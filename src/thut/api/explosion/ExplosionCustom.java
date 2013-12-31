@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 
+import assets.pokecube.utils.Vector3;
+import assets.pokecube.utils.ExplosionCustom.Cruncher;
 import cpw.mods.fml.common.network.PacketDispatcher;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -43,12 +45,15 @@ public class ExplosionCustom extends Explosion{
 	public static int DUSTID = 0;
 	
 	/**
-	 * these are used by the vanilla kind one.
+	 * these are used by the vanilla kind of explosion.
 	 */
 	World worldObj;
 	Vector3 centre;
 	float strength;
 	
+	/**
+	 * Call this once when the mod is loading it initialize the array of coordinates.
+	 */
 	public ExplosionCustom()
 	{
 		super(null, null, 0, 0, 0, 0);
@@ -64,46 +69,78 @@ public class ExplosionCustom extends Explosion{
 		centre = new Vector3(par3, par5, par7);
 	}
 
+	/**
+	 * Does an explosion of the given strength at the given location.
+	 * if the effective radius is less than 32, it will drop some blocks.
+	 * 
+	 * @param centre - Centre of the explosion
+	 * @param worldObj
+	 * @param radius - Maxiumum radius of the explosion, used to limit if needed
+	 * @param strength
+	 */
 	public static void doExplosion(final Vector3 centre, final World worldObj,
 			final int radius, final double strength) {
-		Cruncher.destroyInRangeV4(centre, worldObj, radius, strength, false,
-				false);
+		
+		if(radius == 0)
+		{
+			doExplosion(centre, worldObj, strength);
+		}
+		else
+		{
+			Cruncher.destroyInRangeV4(centre, worldObj, radius, strength, false,
+					false);
+		}
 	}
 	
-	public void kineticImpactor(final World worldObj, final Vector3 velocity,
-			final Vector3 hitLocation, final Vector3 acceleration,
-			final double mass, final float energy) {
-		doKineticImpactor(worldObj, velocity, hitLocation, acceleration, mass,
-				energy);
-
+	/**
+	 * Does an explosion of the given strength at the given location.
+	 * This version uses the maximum allowed radius.
+	 * if the effective radius is less than 32, it will drop some blocks.
+	 * 
+	 * @param centre - Centre of the explosion
+	 * @param worldObj
+	 * @param strength
+	 */
+	public static void doExplosion(final Vector3 centre, final World worldObj, final double strength) {
+		Cruncher.destroyInRangeV4(centre, worldObj, MAX_RADIUS, strength, false,
+				false);
 	}
 
+	/**
+	 * This method simulates a kinetic impact, It uses something very similar to newton impact depth rules, and a denser object will
+	 * penetrate much further than a less dense object.
+	 * 
+	 * @param worldObj
+	 * @param velocity - Direction that the thing is going, this is normalized, use energy for speed
+	 * @param hitLocation - The location of the impact.
+	 * @param acceleration -  gravity, mainly relevant for heavy projectiles with high energy, use new Vector3() for no gravity.
+	 * @param density - The density of the projectile, the lower this is, the less penetrating.
+	 * @param energy - The energy of the projectile, this determines total explosive power.
+	 */
 	public static void doKineticImpactor(World worldObj, Vector3 velocity,
-			Vector3 hitLocation, Vector3 acceleration, double mass, float energy) {
-		if (mass < 0 || energy <= 0) {
+			Vector3 hitLocation, Vector3 acceleration, float density, float energy) {
+		if (density < 0 || energy <= 0) {
 			return;
 		}
 		double eid = Math.random();
-		System.out.println("energy: " + energy + " Location: "
-				+ hitLocation.toString());
 		int n = 0;
 		List<Vector3> locations = new ArrayList<Vector3>();
 		List<Float> blasts = new ArrayList<Float>();
 
 		float resist = hitLocation.getExplosionResistance(worldObj);
-		float blast = Math.min(resist, energy);
+		float blast = (float) Math.min((energy*(resist/density)), energy);
 
-		if (resist > energy) {
+		if (resist > density) {
 			hitLocation = hitLocation.subtract(velocity.normalize());
 			Cruncher.destroyInRangeV4(hitLocation, worldObj,
-					(int) (int) Math.max((energy / 2), 10), energy, true, true);
+					(int) (int) Math.max(blast, 10), blast, true, true);
 			return;
 		}
 
 		Vector3 absorbedLoc = new Vector3();
 		float remainingEnergy = 0;
 		int id = hitLocation.getBlockId(worldObj);
-		energy -= resist;
+		density -= resist;
 
 		while (energy > 0) {
 			locations.add(hitLocation.subtract(velocity.normalize()));
@@ -113,13 +150,14 @@ public class ExplosionCustom extends Explosion{
 			velocity.add(acceleration);
 			resist = (float) Math.max(
 					hitLocation.getExplosionResistance(worldObj), 0);
-			blast = Math.min(resist, energy);
-			if (resist > energy) {
+			blast = (float) Math.min(energy*(resist/density), energy);
+			if (resist > density) {
 				absorbedLoc.set(hitLocation);
 				remainingEnergy = energy;
 				break;
 			}
-			energy -= (resist + 0.1);
+			energy -= energy*(resist/density);
+			density -= (resist + 0.1);
 		}
 		
 		n = locations.size();
@@ -127,8 +165,7 @@ public class ExplosionCustom extends Explosion{
 
 			for (int i = 0; i < n; i++) {
 				Vector3 source = locations.get(i);
-				float strength = Math.min(blasts.get(i) * blasts.get(i)
-						* (((float) n - (float) i) / ((float) n)), 256);
+				float strength = Math.min(blasts.get(i), 256);
 				if (worldObj.doChunksNearChunkExist(source.intX(),
 						source.intY(), source.intZ(), (int) (strength / 2))) {
 					if (strength != 0)
@@ -144,11 +181,21 @@ public class ExplosionCustom extends Explosion{
 		}
 	}
 
+	/**
+	 * Does the explosion based on the parameters passed in via the constructor
+	 */
 	public void doExplosion()
 	{
 		doExplosionA();
 	}
 	
+	/**
+	 * The actual explosion code for the constructor based explosion.
+	 * if the effective radius is less than 32, it will drop some blocks.
+	 * 
+	 * This is mostly identical to the cruncher method, except for the passing this explosion instance to the blocks
+	 * as well as no option for ash and melt.
+	 */
 	public void doExplosionA() {
 		worldObj.theProfiler.startSection("explosion");
 		long startTime = System.nanoTime();
@@ -326,7 +373,7 @@ public class ExplosionCustom extends Explosion{
 	}
 	
     /**
-     * Does the second part of the explosion (sound, particles, drop spawn)
+     * Does nothing overriden from vanilla
      */
     @Override
     public void doExplosionB(boolean par1)
@@ -334,6 +381,11 @@ public class ExplosionCustom extends Explosion{
     	
     }
 	
+    /**
+     * This is the class that does most of the maths, unless you use the vanilla style explosion.
+     * @author Thutmose
+     *
+     */
 	public static class Cruncher {
 		public Double[] set1 = new Double[] { 123456d };
 		public Double[] set2 = new Double[] { 123456d };
@@ -527,40 +579,9 @@ public class ExplosionCustom extends Explosion{
 			}
 		}
 
-		public static byte[][] populatePoints() {
-			byte[][] quadrant;
-			Double[] radii;
-			List<byte[]> templist = new ArrayList<byte[]>();
-			List<Double> tempRadii = new ArrayList<Double>();
-			Cruncher sort = new Cruncher();
-
-			for (byte z = (byte) -size; z <= size; z++)
-				for (byte y = (byte) -size; y <= size; y++)
-					for (byte x = (byte) -size; x <= size; x++) {
-
-						double radSq = (double) (x * x + y * y + z * z);
-						if (radSq > size * size)
-							continue;
-
-						templist.add(new byte[] { x, y, z });
-						tempRadii.add(radSq);
-					}
-			quadrant = templist.toArray(new byte[0][0]);
-			radii = tempRadii.toArray(new Double[0]);
-			templist.clear();
-			tempRadii.clear();
-
-			sort.sort2(radii, quadrant);
-
-			radii = sort.set1;
-			quadrant = sort.set11;
-
-			sort.set1 = null;
-			sort.set11 = null;
-
-			return quadrant;
-		}
-
+		/**
+		 * This needs to be done once at mod load.  This int[] is used by all of the explosions as a sample volume.  the constructor calls this.
+		 */
 		public static void populateInt() {
 
 			new Thread(new Runnable() {
@@ -622,35 +643,15 @@ public class ExplosionCustom extends Explosion{
 							* linearFactor * linearFactor);
 		}
 
-		public static boolean isInShadow(Vector3 source, Vector3 near,
-				Vector3 far) {
-			double dNear = near.distanceTo(source);
-			double dFar = far.distanceTo(source);
-			double dNF = near.distanceTo(far);
-			if (dNear >= dFar) {
-				return false;
-			}
-			Vector3 nearHat = near.normalize();
-			Vector3 farHat = far.normalize();
-
-			double factor = 1 - (dNear) / dFar;
-
-			if (factor < 0.5)
-				return false;
-
-			if (nearHat.dot(farHat) > factor) {
-				return true;
-			}
-
-			return false;
-		}
-
-		public static double dot(int a, Vector3 b) {
-			int x = (((a) & 255) - size), y = (((a / 256) & 255) - size), z = (((a / (256 * 256)) & 255) - size);
-			Vector3 c = new Vector3(x, y, z).normalize();
-			return b.dot(c);
-		}
-
+		/**
+		 * The main explosion algorithm.
+		 * @param centre The centre of the explosion
+		 * @param worldObj 
+		 * @param radi the maximum radius of effect that will be considered, this may be reduced if the strength is too low
+		 * @param strength the strength of the explosion
+		 * @param dust If this is true, the explosion will replace the rocks with dust (not currently implemented)
+		 * @param melt if this is true, the centre of the explosion will be replaced with the melt id (currently not implemented)
+		 */
 		public static void destroyInRangeV4(final Vector3 centre,
 				final World worldObj, int radi, final double strength,
 				final boolean dust, final boolean melt) {
@@ -779,7 +780,7 @@ public class ExplosionCustom extends Explosion{
 
 	            if (radius<32&&block!=null&&block.canDropFromExplosion(null))
 	            {
-	                block.dropBlockAsItemWithChance(worldObj, rAbs.intX(), rAbs.intY(), rAbs.intZ(), rAbs.getBlockMetadata(worldObj), 1.0f, 0);
+	                block.dropBlockAsItemWithChance(worldObj, rAbs.intX(), rAbs.intY(), rAbs.intZ(), rAbs.getBlockMetadata(worldObj), (float) (1.0f/strength), 0);
 	            }
 	            
 				rAbs.setBlock(worldObj, 0, 0, 2);
