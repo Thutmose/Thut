@@ -88,7 +88,7 @@ public class ExplosionCustom extends Explosion{
 		else
 		{
 			Cruncher.destroyInRangeV4(centre, worldObj, radius, strength, false,
-					false);
+					true);
 		}
 	}
 	
@@ -171,7 +171,7 @@ public class ExplosionCustom extends Explosion{
 					if (strength != 0)
 						Cruncher.destroyInRangeV4(source, worldObj,
 								(int) Math.max(10, strength / 2), strength,
-								true, true);
+								true, false);
 				}
 			}
 		if (remainingEnergy > 10) {
@@ -650,11 +650,11 @@ public class ExplosionCustom extends Explosion{
 		 * @param radi the maximum radius of effect that will be considered, this may be reduced if the strength is too low
 		 * @param strength the strength of the explosion
 		 * @param dust If this is true, the explosion will replace the rocks with dust (not currently implemented)
-		 * @param melt if this is true, the centre of the explosion will be replaced with the melt id (currently not implemented)
+		 * @param drop if this is false, it will not drop anything.
 		 */
 		public static void destroyInRangeV4(final Vector3 centre,
 				final World worldObj, int radi, final double strength,
-				final boolean dust, final boolean melt) {
+				final boolean dust, final boolean drop) {
 			worldObj.theProfiler.startSection("explosion");
 			long startTime = System.nanoTime();
 			final double scaleFactor = 250;
@@ -778,7 +778,7 @@ public class ExplosionCustom extends Explosion{
 					affected.add(chunk);
 				Block block = rAbs.getBlock(worldObj);
 
-	            if (radius<32&&block!=null&&block.canDropFromExplosion(null))
+	            if (drop&&radius<32&&block!=null&&block.canDropFromExplosion(null))
 	            {
 	                block.dropBlockAsItemWithChance(worldObj, rAbs.intX(), rAbs.intY(), rAbs.intZ(), rAbs.getBlockMetadata(worldObj), (float) (1.0f/strength), 0);
 	            }
