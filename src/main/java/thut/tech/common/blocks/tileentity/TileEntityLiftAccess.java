@@ -30,8 +30,9 @@ import javax.print.attribute.standard.SheetCollate;
 
 
 
+
 import thut.api.ThutBlocks;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;

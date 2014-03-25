@@ -12,12 +12,13 @@ import java.util.Random;
 
 
 
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.explosion.ExplosionCustom;
 import thut.api.explosion.ExplosionCustom.Cruncher;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.common.WorldCore;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;
 import thut.world.common.corehandlers.ConfigHandler;

@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import thut.api.ThutBlocks;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.client.ClientProxy;
 import thut.world.client.render.RenderFluid;
 import thut.world.common.WorldCore;

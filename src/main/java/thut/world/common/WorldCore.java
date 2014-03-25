@@ -22,7 +22,7 @@ import net.minecraftforge.oredict.OreDictionary;
 import thut.api.CreativeTabThut;
 import thut.api.ThutBlocks;
 import thut.api.explosion.ExplosionCustom.Cruncher;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.api.network.PacketPipeline;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;
 import thut.world.common.corehandlers.BlockHandler;

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import thut.api.ThutBlocks;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.common.WorldCore;
 import thut.world.common.blocks.fluids.BlockFluid;
 import thut.world.common.blocks.fluids.liquids.BlockLava;

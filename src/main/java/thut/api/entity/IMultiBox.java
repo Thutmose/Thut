@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import thut.api.explosion.Vector3;
-import thut.api.explosion.Vector3.Matrix3;
+import thut.api.maths.Matrix3;
+import thut.api.maths.Vector3;
 import net.minecraft.entity.Entity;
 
 

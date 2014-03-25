@@ -5,7 +5,7 @@ import java.io.File;
 import java.util.logging.Level;
 
 import thut.api.explosion.ExplosionCustom;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.common.WorldCore;
 import thut.world.common.blocks.fluids.liquids.BlockLava;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;

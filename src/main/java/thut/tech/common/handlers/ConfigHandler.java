@@ -1,6 +1,6 @@
 package thut.tech.common.handlers;
 
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
 import net.minecraftforge.common.config.Configuration;
 

@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.common.corehandlers.ConfigHandler;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;

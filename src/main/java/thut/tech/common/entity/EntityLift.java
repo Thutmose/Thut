@@ -12,8 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import thut.api.ThutBlocks;
 import thut.api.entity.IMultiBox;
-import thut.api.explosion.Vector3;
-import thut.api.explosion.Vector3.Matrix3;
+import thut.api.maths.Matrix3;
+import thut.api.maths.Vector3;
 import thut.api.network.PacketPipeline;
 import thut.tech.common.blocks.tileentity.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;

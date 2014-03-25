@@ -1,6 +1,6 @@
 package thut.world.common.blocks.fluids.gases;
 
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.common.WorldCore;
 import thut.world.common.corehandlers.ConfigHandler;
 import net.minecraft.block.Block;

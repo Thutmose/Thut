@@ -15,12 +15,13 @@ import java.util.Random;
 
 
 
+
 import com.google.common.io.ByteArrayDataInput;
 
 import thut.api.ThutBlocks;
 import thut.api.explosion.ExplosionCustom;
 import thut.api.explosion.ExplosionCustom.Cruncher;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.client.ClientProxy;
 import thut.world.common.Volcano;
 import thut.world.common.WorldCore;

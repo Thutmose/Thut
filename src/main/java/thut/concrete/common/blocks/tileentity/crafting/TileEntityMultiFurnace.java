@@ -2,7 +2,7 @@ package thut.concrete.common.blocks.tileentity.crafting;
 
 import static thut.api.ThutBlocks.*;
 import thut.api.ThutItems;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;

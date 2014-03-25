@@ -14,7 +14,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.world.World;
 import thut.api.explosion.ExplosionCustom;
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.world.common.WorldCore;
 import thut.world.common.blocks.fluids.BlockFluid;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;

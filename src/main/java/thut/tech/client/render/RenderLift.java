@@ -2,7 +2,7 @@ package thut.tech.client.render;
 
 import org.lwjgl.opengl.GL11;
 
-import thut.api.explosion.Vector3;
+import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
 import cpw.mods.fml.client.FMLClientHandler;
 import net.minecraft.client.renderer.entity.Render;
