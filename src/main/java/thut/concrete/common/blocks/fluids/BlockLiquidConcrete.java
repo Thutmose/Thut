@@ -44,7 +44,7 @@ import net.minecraftforge.fluids.IFluidBlock;
 public class BlockLiquidConcrete extends BlockFluid
 {
 	public static int hardenRate = 5;
-	static Material wetConcrete = (new WetConcrete(MapColor.stoneColor));
+	static Material wetConcrete = (new WetRock(MapColor.stoneColor));
 	
 	Integer[][] data;
     @SideOnly(Side.CLIENT)
@@ -130,7 +130,6 @@ public class BlockLiquidConcrete extends BlockFluid
 			FluidInfo info = new FluidInfo();
 			HashMap<Block, Block> combinationList = new HashMap<Block, Block>();
 			HashMap<Block, Integer> desiccantList = new HashMap<Block, Integer>();
-
 
 			combinationList.put(ThutBlocks.rebar, ThutBlocks.liquidREConcrete);
 			combinationList.put(flowing_water, ThutBlocks.liquidConcrete);

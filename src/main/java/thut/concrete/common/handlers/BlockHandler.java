@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import thut.concrete.common.blocks.fluids.BlockAsphalt;
 import thut.concrete.common.blocks.fluids.BlockConcrete;
+import thut.concrete.common.blocks.fluids.BlockLiquidAsphalt;
 import thut.concrete.common.blocks.fluids.BlockLiquidConcrete;
 import thut.concrete.common.blocks.fluids.BlockLiquidREConcrete;
 import thut.concrete.common.blocks.fluids.BlockREConcrete;
@@ -26,6 +28,9 @@ public class BlockHandler
 		blockList.add(new BlockConcrete());
 		blockList.add(new BlockLiquidREConcrete());
 		blockList.add(new BlockREConcrete());
+		blockList.add(new BlockLiquidAsphalt());
+		blockList.add(new BlockAsphalt());
+		
 		
 		blockList.add(new BlockMultiFurnace());
 		GameRegistry.registerTileEntity(TileEntityMultiFurnace.class, "multikilncore");

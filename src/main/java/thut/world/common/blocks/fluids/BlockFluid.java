@@ -7,6 +7,7 @@ import static net.minecraftforge.common.util.ForgeDirection.SOUTH;
 import static net.minecraftforge.common.util.ForgeDirection.UP;
 import static net.minecraftforge.common.util.ForgeDirection.WEST;
 import static net.minecraft.init.Blocks.*;
+import static thut.api.ThutBlocks.concrete;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +23,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.*;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -431,6 +433,36 @@ public abstract class BlockFluid extends BlockFluidBase {
 	}
 
 	public void setData() {
+		if(fluidBlocks.get(this)==null)
+		{
+			FluidInfo info = new FluidInfo();
+			HashMap<Block, Block> combinationList = new HashMap<Block, Block>();
+			HashMap<Block, Integer> desiccantList = new HashMap<Block, Integer>();
+			int hardenRate = 5;
+			combinationList.put(water, this);
+			combinationList.put(air, this);
+			combinationList.put(this, this);
+			
+			desiccantList.put(air, hardenRate);
+			desiccantList.put(dirt, hardenRate);
+			desiccantList.put(grass, hardenRate);
+			desiccantList.put(sand, hardenRate);
+			
+			List<Block> replaces = new ArrayList<Block>();
+			replaces.addAll(defaultReplacements);
+			
+			for(Block b: replaces)
+				combinationList.put(b,this);
+			
+			info.viscosity = solid?15:0;
+			info.desiccants = desiccantList;
+			info.combinationBlocks = combinationList;
+			info.hardenTo = concrete;
+			info.fallOfEdge = true;
+			info.hardenDiff = 0;
+			
+			fluidBlocks.put(this,info);
+		}
 	}
 
 	/**
@@ -1277,7 +1309,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 		return vec.xCoord == 0.0D && vec.zCoord == 0.0D ? -1000.0D : Math
 				.atan2(vec.zCoord, vec.xCoord) - Math.PI / 2D;
 	}
-
+	
 	public static class FluidInfo {
 
 		/**
@@ -1301,9 +1333,9 @@ public abstract class BlockFluid extends BlockFluidBase {
 
 	}
 
-	public static class WetConcrete extends Material {
+	public static class WetRock extends Material {
 
-		public WetConcrete(MapColor par1MapColor) {
+		public WetRock(MapColor par1MapColor) {
 			super(par1MapColor);
 		}
 

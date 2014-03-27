@@ -44,7 +44,7 @@ import net.minecraftforge.fluids.Fluid;
 public class BlockLiquidREConcrete extends BlockFluid implements IRebar//, IAntiPoisonBlock
 {
 	public int colourid;
-	static Material wetConcrete = (new WetConcrete(MapColor.stoneColor));
+	static Material wetConcrete = (new WetRock(MapColor.stoneColor));
 	Integer[][] data;
 	boolean[] side = new boolean[6];
     @SideOnly(Side.CLIENT)
