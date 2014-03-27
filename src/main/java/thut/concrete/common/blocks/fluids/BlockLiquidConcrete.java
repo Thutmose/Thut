@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
 import thut.concrete.common.ConcreteCore;
-import thut.world.common.blocks.fluids.BlockFluid;
+import thut.core.common.blocks.BlockFluid;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;

@@ -15,7 +15,7 @@ import thut.concrete.common.blocks.technical.BlockRebar;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityMultiBlockPart;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityMultiFurnace;
 import thut.concrete.common.blocks.tileentity.worldBlocks.TileEntityBlockFluid;
-import thut.world.common.blocks.fluids.BlockFluid;
+import thut.core.common.blocks.BlockFluid;
 import net.minecraft.block.Block;
 
 public class BlockHandler 
@@ -41,7 +41,7 @@ public class BlockHandler
 		
 		for(Block b: blockList)
 		{
-			GameRegistry.registerBlock(b, b.getLocalizedName().substring(5));
+			GameRegistry.registerBlock(b, b.getUnlocalizedName().substring(5));
 		}
 		initFluids();
 	}

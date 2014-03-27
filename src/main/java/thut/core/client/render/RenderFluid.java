@@ -1,4 +1,4 @@
-package thut.world.client.render;
+package thut.core.client.render;
 
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
@@ -7,11 +7,8 @@ import static org.lwjgl.opengl.GL11.glTranslated;
 
 import org.lwjgl.opengl.GL11;
 
-import thut.world.client.ClientProxy;
-import thut.world.common.blocks.fluids.*;
-import thut.world.common.blocks.fluids.dusts.*;
-import thut.world.common.blocks.fluids.liquids.*;
-import thut.world.common.blocks.fluids.solids.*;
+import thut.core.client.ClientProxy;
+import thut.core.common.blocks.BlockFluid;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -117,13 +114,6 @@ public class RenderFluid implements ISimpleBlockRenderingHandler
         }
         
         boolean solid = ((BlockFluid)block).solid;
-        
-        int bMeta = world.getBlockMetadata(x, y, z);
-        if(bMeta==15)
-        {
-        	renderer.renderStandardBlock(block, x, y, z);
-        	return true;
-        }
 
         BlockFluid theFluid = (BlockFluid) block;
         
@@ -136,7 +126,14 @@ public class RenderFluid implements ISimpleBlockRenderingHandler
         	renderer.renderStandardBlock(block, x, y, z);
         	return true;
         }
+
         
+        int bMeta = world.getBlockMetadata(x, y, z);
+        if(bMeta==15)
+        {
+        	renderer.renderStandardBlock(block, x, y, z);
+        	return true;
+        }
         
         Tessellator tessellator = Tessellator.instance;
         

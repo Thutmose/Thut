@@ -38,8 +38,6 @@ public class ConfigHandler {
 	public static int ashAmount;
 	public static boolean debugPrints;
 	public static boolean volcanosActive;
-	public static boolean collisionDamage;
-	public static boolean paneFix;
 	
 	public static boolean defaultTypeFinite;
 	public static boolean vanillaDust;
@@ -85,17 +83,11 @@ public class ConfigHandler {
 			
 
 			deleteAsh = conf.get("Misc", "deleteAsh", false).getBoolean(false);
-			byte rad = (byte) conf.get("Misc", "explosionRadius", 63, "The radius of the volume affected by explosions, max value of 127, higher settings make the game take longer to load at startup").getInt();
-			ExplosionCustom.MAX_RADIUS = (byte) Math.min(rad,127);
-			
-			paneFix = conf.get("Misc", "fix panes", true, "Do glass panes of mods using outdated methods connect to concrete?").getBoolean(true);
-			Vector3.collisionDamage = collisionDamage;
 			
 			if(deleteAsh)
 				conf.get("World Gen", "deleteAsh", false).set(false);
 			
 			defaultTypeFinite = conf.get("Misc", "defaultFinite", false).getBoolean(false);
-
 
 			Property chunksize = conf.get("Chunk Size", "chunksize", chunkSize,"the size of wrapping chunks, If you set this less than 20 it will disabe the wrapping.  This only applies to the new worldtype added by this mod.  it has no effect on any other world type (like Flat or LargeBiomes)");
 			ChunkSize = chunksize.getInt();

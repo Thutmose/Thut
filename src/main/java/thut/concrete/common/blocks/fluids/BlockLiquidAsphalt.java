@@ -9,7 +9,7 @@ import net.minecraft.util.IIcon;
 import net.minecraftforge.fluids.Fluid;
 import thut.api.ThutBlocks;
 import thut.concrete.common.ConcreteCore;
-import thut.world.common.blocks.fluids.BlockFluid;
+import thut.core.common.blocks.BlockFluid;
 
 public class BlockLiquidAsphalt extends BlockFluid {
 

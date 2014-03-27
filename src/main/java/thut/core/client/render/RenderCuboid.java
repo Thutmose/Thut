@@ -1,4 +1,4 @@
-package thut.world.client.render;
+package thut.core.client.render;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

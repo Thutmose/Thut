@@ -110,7 +110,6 @@ public class ItemDusts extends Item
     		if(block instanceof BlockDust||block instanceof BlockDustInactive&&meta!=15)
     		{
     			world.setBlockMetadataWithNotify(x1, y1, z1, meta+1, 3);
-    			System.out.println("case 1");
     			if(!player.capabilities.isCreativeMode)
     				stack.splitStack(1);
                 return true;
@@ -118,8 +117,6 @@ public class ItemDusts extends Item
     		else if(world.getBlock(x1, y1, z1) instanceof BlockDust||world.getBlock(x1, y1, z1) instanceof BlockDustInactive&&meta!=15)
     		{
     			world.setBlockMetadataWithNotify(x1, y1, z1, meta+1, 3);
-
-    			System.out.println("case 2"+" "+meta);
     			if(!player.capabilities.isCreativeMode)
     				stack.splitStack(1);
                 return true;

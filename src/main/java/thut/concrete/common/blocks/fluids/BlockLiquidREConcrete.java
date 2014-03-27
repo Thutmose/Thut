@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import thut.world.common.blocks.fluids.BlockFluid;
-import thut.world.common.blocks.fluids.BlockFluid.FluidInfo;
 import thut.api.blocks.*;
 import thut.api.render.RenderRebar;
 import thut.concrete.client.render.RenderFluid;
+import thut.core.common.blocks.BlockFluid;
+import thut.core.common.blocks.BlockFluid.FluidInfo;
 //import atomicscience.api.IAntiPoisonBlock;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;

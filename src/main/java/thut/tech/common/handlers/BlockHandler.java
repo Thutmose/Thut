@@ -26,6 +26,6 @@ public class BlockHandler
 		EntityRegistry.registerModEntity(EntityLift.class, "thuttechlift", 1, TechCore.instance, 32, 3, true);
 
 		GameRegistry.registerBlock(lift, ItemBlockMeta.class, lift.getLocalizedName().substring(5));
-		GameRegistry.registerBlock(rail, rail.getLocalizedName().substring(5));
+		GameRegistry.registerBlock(rail, rail.getUnlocalizedName().substring(5));
 	}
 }

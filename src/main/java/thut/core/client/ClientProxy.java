@@ -1,24 +1,18 @@
-package thut.world.client;
+package thut.core.client;
 
-import thut.core.client.render.RenderFluid;
-import thut.core.common.blocks.BlockFluid;
-import thut.world.common.CommonProxy;
-import thut.world.common.WorldCore;
-import thut.world.common.blocks.tileentity.*;
-import cpw.mods.fml.client.FMLClientHandler;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraftforge.client.event.sound.SoundLoadEvent;
-import net.minecraftforge.common.MinecraftForge;
+import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.client.registry.RenderingRegistry;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.relauncher.Side;
+import thut.core.client.render.RenderFluid;
+import thut.core.common.CommonProxy;
+import thut.core.common.blocks.BlockFluid;
 
-public class ClientProxy extends CommonProxy{
-	
+public class ClientProxy extends CommonProxy {
 	public static int renderPass;
 	public static Minecraft mc;
 	
@@ -70,16 +64,6 @@ public class ClientProxy extends CommonProxy{
         }
     }
 	
-	@Override
-	public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z)
-	{
-		TileEntity te = world.getTileEntity(x, y, z);
-		if(te==null)
-			return null;
-		
-		
-		return null;
-	}
 	
 	@Override
 	public void loadSounds(){
@@ -95,5 +79,4 @@ public class ClientProxy extends CommonProxy{
 	{
 		return getPlayer(null);
 	}
-	
 }

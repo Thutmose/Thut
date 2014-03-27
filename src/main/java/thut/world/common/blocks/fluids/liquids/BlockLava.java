@@ -17,9 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
+import thut.core.common.blocks.BlockFluid;
 import thut.world.common.Volcano;
 import thut.world.common.WorldCore;
-import thut.world.common.blocks.fluids.BlockFluid;
 import thut.world.common.blocks.fluids.dusts.BlockDust;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;
 import thut.world.common.blocks.tileentity.TileEntityVolcano;

@@ -19,6 +19,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 import thut.api.ThutBlocks;
+import thut.core.common.blocks.BlockFluid;
 import thut.world.common.blocks.*;
 import thut.world.common.blocks.fluids.*;
 import thut.world.common.blocks.fluids.dusts.*;
@@ -86,7 +87,7 @@ public class BlockHandler {
 	public void registerBlocks(){
 		for(Block block : blocks)
 		{
-			GameRegistry.registerBlock(block, block.getLocalizedName().substring(5));
+			GameRegistry.registerBlock(block, block.getUnlocalizedName().substring(5));
 		}
 		
 	}

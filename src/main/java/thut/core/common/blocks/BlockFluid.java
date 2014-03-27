@@ -1,4 +1,4 @@
-package thut.world.common.blocks.fluids;
+package thut.core.common.blocks;
 
 import static net.minecraftforge.common.util.ForgeDirection.DOWN;
 import static net.minecraftforge.common.util.ForgeDirection.EAST;
@@ -14,10 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
-import thut.world.client.ClientProxy;
-import thut.world.client.render.RenderFluid;
-import thut.world.common.WorldCore;
-import thut.world.common.corehandlers.ConfigHandler;
+import thut.core.client.ClientProxy;
+import thut.core.client.render.RenderFluid;
+import thut.core.common.ThutCore;
+import thut.core.common.handlers.ConfigHandler;
+//import thut.world.client.ClientProxy;
+//import thut.world.client.render.RenderFluid;
+//import thut.world.common.WorldCore;
+//import thut.world.common.corehandlers.ConfigHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.*;
@@ -501,17 +505,17 @@ public abstract class BlockFluid extends BlockFluidBase {
 			return AxisAlignedBB.getAABBPool().getAABB(0, 0, 0, 1, f * l, 1)
 					.offset(x, y, z);
 		}
-		if (WorldCore.proxy.getPlayer() == null) {
+		if (ThutCore.proxy.getPlayer() == null) {
 			return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, 1, 1).offset(x, y,
 					z);
 		}
 
 		Vector3 here = new Vector3(x, y, z);
 
-		Vector3 playerloc = new Vector3(WorldCore.proxy.getPlayer());
+		Vector3 playerloc = new Vector3(ThutCore.proxy.getPlayer());
 
 		Vector3 hit = playerloc.findNextSolidBlock(worldObj, new Vector3(
-				WorldCore.proxy.getPlayer().getLookVec()), 5);
+				ThutCore.proxy.getPlayer().getLookVec()), 5);
 		if (hit != null)
 			return AxisAlignedBB.getBoundingBox(0, 0, 0, 1,
 					Math.min(0.0625 + hit.y - y, 1), 1).offset(x, y, z);
@@ -520,7 +524,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 
 	@SideOnly(Side.CLIENT)
 	public EntityPlayer getPlayer() {
-		return WorldCore.proxy.getPlayer();
+		return ThutCore.proxy.getPlayer();
 	}
 
 	/**
@@ -545,9 +549,8 @@ public abstract class BlockFluid extends BlockFluidBase {
 		ItemStack item = player.getHeldItem();
 		int meta = worldObj.getBlockMetadata(x, y, z);
 		boolean ret = false;
-		// System.out.println(this.isBlockNormalCube(worldObj, x, y,
-		// z)+" "+this.getBlockBrightness(worldObj, x, y,
-		// z)+" "+this.getLightOpacity(worldObj, x, y, z));
+		
+		
 		if (item != null) {
 			Block itemID = Block.getBlockFromItem(item.getItem());
 			int itemMeta = item.getItemDamage();
@@ -1275,7 +1278,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 	@Override
 	public int getRenderType() {
 
-		return solid ? 0 : RenderBlockFluid.instance.getRenderId();// renderID;
+		return solid ? 0 : RenderFluid.ID;//RenderBlockFluid.instance.getRenderId();// renderID;
 	}
 
 	/**

@@ -8,8 +8,8 @@ import java.util.Random;
 
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
+import thut.core.common.blocks.BlockFluid;
 import thut.world.common.WorldCore;
-import thut.world.common.blocks.fluids.BlockFluid;
 import thut.world.common.blocks.fluids.liquids.BlockLava;
 import thut.world.common.blocks.world.BlockWorldGen;
 import cpw.mods.fml.relauncher.Side;

@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import thut.api.ThutItems;
 import thut.api.blocks.IRebar;
 import thut.concrete.common.ConcreteCore;
 import thut.concrete.common.blocks.tileentity.worldBlocks.TileEntityBlockFluid;
-import thut.world.common.blocks.fluids.BlockFluid;
-import thut.world.common.blocks.fluids.BlockFluid.FluidInfo;
+import thut.core.common.blocks.BlockFluid;
+import thut.core.common.blocks.BlockFluid.FluidInfo;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -73,14 +74,14 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
      */
     public Item getItemDropped(int par1, Random par2Random, int par3)
     {
-        return Item.getItemFromBlock(rebar);
+        return ThutItems.dust.getItem();
     }
     
     
     @Override
     public int quantityDropped(int meta, int fortune, Random random)
     {
-        return 1;
+        return meta;
     }
 	
 	

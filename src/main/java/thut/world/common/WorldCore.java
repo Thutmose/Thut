@@ -97,14 +97,11 @@ public class WorldCore {
 
 		blockList = new BlockHandler(config);
 		itemList = new ItemHandler(config);
-		
-		Cruncher sort = new Cruncher();
 	}
 	
 	  @EventHandler
 	    public void load(FMLInitializationEvent evt)
 	    {
-		proxy.initClient();
 		liquidHndlr = new LiquidHandler();
 		MinecraftForge.EVENT_BUS.register(liquidHndlr);
 		
