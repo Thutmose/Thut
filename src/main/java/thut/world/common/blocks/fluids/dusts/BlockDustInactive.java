@@ -47,7 +47,7 @@ public class BlockDustInactive extends BlockFluid
 
     public BlockDustInactive()
     {
-    	super(getFluidType("dust")  ,Material.ground);
+    	super(new Fluid("dust").setDensity(900).setViscosity(3000)  ,Material.ground);
 		setBlockName("soliddust");
 	//	setCreativeTab(ConcreteCore.tabThut);
 		setHardness(0.1f);

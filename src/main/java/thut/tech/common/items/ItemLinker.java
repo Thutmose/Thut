@@ -145,6 +145,6 @@ public class ItemLinker extends Item
 	@SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister par1IconRegister)
     {
-        this.itemIcon = par1IconRegister.registerIcon("thuttech:liftController");
+        this.itemIcon = par1IconRegister.registerIcon(TechCore.ID+":"+"liftController");
     }
 }

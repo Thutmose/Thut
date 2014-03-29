@@ -49,7 +49,7 @@ public class BlockDust extends BlockFluid
 
     public BlockDust()
     {
-    	super(getFluidType("dust"),Material.sand);
+    	super(new Fluid("dust").setDensity(900).setViscosity(3000),Material.sand);
 		setBlockName("dust");
 		setHardness(0.1f);
 		setResistance(0.0f);

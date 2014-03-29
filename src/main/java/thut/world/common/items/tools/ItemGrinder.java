@@ -16,10 +16,10 @@ import net.minecraft.world.World;
 import thut.api.explosion.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.blocks.BlockFluid;
+import thut.core.common.items.ItemDusts;
 import thut.world.common.WorldCore;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;
 import thut.world.common.corehandlers.ItemHandler;
-import thut.world.common.items.resources.ItemDusts;
 
 public class ItemGrinder extends Item {
 

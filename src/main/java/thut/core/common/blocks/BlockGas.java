@@ -1,8 +1,6 @@
-package thut.world.common.blocks.fluids.gases;
+package thut.core.common.blocks;
 
 import thut.api.maths.Vector3;
-import thut.world.common.WorldCore;
-import thut.world.common.corehandlers.ConfigHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -25,8 +23,8 @@ public abstract class BlockGas extends BlockFluidFinite
 		super(fluid, Material.air);
 		FluidRegistry.registerFluid(fluid);
 		setLightOpacity(0);
-		if(ConfigHandler.debugPrints)
-			this.setCreativeTab(WorldCore.tabThut);
+	//	if(ConfigHandler.debugPrints)
+	//		this.setCreativeTab(WorldCore.tabThut);
 	}
 	
     /**

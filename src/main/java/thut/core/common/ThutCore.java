@@ -16,7 +16,6 @@ import net.minecraftforge.common.BiomeManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.oredict.OreDictionary;
-import thut.api.CreativeTabThut;
 import thut.api.ThutBlocks;
 import thut.api.explosion.ExplosionCustom.Cruncher;
 import thut.api.maths.Vector3;
@@ -40,7 +39,6 @@ public class ThutCore {
 
 	@SidedProxy(clientSide = "thut.core.client.ClientProxy", serverSide = "thut.core.common.CommonProxy")
 	public static CommonProxy proxy;
-	public static final String TEXTURE_PATH = "core:";
 		
 	@Instance("ThutCore")
 	public static ThutCore instance;

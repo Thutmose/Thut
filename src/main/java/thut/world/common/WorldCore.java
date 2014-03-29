@@ -19,11 +19,11 @@ import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.common.BiomeManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.oredict.OreDictionary;
-import thut.api.CreativeTabThut;
 import thut.api.ThutBlocks;
 import thut.api.explosion.ExplosionCustom.Cruncher;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketPipeline;
+import thut.core.common.CreativeTabThut;
 import thut.world.common.blocks.fluids.solids.BlockSolidLava;
 import thut.world.common.corehandlers.BlockHandler;
 import thut.world.common.corehandlers.ConfigHandler;
@@ -50,17 +50,17 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.common.registry.VillagerRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod( modid = "thutWorldgen", name="Thut's WorldGen", version="0.0.1")
+@Mod( modid = "thutworld", name="Thut's WorldGen", version="0.0.1")
 public class WorldCore {
 
 	@SidedProxy(clientSide = "thut.world.client.ClientProxy", serverSide = "thut.world.common.CommonProxy")
 	public static CommonProxy proxy;
-	public static final String TEXTURE_PATH = "worldgen:";
+	public static final String TEXTURE_PATH = "thutworld:";
 		
-	@Instance("thutWorldgen")
+	@Instance("thutworld")
 	public static WorldCore instance;
 	
-	public static String modid = "thutWorldgen";
+	public static String modid = "thutworld";
 	
 	private static final String[]  LANGUAGES_SUPPORTED	= new String[] { "en_UK", "en_US" , "de_DE"};
     

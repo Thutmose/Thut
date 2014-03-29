@@ -66,6 +66,8 @@ public abstract class BlockFluid extends BlockFluidBase {
 	public boolean stampable = false;
 	public int maxMeta = 15;
 	public static int renderID;
+	protected int tickrate = 20;
+	protected Block hardenTo = null;
 
 	private static boolean init = true;
 	public static List<Block> defaultReplacements = new ArrayList<Block>();
@@ -140,31 +142,6 @@ public abstract class BlockFluid extends BlockFluidBase {
 	public int onBlockPlaced(World worldObj, int x, int y, int z, int side,
 			float hitX, float hitY, float hitZ, int meta) {
 		return (placeamount - 1);
-	}
-
-	public static Fluid getFluidType(String type) {
-		if (type.equals("solidRock")) {
-			return new Fluid("solidRock").setDensity(5000).setViscosity(
-					Integer.MAX_VALUE);
-		}
-		if (type.equals("liquidRock")) {
-			return new Fluid("liquidRock").setDensity(4000).setViscosity(2000);
-		}
-		if (type.equals("REliquidRock")) {
-			return new Fluid("REliquidRock").setDensity(Integer.MAX_VALUE)
-					.setViscosity(2000);
-		}
-		if (type.equals("moltenRock")) {
-			return new Fluid("moltenRock").setDensity(5000).setViscosity(2500);
-		}
-		if (type.equals("dust")) {
-			return new Fluid("dust").setDensity(900).setViscosity(3000);
-		}
-		if (type.equals("wetdust")) {
-			return new Fluid("wetdust").setDensity(2000).setViscosity(1500);
-		}
-
-		return new Fluid("genericRock").setDensity(4000).setViscosity(2000);
 	}
 
 	@Override
@@ -461,7 +438,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 			info.viscosity = solid?15:0;
 			info.desiccants = desiccantList;
 			info.combinationBlocks = combinationList;
-			info.hardenTo = concrete;
+			info.hardenTo = hardenTo;
 			info.fallOfEdge = true;
 			info.hardenDiff = 0;
 			
@@ -586,7 +563,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 	}
 
 	public int tickRate(World worldObj) {
-		return 20;
+		return tickrate;
 	}
 
 	// //////////////////////////////////////Fluid Block Logic Below

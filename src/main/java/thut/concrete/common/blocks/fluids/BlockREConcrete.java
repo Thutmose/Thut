@@ -48,7 +48,8 @@ public class BlockREConcrete extends BlockFluid implements IRebar, ITileEntityPr
 	boolean[] side = new boolean[6];
 
 	public BlockREConcrete() {
-		super(getFluidType("solidRock") ,Material.rock);
+		super(new Fluid("solidRock").setDensity(5000).setViscosity(
+				Integer.MAX_VALUE) ,Material.rock);
 		setBlockName("REconcrete");
 		setCreativeTab(ConcreteCore.tabThut);
 		this.setTickRandomly(true);

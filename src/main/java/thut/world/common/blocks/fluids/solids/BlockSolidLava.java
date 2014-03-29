@@ -44,7 +44,8 @@ public class BlockSolidLava extends BlockFluid
 	ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
 	
 	public BlockSolidLava(int par2) {
-		super(getFluidType("solidRock") ,Material.rock);
+		super(new Fluid("solidRock").setDensity(5000).setViscosity(
+				Integer.MAX_VALUE) ,Material.rock);
 		typeid = par2;
 		setBlockName("solidLava" + typeid);
 		this.rate = 1;

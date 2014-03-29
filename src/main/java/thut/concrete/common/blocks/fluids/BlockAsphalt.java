@@ -1,11 +1,6 @@
 package thut.concrete.common.blocks.fluids;
 
-import static net.minecraft.init.Blocks.air;
-import static net.minecraft.init.Blocks.dirt;
-import static net.minecraft.init.Blocks.grass;
-import static net.minecraft.init.Blocks.sand;
-import static net.minecraft.init.Blocks.water;
-import static thut.api.ThutBlocks.concrete;
+import static thut.api.ThutBlocks.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,10 +27,11 @@ import thut.core.common.blocks.BlockFluid.FluidInfo;
 public class BlockAsphalt extends BlockFluid implements ITileEntityProvider {
 
 	public BlockAsphalt() {
-		super(new Fluid("solid"),Material.rock);
+		super(new Fluid("asphalt").setDensity(5000).setViscosity(10000),Material.rock);
 		setBlockName("asphalt");
 		this.rate = 30;
-		concrete = this;
+		tickrate = 100;
+		asphalt = this;
 		setCreativeTab(ConcreteCore.tabThut);
 		this.stampable = true;
 		this.setTickRandomly(true);

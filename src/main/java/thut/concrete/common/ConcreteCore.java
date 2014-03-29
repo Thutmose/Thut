@@ -1,9 +1,9 @@
 package thut.concrete.common;
 
-import thut.api.CreativeTabThut;
 import thut.api.network.PacketPipeline;
 import thut.concrete.common.handlers.BlockHandler;
 import thut.concrete.common.handlers.ItemHandler;
+import thut.core.common.CreativeTabThut;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
