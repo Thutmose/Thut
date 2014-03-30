@@ -7,21 +7,21 @@ import net.minecraft.util.StatCollector;
 
 import org.lwjgl.opengl.GL11;
 
-import thut.concrete.common.blocks.tileentity.crafting.ContainerLimekiln;
-import thut.concrete.common.blocks.tileentity.crafting.TileEntityKiln;
+import thut.concrete.common.blocks.tileentity.crafting.ContainerMixer;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
 
-public class GuiLimekiln extends GuiContainer
+public class GuiMixer extends GuiContainer
 {
-	private TileEntityKiln tileEntity;
+	private TileEntityMixer tileEntity;
 	private ResourceLocation texture = new ResourceLocation("concrete","gui/limeKiln.png");
 	private String invTitle;
 	
-	public GuiLimekiln(InventoryPlayer playerInventory, TileEntityKiln tileEntity)
+	public GuiMixer(InventoryPlayer playerInventory, TileEntityMixer tileEntity)
 	{
-		super(new ContainerLimekiln(playerInventory, tileEntity));
+		super(new ContainerMixer(playerInventory, tileEntity));
 		
 		this.tileEntity = tileEntity;
-		invTitle = tileEntity.type==0?"Lime Kiln":"Dust Furnace";
+		invTitle = "Mixer Furnace";
 	}
 
 	@Override
@@ -42,13 +42,13 @@ public class GuiLimekiln extends GuiContainer
 		drawTexturedModalRect(x, y, 0, 0, xSize, ySize);
 		int i1;
 		
-		if(tileEntity.isBurning())
-		{
-			i1 = tileEntity.getBurnTimeRemainingScaled(12);
-			drawTexturedModalRect(x + 126, y + 39 + 12 - i1, 176, 12 - i1, 14, i1 + 2);
-		}
-		
-		i1 = tileEntity.getCookProgressScaled(24);
-		drawTexturedModalRect(x + 74, y + 36, 176, 14, 17, i1);
+//		if(tileEntity.isBurning())
+//		{
+//			i1 = tileEntity.getBurnTimeRemainingScaled(12);
+//			drawTexturedModalRect(x + 126, y + 39 + 12 - i1, 176, 12 - i1, 14, i1 + 2);
+//		}
+//		
+//		i1 = tileEntity.getCookProgressScaled(24);
+//		drawTexturedModalRect(x + 74, y + 36, 176, 14, 17, i1);
 	}
 }

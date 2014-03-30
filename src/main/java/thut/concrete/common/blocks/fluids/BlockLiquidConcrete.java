@@ -50,7 +50,7 @@ public class BlockLiquidConcrete extends BlockFluid
     @SideOnly(Side.CLIENT)
     private IIcon[] iconArray;
 	public BlockLiquidConcrete() {
-		super(new Fluid("liquidRock").setDensity(4000).setViscosity(2000), wetConcrete);
+		super(new Fluid("concrete").setDensity(4000).setViscosity(2000), wetConcrete);
 		setBlockName("concreteLiquid");
 		setCreativeTab(ConcreteCore.tabThut);
 		this.setResistance((float) 10.0);

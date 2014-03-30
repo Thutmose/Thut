@@ -5,20 +5,15 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
-import net.minecraft.inventory.SlotFurnace;
 import net.minecraft.item.ItemStack;
 
-public class ContainerLimekiln extends Container
+public class ContainerMixer  extends Container
 {
-	private TileEntityKiln tileEntity;
-	private int lastCookTime = 0;
-	private int lastBurnTime = 0;
-	private int lastItemBurnTime = 0;
+	private TileEntityMixer tileEntity;
 	
-	public ContainerLimekiln(InventoryPlayer playerInventory, TileEntityKiln tileEntity)
+	public ContainerMixer(InventoryPlayer playerInventory, TileEntityMixer tileEntity)
 	{
 		this.tileEntity = tileEntity;
-		
 		//Input
 		for(int x = 0; x < 8; x++)
 		{
@@ -33,61 +28,26 @@ public class ContainerLimekiln extends Container
 		{
 			addSlotToContainer(new Slot(tileEntity, x+9, 6+(20*x), 63));
 		}
-		
+
 		bindPlayerInventory(playerInventory);
-		
 	}
 	
 	@Override
 	public void addCraftingToCrafters(ICrafting par1ICrafting)
 	{
 		super.addCraftingToCrafters(par1ICrafting);
-        par1ICrafting.sendProgressBarUpdate(this, 0, this.tileEntity.furnaceCookTime);
-        par1ICrafting.sendProgressBarUpdate(this, 1, this.tileEntity.furnaceBurnTime);
-        par1ICrafting.sendProgressBarUpdate(this, 2, this.tileEntity.currentItemBurnTime);
 	}
 	
 	@Override
 	public void detectAndSendChanges()
     {
         super.detectAndSendChanges();
-
-        for (int i = 0; i < this.crafters.size(); ++i)
-        {
-            ICrafting icrafting = (ICrafting)this.crafters.get(i);
-
-            if (this.lastCookTime != this.tileEntity.furnaceCookTime)
-                icrafting.sendProgressBarUpdate(this, 0, this.tileEntity.furnaceCookTime);
-
-            if (this.lastBurnTime != this.tileEntity.furnaceBurnTime)
-                icrafting.sendProgressBarUpdate(this, 1, this.tileEntity.furnaceBurnTime);
-
-            if (this.lastItemBurnTime != this.tileEntity.currentItemBurnTime)
-                icrafting.sendProgressBarUpdate(this, 2, this.tileEntity.currentItemBurnTime);
-        }
-
-        this.lastCookTime = this.tileEntity.furnaceCookTime;
-        this.lastBurnTime = this.tileEntity.furnaceBurnTime;
-        this.lastItemBurnTime = this.tileEntity.currentItemBurnTime;
     }
 	
 	@Override
 	public void updateProgressBar(int par1, int par2)
 	{
-		if (par1 == 0)
-        {
-            this.tileEntity.furnaceCookTime = par2;
-        }
-
-        if (par1 == 1)
-        {
-            this.tileEntity.furnaceBurnTime = par2;
-        }
-
-        if (par1 == 2)
-        {
-            this.tileEntity.currentItemBurnTime = par2;
-        }
+		super.updateProgressBar(par1, par2);
 	}
 	
 	@Override

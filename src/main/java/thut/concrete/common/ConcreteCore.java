@@ -56,5 +56,9 @@ public class ConcreteCore
 		PacketPipeline.packetPipeline.postInitialise();
 	}
 	
-	
+	public static class GUIIDs
+	{
+		public static int limekiln = 0;
+		public static int mixer = 1;
+	}
 }

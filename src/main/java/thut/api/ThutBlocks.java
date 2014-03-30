@@ -26,6 +26,7 @@ public class ThutBlocks extends Blocks
 	
 	public static Block rebar;
 	public static Block limekiln;
+	public static Block mixer;
 	
 	//Thut Tech Blocks
 	public static Block liftRail;

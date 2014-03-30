@@ -78,8 +78,8 @@ public class ConfigHandler {
 			debugPrints = conf.get("Misc", "debug Prints", false,"Do Printouts of stuff happen?").getBoolean(false);
 
 			
-			trass = conf.get("World Gen", "trass", false).getBoolean(false);
-			limestone = conf.get("World Gen", "limestone", false).getBoolean(false);
+			trass = conf.get("World Gen", "trass", true).getBoolean(true);
+			limestone = conf.get("World Gen", "limestone", true).getBoolean(true);
 			
 
 			deleteAsh = conf.get("Misc", "deleteAsh", false).getBoolean(false);
@@ -98,11 +98,4 @@ public class ConfigHandler {
 			conf.save();
 		}
 	}
-	
-	
-	public static class GUIIDs
-	{
-		public static int limekiln = 0;
-	}
-
 }

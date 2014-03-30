@@ -14,6 +14,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 import thut.api.ThutItems;
 import thut.concrete.common.items.tools.ItemPaintBrush;
+import thut.concrete.common.items.tools.ItemSpout;
+import thut.concrete.common.items.tools.ItemTank;
 
 public class ItemHandler 
 {
@@ -27,6 +29,8 @@ public class ItemHandler
 		{
 			Item painter = new ItemPaintBrush(i);
 			items.add(painter);
+			items.add(new ItemSpout());
+			items.add(new ItemTank());
 			ItemStack stack = new ItemStack(painter, 1,0);
 			ThutItems.brushes[i] = stack;
 		}
@@ -102,9 +106,10 @@ public class ItemHandler
 			GameRegistry.addRecipe(new ItemStack(rebar,5),"x  "," x ","  x", 'x', steel);
 		}
 		
-		GameRegistry.addRecipe(new ItemStack(limekiln,1,0),"xxx","x x","yyy", 'x', new ItemStack(brick_block,1), 'y', new ItemStack(stone,1));
+		GameRegistry.addRecipe(new ItemStack(limekiln,1,0),"xxx","x x","yyy", 'x', new ItemStack(brick_block,1), 'y', new ItemStack(stone,1));	
+		GameRegistry.addRecipe(new ItemStack(mixer,1,0),"xxx","x x","yyy", 'x', new ItemStack(stonebrick,1), 'y', new ItemStack(stone,1));
 		
-		GameRegistry.addShapelessRecipe(eightLiquidConcrete,cement, ThutItems.gravel, ThutItems.gravel, ThutItems.gravel, ThutItems.gravel, ThutItems.sand, ThutItems.sand, ThutItems.sand, new ItemStack(water_bucket));
+	//	GameRegistry.addShapelessRecipe(eightLiquidConcrete,cement, ThutItems.gravel, ThutItems.gravel, ThutItems.gravel, ThutItems.gravel, ThutItems.sand, ThutItems.sand, ThutItems.sand, new ItemStack(water_bucket));
 
 		GameRegistry.addShapelessRecipe(cement, lime, trass);
 		GameRegistry.addShapelessRecipe(cement, lime, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust);

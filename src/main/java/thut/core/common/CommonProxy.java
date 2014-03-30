@@ -1,5 +1,8 @@
 package thut.core.common;
 
+import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
+import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
+import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -41,7 +44,9 @@ public class CommonProxy
     
     public void registerTEs()
     {
-    	
+		GameRegistry.registerTileEntity(TileEntityMultiBlockPart.class, "multiblockpart");
+		GameRegistry.registerTileEntity(TileEntityMultiBlockPartFluids.class, "multiblockpartfluids");
+		GameRegistry.registerTileEntity(TileEntityBlockFluid.class, "paintableTE");
     }
     
     public void registerEntities()

@@ -1,4 +1,4 @@
-package thut.concrete.common.blocks.tileentity.crafting;
+package thut.core.common.blocks.tileentity;
 
 import static thut.api.ThutBlocks.*;
 import net.minecraft.block.Block;
@@ -13,7 +13,7 @@ import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityMultiBlockPart extends TileEntity implements ISidedInventory
 {
-	TileEntityMultiFurnace tileEntityCore;
+	TileEntityMultiCore tileEntityCore;
 	int coreX = 0;
 	int coreY = -1;
 	int coreZ = 0;
@@ -26,7 +26,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
 		return false;
 	}
 	
-	public void setCore(TileEntityMultiFurnace core)
+	public void setCore(TileEntityMultiCore core)
 	{
 		coreX = core.xCoord;
 		coreY = core.yCoord;
@@ -34,10 +34,10 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
 		tileEntityCore = core;
 	}
 	
-	public TileEntityMultiFurnace getCore()
+	public TileEntityMultiCore getCore()
 	{
 		if(tileEntityCore == null)
-			tileEntityCore = (TileEntityMultiFurnace)worldObj.getTileEntity(coreX, coreY, coreZ);
+			tileEntityCore = (TileEntityMultiCore)worldObj.getTileEntity(coreX, coreY, coreZ);
 		
 		return tileEntityCore;
 	}
@@ -50,8 +50,8 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
 		coreX = tagCompound.getInteger("CoreX");
 		coreY = tagCompound.getInteger("CoreY");
 		coreZ = tagCompound.getInteger("CoreZ");
-		String name = tagCompound.getString("revert");
-		revertID = Block.getBlockFromName(name);
+		int name = tagCompound.getInteger("revert");
+		revertID = Block.getBlockById(name);
 		type = tagCompound.getInteger("type");
 		if(revertID==null)
 			revertID = brick_block;
@@ -64,7 +64,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
 		tagCompound.setInteger("CoreX", coreX);
 		tagCompound.setInteger("CoreY", coreY);
 		tagCompound.setInteger("CoreZ", coreZ);
-		tagCompound.setString("revert", revertID.getLocalizedName());
+		tagCompound.setInteger("revert", Block.getIdFromBlock(revertID));
 		tagCompound.setInteger("type", type);
 	}
 	

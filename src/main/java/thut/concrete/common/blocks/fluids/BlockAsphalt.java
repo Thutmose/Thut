@@ -20,9 +20,9 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import thut.api.blocks.IRebar;
 import thut.concrete.common.ConcreteCore;
-import thut.concrete.common.blocks.tileentity.worldBlocks.TileEntityBlockFluid;
 import thut.core.common.blocks.BlockFluid;
 import thut.core.common.blocks.BlockFluid.FluidInfo;
+import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
 
 public class BlockAsphalt extends BlockFluid implements ITileEntityProvider {
 

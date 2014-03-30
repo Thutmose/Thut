@@ -9,9 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import thut.api.ThutItems;
 import thut.api.blocks.IRebar;
 import thut.concrete.common.ConcreteCore;
-import thut.concrete.common.blocks.tileentity.worldBlocks.TileEntityBlockFluid;
 import thut.core.common.blocks.BlockFluid;
 import thut.core.common.blocks.BlockFluid.FluidInfo;
+import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -42,7 +42,7 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 	Integer[][] data;
 	
 	public BlockConcrete() {
-		super(new Fluid("solid"),Material.rock);
+		super(new Fluid("solidconcrete"),Material.rock);
 		setBlockName("concrete");
 		this.rate = 10;
 		concrete = this;
@@ -81,7 +81,7 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
     @Override
     public int quantityDropped(int meta, int fortune, Random random)
     {
-        return meta;
+        return meta + 1;
     }
 	
 	

@@ -4,8 +4,10 @@ import static thut.api.ThutBlocks.*;
 import java.util.Random;
 
 import thut.concrete.common.ConcreteCore;
-import thut.concrete.common.blocks.tileentity.crafting.TileEntityMultiBlockPart;
-import thut.concrete.common.blocks.tileentity.crafting.TileEntityMultiFurnace;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityKiln;
+import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
+import thut.core.common.blocks.tileentity.TileEntityMultiCore;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -29,13 +31,13 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-public class BlockMultiFurnace extends Block implements ITileEntityProvider
+public class BlockKiln extends Block implements ITileEntityProvider
 {
 	private IIcon faceIconUnlit;
 	private IIcon faceIconLit;
 	
 	
-	public BlockMultiFurnace() {
+	public BlockKiln() {
 		super(Material.rock);
 		
 		setBlockName("blockLimekiln");
@@ -70,13 +72,13 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 				
 				if(dummy != null && dummy.getCore() != null)
 				{
-					TileEntityMultiFurnace core = dummy.getCore();
+					TileEntityMultiCore core = dummy.getCore();
 					return core.getBlockType().onBlockActivated(world, core.xCoord, core.yCoord, core.zCoord, player, par6, par7, par8, par9);
 				}
 				
 				return true;
 			}
-			TileEntityMultiFurnace tileEntity = (TileEntityMultiFurnace)t;
+			TileEntityKiln tileEntity = (TileEntityKiln)t;
 	         
 	        if(tileEntity != null)
 	        {
@@ -84,7 +86,6 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 	        	{
 	        		tileEntity.facing=ForgeDirection.getOrientation(par6).getOpposite();
 	        	}
-
 	            if(!tileEntity.getIsValid())
 	            {
 	                if(tileEntity.checkIfProperlyFormed())
@@ -93,8 +94,8 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 	                }
 	            }
 	            // Check if the multi-block structure has been formed.
-//	            if(tileEntity.getIsValid())//TODO gui in core
-//	                player.openGui(ConcreteCore.instance, ConfigHandler.GUIIDs.limekiln, world, x, y, z);
+	            if(tileEntity.getIsValid())//TODO gui in core
+	                player.openGui(ConcreteCore.instance, ConcreteCore.GUIIDs.limekiln, world, x, y, z);
 	        }
 	         
 	        return true;
@@ -122,11 +123,11 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 	{
 		TileEntity t = world.getTileEntity(x, y, z);
 		
-		if(!(t instanceof TileEntityMultiFurnace))
+		if(!(t instanceof TileEntityKiln))
 			return;
 		
 		int meta = world.getBlockMetadata(x, y, z);
-		TileEntityMultiFurnace te = (TileEntityMultiFurnace)t;
+		TileEntityKiln te = (TileEntityKiln)t;
 		ForgeDirection side =  getFacingfromEntity(entity);
 		
 		
@@ -195,7 +196,7 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 		boolean isActive = par1World.getBlockMetadata(x, y, z)==1;
         if (isActive)
         {
-    		TileEntityMultiFurnace te = (TileEntityMultiFurnace)par1World.getTileEntity(x, y, z);
+    		TileEntityKiln te = (TileEntityKiln)par1World.getTileEntity(x, y, z);
             int l = te.facing.ordinal()-2;
             float f = (float)x + 0.5F;
             float f1 = (float)y + 0.0F + par5Random.nextFloat() * 6.0F / 16.0F;
@@ -253,27 +254,19 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 	@Override
 	public void breakBlock(World world, int x, int y, int z, Block par5, int par6)
 	{
-		
-		if(par6==2||par6==3)
+		TileEntity t = world.getTileEntity(x, y, z);
+		if(t instanceof TileEntityMultiBlockPart)
 		{
-			TileEntity t = world.getTileEntity(x, y, z);
-			if(t instanceof TileEntityMultiBlockPart)
-			{
-				TileEntityMultiBlockPart p = (TileEntityMultiBlockPart)t;
-				if(p.getCore()!=null)
-					p.getCore().invalidateMultiblock();
-			}
+			TileEntityMultiBlockPart p = (TileEntityMultiBlockPart)t;
+			if(p.getCore()!=null)
+				p.getCore().invalidateMultiblock();
 		}
 		
-		
-		if(!(par6==0||par6==1))
+		t = world.getTileEntity(x, y, z);
+		if(!(t instanceof TileEntityMixer))
 			return;
 		
-		TileEntity t = world.getTileEntity(x, y, z);
-		if(!(t instanceof TileEntityMultiFurnace))
-			return;
-		
-		TileEntityMultiFurnace tileEntity = (TileEntityMultiFurnace)t;
+		TileEntityMixer tileEntity = (TileEntityMixer)t;
 		
 		if(tileEntity != null)
 			tileEntity.invalidateMultiblock();
@@ -319,7 +312,7 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 	{
 		Random prng = new Random();
 		
-		TileEntityMultiFurnace tileEntity = (TileEntityMultiFurnace)world.getTileEntity(x, y, z);
+		TileEntityKiln tileEntity = (TileEntityKiln)world.getTileEntity(x, y, z);
 		if(tileEntity == null)
 			return;
 		
@@ -342,7 +335,7 @@ public class BlockMultiFurnace extends Block implements ITileEntityProvider
 
 	@Override
 	public TileEntity createNewTileEntity(World var1, int var2) {
-		return  new TileEntityMultiFurnace();
+		return  new TileEntityKiln();
 	}
 
 }

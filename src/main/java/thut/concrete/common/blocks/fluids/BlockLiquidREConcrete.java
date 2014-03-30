@@ -52,7 +52,7 @@ public class BlockLiquidREConcrete extends BlockFluid implements IRebar//, IAnti
     public boolean solidifiable;
     
     public BlockLiquidREConcrete() {
-		super(new Fluid("REliquidRock").setDensity(Integer.MAX_VALUE)
+		super(new Fluid("Reconcrete").setDensity(Integer.MAX_VALUE)
 				.setViscosity(2000), Material.iron);
 		setBlockName("REconcreteLiquid");
 		this.setResistance((float) 10.0);

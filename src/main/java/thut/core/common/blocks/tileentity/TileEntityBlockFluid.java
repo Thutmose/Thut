@@ -1,4 +1,4 @@
-package thut.concrete.common.blocks.tileentity.worldBlocks;
+package thut.core.common.blocks.tileentity;
 
 import java.util.Arrays;
 import java.util.List;

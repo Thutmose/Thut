@@ -3,6 +3,8 @@ package thut.concrete.common.blocks.tileentity.crafting;
 import static thut.api.ThutBlocks.*;
 import thut.api.ThutItems;
 import thut.api.maths.Vector3;
+import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
+import thut.core.common.blocks.tileentity.TileEntityMultiCore;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -22,7 +24,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class TileEntityMultiFurnace extends TileEntity implements ISidedInventory
+public class TileEntityKiln extends TileEntityMultiCore
 {
 	private static final int[] sidedSlotSides = new int[] {8};
 	private static final int[] sidedSlotBottom = new int[] {8,9,10,11,12,13,14,15,16};
@@ -44,7 +46,7 @@ public class TileEntityMultiFurnace extends TileEntity implements ISidedInventor
 	public int furnaceCookTime = 0;
 	
 	boolean first = false;
-	private boolean isValidMultiblock = false;
+//	private boolean isValidMultiblock = false;
 	 
 	public boolean getIsValid()
 	{
@@ -208,7 +210,7 @@ public class TileEntityMultiFurnace extends TileEntity implements ISidedInventor
 		isValidMultiblock = true;
 	}
 	
-	private void revertDummies()
+	protected void revertDummies()
 	{
 		int n=0;
 		boolean axis = (facing.equals(ForgeDirection.EAST)||facing.equals(ForgeDirection.WEST));

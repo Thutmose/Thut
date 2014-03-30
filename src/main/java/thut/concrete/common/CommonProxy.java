@@ -1,6 +1,12 @@
 package thut.concrete.common;
 
+import thut.concrete.client.gui.GuiLimekiln;
+import thut.concrete.common.blocks.tileentity.crafting.ContainerLimekiln;
+import thut.concrete.common.blocks.tileentity.crafting.ContainerMixer;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityKiln;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.network.IGuiHandler;
@@ -62,6 +68,19 @@ public class CommonProxy  implements IGuiHandler
 	@Override
 	public Object getServerGuiElement(int guiID, EntityPlayer player, World world, int x, int y, int z)
 	{
+		TileEntity te = world.getTileEntity(x, y, z);
+		if(te==null)
+			return null;
+		if(te instanceof TileEntityKiln)
+		{
+			TileEntityKiln tileEntity = (TileEntityKiln)te;
+			return new ContainerLimekiln(player.inventory, tileEntity);
+		}
+		if(te instanceof TileEntityMixer)
+		{
+			TileEntityMixer tileEntity = (TileEntityMixer)te;
+			return new ContainerMixer(player.inventory, tileEntity);
+		}
 		return null;
 	}
 	

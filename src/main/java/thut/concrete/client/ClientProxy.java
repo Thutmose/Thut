@@ -2,9 +2,11 @@ package thut.concrete.client;
 
 import thut.api.render.RenderRebar;
 import thut.concrete.client.gui.GuiLimekiln;
+import thut.concrete.client.gui.GuiMixer;
 import thut.concrete.client.render.RenderFluid;
 import thut.concrete.common.CommonProxy;
-import thut.concrete.common.blocks.tileentity.crafting.TileEntityMultiFurnace;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityKiln;
+import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -78,10 +80,15 @@ public class ClientProxy extends CommonProxy{
 		TileEntity te = world.getTileEntity(x, y, z);
 		if(te==null)
 			return null;
-		if(te instanceof TileEntityMultiFurnace)
+		if(te instanceof TileEntityKiln)
 		{
-			TileEntityMultiFurnace tileEntity = (TileEntityMultiFurnace)te;
+			TileEntityKiln tileEntity = (TileEntityKiln)te;
 			return new GuiLimekiln(player.inventory, tileEntity);
+		}
+		if(te instanceof TileEntityMixer)
+		{
+			TileEntityMixer tileEntity = (TileEntityMixer)te;
+			return new GuiMixer(player.inventory, tileEntity);
 		}
 		
 		return null;

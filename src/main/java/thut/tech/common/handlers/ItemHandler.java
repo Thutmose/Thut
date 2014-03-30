@@ -13,8 +13,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 import thut.api.ThutItems;
 import thut.tech.common.items.ItemLinker;
-import thut.tech.common.items.ItemSpout;
-import thut.tech.common.items.ItemTank;
 
 public class ItemHandler 
 {
@@ -23,8 +21,6 @@ public class ItemHandler
 	public static void registerItems()
 	{
 		items.add(new ItemLinker());
-		items.add(new ItemSpout());
-		items.add(new ItemTank());
 		
 		for(Item item: items){
 			GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));

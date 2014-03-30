@@ -1,4 +1,4 @@
-package thut.tech.common.items;
+package thut.concrete.common.items.tools;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -32,24 +32,24 @@ public class ItemTank extends Item implements IFluidContainerItem
 	
     public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-    	int index = player.inventory.currentItem;
-    	if(index > 0)
-    	{
-    		int n = index - 1;
-    		ItemStack stack = player.inventory.getStackInSlot(n);
-    		if(stack!=null)
-    		if(Block.getBlockFromItem(stack.getItem()) instanceof BlockFluid)
-    		{
-    			BlockFluid fluid = (BlockFluid) Block.getBlockFromItem(stack.getItem());
-    			FluidStack fstack = new FluidStack(fluid.getFluid(), stack.stackSize * 1000);
-    			int added = fill(itemstack, fstack, true)/1000;
-    			
-    			stack.splitStack(added);
-    		//	System.out.println();
-    		}
-    	}
-    	
-    	
+//    	int index = player.inventory.currentItem;
+//    	if(index > 0)
+//    	{
+//    		int n = index - 1;
+//    		ItemStack stack = player.inventory.getStackInSlot(n);
+//    		if(stack!=null)
+//    		if(Block.getBlockFromItem(stack.getItem()) instanceof BlockFluid)
+//    		{
+//    			BlockFluid fluid = (BlockFluid) Block.getBlockFromItem(stack.getItem());
+//    			FluidStack fstack = new FluidStack(fluid.getFluid(), stack.stackSize * 1000);
+//    			int added = fill(itemstack, fstack, true)/1000;
+//    			
+//    			stack.splitStack(added);
+//    		//	System.out.println();
+//    		}
+//    	}
+//    	
+//    	
     	return itemstack;
     }
 	

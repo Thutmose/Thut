@@ -1,4 +1,4 @@
-package thut.tech.common.items;
+package thut.concrete.common.items.tools;
 
 import java.util.ArrayList;
 
@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidContainerItem;
 
 public class ItemSpout extends Item {
 
@@ -44,11 +45,11 @@ public class ItemSpout extends Item {
     		if(meta!=15)
 	    		for(ItemStack stack : tanks)
 	    		{
-	    			ItemTank tank = (ItemTank) stack.getItem();
+	    			IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
 	    			Fluid f1 = tank.getFluid(stack).getFluid();
 	    			if(f.getUnlocalizedName().equals(f1.getUnlocalizedName()))
 	    			{
-	    				int inTank = tank.getAmount(stack);
+	    				int inTank = tank.getFluid(stack).amount;
 	    				float factor = 62.5f;
 	    				int metaDiff = full?15-meta:1;
 	    				toDrain = (int) (factor * metaDiff);
@@ -62,9 +63,9 @@ public class ItemSpout extends Item {
     	{
     		for(ItemStack stack : tanks)
     		{
-    			ItemTank tank = (ItemTank) stack.getItem();
+    			IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
     			Fluid f1 = tank.getFluid(stack).getFluid();
-				int inTank = tank.getAmount(stack);
+				int inTank = tank.getFluid(stack).amount;
 				float factor = 62.5f;
 				int metaDiff = full?16:1;
 				toDrain = (int) (factor * metaDiff);
@@ -83,9 +84,9 @@ public class ItemSpout extends Item {
     	
     	for(ItemStack stack : player.inventory.mainInventory)
     	{
-    		if(stack!=null && stack.getItem() instanceof ItemTank)
+    		if(stack!=null && stack.getItem() instanceof IFluidContainerItem)
     		{
-    			ItemTank tank = (ItemTank) stack.getItem();
+    			IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
     			if(tank.getFluid(stack)!=null)
     				ret.add(stack);
     		}
