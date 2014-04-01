@@ -3,6 +3,8 @@ package thut.concrete.common.blocks.tileentity.crafting;
 import static net.minecraft.init.Blocks.stonebrick;
 import thut.api.ThutBlocks;
 import thut.api.ThutItems;
+import thut.concrete.common.handlers.RecipeHandler;
+import thut.concrete.common.handlers.RecipeHandler.MixerRecipe;
 import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 import thut.core.common.blocks.tileentity.TileEntityMultiCore;
 import thut.core.common.blocks.tileentity.TileEntityMultiCoreFluids;
@@ -36,6 +38,7 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 	private static final int[] sandSlots = new int[] {0,1,2,3,4,5,6};
 	private static final int[] cementSlots = new int[] {7, 16};
 	private static final int[] allSides = new int[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+	private static final int[] itemSlots = new int[] {0,1,2,3,4,5,6,7,9,10,11,12,13,14,15,16};
 	private ItemStack[] furnaceItems = new ItemStack[17];
 	
 	@Override
@@ -140,19 +143,28 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 
 	@Override
 	public boolean isItemValidForSlot(int var1, ItemStack var2) {
-		if(var1==16||var1==7)
+		if(var1!=8)
 		{
-			return var2.isItemEqual(ThutItems.cement);
+			for(ItemStack s: RecipeHandler.validMixerInputs)
+			{
+				if(s.isItemEqual(var2))
+					return true;
+			}
 		}
+		
+//		if(var1==16||var1==7)
+//		{
+//			return var2.isItemEqual(ThutItems.cement);
+//		}
 		if(var1 == 8)
 		{
 			return var2.getItem() instanceof IFluidContainerItem || var2.getItem() == Items.water_bucket; //TODO check if it is a water container instead
 		}
-		if(var1<7)
-		{
-			return Block.getBlockFromItem(var2.getItem()) == Blocks.sand;
-		}
-		return Block.getBlockFromItem(var2.getItem()) == Blocks.gravel;
+//		if(var1<7)
+//		{
+//			return Block.getBlockFromItem(var2.getItem()) == Blocks.sand;
+//		}
+		return false;//Block.getBlockFromItem(var2.getItem()) == Blocks.gravel;
 	}
 
 	@Override
@@ -228,7 +240,6 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 		return new int[] {tankWater.getFluidAmount(), tankConcrete.getFluidAmount()};
 	}
 	
-	
 	protected FluidTank tankWater = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME*64);
 	protected FluidTank tankConcrete = new FluidTank(FluidContainerRegistry.BUCKET_VOLUME*64);
     /* IFluidHandler */
@@ -258,13 +269,20 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
     @Override
     public boolean canFill(ForgeDirection from, Fluid fluid)
     {
-        return from==ForgeDirection.UP && fluid.getName().equalsIgnoreCase("water");
+    	boolean valid = false;
+    	for(FluidStack f: RecipeHandler.validInputFluids)
+    	{
+    		valid = f.getFluid().getName().equalsIgnoreCase(fluid.getName());
+    		if(valid) break;
+    	}
+    	
+        return from==ForgeDirection.UP && valid;
     }
 
     @Override
     public boolean canDrain(ForgeDirection from, Fluid fluid)
     {
-        return from!=ForgeDirection.UP&&fluid.getName().equalsIgnoreCase("concrete") || from==ForgeDirection.UP && fluid.getName().equalsIgnoreCase("water");
+        return true;
     }
 
     @Override
@@ -325,33 +343,59 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 		tagCompound.setTag("water", water);
 	}
 	
+	long time = 0;
 	@Override
 	public void updateEntity()
 	{
-		if(!isValidMultiblock)
-			return;
-		checkFluidSlot();
-		int sand = count(sandSlots, new ItemStack(Blocks.sand));
-		int gravel = count(gravelSlots, new ItemStack(Blocks.gravel));
-		int cement = count(cementSlots, ThutItems.cement);
-		if(sand>=3 && gravel >=4 && cement > 0
-				&&tankWater.getFluidAmount() >= 1000
-				&&tankConcrete.getFluidAmount() <= 56000)
+		if(!isValidMultiblock || time%20!=0)
 		{
-			makeConcrete();
+			time++;
+			return;
 		}
-		
+		checkFluidSlot();
+		if(tankConcrete.getFluidAmount()<64000)
+		for(MixerRecipe rec : RecipeHandler.mixerRecipes)
+		{
+			if(checkInventory(rec))
+				makeRecipe(rec);
+		}
+		time++;
 	}
 	
-	void makeConcrete()
+	void makeRecipe(MixerRecipe rec)
 	{
-		if(   consume(sandSlots, new ItemStack(Blocks.sand), 3) 
-			&&consume(gravelSlots, new ItemStack(Blocks.gravel), 4) 
-			&&consume(cementSlots, ThutItems.cement, 1))
+		for(ItemStack s: rec.solids)
 		{
-			tankWater.drain(1000, true);
-			tankConcrete.fill(new FluidStack(FluidRegistry.getFluid("concrete"), 8000), true);
+			consume(itemSlots, s);
 		}
+		tankWater.drain(rec.liquid.amount, true);
+		tankConcrete.fill(rec.output.copy(), true);
+	}
+	
+	boolean checkInventory(MixerRecipe rec)
+	{
+		boolean hasItems = true;
+		for(ItemStack s: rec.solids)
+		{
+			if(!hasItems) break;
+			int num = count(itemSlots, s);
+			hasItems = hasItems && num >= s.stackSize;
+		}
+		if(!hasItems) return false;
+		if(rec.liquid==null) return true;
+		FluidStack f = tankWater.getFluid();
+		
+		if(f==null) return false;
+		if(!f.isFluidEqual(rec.liquid)) return false;
+		
+		f = tankConcrete.getFluid();
+		
+		if(f==null) return true;
+		//System.out.println(rec.output.amount);
+		
+		if(f.amount <= 64000 - rec.output.amount )
+			return tankWater.getFluid().amount >= rec.liquid.amount;
+		return false;
 	}
 	
 	void checkFluidSlot()
@@ -367,14 +411,35 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 					this.setInventorySlotContents(8, new ItemStack(Items.bucket));
 				}
 			}
-			if(fluid.getItem() instanceof IFluidContainerItem && tankConcrete.getFluidAmount()>0)
+			if(fluid.getItem() instanceof IFluidContainerItem)
 			{
 				IFluidContainerItem container = (IFluidContainerItem) fluid.getItem();
-				int existing = container.getFluid(fluid)!=null?container.getFluid(fluid).amount:0;
 				
-				int freeSpace = container.getCapacity(fluid) - existing;
-				FluidStack out = tankConcrete.drain(freeSpace, true);
-				container.fill(fluid, out, true);
+				FluidStack temp = container.getFluid(fluid);
+				
+				if((temp == null 
+						|| temp.isFluidEqual(tankConcrete.getFluid()))
+						&& tankConcrete.getFluidAmount()>0)
+				{
+					int existing = temp!=null?temp.amount:0;
+					int freeSpace = container.getCapacity(fluid) - existing;
+					FluidStack out = tankConcrete.drain(freeSpace, true);
+					container.fill(fluid, out, true);
+				}
+				else if(temp != null)
+				{
+					for(FluidStack f: RecipeHandler.validInputFluids)
+					{
+						if(f.isFluidEqual(temp))
+						{
+							if(tankWater.getFluidAmount()<= (64000 - temp.amount))
+							{
+								tankWater.fill(temp.copy(), true);
+								container.drain(fluid, temp.amount, true);
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -395,6 +460,11 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 		}
 		
 		return ret;
+	}
+	
+	boolean consume(int[] slots, ItemStack item)
+	{
+		return consume(slots, item, item.stackSize);
 	}
 	
 	boolean consume(int[] slots, ItemStack item, int amount)

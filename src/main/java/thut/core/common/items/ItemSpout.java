@@ -1,4 +1,4 @@
-package thut.concrete.common.items.tools;
+package thut.core.common.items;
 
 import java.util.ArrayList;
 
@@ -7,12 +7,14 @@ import cpw.mods.fml.relauncher.SideOnly;
 import thut.api.maths.Vector3;
 import thut.core.common.blocks.BlockFluid;
 import thut.tech.common.TechCore;
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
@@ -65,13 +67,29 @@ public class ItemSpout extends Item {
     		{
     			IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
     			Fluid f1 = tank.getFluid(stack).getFluid();
-				int inTank = tank.getFluid(stack).amount;
-				float factor = 62.5f;
-				int metaDiff = full?16:1;
-				toDrain = (int) (factor * metaDiff);
-				next.setBlock(worldObj, f1.getBlock(), metaDiff-1);
-	        	System.out.println(tank.drain(stack, toDrain, true).amount);
-				break;
+    			if(!f1.canBePlacedInWorld())
+    			{
+    				continue;
+    			}
+    			Block b = f1.getBlock();
+    			if(b instanceof BlockFluidBase)
+    			{
+    				BlockFluidBase block = (BlockFluidBase) b;
+					int inTank = tank.getFluid(stack).amount;
+					int maxMeta = block.getMaxRenderHeightMeta();
+					
+					int metaDiff = full?16:1;
+					
+					toDrain = maxMeta ==0? 1000 : (int) (metaDiff * 1000f / (maxMeta+1));
+					next.setBlock(worldObj, b, metaDiff-1, 3);
+		        	System.out.println(tank.drain(stack, toDrain, true).amount);
+		        	break;
+    			}
+    			else
+    			{
+    				tank.drain(stack, 1000, true);
+    				next.setBlock(worldObj, b, 0, 3);
+    			}
     		}
     	}
     	

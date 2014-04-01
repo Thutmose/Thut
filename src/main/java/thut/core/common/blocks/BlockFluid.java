@@ -1227,14 +1227,17 @@ public abstract class BlockFluid extends BlockFluidBase {
 
 	@Override
 	public FluidStack drain(World world, int x, int y, int z, boolean doDrain) {
-		// TODO Auto-generated method stub
-		return null;
+		if(solid)
+			return null;
+		FluidStack ret = new FluidStack(getFluid(), (int) (world.getBlockMetadata(x, y, z)+1 * 62.5));
+		if(doDrain)
+			world.setBlock(x,y,z,this.getReturnTo(this));
+		return ret;
 	}
 
 	@Override
 	public boolean canDrain(World world, int x, int y, int z) {
-		// TODO Auto-generated method stub
-		return false;
+		return !solid;
 	}
 
 	@Override

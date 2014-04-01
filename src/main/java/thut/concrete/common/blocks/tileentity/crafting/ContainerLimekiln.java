@@ -114,6 +114,8 @@ public class ContainerLimekiln extends Container
 		ItemStack stack = null;
 		Slot slotObject = (Slot)inventorySlots.get(slot);
 		
+		
+		
 		if(slotObject != null && slotObject.getHasStack())
 		{
 			ItemStack stackInSlot = slotObject.getStack();
@@ -141,4 +143,10 @@ public class ContainerLimekiln extends Container
 		
 		return stack;
 	}
+	
+    public boolean func_94530_a(ItemStack par1ItemStack, Slot par2Slot)
+    {
+    	if(par1ItemStack==null) return true;
+        return tileEntity.isItemValidForSlot(par2Slot.slotNumber, par1ItemStack);
+    }
 }

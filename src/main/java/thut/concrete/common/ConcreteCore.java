@@ -3,12 +3,15 @@ package thut.concrete.common;
 import thut.api.network.PacketPipeline;
 import thut.concrete.common.handlers.BlockHandler;
 import thut.concrete.common.handlers.ItemHandler;
+import thut.concrete.common.handlers.RecipeHandler;
 import thut.core.common.CreativeTabThut;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLInterModComms;
+import cpw.mods.fml.common.event.FMLInterModComms.IMCEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -52,8 +55,14 @@ public class ConcreteCore
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent e)
 	{
-		
+		RecipeHandler.registerRecipes();
 		PacketPipeline.packetPipeline.postInitialise();
+	}
+	
+	@EventHandler
+	public void handleIMCRecipeAddition(IMCEvent evt)
+	{
+		
 	}
 	
 	public static class GUIIDs

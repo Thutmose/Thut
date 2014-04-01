@@ -14,8 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 import thut.api.ThutItems;
 import thut.concrete.common.items.tools.ItemPaintBrush;
-import thut.concrete.common.items.tools.ItemSpout;
-import thut.concrete.common.items.tools.ItemTank;
 
 public class ItemHandler 
 {
@@ -29,8 +27,6 @@ public class ItemHandler
 		{
 			Item painter = new ItemPaintBrush(i);
 			items.add(painter);
-			items.add(new ItemSpout());
-			items.add(new ItemTank());
 			ItemStack stack = new ItemStack(painter, 1,0);
 			ThutItems.brushes[i] = stack;
 		}
@@ -64,83 +60,6 @@ public class ItemHandler
 		eightLiquidConcrete = new ItemStack(liquidConcrete, 8, 0);
 		
 		 registerOres();
-	}
-	
-	public static void registerRecipes()
-	{
-		ThutItems.cookable.add(chalkOre);
-		ThutItems.cookable.add(limestoneOre);
-		ThutItems.cookable.add(carbonate);
-		ThutItems.cookable.add(boneMeal);
-		
-		for(Item item : ThutItems.getItems())
-		{
-			if(item!=null&&item.getUnlocalizedName().toLowerCase().contains("bone"))
-			{
-				cookable.add(new ItemStack(item,1,0));
-			}
-		}
-		
-		for(Item item : getItems())
-		{
-			if(item!=null&&item.getUnlocalizedName().toLowerCase().contains("limestone"))
-			{
-				cookable.add(new ItemStack(item,1,0));
-			}
-		}
-		
-		for(int i = 0; i<16; i++)
-		{
-			GameRegistry.addRecipe(brushes[16].copy()," x "," y "," z ", 'x',new ItemStack(wool,1,i), 'y', iron_ingot, 'z', stick);
-		}
-		
-		GameRegistry.addRecipe(new ItemStack(rebar,4),"x  "," x ","  x", 'x', iron_ingot);
-		
-		for (ItemStack steel : OreDictionary.getOres("ingotSteel")) 
-		{
-			GameRegistry.addRecipe(new ItemStack(rebar,16),"x  "," x ","  x", 'x', steel);
-		}
-		
-		for (ItemStack steel : OreDictionary.getOres("ingotRefinedIron")) 
-		{
-			GameRegistry.addRecipe(new ItemStack(rebar,5),"x  "," x ","  x", 'x', steel);
-		}
-		
-		GameRegistry.addRecipe(new ItemStack(limekiln,1,0),"xxx","x x","yyy", 'x', new ItemStack(brick_block,1), 'y', new ItemStack(stone,1));	
-		GameRegistry.addRecipe(new ItemStack(mixer,1,0),"xxx","x x","yyy", 'x', new ItemStack(stonebrick,1), 'y', new ItemStack(stone,1));
-		
-	//	GameRegistry.addShapelessRecipe(eightLiquidConcrete,cement, ThutItems.gravel, ThutItems.gravel, ThutItems.gravel, ThutItems.gravel, ThutItems.sand, ThutItems.sand, ThutItems.sand, new ItemStack(water_bucket));
-
-		GameRegistry.addShapelessRecipe(cement, lime, trass);
-		GameRegistry.addShapelessRecipe(cement, lime, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust, ThutItems.dust);
-		
-		GameRegistry.addShapelessRecipe(trass, trassOre);
-		GameRegistry.addShapelessRecipe(ThutItems.dust, solidLava0);
-		GameRegistry.addShapelessRecipe(ThutItems.dust, solidLava1);
-		GameRegistry.addShapelessRecipe(ThutItems.dust, solidLava2);
-		
-		for (ItemStack item : OreDictionary.getOres("rebar")) 
-		{
-			GameRegistry.addShapelessRecipe(new ItemStack(rebar,1,0), item);
-		}
-		
-		for(Item i : getItems())
-		{
-			if(i!=null&&i!=twoRebar.getItem()&&i.getUnlocalizedName().toLowerCase().contains("rebar"))
-			{
-				GameRegistry.addShapelessRecipe(new ItemStack(rebar,1,0), new ItemStack(i,1,0));
-			}
-		}
-		for(int i = 0; i<16; i++)
-		{
-			for (ItemStack dye : OreDictionary.getOres(dyeNames[i])) 
-			{
-				for(ItemStack brush : brushes)
-				{
-					GameRegistry.addShapelessRecipe(brushes[i].copy(), brush.copy(), dye.copy() );
-				}
-			}
-		}
 	}
 	
 	public static void registerOres()

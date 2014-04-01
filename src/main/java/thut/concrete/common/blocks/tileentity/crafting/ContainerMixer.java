@@ -73,7 +73,7 @@ public class ContainerMixer  extends Container
 	{
 		ItemStack stack = null;
 		Slot slotObject = (Slot)inventorySlots.get(slot);
-		
+		//if(player.worldObj.isRemote) return stack;
 		if(slotObject != null && slotObject.getHasStack())
 		{
 			ItemStack stackInSlot = slotObject.getStack();
@@ -82,11 +82,27 @@ public class ContainerMixer  extends Container
 			// Merges the item into the player inventory
 			if(slot < 9)
 			{
-				if(!this.mergeItemStack(stackInSlot, 3, 39, true))
-					return null;
+//				if(!this.mergeItemStack(stackInSlot, 0, 53, true))
+//					return null;
 			}
-			else if(!this.mergeItemStack(stackInSlot, 0, 9, false))
-				return null;
+			else
+			{
+				for(int i = 0; i<17; i++)
+				{
+					if(tileEntity.isItemValidForSlot(i, stack))
+					{
+						int stackSize = stack.stackSize;
+						if(!this.mergeItemStack(stackInSlot, 0, i+1, true))
+						{			
+							if(stackSize==stack.stackSize)
+								continue;
+							if(stackInSlot.stackSize == 0)
+								slotObject.putStack(null);
+							return null;
+						}
+					}
+				}
+			}
 			
 			if(stackInSlot.stackSize == 0)
 				slotObject.putStack(null);
@@ -101,4 +117,22 @@ public class ContainerMixer  extends Container
 		
 		return stack;
 	}
+    
+    public ItemStack slotClick(int par1, int par2, int par3, EntityPlayer par4EntityPlayer)
+    {
+    	ItemStack stack = par4EntityPlayer.inventory.getItemStack();
+    	if(par1<17&&stack!=null&&!tileEntity.isItemValidForSlot(par1, stack))
+    	{
+        	return null;
+    	}
+    	return super.slotClick(par1, par2, par3, par4EntityPlayer);
+    }
+	
+    public boolean func_94530_a(ItemStack par1ItemStack, Slot par2Slot)
+    {
+    	System.out.println("test");
+    	if(par1ItemStack==null) return true;
+    	System.out.println(par2Slot.slotNumber+" "+par1ItemStack);
+        return tileEntity.isItemValidForSlot(par2Slot.slotNumber, par1ItemStack);
+    }
 }

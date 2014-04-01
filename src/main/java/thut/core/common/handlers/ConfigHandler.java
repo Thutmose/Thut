@@ -1,9 +1,15 @@
 package thut.core.common.handlers;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
+import cpw.mods.fml.common.registry.GameRegistry;
 import thut.api.explosion.ExplosionCustom;
 import thut.api.maths.Vector3;
+import thut.core.common.items.ItemSpout;
+import thut.core.common.items.ItemTank;
+import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
 
 public class ConfigHandler {
@@ -26,5 +32,15 @@ public class ConfigHandler {
 		}finally{
 			conf.save();
 		}
+		
+
+		items.add(new ItemSpout());
+		items.add(new ItemTank());
+		
+		for(Item item: items){
+			GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+		}
 	}
+	
+	private static List<Item> items = new ArrayList<Item>();
 }

@@ -1,4 +1,4 @@
-package thut.concrete.common.items.tools;
+package thut.core.common.items;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -41,8 +41,8 @@ public class ItemTank extends Item implements IFluidContainerItem
 //    		if(Block.getBlockFromItem(stack.getItem()) instanceof BlockFluid)
 //    		{
 //    			BlockFluid fluid = (BlockFluid) Block.getBlockFromItem(stack.getItem());
-//    			FluidStack fstack = new FluidStack(fluid.getFluid(), stack.stackSize * 1000);
-//    			int added = fill(itemstack, fstack, true)/1000;
+    			FluidStack fstack = new FluidStack(FluidRegistry.WATER, 10000);
+    			int added = fill(itemstack, fstack, true)/1000;
 //    			
 //    			stack.splitStack(added);
 //    		//	System.out.println();
@@ -64,10 +64,12 @@ public class ItemTank extends Item implements IFluidContainerItem
 		
 		if(!container.hasTagCompound()) return null;
 		String name = container.getTagCompound().getString("fluidName");
-		int amount = container.getTagCompound().getInteger("fluidAmount");
+		int amount = container.getTagCompound( ).getInteger("fluidAmount");
+		NBTTagCompound tag = container.getTagCompound().getCompoundTag("fluidTag");
+		if(tag.hasNoTags()) tag = null;
 		if(FluidRegistry.getFluid(name)==null) return null;
 		
-		FluidStack ret = new FluidStack(FluidRegistry.getFluidID(name), amount, container.getTagCompound());
+		FluidStack ret = new FluidStack(FluidRegistry.getFluidID(name), amount, tag);//, container.getTagCompound());
 		return ret;
 	}
 
@@ -101,13 +103,15 @@ public class ItemTank extends Item implements IFluidContainerItem
 			}
 			String name = container.getTagCompound().getString("fluidName");
 			int amt = container.getTagCompound().getInteger("fluidAmount");
-			System.out.println(name);
+			
 			if(name==null||name.trim().isEmpty())
 			{
 				container.getTagCompound().setString("fluidName", name = FluidRegistry.getFluidName(resource));
 				container.getTagCompound().setInteger("fluidAmount", amt = 0);
+				if(resource.tag!=null)
+					container.getTagCompound().setTag("fluidTag", resource.tag);
 			}
-			else if(FluidRegistry.getFluidID(name)!=resource.fluidID)
+			else if(!getFluid(container).isFluidEqual(resource))
 			{
 				return 0;
 			}
@@ -127,7 +131,8 @@ public class ItemTank extends Item implements IFluidContainerItem
 		if(getFluid(container)==null) return null;
 		
 		String name = container.getTagCompound().getString("fluidName");
-		
+		NBTTagCompound tag = container.getTagCompound().getCompoundTag("fluidTag");
+		if(tag.hasNoTags()) tag = null;
 		if(doDrain)
 		{
 			container.getTagCompound().setInteger("fluidAmount", exist - amount);
@@ -139,6 +144,6 @@ public class ItemTank extends Item implements IFluidContainerItem
 			}
 		}
 		
-		return new FluidStack(FluidRegistry.getFluidID(name), amount, container.getTagCompound());
+		return new FluidStack(FluidRegistry.getFluidID(name), amount, tag);//, container.getTagCompound());
 	}
 }
