@@ -25,8 +25,6 @@ public class ConcreteCore
 	@Instance("ThutConcrete")
 	public static ConcreteCore instance;
 	
-	private static final String[]  LANGUAGES_SUPPORTED	= new String[] { "en_UK", "en_US" , "de_DE"};
-	
 	public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
 	
     private static final String[] colourNames = { "White",

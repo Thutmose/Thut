@@ -50,10 +50,13 @@ public class ItemHandler {
 	public void initItems(){
 		int id = config.IDItem;
 		Item grinderItem = new ItemGrinder();
-		Item dusts = new ItemDusts();
-		dust = new ItemStack(dusts);
-		trass = new ItemStack(dusts, 1, 3);
-		itemList.add(dusts);
+		if(dust==null)
+		{
+			Item dusts = new ItemDusts();
+			dust = new ItemStack(dusts);
+			trass = new ItemStack(dusts, 1, 3);
+			itemList.add(dusts);
+		}
 		itemList.add(grinderItem);
 		addDusts();
 		registerItems();
@@ -117,6 +120,7 @@ public class ItemHandler {
 	public void registerItems(){
 		for(Item item: itemList){
 			GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+			System.out.println(item.getUnlocalizedName().substring(5));
 		}
 	}
 }

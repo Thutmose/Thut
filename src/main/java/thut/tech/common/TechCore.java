@@ -46,6 +46,10 @@ public class TechCore
     public void load(FMLInitializationEvent evt)
     {
 		proxy.initClient();
+
+//		BlockHandler.registerBlocks();
+//		ItemHandler.registerItems();
+//		
 		PacketPipeline.packetPipeline.initalise();
 		PacketPipeline.packetPipeline.registerPacket(PacketThutTech.class);
     }

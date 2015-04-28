@@ -33,7 +33,7 @@ public class ItemDusts extends Item
 	public ItemDusts() {
 		super();
 		this.setHasSubtypes(true);
-		this.setUnlocalizedName("dust");
+		this.setUnlocalizedName("dusts");
         this.setMaxDamage(0);
         this.setCreativeTab(ThutCore.tabThut);
 	}

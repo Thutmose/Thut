@@ -55,7 +55,7 @@ public class ItemSpout extends Item {
 	    				float factor = 62.5f;
 	    				int metaDiff = full?15-meta:1;
 	    				toDrain = (int) (factor * metaDiff);
-	    				FluidStack s = tank.drain(stack, toDrain, true);
+	    				FluidStack s = tank.drain(stack, toDrain, !player.capabilities.isCreativeMode);
 	    				hit.setBlock(worldObj, hit.getBlock(worldObj), (int) (s.amount/62.5 + meta));
 	    				break;
 	    			}
@@ -82,12 +82,12 @@ public class ItemSpout extends Item {
 					
 					toDrain = maxMeta ==0? 1000 : (int) (metaDiff * 1000f / (maxMeta+1));
 					next.setBlock(worldObj, b, metaDiff-1, 3);
-		        	System.out.println(tank.drain(stack, toDrain, true).amount);
+		        	tank.drain(stack, toDrain, !player.capabilities.isCreativeMode);
 		        	break;
     			}
     			else
     			{
-    				tank.drain(stack, 1000, true);
+    				tank.drain(stack, 1000, !player.capabilities.isCreativeMode);
     				next.setBlock(worldObj, b, 0, 3);
     			}
     		}

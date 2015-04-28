@@ -61,8 +61,6 @@ public class WorldCore {
 	public static WorldCore instance;
 	
 	public static String modid = "thutworld";
-	
-	private static final String[]  LANGUAGES_SUPPORTED	= new String[] { "en_UK", "en_US" , "de_DE"};
     
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
     
@@ -102,9 +100,12 @@ public class WorldCore {
 	  @EventHandler
 	    public void load(FMLInitializationEvent evt)
 	    {
+
+
+//			blockList = new BlockHandler(config);
+//			itemList = new ItemHandler(config);
 		liquidHndlr = new LiquidHandler();
 		MinecraftForge.EVENT_BUS.register(liquidHndlr);
-		
 		GameRegistry.registerWorldGenerator(new TrassWorldGen(), 10);
 		GameRegistry.registerWorldGenerator(new VolcanoWorldGen(), 10);
 		
@@ -125,7 +126,6 @@ public class WorldCore {
 		BiomeDictionary.registerBiomeType(chalk, Type.PLAINS);
 		BiomeManager.addVillageBiome(chalk, true);
 		initOreMap();
-		registerLanguages();
 		
 		PacketPipeline.packetPipeline.initalise();
 	//*/	
@@ -221,41 +221,6 @@ public class WorldCore {
 		colourMap.put((short)(13 + 14 * 16), (byte)12);
 		
 		
-	}
-	
-	public void registerLanguages()
-	{
-		/**
-		 * Handle language support
-		 */
-		int languages = 0;
-
-		for (String language : LANGUAGES_SUPPORTED)
-		{
-			LanguageRegistry.instance().loadLocalization("/assets/worldgen/language/" + language + ".properties", language, false);
-
-			if (LanguageRegistry.instance().getStringLocalization("children", language) != "")
-			{
-				try
-				{
-					String[] children = LanguageRegistry.instance().getStringLocalization("children", language).split(",");
-
-					for (String child : children)
-					{
-						if (child != "" && child != null)
-						{
-							LanguageRegistry.instance().loadLocalization("/assets/worldgen/language/"+ language + ".properties", child, false);
-							languages++;
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}
-		}
-
 	}
 	
 	

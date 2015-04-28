@@ -42,12 +42,14 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 	Integer[][] data;
 	
 	public BlockConcrete() {
-		super(new Fluid("solidconcrete"),Material.rock);
+		super(new Fluid("solidconcrete").setDensity(Integer.MAX_VALUE).setViscosity(
+				Integer.MAX_VALUE),Material.rock);
 		setBlockName("concrete");
 		this.rate = 10;
 		concrete = this;
 		setCreativeTab(ConcreteCore.tabThut);
 		setSolid();
+		this.fluid = false;
 		this.stampable = true;
 		this.setTickRandomly(false);
 		this.setStepSound(soundTypeStone);

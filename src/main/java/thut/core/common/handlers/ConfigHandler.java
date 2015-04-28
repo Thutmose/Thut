@@ -8,6 +8,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import thut.api.explosion.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.items.ItemSpout;
+import thut.core.common.items.ItemSpreader;
 import thut.core.common.items.ItemTank;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
@@ -36,6 +37,7 @@ public class ConfigHandler {
 
 		items.add(new ItemSpout());
 		items.add(new ItemTank());
+		items.add(new ItemSpreader());
 		
 		for(Item item: items){
 			GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));

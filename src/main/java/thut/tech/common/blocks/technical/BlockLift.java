@@ -54,7 +54,7 @@ public class BlockLift extends Block implements ITileEntityProvider, IMetaBlock/
 		super(Material.iron);
 		setHardness(3.5f);
 		setCreativeTab(TechCore.tabThut);
-		this.setBlockName("Block");
+		this.setBlockName("LiftBlock");
 		ThutBlocks.lift = this;
 	}
 	

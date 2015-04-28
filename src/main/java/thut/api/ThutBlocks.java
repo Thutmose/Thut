@@ -21,8 +21,8 @@ public class ThutBlocks extends Blocks
 	public static Block liquidREConcrete;
 	public static Block concrete;
 	public static Block reConcrete;
+	public static Block asphaltConcrete;
 	public static Block asphalt;
-	public static Block liquidAsphalt;
 	
 	public static Block rebar;
 	public static Block limekiln;

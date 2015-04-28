@@ -62,6 +62,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 	public boolean wanderer = false;
 	public boolean hasFloatState = false;
 	public boolean solid = false;
+	public boolean fluid = true;
 	public int placeamount = 1;
 	public boolean stampable = false;
 	public int maxMeta = 15;
@@ -113,6 +114,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 		setQuantaPerBlock(16);
 		setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
 		this.setLightOpacity(255);
+		this.fluid = true;
 		if (init) {
 			init = false;
 			init();
@@ -219,18 +221,18 @@ public abstract class BlockFluid extends BlockFluidBase {
 			return AxisAlignedBB.getAABBPool().getAABB(0, 0, 0, 1, f * l, 1)
 					.offset(x, y, z);
 		}
-
-		if (!((new Vector3(x, y - 1, z)).isFluid(par1World) || par1World
-				.isAirBlock(x, y - 1, z))) {
-			return AxisAlignedBB.getAABBPool().getAABB((double) x + this.minX,
-					(double) y + this.minY, (double) z + this.minZ,
-					(double) x + this.maxX,
-					(double) ((float) y + (float) l * f),
-					(double) z + this.maxZ);
-		} else {
-			return AxisAlignedBB.getAABBPool().getAABB(0, 0, 0, 0, 0, 0)
-					.offset(x, y, z);
-		}
+		return null;
+//		if (!((new Vector3(x, y - 1, z)).isFluid(par1World) || par1World
+//				.isAirBlock(x, y - 1, z))) {
+//			return AxisAlignedBB.getAABBPool().getAABB((double) x + this.minX,
+//					(double) y + this.minY, (double) z + this.minZ,
+//					(double) x + this.maxX,
+//					(double) ((float) y + (float) l * f),
+//					(double) z + this.maxZ);
+//		} else {
+//			return AxisAlignedBB.getAABBPool().getAABB(0, 0, 0, 0, 0, 0)
+//					.offset(x, y, z);
+//		}
 	}
 
 	public boolean isFloating(IBlockAccess world, int x, int y, int z) {
@@ -265,19 +267,19 @@ public abstract class BlockFluid extends BlockFluidBase {
 			return;
 		}
 
-		if (hasFloatState && isFloating(worldObj, x, y, z))
-			return;
-		if (worldObj.getBlockMetadata(x, y, z) == 15) {
-			if (aaBB.intersectsWith(AxisAlignedBB.getBoundingBox(0, 0, 0, 1, 1,
-					1).offset(x, y, z)))
-				list.add(AxisAlignedBB.getBoundingBox(0, 0, 0, 1, 1, 1).offset(
-						x, y, z));
-			return;
-		}
-		for (AxisAlignedBB box : getBoxes(worldObj, x, y, z)) {
-			if (aaBB.intersectsWith(box))
-				list.add(box);
-		}
+//		if (hasFloatState && isFloating(worldObj, x, y, z))
+//			return;
+//		if (worldObj.getBlockMetadata(x, y, z) == 15) {
+//			if (aaBB.intersectsWith(AxisAlignedBB.getBoundingBox(0, 0, 0, 1, 1,
+//					1).offset(x, y, z)))
+//				list.add(AxisAlignedBB.getBoundingBox(0, 0, 0, 1, 1, 1).offset(
+//						x, y, z));
+//			return;
+//		}
+//		for (AxisAlignedBB box : getBoxes(worldObj, x, y, z)) {
+//			if (aaBB.intersectsWith(box))
+//				list.add(box);
+//		}
 	}
 
 	public AxisAlignedBB[] getBoxes(World worldObj, int x, int y, int z) {
@@ -552,7 +554,8 @@ public abstract class BlockFluid extends BlockFluidBase {
 	public void updateTick(World worldObj, int x, int y, int z,
 			Random par5Random) {
 		worldObj.theProfiler.startSection("fluid Blocks");
-		if (!solid) {
+		//System.out.println("test");
+		if (fluid) {
 			Vector3 here = new Vector3(x, y, z);
 			doFluidTick(worldObj, here);
 			doHardenTick(worldObj, here);
@@ -569,6 +572,11 @@ public abstract class BlockFluid extends BlockFluidBase {
 	// //////////////////////////////////////Fluid Block Logic Below
 	// Here////////////////////////////////////////////////////
 
+	public boolean trySpread(World worldObj, Vector3 vec) 
+	{
+		return trySpread(worldObj, vec, false);
+	}
+	
 	/**
 	 * TODO More Optimization Checks if the block should spread to the side
 	 * 
@@ -577,9 +585,11 @@ public abstract class BlockFluid extends BlockFluidBase {
 	 * @param y
 	 * @param z
 	 */
-	public boolean trySpread(World worldObj, Vector3 vec) {
+	public boolean trySpread(World worldObj, Vector3 vec, boolean ignoreDiff) {
 		boolean moved = false;
 		int viscosity = viscosity(vec.getBlock(worldObj));
+		if(ignoreDiff)
+			viscosity = 0;
 
 		Block block = vec.getBlock(worldObj);
 
@@ -598,7 +608,7 @@ public abstract class BlockFluid extends BlockFluidBase {
 			block = vec.getBlock(worldObj, sides[i]);
 			int meta = vec.getBlockMetadata(worldObj, sides[i]);
 			if (!(block instanceof BlockFluid))
-				moved = moved || equalize(worldObj, vec, vec.offset(sides[i]));
+				moved = moved || equalize(worldObj, vec, vec.offset(sides[i]), ignoreDiff);
 			else if (meta < highestMeta) {
 				highestMeta = meta;
 				k = i;
@@ -607,12 +617,12 @@ public abstract class BlockFluid extends BlockFluidBase {
 		}
 
 		if (highestMeta != 16)
-			moved = moved || equalize(worldObj, vec, vec.offset(sides[k]));
+			moved = moved || equalize(worldObj, vec, vec.offset(sides[k]), ignoreDiff);
 
 		if (block instanceof BlockFluid && ((BlockFluid) block).wanderer) {
 			int meta = vec.getBlockMetadata(worldObj);
 			if (meta == 0 && viscosity == 0) {
-				moved = moved || merge(worldObj, vec, vec.offset(sides[i]));
+				moved = moved || merge(worldObj, vec, vec.offset(sides[i]), ignoreDiff);
 			}
 
 		}
@@ -722,7 +732,12 @@ public abstract class BlockFluid extends BlockFluidBase {
         return fell;
     }
 
-	public boolean merge(World worldObj, Vector3 vec, Vector3 vec1){
+	
+	public boolean merge(World worldObj, Vector3 vec, Vector3 vec1)
+	{
+		return merge(worldObj, vec, vec1, false);
+	}
+	public boolean merge(World worldObj, Vector3 vec, Vector3 vec1, boolean ignoreDiff){
     	if(vec.sameBlock(vec1)) return false;
     	 int metaOld, meta1Old;
          Block idOld, id1Old;
@@ -785,38 +800,35 @@ public abstract class BlockFluid extends BlockFluidBase {
          		}
  	        	
          	}
-         	if(changed)
-         	{
-         	//	tickSides(worldObj, vec.intX(), vec.intY(), vec.intZ(), 30);
-         	//	vec.scheduleUpdate(worldObj);
-         	//	vec1.scheduleUpdate(worldObj);
-         	}
          	return changed;
          }
          return false;
     }
 
 	public boolean equalize(World worldObj, Vector3 vec, Vector3 vec1){
+		return equalize(worldObj, vec, vec1, false);
+	}
+	public boolean equalize(World worldObj, Vector3 vec, Vector3 vec1, boolean ignoreDiff){
     	if(vec.sameBlock(vec1)){return false;}
-    	
     	int metaOld, meta1Old;
         Block id = vec.getBlock(worldObj);
         int meta = metaOld = vec.getBlockMetadata(worldObj);
         boolean additionalMeta = true;
         int spread = viscosity(id);
         int diff = hardenDifferential(id) + spread;
+        if(ignoreDiff)
+        	diff = spread = 0;
         if(meta==0||!fluidBlocks.containsKey(id))
         {
         	return false;
         }
-        
+
         Block id1 = vec1.getBlock(worldObj);
         int meta1 = meta1Old = vec1.getBlockMetadata(worldObj);
         
         if(id==id1&&meta==meta1) return false;
 
         boolean combine = willCombine(id, vec1, worldObj);
-
         if(combine)
         {
             Block block1 = id1;
@@ -841,12 +853,7 @@ public abstract class BlockFluid extends BlockFluidBase {
         	}
     		vec1.setBlock( worldObj, idCombine, Math.min(15, meta1), 2);
     		vec.setBlock(worldObj, id, meta, 2);
-         	if(changed)
-         	{
-         	//	tickSides(worldObj, vec.intX(), vec.intY(), vec.intZ(), 30);
-         	//	vec.scheduleUpdate(worldObj);
-         	//	vec1.scheduleUpdate(worldObj);
-         	}
+    		
         	return changed;
         	
         }

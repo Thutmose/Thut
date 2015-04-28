@@ -1,16 +1,21 @@
 package thut.core.common.items;
 
+import java.util.List;
+import java.util.Map;
+
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import thut.core.common.blocks.BlockFluid;
 import thut.tech.common.TechCore;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
@@ -146,4 +151,31 @@ public class ItemTank extends Item implements IFluidContainerItem
 		
 		return new FluidStack(FluidRegistry.getFluidID(name), amount, tag);//, container.getTagCompound());
 	}
+	
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    /**
+     * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
+     */
+    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List par3List)
+    {
+    	ItemStack tank = new ItemStack(par1, 1, 0);
+    	tank.setStackDisplayName("Empty Tank");
+        par3List.add(tank);
+        
+        Map<String, Fluid> fluidMap = FluidRegistry.getRegisteredFluids();
+        
+        for(Fluid f : fluidMap.values())
+        {
+        	if(f.getDensity() == Integer.MAX_VALUE) continue;
+        	
+        	tank = new ItemStack(par1, 1, 0);
+    		FluidStack fstack = new FluidStack(f, Integer.MAX_VALUE);
+    		fill(tank, fstack, true);
+            par3List.add(tank);
+        	
+        }
+        
+    }
 }

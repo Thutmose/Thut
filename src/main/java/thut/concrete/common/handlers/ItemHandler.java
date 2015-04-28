@@ -33,6 +33,7 @@ public class ItemHandler
 		
 		for(Item item: items){
 			GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+			System.out.println(item.getUnlocalizedName().substring(5));
 		}
 	}
 	

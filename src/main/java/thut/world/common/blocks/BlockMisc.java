@@ -49,7 +49,7 @@ public class BlockMisc extends Block
 	Integer[][] data;
 	public BlockMisc() {
 		super(Material.rock);
-		
+		this.setBlockName("MiscBlocks");
 		if(ConfigHandler.debugPrints)
 			this.setCreativeTab(WorldCore.tabThut);
 		this.setResistance(00);
