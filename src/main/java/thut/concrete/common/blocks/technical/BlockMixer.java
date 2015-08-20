@@ -9,11 +9,11 @@ import java.util.Random;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import thut.api.blocks.tileentity.TileEntityMultiBlockPartFluids;
+import thut.api.blocks.tileentity.TileEntityMultiCoreFluids;
 import thut.concrete.common.ConcreteCore;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
-import thut.core.common.blocks.tileentity.TileEntityMultiCoreFluids;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -87,7 +87,7 @@ public class BlockMixer extends Block implements ITileEntityProvider
 	            // Check if the multi-block structure has been formed.
 	            System.out.println(Arrays.toString(tileEntity.tankCapacities()));
 	            if(tileEntity.getIsValid())//TODO gui in core
-	                player.openGui(ConcreteCore.instance, ConcreteCore.GUIIDs.mixer, world, x, y, z);
+	                player.openGui(ConcreteCore.instance, 0, world, x, y, z);
 	        }
 	         
 	        return true;

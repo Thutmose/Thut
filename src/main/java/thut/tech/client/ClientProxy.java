@@ -4,7 +4,7 @@ import thut.api.render.RenderRebar;
 import thut.tech.client.render.RenderLift;
 import thut.tech.client.render.RenderLiftController;
 import thut.tech.common.CommonProxy;
-import thut.tech.common.blocks.tileentity.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.entity.EntityLift;
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.ClientRegistry;
@@ -29,7 +29,7 @@ public class ClientProxy extends CommonProxy{
 	public void initClient()
 	{
 		mc = FMLClientHandler.instance().getClient();
-	//	RenderingRegistry.registerBlockHandler(RenderRebar.ID,RenderRebar.renderer);
+		RenderingRegistry.registerBlockHandler(RenderRebar.ID,RenderRebar.renderer);
 
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController());
 

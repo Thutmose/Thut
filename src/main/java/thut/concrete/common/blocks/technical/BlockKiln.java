@@ -3,11 +3,11 @@ import static thut.api.ThutBlocks.*;
 
 import java.util.Random;
 
+import thut.api.blocks.tileentity.TileEntityMultiBlockPart;
+import thut.api.blocks.tileentity.TileEntityMultiCore;
 import thut.concrete.common.ConcreteCore;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityMixer;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityKiln;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
-import thut.core.common.blocks.tileentity.TileEntityMultiCore;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -95,7 +95,7 @@ public class BlockKiln extends Block implements ITileEntityProvider
 	            }
 	            // Check if the multi-block structure has been formed.
 	            if(tileEntity.getIsValid())//TODO gui in core
-	                player.openGui(ConcreteCore.instance, ConcreteCore.GUIIDs.limekiln, world, x, y, z);
+	                player.openGui(ConcreteCore.instance, 0, world, x, y, z);
 	        }
 	         
 	        return true;

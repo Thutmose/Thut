@@ -30,7 +30,7 @@ public class RenderRebar implements ISimpleBlockRenderingHandler{
 	
 	public static final RenderRebar renderer = new RenderRebar();
 
-	private RenderIRebar rebar = new RenderIRebar();
+	public RenderIRebar rebar = new RenderIRebar();
 
 	private ResourceLocation texture;
 	
@@ -44,10 +44,10 @@ public class RenderRebar implements ISimpleBlockRenderingHandler{
 		sides = ((IRebar)parblock).getInventorySides();
 		
 		glPushMatrix();
-		glTranslated(-0.0, -0.9, -0.0);
-		glRotatef(-30,1,0,0);
-		glRotatef(30,0,0,1);
+		glTranslated(-0.0, -0, -0.0);
 		glScaled(1.45, 1.45, 1.45);
+//		glRotatef(-30,1,0,0);
+//		glRotatef(30,0,0,1);
 		
 		GL11.glPushAttrib(GL11.GL_BLEND);
         GL11.glEnable(GL11.GL_BLEND);
@@ -80,7 +80,6 @@ public class RenderRebar implements ISimpleBlockRenderingHandler{
 		boolean[] sides = null;
 		IIcon icon = parblock.getIcon(0, 0);
 		IIcon icon1 = parblock.getIcon(0, 0);
-		IIcon[] icons = new IIcon[6];
 		
 		if(parblock instanceof IRebar)
 		{

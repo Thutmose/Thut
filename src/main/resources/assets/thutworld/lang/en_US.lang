@@ -1,0 +1,86 @@
+# Thut's Concrete Language Properties
+# @author Thutmose and Vexatos
+
+# Blocks
+tile.concrete.name=Concrete
+tile.concreteLiquid.name=Liquid Concrete
+tile.asphalt.name=Asphalt
+tile.asphaltLiquid.name=Liquid Asphalt
+tile.Lava0.name=Mafic Lava
+tile.Lava1.name=Intermediate Lava
+tile.Lava2.name=Felsic Lava
+tile.Lava3.name=Meteor Melt
+tile.solidLava0.name=Basalt
+tile.solidLava1.name=Andesite
+tile.solidLava2.name=Rhyolite
+tile.solidLava3.name=Solidified Melt
+tile.dust.name=Volcanic Ash
+tile.REconcrete.name=Reinforced Concrete
+tile.REconcreteLiquid.name=Liquid Reinforced Concrete
+tile.blockLimekiln.name=Lime Kiln [WIP]
+tile.blockMixer.name=Mixer [WIP]
+tile.volcano.name=Volcano Spawner
+tile.meteorite.name=Meteorite
+tile.rebar.name=Rebar
+tile.liftRail.name=Elevator Rail
+tile.platformRail.name=Platform Rail [WIP]
+
+tile.chalk.name=Chalk
+tile.trass.name=Trass
+tile.limestone.name=Limestone
+
+tile.liftSpawner.name=Elevator
+tile.liftController.name=Elevator Control
+tile.display.name=Display [WIP]
+tile.seismicSensor.name=Remote Sensor [WIP]
+
+# Items
+item.dustTrass.name=Trass dust
+item.dustCaO.name=Lime
+item.dust.name=Dust
+item.dustCement.name=Cement
+item.dustCaCO3.name=Calcium Carbonate
+item.dustSulfur.name=Sulfur
+
+item.paintBrush0.name=Black Brush
+item.paintBrush1.name=Red Brush
+item.paintBrush2.name=Green Brush
+item.paintBrush3.name=Brown Brush
+item.paintBrush4.name=Blue Brush
+item.paintBrush5.name=Purple Brush
+item.paintBrush6.name=Cyan Brush
+item.paintBrush7.name=Light Grey Brush
+item.paintBrush8.name=Grey Brush
+item.paintBrush9.name=Pink Brush
+item.paintBrush10.name=Lime Brush
+item.paintBrush11.name=Yellow Brush
+item.paintBrush12.name=Light Blue Brush
+item.paintBrush13.name=Magenta Brush
+item.paintBrush14.name=Orange Brush
+item.paintBrush15.name=White Brush
+item.paintBrush16.name=Brush
+
+item.wallstamper.name=Stamper
+item.smoother.name=Smoother
+item.bucketOconcrete.name=Bucket of Concrete
+
+item.deviceLinker.name=Linking Device
+
+item.tank.name=Tank [WIP]
+item.spout.name=Spout [WIP]
+
+# Chat Messages
+msg.noRails.name=Complete rails not found.
+msg.noBase.name=Complete base not found.
+
+msg.liftSet.name=Elevator set
+
+msg.floorSet.name=Set this Floor to %s
+msg.floorError.name=Floor %s already exists.
+msg.particlesLeft.name=Particles Remaining
+
+
+# Misc
+itemGroup.tabConcrete=Thut's Concrete
+
+entity.thuttech.thuttechlift.name=Elevator

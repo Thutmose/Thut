@@ -6,7 +6,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import codechicken.lib.vec.BlockCoord;
+import codechicken.lib.vec.Cuboid6;
+import codechicken.multipart.TMultiPart;
+import codechicken.multipart.TileMultipart;
+import codechicken.multipart.minecraft.McBlockPart;
+import codechicken.multipart.minecraft.McMetaPart;
+import scala.collection.Iterator;
+import thut.api.ThutBlocks;
 import thut.api.blocks.IRebar;
+import thut.api.blocks.multiparts.parts.PartRebar;
 import thut.api.render.RenderRebar;
 import thut.concrete.common.ConcreteCore;
 import thut.concrete.common.blocks.fluids.BlockLiquidConcrete;
@@ -25,12 +34,17 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 
 public class BlockRebar extends Block implements IRebar
 {
@@ -67,21 +81,45 @@ public class BlockRebar extends Block implements IRebar
     	
     	if(item!=null)
     	{
-
+        	BlockCoord pos = new BlockCoord(x, y, z);
 	    	if(Block.getBlockFromItem(item.getItem()) instanceof IRebar)
 	    	{
-		    	if(placeBlock(world, x, y, z, Block.getBlockFromItem(item.getItem()), item.getItemDamage(), ForgeDirection.getOrientation(side)))
+	    		pos = placeBlock(world, x, y, z, Block.getBlockFromItem(item.getItem()), item.getItemDamage(), ForgeDirection.getOrientation(side));
+		    	if((pos) != null)
 		    	{
+	    			McBlockPart part = ThutBlocks.getPart(this);
+	    			try
+					{
+						if(!world.isRemote && TileMultipart.canPlacePart(world, pos, part))
+						{
+							TileMultipart.addPart(world, pos, part);
+						}
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace();
+					}
+	                if(!player.capabilities.isCreativeMode)
+	                {
+	                    item.stackSize--;
+	                    if (item.stackSize == 0)
+	                    {
+	                        player.inventory.mainInventory[player.inventory.currentItem] = null;
+	                        MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, item));
+	                    }
+	                }
 		    		placed = true;
 	    				if(!player.capabilities.isCreativeMode)
-	    					item.splitStack(1);
+	    					player.inventory.consumeInventoryItem(item.getItem());
 		    	}
 	    	}
 	    	if(Block.getBlockFromItem(item.getItem()) instanceof BlockLiquidConcrete)
 	    	{
 	    		placed = true;
 		    	world.setBlock(x, y, z, liquidREConcrete,15,3);
-		    	world.scheduleBlockUpdate(x, y, z, liquidREConcrete, 5);
+				world.scheduledUpdatesAreImmediate = true;
+				liquidREConcrete.updateTick(world, x,y,z, world.rand);
+				world.scheduledUpdatesAreImmediate = false;
 				if(!player.capabilities.isCreativeMode)
 					item.splitStack(1);
 		    	
@@ -99,14 +137,12 @@ public class BlockRebar extends Block implements IRebar
     	boolean placed = false;
     	ItemStack item = player.getHeldItem();
 
-    	
+    	BlockCoord pos;
     	if(item!=null)
     	{
 
 	    	if(Block.getBlockFromItem(item.getItem()) instanceof IRebar)
 	    	{
-	    		
-	        	
 	        	if(player.isSneaking())
 	        	{
 	        		boolean done = false;
@@ -114,38 +150,51 @@ public class BlockRebar extends Block implements IRebar
 	        		
 	        		while(!done&&num>0)
 	        		{
-			    		placed = placeBlock(world, x, y, z, Block.getBlockFromItem(item.getItem()), item.getItemDamage(), ForgeDirection.UP);
+			    		placed = (pos = placeBlock(world, x, y, z, Block.getBlockFromItem(item.getItem()), item.getItemDamage(), ForgeDirection.UP))!=null;
 			    		done = !placed;
 			    		if(placed)
 			    		{
+			    			McBlockPart part = ThutBlocks.getPart(this);
+			    			if(!world.isRemote)
+			                TileMultipart.addPart(world, pos, part);
+			                if(!player.capabilities.isCreativeMode)
+			                {
+			                    item.stackSize--;
+			                    if (item.stackSize == 0)
+			                    {
+			                        player.inventory.mainInventory[player.inventory.currentItem] = null;
+			                        MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, item));
+			                    }
+			                }
 			    			num--;
 			    		}
 	    				if(!player.capabilities.isCreativeMode)
 	    				{
-	    					//player.addChatMessage("split");
 	    					player.inventory.consumeInventoryItem(item.getItem());
 	    				}
 	        		}
 	        	}
 	        	else
-		    	if(placeBlock(world, x, y, z, Block.getBlockFromItem(item.getItem()), item.getItemDamage(), ForgeDirection.UP))
+		    	if((pos = placeBlock(world, x, y, z, Block.getBlockFromItem(item.getItem()), item.getItemDamage(), ForgeDirection.UP))!=null)
 		    	{
 		    		placed = true;
+	    			McBlockPart part = ThutBlocks.getPart(this);
+	    			if(!world.isRemote)
+	                TileMultipart.addPart(world, pos, part);
+	                if(!player.capabilities.isCreativeMode)
+	                {
+	                    item.stackSize--;
+	                    if (item.stackSize == 0)
+	                    {
+	                        player.inventory.mainInventory[player.inventory.currentItem] = null;
+	                        MinecraftForge.EVENT_BUS.post(new PlayerDestroyItemEvent(player, item));
+	                    }
+	                }
 	    				if(!player.capabilities.isCreativeMode)
 	    				{
-	    					//player.addChatMessage("split");
 	    					player.inventory.consumeInventoryItem(item.getItem());
 	    				}
 		    	}
-	    	}
-	    	if(Block.getBlockFromItem(item.getItem()) instanceof BlockLiquidConcrete)
-	    	{
-	    		placed = true;
-		    	world.setBlock(x, y, z, liquidREConcrete,0,3);
-		    	world.scheduleBlockUpdate(x, y, z, liquidREConcrete, 5);
-				if(!player.capabilities.isCreativeMode)
-					player.inventory.consumeInventoryItem(item.getItem());
-		    	
 	    	}
     	}
 	    	
@@ -177,21 +226,40 @@ public class BlockRebar extends Block implements IRebar
 	}
 	
 
-    public boolean placeBlock(World worldObj, int x, int y, int z, Block block2, int rebarMeta, ForgeDirection side)
+    public BlockCoord placeBlock(World worldObj, int x, int y, int z, Block block2, int rebarMeta, ForgeDirection side)
     {
     	int dx = side.offsetX, dy = side.offsetY, dz = side.offsetZ;
+    	BlockCoord ret = new BlockCoord();
     	while(Math.abs(dx)<MAX_PLACEMENT_RANGE&&Math.abs(dy)<MAX_PLACEMENT_RANGE&&Math.abs(dz)<MAX_PLACEMENT_RANGE)
     	{
-    		if(dy+y>worldObj.getActualHeight()) return false;
+    		if(dy+y>worldObj.getActualHeight()) return null;
         	Block block = worldObj.getBlock(x+dx, y+dy, z+dz);
+
+    		ret.set(x+dx, y+dy, z+dz);
+        	boolean rightBlock = block2==block;
+        	TileMultipart tile = TileMultipart.getOrConvertTile(worldObj, ret);
+        	
+        	if(tile!=null)
+        	{
+        		Iterator<TMultiPart> it = tile.partList().iterator();
+        		while(it.hasNext())
+        		{
+        			TMultiPart p = it.next();
+        			if(p instanceof PartRebar)
+        			{
+        				rightBlock = true;
+        				break;
+        			}
+        		}
+        	}
+        	
         	if(block.isAir(worldObj, x+dx, y+dy, z+dz)||block.getMaterial().isReplaceable())
     		{
-    			worldObj.setBlock(x+dx, y+dy, z+dz, block2, rebarMeta, 3);
-    			return true;
+    			return ret;
     		}
-        	else if (block!=block2)
+        	else if (!rightBlock)
         	{
-        		return false;
+        		return null;
         	}
         	
 			dy+=side.offsetY;
@@ -199,8 +267,9 @@ public class BlockRebar extends Block implements IRebar
 			dz+=side.offsetZ;
 		
     	}
-    	return false;
+    	return null;
     }
+	
 
 	
     /**
@@ -242,6 +311,10 @@ public class BlockRebar extends Block implements IRebar
     public boolean isLadder(IBlockAccess world, int x, int y, int z, EntityLivingBase entity)
     {
     	
+		if(true)//TODO figure out how to do this with multi-parts.
+			return false;
+		
+		
     	side = sides(world,x,y,z);
 		
 		if(!(side[0]||side[1]||side[2]||side[3]||side[4]||side[5]))
@@ -368,11 +441,34 @@ public class BlockRebar extends Block implements IRebar
 	public boolean[] sides(IBlockAccess worldObj, int x, int y, int z) 
 	{
 		boolean[] side = new boolean[]{false, false, false, false, false, false};
-    	int[][]sides = {{1,0,0},{-1,0,0},{0,0,1},{0,0,-1},{0,1,0},{0,-1,0}};
+    	//int[][]sides = {{1,0,0},{-1,0,0},{0,0,1},{0,0,-1},{0,1,0},{0,-1,0}};
 		for(int i = 0; i<6; i++)
 		{
-			Block block = worldObj.getBlock(x+sides[i][0], y+sides[i][1], z+sides[i][2]);
-			side[i] = (block instanceof IRebar);
+			EnumFacing dir = EnumFacing.getFront(i);
+			Block block = worldObj.getBlock(x+dir.getFrontOffsetX(), y+dir.getFrontOffsetY(), z+dir.getFrontOffsetZ());
+        	boolean rightBlock = false;
+        	TileEntity te = worldObj.getTileEntity(x+dir.getFrontOffsetX(), y+dir.getFrontOffsetY(), z+dir.getFrontOffsetZ());
+        	
+        	TileMultipart tile = (TileMultipart) ((te instanceof TileMultipart)?te:null);
+        	
+        	if(tile!=null)
+        	{
+        		Iterator<TMultiPart> it = tile.partList().iterator();
+        		while(it.hasNext())
+        		{
+        			TMultiPart p = it.next();
+        			if(p instanceof PartRebar)
+        			{
+        				rightBlock = true;
+        				break;
+        			}
+        		}
+        	}
+			
+			side[i] = (block instanceof IRebar) || rightBlock;
+			
+			
+			
 		}
 		
 		return side;
@@ -404,6 +500,4 @@ public class BlockRebar extends Block implements IRebar
 	public boolean[] getInventorySides() {
 		return new boolean[] {false, false, true, true, true, true};
 	}
-		
-	
 }

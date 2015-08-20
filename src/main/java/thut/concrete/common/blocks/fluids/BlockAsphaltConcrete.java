@@ -5,6 +5,7 @@ import static thut.api.ThutBlocks.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -18,52 +19,24 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
+import thut.api.ThutCore;
+import thut.api.blocks.BlockFluid;
 import thut.api.blocks.IRebar;
 import thut.concrete.common.ConcreteCore;
-import thut.core.common.blocks.BlockFluid;
-import thut.core.common.blocks.BlockFluid.FluidInfo;
-import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
+import thut.concrete.common.blocks.tileentity.worldBlocks.TileEntityBlockFluid;
 
 public class BlockAsphaltConcrete extends BlockFluid implements ITileEntityProvider {
 
 	public BlockAsphaltConcrete() {
 		super(new Fluid("asphaltConcrete").setDensity(5000).setViscosity(10000),Material.rock);
 		setBlockName("asphaltConcrete");
-		this.rate = 30;
-		tickrate = 100;
-		asphaltConcrete = this;
-		setCreativeTab(ConcreteCore.tabThut);
-		this.stampable = true;
-		this.setTickRandomly(true);
-		this.setStepSound(soundTypeStone);
-		this.placeamount = 16;
-		this.solid = true;
+		solidAsphalt = this;
+		setCreativeTab(ThutCore.tabThut);
 	}
 	
-	public void setData() {
-		if(fluidBlocks.get(this)==null)
-		{
-			FluidInfo info = new FluidInfo();
-			HashMap<Block, Block> combinationList = new HashMap<Block, Block>();
-			HashMap<Block, Integer> desiccantList = new HashMap<Block, Integer>();
-			combinationList.put(this, this);
-			
-			List<Block> replaces = new ArrayList<Block>();
-			replaces.addAll(defaultReplacements);
-			
-			for(Block b: replaces)
-				combinationList.put(b,this);
-			
-			info.viscosity = 8;
-			info.desiccants = desiccantList;
-			info.combinationBlocks = combinationList;
-			info.fallOfEdge = false;
-			
-			fluidBlocks.put(this,info);
-		}
-	}
-	
-	
+
+	@SideOnly(Side.CLIENT)
+	IIcon[] iconArray;
 	@SideOnly(Side.CLIENT)
 	public void registerBlockIcons(IIconRegister par1IconRegister)
 	{
@@ -115,5 +88,9 @@ public class BlockAsphaltConcrete extends BlockFluid implements ITileEntityProvi
 		
 	    return te;
 	}
-
+	
+	public int getFlowDifferential()
+	{
+		return 5 + new Random().nextInt(5);
+	}
 }

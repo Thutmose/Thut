@@ -11,7 +11,7 @@ import thut.api.maths.Vector3;
 import net.minecraft.entity.Entity;
 
 
-public interface IMultiBox 
+public interface IMultibox 
 {
 	
 	public abstract void setBoxes();

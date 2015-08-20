@@ -7,13 +7,12 @@ import static org.lwjgl.opengl.GL11.glTranslated;
 
 import org.lwjgl.opengl.GL11;
 
+import thut.api.blocks.BlockFluid;
 import thut.api.blocks.IRebar;
 import thut.api.render.RenderIRebar;
 import thut.concrete.client.ClientProxy;
 import thut.concrete.common.blocks.fluids.BlockLiquidREConcrete;
 import thut.concrete.common.blocks.fluids.BlockREConcrete;
-import thut.core.client.render.RenderCuboid;
-import thut.core.common.blocks.BlockFluid;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -148,6 +147,14 @@ public class RenderFluid implements ISimpleBlockRenderingHandler
             }
     		if(rebar)
     			rebarRenderer.tessAddRebar(tessellator, icon, x, y, z, sides, true);
+    		IIcon[] icons = new IIcon[6];
+    		for(int i = 0; i<6; i++)
+    		{
+    			icons[i] = block.getIcon(world, x, y, z, i);
+    		}
+        	renderer.renderStandardBlock(block, x, y, z);
+    		
+    		return true;
         }
         
         int color = block.colorMultiplier(world, x, y, z);
@@ -195,10 +202,6 @@ public class RenderFluid implements ISimpleBlockRenderingHandler
                 heightNE = flow11;
             }
 
-            if(theFluid.isInWater(world, x, y, z)&&ClientProxy.renderPass!=0)
-            {
-            	renderFluidOverLay(world, x, y, z, Blocks.water, renderer);
-            }
             boolean same = heightNE == heightSE && heightSE == heightSW && heightNW == heightSW && heightNW == heightNE;
             if(same)
             {
@@ -216,10 +219,6 @@ public class RenderFluid implements ISimpleBlockRenderingHandler
                 if (flowDir > -999.0F) {
                     iconStill = block.getIcon(world, x, y, z, 1);
                 }
-//                heightNW -= RENDER_OFFSET;
-//                heightSW -= RENDER_OFFSET;
-//                heightSE -= RENDER_OFFSET;
-//                heightNE -= RENDER_OFFSET;
 
                 double u1, u2, u3, u4, v1, v2, v3, v4;
 
@@ -324,10 +323,10 @@ public class RenderFluid implements ISimpleBlockRenderingHandler
                         tz2 = z + 1;
                     }
                     float u1Flow = iconFlow.getInterpolatedU(0.0D);
-                    float u2Flow = theFluid.solid?iconFlow.getMaxU():iconFlow.getInterpolatedU(8.0D);
+                    float u2Flow = iconFlow.getInterpolatedU(8.0D);//theFluid.solid?iconFlow.getMaxU():
                     float v1Flow = iconFlow.getInterpolatedV((1.0D - ty1) * 16.0D * 0.5D);
                     float v2Flow = iconFlow.getInterpolatedV((1.0D - ty2) * 16.0D * 0.5D);
-                    float v3Flow = theFluid.solid?iconFlow.getMaxV():iconFlow.getInterpolatedV(8.0D);
+                    float v3Flow = iconFlow.getInterpolatedV(8.0D);//theFluid.solid?iconFlow.getMaxV():
                     tessellator.setBrightness(block.getMixedBrightnessForBlock(world, x2, y, z2));
                     float sideLighting = 1.0F;
 

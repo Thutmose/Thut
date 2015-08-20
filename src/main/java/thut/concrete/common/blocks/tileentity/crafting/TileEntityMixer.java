@@ -3,11 +3,10 @@ package thut.concrete.common.blocks.tileentity.crafting;
 import static net.minecraft.init.Blocks.stonebrick;
 import thut.api.ThutBlocks;
 import thut.api.ThutItems;
+import thut.api.blocks.tileentity.TileEntityMultiBlockPartFluids;
+import thut.api.blocks.tileentity.TileEntityMultiCoreFluids;
 import thut.concrete.common.handlers.RecipeHandler;
 import thut.concrete.common.handlers.RecipeHandler.MixerRecipe;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
-import thut.core.common.blocks.tileentity.TileEntityMultiCore;
-import thut.core.common.blocks.tileentity.TileEntityMultiCoreFluids;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -145,6 +144,7 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 	public boolean isItemValidForSlot(int var1, ItemStack var2) {
 		if(var1!=8)
 		{
+			System.out.println(var1);
 			for(ItemStack s: RecipeHandler.validMixerInputs)
 			{
 				if(s.isItemEqual(var2))
@@ -152,18 +152,10 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 			}
 		}
 		
-//		if(var1==16||var1==7)
-//		{
-//			return var2.isItemEqual(ThutItems.cement);
-//		}
 		if(var1 == 8)
 		{
 			return var2.getItem() instanceof IFluidContainerItem || var2.getItem() == Items.water_bucket; //TODO check if it is a water container instead
 		}
-//		if(var1<7)
-//		{
-//			return Block.getBlockFromItem(var2.getItem()) == Blocks.sand;
-//		}
 		return false;//Block.getBlockFromItem(var2.getItem()) == Blocks.gravel;
 	}
 
@@ -177,6 +169,9 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 					int x = i + xCoord;
 					int z = j + zCoord;
 					int y = k + yCoord;
+					
+				//	worldObj.setBlock(x, y, z, Blocks.stonebrick);
+					
 					Block b = worldObj.getBlock(x, y, z);
 					if(b!= Blocks.stonebrick)
 					{
@@ -196,7 +191,7 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 					int x = i + xCoord;
 					int z = j + zCoord;
 					int y = k + yCoord;
-					worldObj.setBlock(x, y, z, getBlockType());
+					worldObj.setBlock(x, y, z, Blocks.stonebrick);
 					TileEntityMultiBlockPartFluids dummyTE;
 					TileEntity te = worldObj.getTileEntity(x, y, z);
 					if(te instanceof TileEntityMultiBlockPartFluids)
@@ -209,8 +204,11 @@ public class TileEntityMixer extends TileEntityMultiCoreFluids{
 							worldObj.removeTileEntity(x, y, z);
 						}
 						dummyTE = new TileEntityMultiBlockPartFluids();
+						dummyTE.type = 1;
+						dummyTE.revertID = Blocks.stonebrick;
 						worldObj.setTileEntity(x, y, z, dummyTE);
 					}
+					dummyTE.type = 1;
 					dummyTE.revertID = Blocks.stonebrick;
 					dummyTE.setCore(this);
 				}

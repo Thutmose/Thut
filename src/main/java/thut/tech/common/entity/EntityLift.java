@@ -2,23 +2,33 @@ package thut.tech.common.entity;
 
 import static thut.api.ThutBlocks.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import scala.collection.Iterator;
 import thut.api.ThutBlocks;
-import thut.api.entity.IMultiBox;
+import thut.api.blocks.multiparts.parts.PartRebar;
+import thut.api.entity.IMultibox;
 import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
-import thut.api.network.PacketPipeline;
-import thut.tech.common.blocks.tileentity.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
 import thut.tech.common.items.ItemLinker;
-import thut.tech.common.network.PacketThutTech;
+import thut.tech.common.network.PacketPipeline;
+import thut.tech.common.network.PacketPipeline.ClientPacket;
+import codechicken.lib.raytracer.RayTracer;
+import codechicken.lib.vec.BlockCoord;
+import codechicken.multipart.TMultiPart;
+import codechicken.multipart.TileMultipart;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
@@ -35,28 +45,24 @@ import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityHopper;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 
-public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IMultiBox
+public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IMultibox
 {
-
-	//TODO remove this
-	TileEntity test = new TileEntityHopper();
-	
 	public double size = 1;
 	public double speedUp = ConfigHandler.LiftSpeedUp;
 	public double speedDown = -ConfigHandler.LiftSpeedDown;
-	public double NOPASSENGERSPEEDDOWN = -ConfigHandler.LiftSpeedDown;
-	public double PASSENDERSPEEDDOWN = -ConfigHandler.LiftSpeedDownOccupied;
 	public static int ACCELERATIONTICKS = 20;
 	public double acceleration = 0.05;
 	public boolean up = true;
@@ -69,39 +75,29 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 	int passengertime = 10;
 	boolean first = true;
 	Random r = new Random();
-//	public IElectricityStorage source;
-	
-	public double storedEnergy = 0;
-	
-	public static double ENERGYCOST = 0;
-	
-	public boolean xAxis = false;
-	
-	public double destinationY = 0;
-	public int destinationFloor = 0;
+	public UUID id = UUID.randomUUID();
+	private static HashMap<UUID, EntityLift> lifts = new HashMap();
 	
 	public double prevFloorY = 0;
 	public double prevFloor = 0;
 	
 	public boolean called = false;
 	TileEntityLiftAccess current;
-	public int id;
-	
-	public static ConcurrentHashMap<Integer, EntityLift> lifts = new ConcurrentHashMap<Integer, EntityLift>();
-	public static int MAXID = 0;
 	
 	Matrix3 mainBox = new Matrix3();
+	Matrix3 tempBox = new Matrix3();
 	
 	public ConcurrentHashMap<String, Matrix3> boxes = new ConcurrentHashMap<String, Matrix3>();
 	public ConcurrentHashMap<String, Vector3> offsets = new ConcurrentHashMap<String, Vector3>();
 	
-	public TileEntityLiftAccess[][] floors = new TileEntityLiftAccess[64][4];
-	
-	public int[][][]floorArray = new int[64][4][3];
+	public int[] floors = new int[64];
 
 	Matrix3 base = new Matrix3();
 	Matrix3 top = new Matrix3();
 	Matrix3 wall1 = new Matrix3();
+	AxisAlignedBB collisionBox = AxisAlignedBB.getBoundingBox(0, 0, 0, 0, 0, 0);
+	
+	public ItemStack[][] blocks = null;
 	
 	public EntityLift(World par1World) 
 	{
@@ -109,6 +105,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 		this.ignoreFrustumCheck = true;
 		this.hurtResistantTime =0;
 		this.isImmuneToFire = true;
+		for(int i = 0; i<64; i++)
+		{
+			floors[i] = -1;
+		}
 	}
 	
 	public boolean canRenderOnFire()
@@ -134,10 +134,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 		this(world);
 		this.setPosition(x, y, z);
 		r.setSeed(100);
-		this.id = MAXID++;//r.nextInt((int)Math.abs(x)+1)+r.nextInt((int)Math.abs(y)+1)+r.nextInt((int)Math.abs(z)+1);
-		lifts.put(id, this);
 		this.size = Math.max(size, 1);
 		this.setSize((float)this.size, 1f);
+		lifts.put(id, this);
 	}
 	
 	@Override
@@ -149,24 +148,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 			this.setSize((float)size, 1f);
 		}
 		
-//		if(test!=null)
-//		{
-//			test.setWorldObj(worldObj);
-//			test.xCoord = (int)posX;
-//			test.yCoord = (int)posY;
-//			test.zCoord = (int)posZ;
-//			test.updateEntity();	
-//		}
-
-//		if(this.health <=0)
-//		{
-//			this.setDead();
-//		}
-//		if(this.health < this.getMaxHealth()&&Math.random()>0.9)
-//		{
-//			this.health++;
-//		}
-		
 		if(first)
 		{
 			checkRails(0);
@@ -174,28 +155,25 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 		}
 		clearLiquids();
 		
+		if(motionY==0)
+		{
+			this.setPosition(posX, Math.round(posY), posZ);
+		}
+		
 		if(!checkBlocks(0))
 			toMoveY=false;
+		
+		toMoveY = called = getDestY()>0;
+		up = getDestY() > posY;
 		
 		accelerate();
 		if(toMoveY)
 		{
 			doMotion();
 		}
-		else
+		else if(!worldObj.isRemote)
 		{
-			setPosition(posX, called&&Math.abs(posY-destinationY)<0.5?destinationY:Math.floor(posY), posZ);
-			called = false;
-			prevFloor = destinationFloor;
-			prevFloorY = destinationY;
-			destinationY = -1;
-			destinationFloor = 0;
-			if(current!=null)
-			{
-				current.setCalled(false);
-				worldObj.scheduleBlockUpdate(current.xCoord, current.yCoord, current.zCoord, current.getBlockType(), 5);
-				current = null;
-			}
+			setPosition(posX, Math.round(posY), posZ);
 		}
 		
 		checkCollision();
@@ -209,7 +187,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 		if(list.size()>0)
 		{
 			hasPassenger = true;
-			System.out.println("passenger");
 		}
 		else
 		{
@@ -223,55 +200,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 		{
 			return;
 		}
-		
-		if(!worldObj.isRemote&&floorArray[floor-1]!=null)
+		if(floors[floor-1]>0)
 		{
-			int i = -1;
-			for(int j = 0; j<4;j++)
-			{
-				if(floorArray[floor-1][j]!=null&&floorArray[floor-1][j].length==3)
-				{
-					int x = floorArray[floor-1][j][0];
-					int y = floorArray[floor-1][j][1];
-					int z = floorArray[floor-1][j][2];
-					if(worldObj.getTileEntity(x, y, z)!=null && worldObj.getTileEntity(x, y, z) instanceof TileEntityLiftAccess)
-					{
-						prevFloorY = posY;
-						destinationY = worldObj.getTileEntity(x, y, z).yCoord - 2;
-						current = (TileEntityLiftAccess)worldObj.getTileEntity(x, y, z);
-						current.called = true;
-						worldObj.scheduleBlockUpdate(x, y, z, worldObj.getBlock(x, y, z), 5);
-						destinationFloor = floor;
-						
-						callYValue((int) destinationY);
-						
-						return;
-					}
-				}
-			}
+			callYValue(floors[floor-1]);
+			setDestinationFloor(floor);
 		}
-	}
-	
-	public void callClient(double destinationY)
-	{
-		prevFloorY = posY;
-		this.destinationY = destinationY;
-		up = destinationY > posY;
-		toMoveY = true;
-		called = true;
-		System.out.println("called client "+destinationY+" "+up);
 	}
 	
 	public void callYValue(int yValue)
 	{
-		if(!worldObj.isRemote&&consumePower())
-		{
-			destinationY = yValue;
-			up = destinationY > posY;
-			toMoveY = true;
-			called = true;
-			PacketPipeline.packetPipeline.sendToAllAround(PacketThutTech.getLiftPacket(this, 3, destinationY, 0), new TargetPoint(this.dimension, posX, posY, posZ, 100));
-		}
+		setDestY(yValue);
 	}
 	
 	public void accelerate()
@@ -314,17 +252,18 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 				}
 				else
 				{
-			//		System.out.println("blocked up");
-					setPosition(posX, called&&Math.abs(posY-destinationY)<0.5?destinationY:Math.floor(posY), posZ);
+					setPosition(posX, Math.abs(posY-getDestY())<0.5?getDestY():Math.floor(posY), posZ);
 					called = false;
-					prevFloor = destinationFloor;
-					prevFloorY = destinationY;
-					destinationY = -1;
-					destinationFloor = 0;
+					prevFloor = getDestinationFloor();
+					prevFloorY = getDestY();
+					setDestY(-1);
+					setDestinationFloor(0);
 					if(current!=null)
 					{
 						current.setCalled(false);
-						worldObj.scheduleBlockUpdate(current.xCoord, current.yCoord, current.zCoord, current.getBlockType(), 5);
+						worldObj.scheduledUpdatesAreImmediate = true;
+						current.getBlockType().updateTick(worldObj, current.xCoord, current.yCoord, current.zCoord, worldObj.rand);
+						worldObj.scheduledUpdatesAreImmediate = false;
 						current = null;
 					}
 					motionY = 0;
@@ -356,17 +295,18 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 				}
 				else
 				{
-			//		System.out.println("blocked down");
-					setPosition(posX, called&&Math.abs(posY-destinationY)<0.5?destinationY:Math.floor(posY), posZ);
+					setPosition(posX, Math.abs(posY-getDestY())<0.5?getDestY():Math.floor(posY), posZ);
 					called = false;
-					prevFloor = destinationFloor;
-					prevFloorY = destinationY;
-					destinationY = -1;
-					destinationFloor = 0;
+					prevFloor = getDestinationFloor();
+					prevFloorY = getDestY();
+					setDestY(-1);
+					setDestinationFloor(0);
 					if(current!=null)
 					{
 						current.setCalled(false);
-						worldObj.scheduleBlockUpdate(current.xCoord, current.yCoord, current.zCoord, current.getBlockType(), 5);
+						worldObj.scheduledUpdatesAreImmediate = true;
+						current.getBlockType().updateTick(worldObj, current.xCoord, current.yCoord, current.zCoord, worldObj.rand);
+						worldObj.scheduledUpdatesAreImmediate = false;
 						current = null;
 					}
 					motionY = 0;
@@ -382,30 +322,31 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 	public boolean checkBlocks(double dir)
 	{
 		boolean ret = true;
-		Vector3 thisloc = new Vector3(this);
-		thisloc = thisloc.add(new Vector3(0,dir,0));
+		Vector3 thisloc = Vector3.getNewVectorFromPool().set(this).addTo(0, dir, 0);
 		
 		if(called)
 		{
-			if(dir > 0 && thisloc.y > destinationY)
+			if(dir > 0 && thisloc.y > getDestY())
 			{
+				thisloc.freeVectorFromPool();
 				return false;
 			}
-			if(dir < 0 && thisloc.y < destinationY)
+			if(dir < 0 && thisloc.y < getDestY())
 			{
+				thisloc.freeVectorFromPool();
 				return false;
 			}
 		}
 
 		int rad = (int)(Math.floor(size/2));
-		
+		Vector3 v = Vector3.getNewVectorFromPool();
 		for(int i = -rad; i<=rad;i++)
 			for(int j = -rad;j<=rad;j++)
 			{
-				Vector3 checkTop = (thisloc.add(new Vector3(i,4,j)));
-				Vector3 checkBottom = (thisloc.add(new Vector3(i,1,j)));
-				ret = ret && (thisloc.add(new Vector3(i,0,j))).clearOfBlocks(worldObj);
-				ret = ret && (thisloc.add(new Vector3(i,5,j))).clearOfBlocks(worldObj);
+				Vector3 checkTop = (v.set(thisloc).add(i,4,j));
+				Vector3 checkBottom = (v.set(thisloc).add(i,1,j));
+				ret = ret && (v.set(thisloc).addTo(i,0,j)).clearOfBlocks(worldObj);
+				ret = ret && (v.set(thisloc).addTo(i,5,j)).clearOfBlocks(worldObj);
 				if(checkTop.isFluid(worldObj))
 				{
 					checkTop.setAir(worldObj);
@@ -414,6 +355,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 				{
 					checkBottom.setAir(worldObj);
 				}
+				checkTop.freeVectorFromPool();
+				checkBottom.freeVectorFromPool();
 			}
 
 		ret = ret && checkRails(dir);
@@ -424,21 +367,25 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 	{
 		int rad = (int)(Math.floor(size/2));
 
-		Vector3 thisloc = new Vector3(this);
+		Vector3 thisloc = Vector3.getNewVectorFromPool().set(this);
+		Vector3 v = Vector3.getNewVectorFromPool();
 		for(int i = -rad; i<=rad;i++)
 			for(int j = -rad;j<=rad;j++)
 			{
-				Vector3 check = (thisloc.add(new Vector3(i,5,j)));
+				Vector3 check = (v.set(thisloc).addTo(i,5,j));
 				if(check.isFluid(worldObj))
 				{
 					check.setBlock(worldObj, air,0);
 				}
-				check = (thisloc.add(new Vector3(i,0,j)));
+				check = (v.set(thisloc).addTo(i,0,j));
 				if(check.isFluid(worldObj))
 				{
 					check.setBlock(worldObj, air,0);
 				}
+				check.freeVectorFromPool();
 			}
+		v.freeVectorFromPool();
+		thisloc.freeVectorFromPool();
 	}
 	
 	public boolean checkRails(double dir)
@@ -448,47 +395,52 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 		int[][] sides = {{rad,0},{-rad,0},{0,rad},{0,-rad}};
 		
 		boolean ret = true;
+		boolean rightBlock = false;
+		BlockCoord posA = new BlockCoord();
+		BlockCoord posB = new BlockCoord();
 		
-		for(int i = 0; i<5; i++)
+		for(int i = 0; i<2; i++)
 		{
-			ret = ret&&worldObj.getBlock((int)Math.floor(posX)+sides[axis?2:0][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?2:0][1])==liftRail;
-			ret = ret&&worldObj.getBlock((int)Math.floor(posX)+sides[axis?3:1][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?3:1][1])==liftRail;
+			posA.set((int)Math.floor(posX)+sides[axis?2:0][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?2:0][1]);
+			rightBlock = PartRebar.isRebar(worldObj, posA);
+			ret = ret && rightBlock;
+
+			posB.set((int)Math.floor(posX)+sides[axis?3:1][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?3:1][1]);
+			rightBlock = PartRebar.isRebar(worldObj, posB);
+			ret = ret && rightBlock;
+			if(ret)
+			{
+				TileEntityLiftAccess teA = (TileEntityLiftAccess) getRailTile(worldObj, posA);
+				TileEntityLiftAccess teB = (TileEntityLiftAccess) getRailTile(worldObj, posB);
+				if(teA!=null&&teA.lift==null)
+					teA.setLift(this);
+				if(teB!=null&&teB.lift==null)
+					teB.setLift(this);
+			}
 		}
 		
 		if((!ret&&dir==0))
 		{
 			axis = !axis;
-			for(int i = 0; i<5; i++)
-			{
-				ret = ret&&worldObj.getBlock((int)Math.floor(posX)+sides[axis?2:0][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?2:0][1])==liftRail;
-				ret = ret&&worldObj.getBlock((int)Math.floor(posX)+sides[axis?3:1][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?3:1][1])==liftRail;
-			}
+//			for(int i = 0; i<2; i++)
+//			{
+//				ret = ret&&worldObj.getBlock((int)Math.floor(posX)+sides[axis?2:0][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?2:0][1])==liftRail;
+//				ret = ret&&worldObj.getBlock((int)Math.floor(posX)+sides[axis?3:1][0],(int)Math.floor(posY+dir+i),(int)Math.floor(posZ)+sides[axis?3:1][1])==liftRail;
+//			}
 		}
 		
 		return ret;
 	}
 	
+	
+	
 	private boolean consumePower()
 	{
 		boolean power = false;
 		int sizeFactor = size == 1?4:size==3?23:55;
-		double energyCost = (destinationY - posY)*ENERGYCOST*sizeFactor;
+		double energyCost = 0;//(destinationY - posY)*ENERGYCOST*sizeFactor;
 		if(energyCost<=0)
 			return true;
-		
-//		if(energyCost>0&&source==null)
-//		{
-//			toMoveY = false;
-//		}
-//		if(source!=null)
-//		{
-//			double available = source.getJoules();
-//			if(available > energyCost)
-//			{
-//				power = true;
-//				source.setJoules(available-energyCost);
-//			}
-//		}
 		if(!power)
 			toMoveY = false;
 		return power;
@@ -497,9 +449,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void checkCollision()
     {
         List list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, AxisAlignedBB.getBoundingBox(posX - (size+1), posY, posZ - (size+1), posX+(size+1), posY + 6, posZ + (size+1)));
-        
-        setOffsets();
-        setBoxes();
         
         if (list != null && !list.isEmpty())
         {
@@ -511,7 +460,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             for (int i = 0; i < list.size(); ++i)
             {
                 Entity entity = (Entity)list.get(i);
-//                if(entity!=this.riddenByEntity&&!(entity instanceof CopyOfEntityLift))
                 {
                 	applyEntityCollision(entity);
                 }
@@ -525,41 +473,87 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void applyEntityCollision(Entity entity)
     {
     	boolean collided = false;
-    	for(String key: boxes.keySet())
-    	{
-    		Matrix3 box = boxes.get(key);
-    		Vector3 offset = new Vector3();
-    		if(offsets.containsKey(key))
-    		{
-    			offset = offsets.get(key);
-    		}
-    		if(box!=null)
-    		{
-    			boolean push = box.pushOutOfBox((Entity)this, entity, offset);
-    			collided = push || collided;
-    			if(key.contains("top")||key.contains("base"))
-    			{
-                    if(AUGMENTG&&push&&toMoveY&&!up)
-                    {
-                    	entity.motionY+=motionY;
-                    }
-    			}
-    		}
-    	}
+    	Vector3 v = Vector3.getNewVectorFromPool();
+    	Vector3 v1 = Vector3.getNewVectorFromPool();
+    	Vector3 v2 = Vector3.getNewVectorFromPool().set(this);
+
+    	AxisAlignedBB box = Matrix3.getAABB(posX - size/2, posY, posZ - size/2, posX + size/2, posY + 1, posZ + size/2);
+    	
+        
+		boolean push = box.intersectsWith(entity.boundingBox);//TODO
+		collided = push || collided;
+		if(push)// && !worldObj.isRemote)
+		{
+            entity.fallDistance = 0;
+            entity.onGround = true;
+			entity.motionY = Math.max(motionY, entity.motionY);
+			
+			if(entity.posY> posY + 1)
+				entity.setPosition(entity.posX, posY+1 + entity.yOffset, entity.posZ);
+			else if(entity.motionY > motionY)
+				entity.setPosition(entity.posX, posY-entity.height, entity.posZ);
+		}
+//		System.out.println(push+" "+worldObj.isRemote+" "+box);
+//		System.out.println(entity.boundingBox);
+		Matrix3.freeAABB(box);
     	
     	if(!collided)
     	{
 	    	Vector3 rotation = mainBox.boxRotation();	
-	    	Vector3 r = ((new Vector3(entity)).subtract(new Vector3(this)));
+	    	v.clear();
+	    	v1.clear();
+	    	Vector3 r = v.set(entity).subtract(v1.set(this));
 	    	if(!(rotation.y==0&&rotation.z==0))
 	    	{
-	    		r = r.rotateAboutAngles(rotation.y, rotation.z);
+	    		r = r.rotateAboutAngles(rotation.y, rotation.z, v2, v1);
 	    	}
 	    	if(r.inMatBox(mainBox))
 	    	{
 	    		entity.setPosition(entity.posX + motionX, entity.posY, entity.posZ+motionZ);
 	    	}
+	    	r.freeVectorFromPool();
     	}
+    	
+    	box = Matrix3.getAABB(posX - size/2, posY+4.5, posZ - size/2, posX + size/2, posY + 5.5, posZ + size/2);
+    	
+        
+		push = box.intersectsWith(entity.boundingBox);//TODO pushing down
+		collided = push || collided;
+		if(push)// && !worldObj.isRemote)
+		{
+            entity.fallDistance = 0;
+            entity.onGround = true;
+			entity.motionY = Math.max(motionY, entity.motionY);
+			if(entity.posY > posY+5.5)
+				entity.setPosition(entity.posX, posY+5.5 + entity.yOffset, entity.posZ);
+			else if(entity.motionY > motionY)
+				entity.setPosition(entity.posX, posY+4.5 - entity.height, entity.posZ);
+		}
+//		System.out.println(push+" "+worldObj.isRemote+" "+box);
+//		System.out.println(entity.boundingBox);
+		Matrix3.freeAABB(box);
+    	
+    	if(!collided)
+    	{
+	    	Vector3 rotation = mainBox.boxRotation();	
+	    	v.clear();
+	    	v1.clear();
+	    	Vector3 r = v.set(entity).subtract(v1.set(this).add(0, 4.5, 0));
+	    	if(!(rotation.y==0&&rotation.z==0))
+	    	{
+	    		r = r.rotateAboutAngles(rotation.y, rotation.z, v2, v1);
+	    	}
+	    	if(r.addTo(0,-4.5,0).inMatBox(mainBox))
+	    	{
+	    		entity.setPosition(entity.posX + motionX, entity.posY, entity.posZ+motionZ);
+	    	}
+	    	r.freeVectorFromPool();
+    	}
+    	
+    	
+    	v.freeVectorFromPool();
+    	v1.freeVectorFromPool();
+    	v2.freeVectorFromPool();
     	
     }
 	
@@ -569,14 +563,22 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean interactFirst(EntityPlayer player)
     {
     	ItemStack item = player.getHeldItem();
-    	System.out.println("interact");
+//    	System.out.println(FMLCommonHandler.instance().getEffectiveSide());
+//    	
+//    	Vector3 v = Vector3.getNewVectorFromPool().set(player).add(0, 1.61, 0);
+//    	Vector3 look = Vector3.getNewVectorFromPool().set(player.getLookVec());
+//    	
+//    	
+//    	
+    	
+    	
     	if(player.isSneaking()&&item!=null&&item.getItem() instanceof ItemLinker)
     	{
            	if(item.stackTagCompound == null)
         	{
         		item.setTagCompound(new NBTTagCompound() );
         	}
-           	item.stackTagCompound.setInteger("lift", id);
+           	item.stackTagCompound.setString("lift", id.toString());
            	if(worldObj.isRemote)
            	player.addChatMessage(new ChatComponentText("lift set"));
            	return true;
@@ -613,9 +615,23 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
     	if(!worldObj.isRemote&&!this.isDead)
     	{
-    		int iron = size == 1?4:size==3?23:55;
-	    	this.dropItem(Item.getItemFromBlock(Blocks.iron_block), iron);
-	    	this.dropItem(Item.getItemFromBlock(ThutBlocks.lift), 1);
+    		if(blocks!=null)
+    		{
+    			for(ItemStack[] barr: blocks)
+    			{
+    				for(ItemStack b: barr)
+    				{
+    					this.entityDropItem(b, 0.5f);
+    				}
+    			}
+    		}
+    		else
+    		{
+        		int iron = size == 1?0:size==3?8:24;
+        		if(iron>0)
+        			this.dropItem(Item.getItemFromBlock(Blocks.iron_block), iron);
+        		this.dropItem(Item.getItemFromBlock(ThutBlocks.lift), 1);
+    		}
     	}
         super.setDead();
     }
@@ -624,131 +640,185 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 	@Override
 	public void writeSpawnData(ByteBuf data) {
 		data.writeDouble(size);
-		data.writeInt(id);
+		data.writeLong(id.getMostSignificantBits());
+		data.writeLong(id.getLeastSignificantBits());
+		for(int i = 0; i<64; i++)
+		{
+			data.writeInt(floors[i]);
+		}
+		PacketBuffer buff = new PacketBuffer(data);
+		NBTTagCompound tag = new NBTTagCompound();
+		try {
+			writeBlocks(tag);
+			buff.writeNBTTagCompoundToBuffer(tag);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void readSpawnData(ByteBuf data) {
+		
 		size = data.readDouble();
+		id = new UUID(data.readLong(), data.readLong());
+		for(int i = 0; i<64; i++)
+		{
+			floors[i] = data.readInt();
+		}
+		lifts.put(id, this);
 		this.setSize((float)this.size, 1f);
-		id = data.readInt();
+		
+		PacketBuffer buff = new PacketBuffer(data);
+		NBTTagCompound tag = new NBTTagCompound();
+		try {
+			tag = buff.readNBTTagCompoundFromBuffer();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		readBlocks(tag);
 	}
 
 	public void setFoor(TileEntityLiftAccess te, int floor)
 	{
 		if(te.floor == 0)
 		{
-			int j = 0;
-			for(int i = 0; i<4; i++)
-			{
-				if(floors[floor-1][i]==null)
-				{
-					j = i;
-					break;
-				}
-			}
-			floors[floor-1][j]=te;
-			floorArray[floor-1][j] = new int[]{te.xCoord,te.yCoord,te.zCoord};
+			floors[floor-1] = te.yCoord-2;
 		}
 		else if(te.floor!=0)
 		{
-			for(int i = 0; i<4; i++)
-			{
-				if(floors[te.floor-1][i] == te)
-				{
-					floors[te.floor-1][i] = null;
-				}
-			}
-			int j = 0;
-			for(int i = 0; i<4; i++)
-			{
-				if(floors[floor-1][i]==null)
-				{
-					j = i;
-					break;
-				}
-			}
-			floors[floor-1][j]=te;
-			floorArray[floor-1][j] = new int[]{te.xCoord,te.yCoord,te.zCoord};
+			floors[te.floor-1] = -1;
+			floors[floor-1] = te.yCoord -2;
 		}
 	}
 
-//	@Override
-//	protected void entityInit()
-//	{
-//		super.entityInit();
-//	}
-
 	@Override
 	public void readEntityFromNBT(NBTTagCompound nbt) {
+		super.readEntityFromNBT(nbt);
 		axis = nbt.getBoolean("axis");
-		id = nbt.getInteger("cuid");
-		MAXID = nbt.getInteger("MAXID");
 		size = nbt.getDouble("size");
+		id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
 		lifts.put(id, this);
 		readList(nbt);
+		readBlocks(nbt);
 	}
 
 	@Override
 	public void writeEntityToNBT(NBTTagCompound nbt) {
-//		super.writeEntityToNBT(nbt);
+		super.writeEntityToNBT(nbt);
 		nbt.setBoolean("axis", axis);
-		nbt.setInteger("cuid", id);
-		nbt.setInteger("MAXID", MAXID);
 		nbt.setDouble("size", size);
+		nbt.setLong("lower", id.getLeastSignificantBits());
+		nbt.setLong("higher", id.getMostSignificantBits());
 		writeList(nbt);
+		try {
+			writeBlocks(nbt);
+		} catch (Exception e) {
+		}
 	}
 
 	public void writeList(NBTTagCompound nbt)
 	{
-		for(int i = 0; i<floorArray.length; i++)
+		for(int i = 0; i<64; i++)
 		{
-			for(int j = 0; j<4; j++)
-			{
-				nbt.setIntArray("list"+i+" "+j, floorArray[i][j]);
-			}
+			nbt.setInteger("floors "+i, floors[i]);
 		}
 	}
 	
 	public void readList(NBTTagCompound nbt)
 	{
-		for(int i = 0; i<floorArray.length; i++)
+		for(int i = 0; i<64; i++)
 		{
-			for(int j = 0; j<4; j++)
-			{
-				int[] loc = nbt.getIntArray("list"+i+" "+j);
-			//System.out.println(Arrays.toString(loc));
-				floorArray[i][j] = loc;
-			}
+			floors[i] = nbt.getInteger("floors "+i);
+			if(floors[i] == 0)
+				floors[i] = -1;
 		}
 	}
 	
+	public void writeBlocks(NBTTagCompound nbt)
+	{
+		if(blocks!=null)
+		{
+			nbt.setInteger("BlocksLength", blocks.length);
+			int size = blocks.length;
+			for(int i = 0; i<size; i++)
+				for(int j = 0; j<size; j++)
+				{
+					ItemStack b = blocks[i][j];
+					nbt.setInteger("block"+i+","+j, Item.getIdFromItem(b.getItem()));
+					nbt.setInteger("meta", b.getItemDamage());
+				}
+		}
+	}
+	
+	public void readBlocks(NBTTagCompound nbt)
+	{
+		if(nbt.hasKey("BlocksLength"))
+		{
+			int size = nbt.getInteger("BlocksLength");
+			blocks = new ItemStack[size][size];
+			for(int i = 0; i<size; i++)
+				for(int j = 0; j<size; j++)
+				{
+					int n = nbt.getInteger("block"+i+","+j);
+					ItemStack b = new ItemStack(Item.getItemById(n), 1, nbt.getInteger("meta"));
+					blocks[i][j]=b;
+				}
+		}
+		else
+		{
+			int size = (int) Math.round(this.size);
+			blocks = new ItemStack[size][size];
+			for(int i = 0; i<size; i++)
+				for(int j = 0; j<size; j++)
+				{
+					blocks[i][j]=new ItemStack(Blocks.iron_block);
+				}
+		}
+	}
+	
+	public static EntityLift getLiftFromUUID(UUID uuid)
+	{
+		return lifts.get(uuid);
+	}
 
 	@Override
-	public void setBoxes()
+	public void setBoxes()//TODO
 	{
-		mainBox = new Matrix3(new Vector3(-size/2,0,-size/2), new Vector3(size/2,5,size/2));
-        boxes.put("base", new Matrix3(new Vector3(-size/2,0,-size/2), new Vector3(size/2,1,size/2)));
-        boxes.put("top", new Matrix3(new Vector3(-size/2,0,-size/2), new Vector3(size/2,0.5,size/2)));
-        boxes.put("wall1", new Matrix3(new Vector3(-0.5,0,-0.5), new Vector3(0.5,5,0.5)));
-        boxes.put("wall2", new Matrix3(new Vector3(-0.5,0,-0.5), new Vector3(0.5,5,0.5)));
+		mainBox.boxMin().set(-size/2d,0,-size/2d);// = new Matrix3(new Vector3, new Vector3(size/2,5,size/2));
+		mainBox.boxMax().set(size/2d,1,size/2d);
+		
+		Matrix3 m2, m3, m4;
+		if(!boxes.containsKey("base"))
+		{
+			m2 = new Matrix3();
+			boxes.put("base", m2);
+		}
+		else
+		{
+			m2 = boxes.get("base");
+		}
+
+		m2.boxMin().clear();
+		m2.boxMax().set(size, 1, size);
+		m2.boxRotation().clear();
+		boxes.put("base", m2);
 	}
 
 	@Override
 	public void setOffsets() 
 	{
-		offsets.put("top", new Vector3(0,5*0.9,0));
-    	double wallOffset = size/2 + 0.5;
-    	if(!axis)
-    	{
-    		offsets.put("wall1",new Vector3(wallOffset,0,0));
-	    	offsets.put("wall2",new Vector3(-wallOffset,0,0));
-    	}
-    	else
-    	{
-    		offsets.put("wall1",new Vector3(0,0,wallOffset));
-	    	offsets.put("wall2",new Vector3(0,0,-wallOffset));
-    	}
+		
+		Vector3 v2, v3, v4;
+		if(!offsets.containsKey("base"))
+		{
+			v2 = Vector3.getNewVectorFromPool();
+			offsets.put("base", v2);
+		}
+		else
+		{
+			v2 = offsets.get("base");
+		}
+		v2.set(0-size/2,0,0-size/2);
 	}
 
 	@Override
@@ -777,7 +847,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
 	@Override
 	public Matrix3 bounds(Vector3 target) {
-		return new Matrix3(new Vector3(-size/2,0, -size/2), new Vector3(size/2, 5, size/2));
+
+		tempBox.boxMin().set(-size/2,0, -size/2);
+		tempBox.boxMax().set(size/2,1, size/2);
+		
+		return tempBox;
 	}
 	
 	 /**
@@ -787,7 +861,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
     	if(damage>15)
     	{
-//    		this.health -= damage;
     		return true;
     	}
     	
@@ -797,6 +870,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 	@Override
 	protected void entityInit() {
 		super.entityInit();
+		this.dataWatcher.addObject(2, Integer.valueOf(0));
+		this.dataWatcher.addObject(3, Integer.valueOf(0));
+		this.dataWatcher.addObject(4, Integer.valueOf(-1));
 	}
 
 	@Override
@@ -815,8 +891,123 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
 	@Override
 	public ItemStack[] getLastActiveItems() {
-		return null;
+		return new ItemStack[0];
 	}
 
+	/**
+	 * @return the destinationFloor
+	 */
+	public int getDestinationFloor() {
+		return dataWatcher.getWatchableObjectInt(2);
+	}
+
+	/**
+	 * @param destinationFloor the destinationFloor to set
+	 */
+	public void setDestinationFloor(int destinationFloor) {
+		dataWatcher.updateObject(2, Integer.valueOf(destinationFloor));
+	}
+
+	/**
+	 * @return the destinationFloor
+	 */
+	public int getCurrentFloor() {
+		return dataWatcher.getWatchableObjectInt(3);
+	}
+
+	/**
+	 * @param currentFloor the destinationFloor to set
+	 */
+	public void setCurrentFloor(int currentFloor) {
+		dataWatcher.updateObject(3, Integer.valueOf(currentFloor));
+	}
+
+	/**
+	 * @return the destinationFloor
+	 */
+	public int getDestY() {
+		return dataWatcher.getWatchableObjectInt(4);
+	}
+
+	/**
+	 * @param dest the destinationFloor to set
+	 */
+	public void setDestY(int dest) {
+		dataWatcher.updateObject(4, Integer.valueOf(dest));
+	}
+    /**
+     * returns the bounding box for this entity
+     */
+    public AxisAlignedBB getBoundingBox()
+    {
+    	collisionBox.maxX = collisionBox.minX = posX;
+    	collisionBox.maxY = collisionBox.minY = posY;
+    	collisionBox.maxZ = collisionBox.minZ = posZ;
+    	
+    	collisionBox.maxY = collisionBox.minY + 1;
+
+    	collisionBox.maxX += size/2;
+    	collisionBox.maxZ += size/2;
+    	collisionBox.minX -= size/2;
+    	collisionBox.minZ -= size/2;
+//    	double wallOffset = size/2;
+//    	if(!axis)
+//    	{
+//    		collisionBox.maxX += wallOffset + 1;
+//    		collisionBox.minX -= wallOffset + 1;
+//    		collisionBox.maxZ += 0.5;
+//    		collisionBox.minZ -= 0.5;
+//    	}
+//    	else
+//    	{
+//    		collisionBox.maxZ += wallOffset + 1;
+//    		collisionBox.minZ -= wallOffset + 1;
+//    		collisionBox.maxX += 0.5;
+//    		collisionBox.minX -= 0.5;
+//    	}
+    	
+        return null;//collisionBox;
+    }
+
+
+    /**
+     * Returns true if other Entities should be prevented from moving through this Entity.
+     */
+    public boolean canBeCollidedWith()
+    {
+        return !this.isDead;
+    }
+    
+    /**
+     * Returns true if this entity should push and be pushed by other entities when colliding.
+     */
+    public boolean canBePushed()
+    {
+        return true;
+    }
+    
+	public static TileEntity getRailTile(World world, BlockCoord pos)
+	{
+		if(world.getBlock(pos.x, pos.y, pos.z)==ThutBlocks.liftRail)
+			return world.getTileEntity(pos.x, pos.y, pos.z);
+    	TileMultipart tile = TileMultipart.getOrConvertTile(world, pos);
+    	if(tile!=null)
+    	{
+    		Iterator<TMultiPart> it = tile.partList().iterator();
+    		while(it.hasNext())
+    		{
+    			TMultiPart p = it.next();
+    			if(p instanceof PartRebar)
+    			{
+    				PartRebar rail = (PartRebar) p;
+    				if(rail.te == null)
+    					rail.te = new TileEntityLiftAccess();
+    				rail.te.setWorldObj(world);
+    				return rail.te;
+    			}
+    		}
+    	}
+		return null;
+	}
 
 }

@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import thut.api.ThutItems;
+import codechicken.lib.vec.BlockCoord;
+import thut.api.ThutBlocks;
+import thut.api.blocks.BlockFluid;
 import thut.api.blocks.IRebar;
+import thut.api.blocks.multiparts.parts.PartFluid;
 import thut.concrete.common.ConcreteCore;
-import thut.core.common.blocks.BlockFluid;
-import thut.core.common.blocks.BlockFluid.FluidInfo;
-import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
+import thut.concrete.common.blocks.tileentity.worldBlocks.TileEntityBlockFluid;
+import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
@@ -42,30 +44,15 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 	Integer[][] data;
 	
 	public BlockConcrete() {
-		super(new Fluid("solidconcrete").setDensity(Integer.MAX_VALUE).setViscosity(
-				Integer.MAX_VALUE),Material.rock);
+		super(new Fluid("solidconcrete").setDensity(3000).setViscosity(Integer.MAX_VALUE),Material.rock);
 		setBlockName("concrete");
-		this.rate = 10;
 		concrete = this;
+		ThutBlocks.addPart(this, ConcretePart.class);
+		ThutBlocks.parts2.put("tc_concrete", ConcretePart.class);
 		setCreativeTab(ConcreteCore.tabThut);
-		setSolid();
-		this.fluid = false;
-		this.stampable = true;
 		this.setTickRandomly(false);
 		this.setStepSound(soundTypeStone);
 	}
-	public void setData()
-	{
-		if(fluidBlocks.get(this)==null){
-			fluidBlocks.put(this, new FluidInfo());
-			FluidInfo info = fluidBlocks.get(this);
-			info.viscosity = 15;
-			info.randomFactor = 15;
-			info.fallOfEdge = false;
-			info.combinationBlocks.put(this, this);
-			}
-	}
-	
 	
 	@Override
 	public boolean isNormalCube(IBlockAccess world, int x, int y, int z) {
@@ -76,31 +63,23 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
      */
     public Item getItemDropped(int par1, Random par2Random, int par3)
     {
-        return ThutItems.dust.getItem();
+        return Item.getItemFromBlock(rebar);
     }
     
     
     @Override
     public int quantityDropped(int meta, int fortune, Random random)
     {
-        return meta + 1;
+        return 1;
     }
 	
-	
-	@Override
-	public void setBlockBoundsBasedOnState(IBlockAccess par1IBlockAccess, int x, int y, int z)
-    {
-    	this.setBoundsByMeta(par1IBlockAccess.getBlockMetadata(x, y, z));
-    	this.setResistanceByMeta(par1IBlockAccess.getBlockMetadata(x, y, z));
-    }
-
     
 	@Override
     public AxisAlignedBB getCollisionBoundingBoxFromPool(World par1World, int par2, int par3, int par4)
     {
         int l = par1World.getBlockMetadata(par2, par3, par4);
         float f = 0.0625F;
-        return AxisAlignedBB.getAABBPool().getAABB((double)par2 + this.minX, (double)par3 + this.minY, (double)par4 + this.minZ,
+        return AxisAlignedBB.getBoundingBox((double)par2 + this.minX, (double)par3 + this.minY, (double)par4 + this.minZ,
         								(double)par2 + this.maxX, (double)((float)par3 + (float)l * f), (double)par4 + this.maxZ);
     }
 	
@@ -113,6 +92,15 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 	@Override
 	public void updateTick(World worldObj, int x, int y, int z, Random par5Random){}
 	
+	  /**
+	   * Returns true if the given side of this block type should be rendered, if the adjacent block is at the given
+	   * coordinates.  Args: blockAccess, x, y, z, side
+	   */
+	  @SideOnly(Side.CLIENT)
+	  public boolean shouldSideBeRendered(IBlockAccess p_149646_1_, int p_149646_2_, int p_149646_3_, int p_149646_4_, int p_149646_5_)
+	  {
+	      return p_149646_5_ == 0 && this.minY > 0.0D ? true : (p_149646_5_ == 1 && this.maxY < 1.0D ? true : (p_149646_5_ == 2 && this.minZ > 0.0D ? true : (p_149646_5_ == 3 && this.maxZ < 1.0D ? true : (p_149646_5_ == 4 && this.minX > 0.0D ? true : (p_149646_5_ == 5 && this.maxX < 1.0D ? true : !p_149646_1_.getBlock(p_149646_2_, p_149646_3_, p_149646_4_).isOpaqueCube())))));
+	  }
 	
 	public void onBlockClicked(World worldObj, int x, int y, int z, EntityPlayer player){
 		this.setResistanceByMeta(worldObj.getBlockMetadata(x, y, z));
@@ -136,7 +124,9 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
+	@SideOnly(Side.CLIENT)
+	IIcon[] iconArray;
 	@SideOnly(Side.CLIENT)
 	public void registerBlockIcons(IIconRegister par1IconRegister)
 	{
@@ -163,16 +153,20 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 		return side;
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
 	public IIcon getIcon(IBlockAccess worldObj, int x, int y, int z, int side)
 	{
-		TileEntityBlockFluid te = (TileEntityBlockFluid) worldObj.getTileEntity(x, y, z);
-		return iconArray[te.metaArray[side]];
+		BlockCoord pos = new BlockCoord(x,y,z);
+		TileEntityBlockFluid te = (TileEntityBlockFluid) PartFluid.getFluidTile(FMLClientHandler.instance().getWorldClient(), pos);
+		return iconArray[te!=null?te.metaArray[side]:8];//
 	}
 	@Override
     public boolean recolourBlock(World world, int x, int y, int z, ForgeDirection side, int colour)
     {
-    	TileEntityBlockFluid te = (TileEntityBlockFluid) world.getTileEntity(x, y, z);
+		BlockCoord pos = new BlockCoord(x,y,z);
+		TileEntityBlockFluid te = (TileEntityBlockFluid) PartFluid.getFluidTile(world, pos);
+		System.out.println(te+" "+world.getBlockMetadata(x, y, z));
     	int old = te.metaArray[side.ordinal()];
     	if(old == colour)
     		return false;
@@ -185,4 +179,21 @@ public class BlockConcrete extends BlockFluid implements ITileEntityProvider//, 
 	public TileEntity createNewTileEntity(World var1, int var2) {
 	    return new TileEntityBlockFluid();
 	}
+	
+    public static class ConcretePart extends PartFluid
+    {
+    	public ConcretePart()
+    	{
+    		this(0);
+    	}
+    	
+    	public ConcretePart(int meta)
+    	{
+    		super(meta);
+    		name = "tc_concrete";
+    		block = ThutBlocks.concrete;
+    		tile = new TileEntityBlockFluid();
+    		hasTile = true;
+    	}
+    }
 }

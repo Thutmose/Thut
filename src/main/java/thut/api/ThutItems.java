@@ -29,14 +29,7 @@ public class ThutItems extends Items {
 	public static ItemStack water;// = new ItemStack(Item.bucketWater);
 	
 	public static ItemStack concreteBucket;// = new ItemStack(ItemBucketConcrete.instance);
-	public static ItemStack trassOre;// = new ItemStack(Blocks.worldGen,1,1);
-	public static ItemStack limestoneOre;// = new ItemStack(Blocks.worldGen,1,2);
-	public static ItemStack chalkOre;// = new ItemStack(Blocks.worldGen,1,0);
 	public static ItemStack twoRebar;// = new ItemStack(rebar,2,0);
-	
-	public static ItemStack solidLava0;// = new ItemStack(getSolidLava(0),1,0);
-	public static ItemStack solidLava1;// = new ItemStack(getSolidLava(1),1,0);
-	public static ItemStack solidLava2;// = new ItemStack(getSolidLava(2),1,0);
 	
 	private static List<Item> itemList = new ArrayList<Item>();
 	public static List<ItemStack> cookable = new ArrayList<ItemStack>();

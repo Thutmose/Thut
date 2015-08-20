@@ -1,163 +1,233 @@
 package thut.api.maths;
 
-import static thut.api.maths.Vector3.*;
+import static java.lang.Math.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.relauncher.Side;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.util.DamageSource;
-import thut.api.entity.IMultiBox;
-import thut.api.maths.Vector3;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.IBlockAccess;
+import thut.api.entity.IMultibox;
 
 
 public class Matrix3 {
-	public Vector3[] Rows = new Vector3[3];
+	
+	public Vector3[] rows = new Vector3[3];
+	private List<Vector3> corners = new ArrayList();
+
+	private static AxisAlignedBB[] pool = new AxisAlignedBB[10000];
+	private static int index = 0;
+	
+	public static synchronized AxisAlignedBB getAABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ)
+	{
+		if(index > 0)
+		{
+			AxisAlignedBB ret = pool[index-1];
+			index--;
+			if(ret!=null)
+				return ret.setBounds(minX, minY, minZ, maxX, maxY, maxZ);
+		}
+		
+		return AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+	}
+	
+	public static synchronized void freeAABB(AxisAlignedBB box)
+	{
+		if(index < pool.length - 1 && index >= 0)
+		{
+			pool[index] = box;
+			index++;
+		}
+	}
+
+	private Vector3 temp1;// = Vector3.getVector();
+	private Vector3 temp;// =Vector3.getVector();
+	private Vector3 ent;// = Vector3.getVector();
+	private Vector3 dir;// = Vector3.getVector();
+	private Vector3 temp2;// = Vector3.getVector();
+	private Vector3 mid = Vector3.getNewVectorFromPool();
+	private Matrix3 box;
+	
 	int size = 3;
 
 	public Matrix3() {
-		Rows[0] = new Vector3();
-		Rows[1] = new Vector3();
-		Rows[2] = new Vector3();
+		rows[0] = Vector3.getNewVectorFromPool();
+		rows[1] = Vector3.getNewVectorFromPool();
+		rows[2] = Vector3.getNewVectorFromPool();
+//		for(int i = 0; i< 8; i++)
+//			corners[i] = Vector3.getVector();
 	}
 
 	public Matrix3(double[] a, double[] b, double[] c) {
-		Rows[0] = Vector3.ArrayTo(a);
-		Rows[1] = Vector3.ArrayTo(b);
-		Rows[2] = Vector3.ArrayTo(c);
+		this();
+		rows[0].set(a[0], a[1], a[2]);
+		rows[1].set(b[0], b[1], b[2]);
+		rows[2].set(c[0], c[1], c[2]);
+//		for(int i = 0; i< 8; i++)
+//			corners[i] = Vector3.getVector();
 	}
 
 	public Matrix3(Vector3 a, Vector3 b, Vector3 c) {
-		Rows[0] = a.Copy();
-		Rows[1] = b.Copy();
-		Rows[2] = c.Copy();
+		rows[0] = a.copy();
+		rows[1] = b.copy();
+		rows[2] = c.copy();
+//		for(int i = 0; i< 8; i++)
+//			corners[i] = Vector3.getVector();
 	}
 
 	public Matrix3(Vector3 a, Vector3 b) {
-		this(a, b, new Vector3(0, 0, 0));
+		this(a, b, Vector3.empty);
 	}
 
 	public Matrix3(double d, double e, double f) {
 		this();
-		Rows[1] = new Vector3(d, e, f);
-	}
-
-	public Matrix3(double d, double e, double f, Vector3 vector3) {
-		this(d, e, f);
-		Rows[2] = vector3;
+		rows[1].set(d, e, f);
 	}
 
 	public Vector3 get(int i) {
 		assert (i < 3);
-		return Rows[i];
+		return rows[i];
 	}
 
 	public Vector3 boxMin() {
-		return Rows[0];
+		return rows[0];
 	}
 
 	public Vector3 boxMax() {
-		return Rows[1];
+		return rows[1];
 	}
 
 	public Vector3 boxRotation() {
-		return Rows[2];
+		return rows[2];
+	}
+	
+	public Vector3 boxCentre() {
+		if(temp==null)
+			temp = Vector3.getNewVectorFromPool();
+		if(temp1==null)
+			temp1 = Vector3.getNewVectorFromPool();
+		if(temp2==null)
+			temp2 = Vector3.getNewVectorFromPool();
+		temp.set(temp1);
+		temp1.set(boxMax());
+		temp2.set(temp1);
+		mid.set(temp2.subtractFrom((temp1.subtractFrom(boxMin())).scalarMultBy(0.5)));
+		temp1.set(temp);
+		
+		return mid;
 	}
 
 	public double get(int i, int j) {
 		assert (i < 3);
-		return Rows[i].get(j);
+		return rows[i].get(j);
 	}
 
-	public double boxZLength() {
-		return Math.abs(get(1, 2) - get(0, 2));
+	/**
+	 * 0 = min, min, min;
+	 * 1 = max, max, max;
+	 * 2 = min, min, max;
+	 * 3 = min, max, min;
+	 * 4 = max, min, min;
+	 * 5 = min, max, max;
+	 * 6 = max, min, max;
+	 * 7 = max. max, min;
+	 * @return
+	 */
+	public Vector3[] corners(Vector3 mid) {
+		corners(mid!=null);
+		return corners.toArray((new Vector3[8]));
 	}
 
-	public double boxYLength() {
-		return Math.abs(get(1, 1) - get(0, 1));
-	}
-
-	public double boxXLength() {
-		return Math.abs(get(1, 0) - get(0, 0));
-	}
-
-	public Vector3[] corners() {
-		Vector3[] corners = new Vector3[8];
-
-		corners[0] = boxMin();
-		corners[1] = boxMax();
-
-		corners[2] = new Vector3(boxMin().x, boxMin().y, boxMax().z);
-		corners[3] = new Vector3(boxMin().x, boxMax().y, boxMin().z);
-		corners[4] = new Vector3(boxMax().x, boxMin().y, boxMin().z);
-
-		corners[5] = new Vector3(boxMin().x, boxMax().y, boxMax().z);
-		corners[6] = new Vector3(boxMax().x, boxMin().y, boxMax().z);
-		corners[7] = new Vector3(boxMax().x, boxMax().y, boxMin().z);
-
-		if (!boxRotation().isEmpty()) {
-			Vector3.rotateAboutAngles(corners, boxRotation().y,
-					boxRotation().z);
+	private void corners(boolean rotate)
+	{
+		if(corners.isEmpty())
+		{
+			for(int i = 0; i< 8; i++)
+				corners.add(Vector3.getNewVectorFromPool());
 		}
+		if(temp==null)
+			temp = Vector3.getNewVectorFromPool();
+		if(temp2==null)
+			temp2 = Vector3.getNewVectorFromPool();
+		corners.get(0).set(boxMin());
+		corners.get(1).set(boxMax());
 
-		return corners;
+		corners.get(2).set(boxMin().x, boxMin().y, boxMax().z);
+		corners.get(3).set(boxMin().x, boxMax().y, boxMin().z);
+		corners.get(4).set(boxMax().x, boxMin().y, boxMin().z);
+
+		corners.get(5).set(boxMin().x, boxMax().y, boxMax().z);
+		corners.get(6).set(boxMax().x, boxMin().y, boxMax().z);
+		corners.get(7).set(boxMax().x, boxMax().y, boxMin().z);
+
+		if(rotate)
+			mid = boxCentre();
+		else
+			mid = null;
+		if (!boxRotation().isEmpty() && mid!=null) {
+			for(int i = 0; i< 8; i++)
+				corners.get(i).subtractFrom(mid);
+			Vector3.rotateAboutAngles(corners.toArray(new Vector3[8]), boxRotation().y,
+					boxRotation().z, temp2, temp);
+			
+			for(int i = 0; i< 8; i++)
+			{
+				corners.get(i).addTo(mid);
+			}
+		}
 	}
-
-	public Matrix3 addOffset(Vector3 pushOffset) {
-		Matrix3 ret = this.copy();
-		ret.Rows[0] = ret.Rows[0].add(pushOffset);
-		ret.Rows[1] = ret.Rows[1].add(pushOffset);
-		return ret;
+	
+	public Matrix3 addOffsetTo(Vector3 pushOffset) {
+		rows[0].addTo(pushOffset);
+		rows[1].addTo(pushOffset);
+		return this;
 	}
 
 	public Matrix3 copy() {
-		Matrix3 ret = new Matrix3(Rows[0], Rows[1], Rows[2]);
+		Matrix3 ret = new Matrix3();
+		ret.rows[0].set(rows[0]);
+		ret.rows[1].set(rows[1]);
+		ret.rows[2].set(rows[2]);
 		return ret;
 	}
 
-	public void set(int i, Vector3 j) {
+	public Matrix3 set(int i, Vector3 j) {
 		assert (i < 3);
-		Rows[i] = j;
+		rows[i] = j;
+		return this;
 	}
 
 	public void set(int i, int j, double k) {
-		Rows[i].set(j, k);
+		rows[i].set(j, k);
 	}
 
 	public double[][] toArray() {
-		return new double[][] { Rows[0].toArray(), Rows[1].toArray(),
-				Rows[2].toArray() };
-	}
-
-	public Matrix3 addToRows(Vector3 vec) {
-		return new Matrix3(Rows[0].add(vec), Rows[1].add(vec),
-				Rows[2].add(vec));
+		return new double[][] { 
+				{rows[0].x,rows[0].y,rows[0].z}, 
+				{rows[1].x,rows[1].y,rows[1].z},
+				{rows[2].x,rows[2].y,rows[2].z} 
+				};
 	}
 
 	public String toString() {
 		String eol = System.getProperty("line.separator");
-		return eol + "0: " + Rows[0].toString() + eol + "1: "
-				+ Rows[1].toString() + eol + "2 : " + Rows[2].toString();
-	}
-
-	/**
-	 * Multiplies MatrixA by MatrixB in the form AB.
-	 * 
-	 * @param MatrixA
-	 * @param MatrixB
-	 * @return
-	 */
-	public static Matrix3 matrixMatrixMult(Matrix3 MatrixA, Matrix3 MatrixB) {
-		Matrix3 MatrixC = new Matrix3();
-		MatrixB = matrixTranspose(MatrixB);
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				MatrixC.set(i, j, vectorDot(MatrixA.get(i), MatrixB.get(j)));
-			}
-		}
-		return MatrixC;
+		return eol + "0: " + rows[0].toString() + eol + "1: "
+				+ rows[1].toString() + eol + "2 : " + rows[2].toString();
 	}
 
 	/**
@@ -175,26 +245,6 @@ public class Matrix3 {
 		}
 		return MatrixT;
 	}
-
-	/**
-	 * Computes the Inverse of the matrix
-	 * 
-	 * @param Matrix
-	 * @return
-	 */
-	public static Matrix3 matrixInverse(Matrix3 Matrix) {
-		Matrix3 Inverse = new Matrix3();
-		double det = matrixDet(Matrix);
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				Inverse.set(i, j, Math.pow(-1, i + j)
-						* matrixDet(matrixMinor(Matrix, i, j)) / det);
-			}
-		}
-		Inverse = matrixTranspose(Inverse);
-		return Inverse;
-	}
-
 	/**
 	 * Computes the Determinant of the given matrix, Matrix must be square.
 	 * 
@@ -253,651 +303,513 @@ public class Matrix3 {
 		}
 		return Minor;
 	}
-
-	/**
-	 * Adds MatrixA and MatrixB
-	 * 
-	 * @param MatrixA
-	 * @param MatrixB
-	 * @return
-	 */
-	public static Matrix3 matrixAddition(Matrix3 MatrixA, Matrix3 MatrixB) {
-		Matrix3 MatrixC = new Matrix3();
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				MatrixC.set(i, i, MatrixA.get(i, j) + MatrixB.get(i, j));
-			}
-		}
-		return MatrixC;
-	}
-
-	/**
-	 * Subtracts MatrixB from MatrixA
-	 * 
-	 * @param MatrixA
-	 * @param MatrixB
-	 * @return
-	 */
-	public static Matrix3 matrixSubtraction(Matrix3 MatrixA, Matrix3 MatrixB) {
-		Matrix3 MatrixC = new Matrix3();
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				MatrixC.set(i, i, MatrixA.get(i, j) - MatrixB.get(i, j));
-			}
-		}
-		return MatrixC;
-	}
-
-	/**
-	 * Multiplies the Matrix by the scalar
-	 * 
-	 * @param Matrix
-	 * @param scalar
-	 * @return
-	 */
-	public static Matrix3 matrixScalarMuli(Matrix3 Matrix, double scalar) {
-		Matrix3 ret = new Matrix3();
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				ret.set(i, j, Matrix.get(i, j) * scalar);
-			}
-		}
-		return ret;
-	}
-
-	public boolean pushOutOfBox(Entity pusher, Entity e, Vector3 offset) {
-		boolean ret = false;
-		ret = doEntityCollision(pusher, e, offset);
-		return ret;
-	}
-
-	public boolean doEntityCollision(Entity pusher, Entity e, Vector3 offset) {
-		return doEntityCollision(pusher, e, offset, new Vector3());
-	}
-
-	public boolean doEntityCollision(Entity pusher, Entity e,
-			Vector3 offset, Vector3 entity) {
-		return doCollision(new Vector3(pusher), new Vector3(pusher.motionX,
-				pusher.motionY, pusher.motionZ), e, offset, entity);
-	}
-
-	public boolean doTileCollision(Vector3 tile, Entity e) {
-		return doCollision(tile, new Vector3(), e, new Vector3(),
-				new Vector3());
-	}
-
-	public boolean doCollision(Vector3 push, Vector3 v, Entity e,
-			Vector3 offset, Vector3 entity) {
-		boolean ret = false;
-
-		offset.y += e.yOffset;
-		if (entity.isNaN()) {
-			System.out.println("HOW DIS NAN " + entity.toString());
-			entity.clear();
-		}
-
-		Vector3 r = ((new Vector3(e)).subtract(offset).subtract(push))
-				.add(entity);
-
-		boolean rot = false;
-		Vector3 rotation = boxRotation();
-
-		if (!(rotation.y == 0 && rotation.z == 0)) {
-			rot = true;
-			r = r.rotateAboutAngles(rotation.y, rotation.z);
-		}
-
-		Vector3 min = boxMin();
-		min.y = -e.yOffset;
-		Vector3 max = boxMax();
-
-		boolean flag = !(e instanceof IMultiBox);
-
-		double posxOffset = flag ? e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMax().x;
-		double negxOffset = flag ? -e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMin().x;
-		double posyOffset = flag ? 0 : ((IMultiBox) e).bounds(push)
-				.boxMax().y;
-		double negyOffset = flag ? 0 : ((IMultiBox) e).bounds(push)
-				.boxMin().y;
-		double poszOffset = flag ? e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMax().z;
-		double negzOffset = flag ? -e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMin().z;
-
-		if (flag
-				&& !(r.inMatBox(this)
-						|| r.add(new Vector3(posxOffset, 0, 0)).inMatBox(
-								this)
-						|| r.add(new Vector3(negxOffset, 0, 0)).inMatBox(
-								this)
-
-						|| r.add(new Vector3(0, 0, poszOffset)).inMatBox(
-								this) || r.add(
-						new Vector3(0, 0, negzOffset)).inMatBox(this))) {
-			// System.out.println();
-			return ret;
-		} else if (!(r.inMatBox(this)
-				|| r.add(new Vector3(posxOffset, 0, 0)).inMatBox(this)
-				|| r.add(new Vector3(negxOffset, 0, 0)).inMatBox(this)
-
-				|| r.add(new Vector3(0, 0, poszOffset)).inMatBox(this)
-				|| r.add(new Vector3(0, 0, negzOffset)).inMatBox(this)
-
-				|| r.add(new Vector3(0, posyOffset, 0)).inMatBox(this) || r
-				.add(new Vector3(0, negyOffset, 0)).inMatBox(this)
-
-		))
-
+	
+	public Matrix3 getOctant(int octant)
+	{
+		Matrix3 ret = copy();
+		switch(octant)
 		{
+		case 0:
+			ret.rows[0].x = rows[0].x + rows[1].x/2;
+			ret.rows[0].y = rows[0].y + rows[1].y/2;
+			ret.rows[0].z = rows[0].z + rows[1].z/2;
+			return ret;
+		case 1:
+			ret.rows[1].x = rows[1].x - rows[1].x/2;
+			ret.rows[0].y = rows[0].y + rows[1].y/2;
+			ret.rows[0].z = rows[0].z + rows[1].z/2;
+			return ret;
+		case 2:
+			ret.rows[1].x = rows[1].x - rows[1].x/2;
+			ret.rows[1].y = rows[1].y - rows[1].y/2;
+			ret.rows[0].z = rows[0].z + rows[1].z/2;
+			return ret;
+		case 3:
+			ret.rows[0].x = rows[0].x + rows[1].x/2;
+			ret.rows[1].y = rows[1].y - rows[1].y/2;
+			ret.rows[0].z = rows[0].z + rows[1].z/2;
+			return ret;
+		case 4:
+			ret.rows[0].x = rows[0].x + rows[1].x/2;
+			ret.rows[0].y = rows[0].y + rows[1].y/2;
+			ret.rows[1].z = rows[1].z - rows[1].z/2;
+			return ret;
+		case 5:
+			ret.rows[1].x = rows[1].x - rows[1].x/2;
+			ret.rows[0].y = rows[0].y + rows[1].y/2;
+			ret.rows[1].z = rows[1].z - rows[1].z/2;
+			return ret;
+		case 6:
+			ret.rows[1].x = rows[1].x - rows[1].x/2;
+			ret.rows[1].y = rows[1].y - rows[1].y/2;
+			ret.rows[1].z = rows[1].z - rows[1].z/2;
+			return ret;
+		case 7:
+			ret.rows[0].x = rows[0].x + rows[1].x/2;
+			ret.rows[1].y = rows[1].y - rows[1].y/2;
+			ret.rows[1].z = rows[1].z - rows[1].z/2;
 			return ret;
 		}
-		// if(e instanceof IMultiBox)
+		
+		return ret;
+	}
+	
+	public Matrix3 resizeBox(double x, double y, double z)
+	{
+		Matrix3 ret = copy();
+
+		ret.boxMin().x -= x;
+		ret.boxMin().y -= y;
+		ret.boxMin().z -= z;
+		
+		ret.boxMax().x += x;
+		ret.boxMax().y += y;
+		ret.boxMax().z += z;
+		
+		return ret;
+	}
+	
+	List<Vector3> cornersList = new ArrayList();
+
+	public Vector3 doTileCollision(IBlockAccess world, Entity e, Vector3 offset, Vector3 diffs) {//TODO finally get this working
+		if(temp==null)
+			temp = Vector3.getNewVectorFromPool();
+		if(dir==null)
+			dir = Vector3.getNewVectorFromPool();
+		if(temp1==null)
+			temp1 = Vector3.getNewVectorFromPool();
+		if(ent==null)
+			ent = Vector3.getNewVectorFromPool();
+		cornersList.clear();
+		ent.set(e);
+		temp.set(ent).addTo(diffs).addTo(offset);		
+		temp1.set(diffs);
+		if(box==null)
+			box = copy();
+		else
 		{
-
+			box.clear();
+			box.set(this);
 		}
+		Matrix3 mob = box.addOffsetTo(temp);
+		
+		int n = 0;
+		e.onGround = false;
 
-		Vector3 pushDir = new Vector3();
-		Vector3 pushLoc = new Vector3();
+		for(Vector3 v: mob.corners(mob.boxCentre()))
+			cornersList.add(v);
 
-		double x = (r.x - (boxXLength()) / 2) / (boxXLength());
-		double y = (r.y - (boxYLength()) / 2) / (boxYLength());
-		double z = (r.z - (boxZLength()) / 2) / (boxZLength());
-		double yoffset = 0;
-
-		double yDiff = push.y + max.y + offset.y;
-		double rho = Math.sqrt(r.x * r.x + r.z * r.z);
-
-		if (rot) {
-			yDiff += rho * Math.sin(-rotation.y);
-		}
-
-		boolean movedx = false, movedy = false, movedz = false;
-
-		Vector3 location = new Vector3(x, y, z);
-
-		if (location.isNaN()) {
-			location.clear();
-		}
+		double minX = Double.MAX_VALUE, minZ = Double.MAX_VALUE, minY = Double.MAX_VALUE;
+		double maxX = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+		
+		for(Vector3 v: cornersList)
 		{
-			boolean entitymovingup = (e.motionY - v.y) > 0;
-			location = location.add(new Vector3(0.5, 0, 0.5));
+			if(v.x > maxX)
+				maxX = v.x;
+			if(v.y > maxY)
+				maxY = v.y;
+			if(v.z > maxZ)
+				maxZ = v.z;
+			if(v.x < minX)
+				minX = v.x;
+			if(v.y < minY)
+				minY = v.y;
+			if(v.z < minZ)
+				minZ = v.z;
+		}
+		double dx = max(maxX - minX, 1), dy = max(maxY - minY, 1), dz = max(maxZ - minZ, 1);
 
-			boolean xpositive = location.x > 0
-					&& location.x >= Math.abs(location.z);
-			boolean xnegative = location.x < 0
-					&& -location.x >= Math.abs(location.z);
+		AxisAlignedBB aabb = mob.boxCentre().getAABB().expand(dx, dy, dz);
+		
+		List list = e.worldObj.func_147461_a(aabb);
 
-			boolean zpositive = location.z > 0
-					&& location.z >= Math.abs(location.x);
-			boolean znegative = location.z < 0
-					&& -location.z >= Math.abs(location.x);
+		freeAABB(aabb);
+		List<AxisAlignedBB> aabbs = list;
+		double[] corners = {minY, maxY, minZ, maxZ, minX, maxX};
+		double[] pens = {Double.MAX_VALUE,Double.MAX_VALUE,
+				Double.MAX_VALUE,Double.MAX_VALUE,
+				Double.MAX_VALUE,Double.MAX_VALUE};
+		
+		boolean justDown = true;
 
-			boolean ynegative = (entitymovingup || (e.motionY - v.y) > 0.2)
-					&& location.y < 0;
-			boolean ypositive = Math.abs(yDiff - e.posY) <= e.stepHeight
-					|| ((e.motionY - v.y) < -0.2 && (e.posY - e.motionY > yDiff));// &&!entitymovingup;//||(((pusher.motionY)<0)&&(yDiff-e.posY)<=e.stepHeight)||(flag&&(yDiff-e.posY)<=e.stepHeight);
+		double minCeiling = Integer.MAX_VALUE;
+		double maxFloor = -1;//MathHelper.floor_double(e.posY);
+		boolean[] dirs = new boolean[6];
 
-			double f = 0.005;
-			double fx = f, fy = f, fz = f;
-			if (ypositive) {
-				pushDir.y = v.y > 0 ? v.y : 0;
-				if (e instanceof EntityLiving && collisionDamage) {
-					int damage = Math.max(
-							(int) ((-e.motionY + v.y + 0.15) * (-e.motionY
-									+ v.y + 0.15)), 0);
-					if (damage > 0)
-						((EntityLiving) e).attackEntityFrom(
-								DamageSource.fall, damage);
-				}
-				e.motionY = v.y > 0 ? v.y : 0;
-				e.setPosition(e.posX + v.x, yDiff, e.posZ + v.z);
-				e.isAirBorne = false;
+		for(AxisAlignedBB box: aabbs)
+		{
+			if(!doAABBcollision(box, corners, pens, dirs, diffs))
+				continue;
+			if(dirs[0])
+			{
+				boolean downForBlock = (diffs.y < 0 && minY >= box.minY);
+				justDown = justDown && downForBlock;
 				e.onGround = true;
-				e.fallDistance = 0;
-				movedy = true;
-			} else if (ynegative) {
-				pushDir.y = -e.motionY - fy + v.y;
-				movedy = true;
-
-				if (e instanceof EntityLiving && collisionDamage) {
-					int damage = Math.max(
-							(int) ((e.motionY + v.y + 0.15) * (e.motionY
-									+ v.y + 0.15)), 0);
-					((EntityLiving) e).attackEntityFrom(DamageSource.fall,
-							damage);
+				if(downForBlock || ((box.maxY - e.posY) <= e.stepHeight))
+				{
+					maxFloor = Math.max(maxFloor, box.maxY);
 				}
 			}
-
-			if (!movedy) {
-				if (xnegative) {
-					pushDir.x = -fx;
-					pushLoc.x = min.x;
-					// System.out.println("pushed1"+location.toString());
-					movedx = true;
-				} else if (xpositive) {
-					pushDir.x = fx;
-					pushLoc.x = max.x;
-					// System.out.println("pushed2"+location.toString());
-					movedx = true;
-				}
-				if (znegative) {
-					pushDir.z = -fz;
-					pushLoc.z = min.z;
-					// System.out.println("pushed3"+location.toString());
-					movedz = true;
-				} else if (zpositive) {
-					pushDir.z = fz;
-					pushLoc.z = max.z;
-					// System.out.println("pushed4"+location.toString());
-					movedz = true;
-				}
+			if(dirs[1])
+			{
+				minCeiling = Math.min(minCeiling, box.minY);
 			}
-
+			n++;
 		}
-
-		if (rot) {
-			pushDir = pushDir.rotateAboutAngles(-rotation.y, -rotation.z);
-			pushLoc = pushLoc.rotateAboutAngles(-rotation.y, -rotation.z);
-		}
-		if (movedy || movedx || movedz) {
-			if (pushDir.y != 0 && !Double.isNaN(pushDir.y)) {
-				e.motionY = pushDir.y;
-
-			}
-			if (pushDir.x != 0 && !Double.isNaN(pushDir.x)) {
-				if (pushLoc.x != 0 && !pushLoc.isNaN()) {
-					e.setPosition(push.x + pushLoc.x + pushDir.x + offset.x
-							+ (pushLoc.x > 0 ? e.width / 2 : -e.width / 2),
-							e.posY, e.posZ);
-				}
-			}
-			if (pushDir.z != 0 && !Double.isNaN(pushDir.z)) {
-				if (pushLoc.z != 0 && !pushLoc.isNaN()) {
-					e.setPosition(e.posX, e.posY, push.z + pushLoc.z
-							+ pushDir.z + offset.z
-							+ (pushLoc.z > 0 ? e.width / 2 : -e.width / 2));
-				}
-
-			}
-			ret = movedx || movedz || movedy;
-		}
-		if (e instanceof EntityItem) {
-			if (movedy) {
-				e.motionX = 0;
-				e.motionZ = 0;
-			}
-		}
-		return movedx || movedz || movedy;
-	}
-
-	public Vector3 getEntityCollisionVector(Entity pusher, Entity e,
-			Vector3 offset, Vector3 entity) {
-		return getCollisionVector(new Vector3(pusher), new Vector3(
-				pusher.motionX, pusher.motionY, pusher.motionZ), e, offset,
-				entity);
-	}
-
-	public Vector3 getCollisionVector(Vector3 push, Vector3 v, Entity e,
-			Vector3 offset, Vector3 entity) {
-		offset.y += e.yOffset;
-		if (entity.isNaN()) {
-			System.out.println("HOW DIS NAN " + entity.toString());
-			entity.clear();
-		}
-
-		Vector3 pushDir = new Vector3();
-		Vector3 pushLoc = new Vector3();
-
-		// Vector3 push = new Vector3(pusher);
-		Vector3 r = ((new Vector3(e)).subtract(offset).subtract(push))
-				.add(entity);
-
-		boolean rot = false;
-		Vector3 rotation = boxRotation();
-
-		if (!(rotation.y == 0 && rotation.z == 0)) {
-			rot = true;
-			r = r.rotateAboutAngles(rotation.y, rotation.z);
-		}
-
-		Vector3 min = boxMin();
-		min.y = -e.yOffset;
-		Vector3 max = boxMax();
-
-		boolean flag = !(e instanceof IMultiBox);
-
-		double posxOffset = flag ? e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMax().x;
-		double negxOffset = flag ? -e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMin().x;
-		double posyOffset = flag ? 0 : ((IMultiBox) e).bounds(push)
-				.boxMax().y;
-		double negyOffset = flag ? 0 : ((IMultiBox) e).bounds(push)
-				.boxMin().y;
-		double poszOffset = flag ? e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMax().z;
-		double negzOffset = flag ? -e.width / 2 : ((IMultiBox) e).bounds(
-				push).boxMin().z;
-
-		if (flag
-				&& !(r.inMatBox(this)
-						|| r.add(new Vector3(posxOffset, 0, 0)).inMatBox(
-								this)
-						|| r.add(new Vector3(negxOffset, 0, 0)).inMatBox(
-								this)
-
-						|| r.add(new Vector3(0, 0, poszOffset)).inMatBox(
-								this) || r.add(
-						new Vector3(0, 0, negzOffset)).inMatBox(this))) {
-			// System.out.println();
-			return pushDir;
-		} else if (!(r.inMatBox(this)
-				|| r.add(new Vector3(posxOffset, 0, 0)).inMatBox(this)
-				|| r.add(new Vector3(negxOffset, 0, 0)).inMatBox(this)
-
-				|| r.add(new Vector3(0, 0, poszOffset)).inMatBox(this)
-				|| r.add(new Vector3(0, 0, negzOffset)).inMatBox(this)
-
-				|| r.add(new Vector3(0, posyOffset, 0)).inMatBox(this) || r
-				.add(new Vector3(0, negyOffset, 0)).inMatBox(this)
-
-		))
-
+		
+		for(int i = 0; i<6; i++)
 		{
-			return pushDir;
+			if(pens[i]==Double.MAX_VALUE)
+				pens[i] = 0;
 		}
-
-		double x = (r.x - (boxXLength()) / 2) / (boxXLength());
-		double y = (r.y - (boxYLength()) / 2) / (boxYLength());
-		double z = (r.z - (boxZLength()) / 2) / (boxZLength());
-		double yoffset = 0;
-
-		double yDiff = push.y + max.y + offset.y;
-		double rho = Math.sqrt(r.x * r.x + r.z * r.z);
-
-		if (rot) {
-			yDiff += rho * Math.sin(-rotation.y);
-		}
-
-		boolean movedx = false, movedy = false, movedz = false;
-
-		Vector3 location = new Vector3(x, y, z);
-
-		if (location.isNaN()) {
-			location.clear();
-		}
+		//If not only colliding with a floor or cieling.
+		if(FMLCommonHandler.instance().getEffectiveSide()==Side.CLIENT)//Hopefully this fixes some of the bouncing that occurs
 		{
-			boolean entitymovingup = (e.motionY - v.y) > 0;
-			location = location.add(new Vector3(0.5, 0, 0.5));
-
-			boolean xpositive = location.x > 0
-					&& location.x >= Math.abs(location.z);
-			boolean xnegative = location.x < 0
-					&& -location.x >= Math.abs(location.z);
-
-			boolean zpositive = location.z > 0
-					&& location.z >= Math.abs(location.x);
-			boolean znegative = location.z < 0
-					&& -location.z >= Math.abs(location.x);
-
-			boolean ynegative = (entitymovingup || (e.motionY - v.y) > 0.2)
-					&& location.y < 0;
-			boolean ypositive = Math.abs(yDiff - e.posY) <= e.stepHeight
-					|| ((e.motionY - v.y) < -0.2 && (e.posY - e.motionY > yDiff));// &&!entitymovingup;//||(((pusher.motionY)<0)&&(yDiff-e.posY)<=e.stepHeight)||(flag&&(yDiff-e.posY)<=e.stepHeight);
-
-			// System.out.println(location.toString());
-
-			double f = 0.010;
-
-			if (ypositive) {
-				// System.out.println(yDiff+" "+push.y+" "+max.y+" "+offset.y+" "+(Math.sqrt(r.x*r.x+r.z*r.z)*Math.sin(-rotation.y))+" "+(-rotation.y));
-				pushDir.y = v.y > 0 ? v.y : 0;
-				// System.out.println((yDiff-e.posY)+" "+e.stepHeight+" "+(e.motionY-pusher.motionY));
-				if (e instanceof EntityLiving && collisionDamage) {
-					int damage = Math.max(
-							(int) ((-e.motionY + v.y + 0.15) * (-e.motionY
-									+ v.y + 0.15)), 0);
-					// System.out.println(damage+" "+(-e.motionY+pusher.motionY)+" "+pusher.motionY);
-					if (damage > 0)
-						((EntityLiving) e).attackEntityFrom(
-								DamageSource.fall, damage);
-				}
-				e.motionY = v.y > 0 ? v.y : 0;
-				e.setPosition(e.posX + v.x, yDiff, e.posZ + v.z);
-				e.motionX = (e.motionX + v.x) * 0.9;
-				e.motionZ = (e.motionZ + v.z) * 0.9;
-				e.isAirBorne = false;
-				e.onGround = true;
-				e.fallDistance = 0;
-				movedy = true;
-				// System.out.println("pushed+y");
-			} else if (ynegative) {
-				pushDir.y = -e.motionY - f + v.y;
-				movedy = true;
-
-				if (e instanceof EntityLiving && collisionDamage) {
-					int damage = Math.max(
-							(int) ((e.motionY + v.y + 0.15) * (e.motionY
-									+ v.y + 0.15)), 0);
-					// System.out.println(damage+" "+(-e.motionY+pusher.motionY)+" "+pusher.motionY);
-					if (damage > 0)
-						((EntityLiving) e).attackEntityFrom(
-								DamageSource.fall, damage);
-				}
-				// System.out.println("pushed-y");
-			}
-
-			if (!movedy) {
-				if (xnegative) {
-					pushDir.x = -f;
-					pushLoc.x = min.x;
-					// System.out.println("pushed1"+location.toString());
-					movedx = true;
-				} else if (xpositive) {
-					pushDir.x = f;
-					pushLoc.x = max.x;
-					// System.out.println("pushed2"+location.toString());
-					movedx = true;
-				}
-				if (znegative) {
-					pushDir.z = -f;
-					pushLoc.x = min.z;
-					// System.out.println("pushed3"+location.toString());
-					movedz = true;
-				} else if (zpositive) {
-					pushDir.z = f;
-					pushLoc.x = max.z;
-					// System.out.println("pushed4"+location.toString());
-					movedz = true;
-				}
-			}
-
+			justDown = dirs[0] && !dirs[1] && !dirs[2] && !dirs[3] && !dirs[4] && !dirs[5];
 		}
-
-		if (rot) {
-			pushDir = pushDir.rotateAboutAngles(-rotation.y, -rotation.z);
-			pushLoc = pushLoc.rotateAboutAngles(-rotation.y, -rotation.z);
-		}
-		// System.out.println(pushLoc.toString()+" "+toString());
-		if (movedy || movedx || movedz) {
-			// System.out.println("pushDir"+pushDir);
-			if (pushDir.y != 0 && !Double.isNaN(pushDir.y)) {
-				e.motionY = pushDir.y;
-
-			}
-			if (pushDir.x != 0 && !Double.isNaN(pushDir.x)) {
-				e.motionX = pushDir.x;
-				if (pushLoc.x != 0 && !pushLoc.isNaN()) {
-					// e.setPosition(pusher.posX + pushLoc.x, e.posY +
-					// pushLoc.y, e.posZ + pushLoc.z);
+		dir.clear();
+		boolean test = false;
+		if(!justDown)
+		{
+			
+			for(int i = 1; i<6; i++)
+			{
+//				if(!dirs[i] || abs(pens[i]) < 0.01)
+//					continue;
+				dir.set(EnumFacing.getFront(i)).scalarMultBy(-0.01).scalarMultBy(pens[i]);
+				
+				if(abs(dir.x) >0)
+				{
+					temp1.x = dir.x;
 				}
-			}
-			if (pushDir.z != 0 && !Double.isNaN(pushDir.z)) {
-				e.motionZ = pushDir.z;
-				if (pushLoc.x != 0 && !pushLoc.isNaN()) {
-					// e.setPosition(e.posX + pushLoc.x, e.posY + pushLoc.y,
-					// pusher.posZ + pushLoc.z);
+				if(abs(dir.z) >0)
+				{
+					temp1.z = dir.z;
 				}
-
+				if(abs(dir.y) >0)
+				{
+					temp1.y = dir.y;
+				}
 			}
 		}
-		if (e instanceof EntityItem) {
-			if (movedy) {
-				e.motionX = 0;
-				e.motionZ = 0;
-			}
+		if(dirs[2]||dirs[3]||dirs[4]||dirs[5])
+		{
+//			System.out.println(Arrays.toString(pens));
+//			System.out.println(Arrays.toString(dirs));
 		}
-		return !pushDir.isNaN() ? pushDir : new Vector3();
+		
+		
+		
+		if(dirs[1])
+		{
+			temp1.y = -pens[1];
+		}
+		if(dirs[0] && !(dirs[1] && pens[0] > 0.5))
+		{
+			test = true;
+			temp1.y =  maxFloor - e.posY;
+		}
+		
+		return temp1;
 	}
 
-	public static boolean multiBoxIntersect(Entity pusher, Entity e,
-			Vector3 offset, Vector3 intersect) {
+	public void set(Matrix3 box) {
+		rows[0].set(box.rows[0]);
+		rows[1].set(box.rows[1]);
+		rows[2].set(box.rows[2]);
+	}
+
+	public boolean doTileCollision(IBlockAccess world, Vector3 location, Entity e, Vector3 offset, Vector3 diffs) {
+		if(!(e instanceof IMultibox))
+			return false;
+		return !doTileCollision(world, e, offset, diffs).equals(diffs);
+	}
+
+	public boolean isInMaterial(IBlockAccess world, Vector3 location, Entity e, Vector3 offset, Material m) {
+		if(!(e instanceof IMultibox))
+			return false;
 		boolean ret = false;
-		if (!(pusher instanceof IMultiBox && e instanceof IMultiBox))
-			return ret;
-
-		Vector3 entity = new Vector3(e, true);
-		Vector3 push = new Vector3(pusher, true);
-
-		for (String pusherKey : ((IMultiBox) pusher).getBoxes().keySet()) {
-			for (String eKey : ((IMultiBox) e).getBoxes().keySet()) {
-				Vector3 pushOffset = ((IMultiBox) pusher).getOffsets()
-						.contains(pusherKey) ? ((IMultiBox) pusher)
-						.getOffsets().get(pusherKey) : new Vector3();
-				Vector3 eOffset = ((IMultiBox) e).getOffsets().contains(
-						eKey) ? ((IMultiBox) e).getOffsets().get(eKey)
-						: new Vector3();
-
-				Matrix3 pushBox = ((IMultiBox) pusher).getBoxes()
-						.get(pusherKey).addOffset(pushOffset)
-						.addOffset(push);
-				Matrix3 eBox = ((IMultiBox) e).getBoxes().get(eKey)
-						.addOffset(eOffset).addOffset(entity);
-
-				ret = pushBox.intersects(eBox);
-
-				if (ret) {
-					intersect = pushBox.intersect(eBox).subtract(entity);
-					break;
+		Vector3 ent = location;
+		if(temp==null)
+			temp = Vector3.getNewVectorFromPool();
+		else
+			temp.clear();
+		if(dir==null)
+			dir = Vector3.getNewVectorFromPool();
+		else
+			dir.clear();
+		if(temp1==null)
+			temp1 = Vector3.getNewVectorFromPool();
+		else
+			temp1.clear();
+		Vector3[] corners = corners(boxCentre());
+		
+		for(int i = 0; i<8; i++)
+		{
+			Vector3 v = corners[i];
+			dir.set(v);
+			temp.set(dir.addTo(ent).addTo(offset));
+			if(temp.getBlockMaterial(world)==m)
+			{
+				return true;
+			}
+			if(i%2==0)
+			{
+				temp.addTo(0, 0.01, 0);
+				if(temp.getBlockMaterial(world)==m)
+				{
+					return true;
 				}
 			}
-			if (ret)
-				break;
+		}
+		return false;
+	}
+	
+	/**
+	 * 
+	 * @param box
+	 * @param corners the extreme corners of this box
+	 * @param pensthe array to store the penetration distances in
+	 * @param dirs the array to store the penetration occurances in
+	 * @param diffs the velocity of the collider
+	 * @return if collides
+	 */
+	public boolean doAABBcollision(AxisAlignedBB box, double[] corners, double[] pens, boolean[] dirs, Vector3 diffs)
+	{
+		double minX = corners[4], minZ = corners[2], minY = corners[0];
+		double maxX = corners[5], maxZ = corners[3], maxY = corners[1];
+		boolean collidesX = ((maxZ <= box.maxZ) && (maxZ >= box.minZ))
+				||((minZ <= box.maxZ) && (minZ >= box.minZ));
+
+		boolean collidesY = ((minY >= box.minY) && (minY <= box.maxY)) 
+						|| ((maxY <= box.maxY) && (maxY >= box.minY));
+		
+		boolean collidesZ = ((maxX <= box.maxX) && (maxX >= box.minX))
+						||((minX <= box.maxX) && (minX >= box.minX));
+		
+		collidesZ = collidesZ && (collidesX || collidesY);
+		collidesX = collidesX && (collidesZ || collidesY);
+		
+		boolean in = collidesZ && collidesX;
+		
+		if (!in) {
+			return false;
+		}
+		
+		if (collidesY) {
+			if  ((minY >= box.minY) && (minY <= box.maxY))
+			{
+				pens[0] = Math.min(pens[0], abs(box.maxY - minY));
+				dirs[0] = true;
+			} else if ((maxY <= box.maxY) && (maxY >= box.minY))
+			{
+				pens[1] = Math.min(pens[1], abs(box.minY - maxY));
+				dirs[1] = true;
+			}
 		}
 
-		return ret;
+		if (collidesZ) {
+			if (diffs.z < 0) {
+				pens[2] = Math.min(pens[2], abs(box.minZ - minZ));
+				dirs[2] = true;
+			} else if (diffs.z > 0) {
+				pens[3] = Math.min(pens[3], abs(box.maxZ - maxZ));
+				dirs[3] = true;
+			}
+		}
+		if (collidesX) {
+			if (diffs.x < 0) {
+				pens[4] = Math.min(pens[4], abs(box.maxX - maxX));
+				dirs[4] = true;
+			} else if (diffs.x > 0) {
+				pens[5] = Math.min(pens[5], abs(box.maxX - maxX));
+				dirs[5] = true;
+			}
+		}
+		return true;
 	}
 
-	public boolean intersects(Matrix3 otherBox) {
+	public boolean doCollision(Vector3 boxVelocity, Entity e) {
 		boolean ret = false;
-		Vector3[] corners = otherBox.corners();
-		Vector3.rotateAboutAngles(corners, boxRotation());
-		for (Vector3 r : corners) {
-			if (r.inMatBox(this)) {
-				ret = true;
-				break;
-			}
-		}
-		return ret;
-	}
-
-	public Vector3 intersect(Matrix3 otherBox) {
-		Vector3 ret = new Vector3();
-		Vector3[] corners = otherBox.corners();
-		Vector3.rotateAboutAngles(corners, boxRotation());
-		for (Vector3 r : corners) {
-			if (r.inMatBox(this)) {
-				ret = r;
-				break;
-			}
-		}
-		return ret;
-	}
-
-	public Vector3 getMatrixPushDir(Matrix3 box) {
-		Vector3 ret = new Vector3();
-
-		return ret;
-	}
-
-	public Vector3 getPushDirOutOfBlocks(Entity e, Vector3 offset) {
-		Vector3 dir = new Vector3();
-
-		return dir;
-	}
-
-	public void pushEntityOutOfAABB(Matrix3 aabb, Entity e, Vector3 source) {
-		double xMin = aabb.boxMin().x;
-		double xMax = aabb.boxMax().x;
-
-		double yMin = aabb.boxMin().y;
-		double yMax = aabb.boxMax().y;
-
-		double zMin = aabb.boxMin().z;
-		double zMax = aabb.boxMax().z;
-
-		Vector3 r = new Vector3(e);
-
-		double posxOffset = e.width / 2;
-		double negxOffset = -e.width / 2;
-		double posyOffset = 0;
-		double negyOffset = 0;
-		double poszOffset = e.width / 2;
-		double negzOffset = -e.width / 2;
-
-		if (!(r.inMatBox(this)
-				|| r.add(new Vector3(posxOffset, 0, 0)).inMatBox(this)
-				|| r.add(new Vector3(negxOffset, 0, 0)).inMatBox(this)
-
-				|| r.add(new Vector3(0, 0, poszOffset)).inMatBox(this)
-				|| r.add(new Vector3(0, 0, negzOffset)).inMatBox(this)
-
-				|| r.add(new Vector3(0, posyOffset, 0)).inMatBox(this) || r
-				.add(new Vector3(0, negyOffset, 0)).inMatBox(this)
-
-		))
-
+		if(e==null)
+			return false;
+		if(dir==null)
+			dir = Vector3.getNewVectorFromPool();
+		if(ent==null)
+			ent = Vector3.getNewVectorFromPool();
+		if(temp2==null)
+			temp2 = Vector3.getNewVectorFromPool();
+		ent.set(e);
+		corners(true);
+		if(e instanceof IMultibox)
 		{
-			return;
+			IMultibox e1 = (IMultibox) e;
+			e1.setOffsets();
+			e1.setBoxes();
+			Map<String, Matrix3> boxes = e1.getBoxes();
+			Map<String, Vector3> offsets = e1.getOffsets();
+			for(String s: boxes.keySet())
+			{
+				Vector3 boxOff = offsets.containsKey(s)?offsets.get(s):Vector3.empty;
+				Matrix3 box = boxes.get(s);
+				box.addOffsetTo(boxOff).addOffsetTo(ent);
+				boolean hit = box.intersects(this);
+				box.addOffsetTo(boxOff.reverse()).addOffsetTo(ent.reverse());
+				boxOff.reverse();
+				ent.reverse();
+				Vector3.empty.clear();
+				if(hit)
+				{
+					return true;
+				}
+			}
+			
+		}
+		else
+		{
+			if(box==null)
+				box = new Matrix3();
+			box.set(e.boundingBox);
+			boolean hit = box.intersects(this);
+			if(hit)
+			{
+				return true;
+			}
+		}
+		
+		return ret;
+	}
+
+	public void set(AxisAlignedBB aabb) {
+		rows[0].x = aabb.minX;
+		rows[0].y = aabb.minY;
+		rows[0].z = aabb.minZ;
+		rows[1].x = aabb.maxX;
+		rows[1].y = aabb.maxY;
+		rows[1].z = aabb.maxZ;
+		rows[2].clear();
+	}
+
+	public boolean intersects(Matrix3 b)
+	{
+		List<Vector3> cornersB = new ArrayList();
+		for(Vector3 v: b.corners(boxCentre()))
+			cornersB.add(v);
+		
+		return intersects(cornersB);
+	}
+	
+	public boolean intersects(List<Vector3> mesh)
+	{
+		List<Vector3> cornersA = new ArrayList();
+		for(Vector3 v: corners(boxCentre()))
+			cornersA.add(v);
+		List<Vector3> diffs = diff(cornersA, mesh);
+		boolean temp = containsOrigin(diffs);
+		for(Vector3 v: diffs)
+			v.freeVectorFromPool();
+		return temp;
+		
+	}
+	
+	static List<Vector3> toMesh(ArrayList<Matrix3> boxes)
+	{
+		List<Vector3> ret = new ArrayList<Vector3>();
+		for(Matrix3 box: boxes)
+		{
+			for(Vector3 v: box.corners(box.boxCentre()))
+			{
+				boolean has = false;
+				for(Vector3 v1:ret)
+				{
+					if(v1.equals(v))
+					{
+						has = true;
+						break;
+					}
+				}
+				if(!has)
+					ret.add(v);
+			}
+		}
+		return ret;
+	}
+	
+	Vector3[] pointSet;
+	private List<Vector3> diff(List<Vector3> cornersA, List<Vector3> cornersB)
+	{
+		ArrayList<Vector3> ret = new ArrayList<Vector3>();
+		Vector3 c = Vector3.getNewVectorFromPool();
+		if(pointSet == null)
+			pointSet = new Vector3[100];
+		
+		//Vector3[] pointSet = new Vector3[cornersA.size() * cornersB.size()];
+		
+		int n = 0;
+		for(Vector3 a: cornersA)
+		{
+			for(Vector3 b: cornersB)
+			{
+				c.set(a).subtractFrom(b);
+				pointSet[n++] = c.copy();
+			}
+		}
+		c.freeVectorFromPool();
+		for(int i = 0; i<n; i++)
+		{
+			Vector3 v = pointSet[i];
+			ret.add(v);
+			pointSet[i] = null;
+		}
+		//ret.addAll(pointSet);
+		return ret;
+	}
+	
+	private static boolean containsOrigin(List<Vector3> points)
+	{
+		int index = 0;
+		int n = 0;
+		Vector3 base = points.get(index);
+		double dist = Double.MAX_VALUE;
+		for(int i = 0; i< points.size(); i++)
+		{
+			double d = points.get(i).magSq();
+			if(d < dist)
+			{
+				base = points.get(i);
+				dist = d;
+				index = i;
+			}
 		}
 
-		Vector3 mid = new Vector3();
-		mid.x = (xMin - xMax) / 2;
-		mid.y = (yMin - yMax) / 2;
-		mid.z = (zMin - zMax) / 2;
-		source = source.add(mid);
-		Vector3 finalPos = new Vector3();
-
-		double xDiff = Math.abs((r.x - source.x) / aabb.boxXLength());
-		double yDiff = Math.abs((r.y - source.y) / aabb.boxYLength());
-		double zDiff = Math.abs((r.z - source.z) / aabb.boxZLength());
-
-		if (r.x < source.x && xDiff > zDiff) {
-			finalPos.x = source.x - xMin - 0.05;
+		Vector3 mid = Vector3.findMidPoint(points);
+		points.remove(index);
+		boolean ret = false;
+		for(int i = 0; i< points.size(); i++)
+		{
+			Vector3 v = points.get(i);
+			double d = v.dot(base);
+			double d1 = v.dot(mid);
+			
+			if(d<=0)
+			{
+				if(d1<=d && signum(d)==signum(d1))
+				{
+					ret = true;
+					n++;
+					return true;
+				}
+			}
+			
 		}
-		if (r.y < source.y) {
-			finalPos.y = source.y - yMin - 0.05;
-		}
+		return ret;
+	}
 
-		if (r.z < source.z && zDiff > xDiff) {
-			finalPos.z = source.z - zMin - 0.05;
-		}
-
-		if (r.x > source.x && xDiff > zDiff) {
-			finalPos.x = source.x + xMax + 0.05;
-		}
-		if (r.y > source.y) {
-			finalPos.y = source.y + yMax + 0.05;
-		}
-
-		if (r.z > source.z && zDiff > xDiff) {
-			finalPos.z = source.z + zMax + 0.05;
-		}
-		finalPos.moveEntity(e);
-
+	public Matrix3 clear() {
+		rows[0].clear();
+		rows[1].clear();
+		rows[2].clear();
+		return this;
 	}
 
 }
-

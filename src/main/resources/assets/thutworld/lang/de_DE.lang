@@ -1,0 +1,82 @@
+# Thut's Concrete Language Properties (German Translation)
+# @author Thutmose and Vexatos
+
+# Blocks
+tile.concrete.name=Beton
+tile.concreteLiquid.name=Flüssiger Beton
+tile.asphalt.name=Asphalt
+tile.asphaltLiquid.name=Flüssiger Asphalt
+tile.Lava0.name=Mafische Lava
+tile.Lava1.name=Intermediäre Lava
+tile.Lava2.name=Felsische Lava
+tile.solidLava0.name=Basalt
+tile.solidLava1.name=Andesit
+tile.solidLava2.name=Rhyolith
+tile.dust.name=Vulkanasche
+tile.REconcrete.name=Verstärkter Beton
+tile.REconcreteLiquid.name=Flüssiger Verstärkter Beton
+tile.blockLimekiln.name=Kalkofen [WIP]
+tile.blockMixer.name=Mixer [WIP]
+tile.volcano.name=Vulkan-Spawner
+tile.rebar.name=Bewehrungsstahl
+tile.liftRail.name=Aufzugsschiene
+tile.platformRail.name=Plattformschiene [WIP]
+
+tile.chalk.name=Kreide
+tile.trass.name=Trass
+tile.limestone.name=Kalkstein
+
+tile.liftSpawner.name=Aufzug
+tile.liftController.name=Aufzugskontrollblock
+tile.display.name=Bildschirm [WIP]
+tile.seismicSensor.name=Fernsensor [WIP]
+
+# Items
+item.dustTrass.name=Trass-Staub
+item.dustCaO.name=Kalk
+item.dust.name=Staub
+item.dustCement.name=Zement
+item.dustCaCO3.name=Calciumkarbonat
+item.dustSulfur.name=Schwefel
+
+item.paintBrush0.name=Schwarzer Pinsel
+item.paintBrush1.name=Roter Pinsel
+item.paintBrush2.name=Grüner Pinsel
+item.paintBrush3.name=Bauner Pinsel
+item.paintBrush4.name=Blauer Pinsel
+item.paintBrush5.name=Violetter Pinsel
+item.paintBrush6.name=Türkiser Pinsel
+item.paintBrush7.name=Hellgrauer Pinsel
+item.paintBrush8.name=Grauer Pinsel
+item.paintBrush9.name=Rosa Pinsel
+item.paintBrush10.name=Hellgrüner Pinsel
+item.paintBrush11.name=Gelber Pinsel
+item.paintBrush12.name=Hellblauer Pinsel
+item.paintBrush13.name=Magentafarbener Pinsel
+item.paintBrush14.name=Oranger Pinsel
+item.paintBrush15.name=Weißer Pinsel
+item.paintBrush16.name=Pinsel
+
+item.wallstamper.name=Stempel
+item.smoother.name=Glätter
+item.bucketOconcrete.name=Beton-Eimer
+
+item.deviceLinker.name=Verbindungsgerät
+
+item.tank.name=Tank [WIP]
+item.spout.name=Hahn [WIP]
+
+# Chat Messages
+msg.noRails.name=Schienen sind nicht vollständig.
+msg.noBase.name=Basis ist nicht vollständig.
+
+msg.liftSet.name=Aufzug ausgewähkt
+
+msg.floorSet.name=Dieses Stockwerk wurde auf Nummer %s gesetzt
+msg.floorError.name=Stockwerk %s existiert bereits.
+msg.particlesLeft.name=Verbleibende Partikel
+
+# Misc
+itemGroup.tabConcrete=Thut's Concrete
+
+entity.thuttech.thuttechlift.name=Aufzug

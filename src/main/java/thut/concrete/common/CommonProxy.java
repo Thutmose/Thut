@@ -1,6 +1,5 @@
 package thut.concrete.common;
 
-import thut.concrete.client.gui.GuiLimekiln;
 import thut.concrete.common.blocks.tileentity.crafting.ContainerLimekiln;
 import thut.concrete.common.blocks.tileentity.crafting.ContainerMixer;
 import thut.concrete.common.blocks.tileentity.crafting.TileEntityKiln;
@@ -68,6 +67,7 @@ public class CommonProxy  implements IGuiHandler
 	@Override
 	public Object getServerGuiElement(int guiID, EntityPlayer player, World world, int x, int y, int z)
 	{
+		//System.out.println(guiID);
 		TileEntity te = world.getTileEntity(x, y, z);
 		if(te==null)
 			return null;
