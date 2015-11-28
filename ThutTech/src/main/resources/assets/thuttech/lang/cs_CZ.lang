@@ -1,0 +1,25 @@
+﻿
+# Thut's Concrete Language Properties
+# @author Thutmose
+# Czech translation
+
+# Blocks
+tile.liftRail.name=Elevator Rail
+tile.lift.name=Výtah
+tile.liftcontroller.name=Kontrolní panel výtahu
+tile.railgun.name=Block Cannon
+
+# Items
+item.devicelinker.name=Spojovací zařízení
+
+# Misc
+itemGroup.tabthut=Thutovy modifikace
+
+#Chat Messages
+msg.liftSet.name=Výstah vybrán
+msg.floorSet.name=Nastaveno jako podlaží %s
+msg.lift.killed=Výtah zrušen
+msg.lift.owner=Vlastníkem výtahu je %s
+
+#Misc
+entity.thuttech.thuttechlift.name=Výtah

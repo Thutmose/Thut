@@ -1,0 +1,20 @@
+# Thut's Tech Language Properties
+# @author Thutmose
+
+# Blocks
+tile.liftRail.name=Elevator Rail
+tile.lift.name=Elevator
+tile.liftcontroller.name=Elevator Controller Block
+tile.railgun.name=Block Cannon
+
+# Items
+item.devicelinker.name=Device Linker
+
+#Chat Messages
+msg.liftSet.name=Elevator set
+msg.floorSet.name=Set this Floor to %s
+msg.lift.killed=Killed Elevator
+msg.lift.owner=This Elevator is owned by %s
+
+#Misc
+entity.thuttech.thuttechlift.name=Elevator

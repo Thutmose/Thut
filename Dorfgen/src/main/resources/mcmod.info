@@ -1,0 +1,14 @@
+[
+{
+  "modid": "dorfgen",
+  "name": "DF World Generator",
+  "description": "Loads the exports from DFHack's 'exportLegends all' as a Minecraft World.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Thutmose"],
+  "screenshots": [],
+  "dependencies": []
+}
+]
