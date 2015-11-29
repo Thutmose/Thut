@@ -1,16 +1,5 @@
 package thut.core.common.blocks.tileentity;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
-import com.ibm.icu.text.MessagePattern.Part;
-
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemDye;
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,9 +7,6 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
-import net.minecraft.world.World;
 
 public class TileEntityBlockFluid extends TileEntity {
 
@@ -71,7 +57,8 @@ public class TileEntityBlockFluid extends TileEntity {
     /**
      * Overriden in a sign to provide the text.
      */
-	@Override
+	@SuppressWarnings("rawtypes")
+    @Override
     public Packet getDescriptionPacket()
     {
         NBTTagCompound nbttagcompound = new NBTTagCompound();

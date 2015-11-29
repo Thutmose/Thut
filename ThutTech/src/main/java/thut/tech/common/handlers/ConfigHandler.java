@@ -1,7 +1,7 @@
 package thut.tech.common.handlers;
 
-import thut.tech.common.entity.EntityLift;
 import net.minecraftforge.common.config.Configuration;
+import thut.tech.common.entity.EntityLift;
 
 public class ConfigHandler 
 {

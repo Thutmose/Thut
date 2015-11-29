@@ -2,11 +2,6 @@ package thut.api.entity;
 
 import java.util.Iterator;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.network.FMLEmbeddedChannel;
-import net.minecraftforge.fml.common.network.FMLOutboundHandler;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.relauncher.Side;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.Entity;
@@ -29,9 +24,13 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.network.ForgeMessage;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.FMLEmbeddedChannel;
+import net.minecraftforge.fml.common.network.FMLOutboundHandler;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.relauncher.Side;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 import thut.api.network.PacketHandler.MessageClient;
@@ -148,7 +147,7 @@ public class Transporter {
 
 					if ( entity instanceof EntityHanging )
 					{
-						EntityHanging h = (EntityHanging) entity;
+//						EntityHanging h = (EntityHanging) entity;
 //						h.field_146063_b += link.xOff;
 //						h.field_146064_c += link.yOff;//TODO get frames teleporting if needed
 //						h.field_146062_d += link.zOff;
@@ -309,7 +308,7 @@ public class Transporter {
 		player.theItemInWorldManager.setWorld(newWorld);
 		scm.updateTimeAndWeatherForPlayer(player, newWorld);
 		scm.syncPlayerInventory(player);
-		Iterator var6 = player.getActivePotionEffects().iterator();
+		Iterator<?> var6 = player.getActivePotionEffects().iterator();
 		while (var6.hasNext()) {
 			PotionEffect effect = (PotionEffect)var6.next();
 			player.playerNetServerHandler.sendPacket(new S1DPacketEntityEffect(player.getEntityId(), effect));
@@ -367,7 +366,7 @@ public class Transporter {
 		return newEntity;
 	}
 	
-	static Entity instantiateEntityFromNBT(Class cls, NBTTagCompound nbt, WorldServer world) {
+	static Entity instantiateEntityFromNBT(Class<? extends Entity> cls, NBTTagCompound nbt, WorldServer world) {
 		try {
 			Entity entity = (Entity)cls.getConstructor(World.class).newInstance(world);
 			entity.readFromNBT(nbt);
@@ -411,6 +410,6 @@ public class Transporter {
 	static void checkChunk(World world, Entity entity) {
 		int cx = MathHelper.floor_double(entity.posX / 16.0D);
 		int cy = MathHelper.floor_double(entity.posZ / 16.0D);
-		Chunk chunk = world.getChunkFromChunkCoords(cx, cy);
+		world.getChunkFromChunkCoords(cx, cy);
 	}
 }

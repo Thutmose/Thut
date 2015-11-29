@@ -92,7 +92,8 @@ public class MappedTruncate {
 			
 			s = new String();
 			
-			for(int j = 0; inMap.remaining() != 0; j++)
+			for(@SuppressWarnings("unused")
+            int j = 0; inMap.remaining() != 0; j++)
 			{
 				s += (char) inMap.get();
 			}

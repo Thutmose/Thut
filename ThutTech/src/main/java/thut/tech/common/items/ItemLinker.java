@@ -1,37 +1,22 @@
 package thut.tech.common.items;
 
-import java.io.File;
 import java.util.UUID;
 
-import akka.actor.FSM.State;
-import scala.actors.threadpool.Arrays;
-import thut.api.ThutBlocks;
-import thut.api.maths.ExplosionCustom;
-import thut.api.maths.Vector3;
-import thut.api.maths.ExplosionCustom.ExplosionStuff;
-import thut.tech.common.TechCore;
-import thut.tech.common.blocks.lift.BlockLift;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
-import thut.tech.common.entity.EntityLift;
-import thut.tech.common.entity.EntityProjectile;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraftforge.common.BiomeDictionary;
+import thut.api.ThutBlocks;
+import thut.tech.common.TechCore;
+import thut.tech.common.blocks.lift.BlockLift;
+import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.entity.EntityLift;
 
 public class ItemLinker extends Item
 {
@@ -77,8 +62,6 @@ public class ItemLinker extends Item
     public boolean onItemUse(ItemStack itemstack, EntityPlayer player, World worldObj, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ)
     {
-        boolean ret = false;
-
         if (itemstack.getTagCompound() == null)
         {
             return false;

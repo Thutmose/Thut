@@ -2,7 +2,6 @@ package dorfgen;
 
 import static dorfgen.WorldGenerator.scale;
 
-import java.util.Arrays;
 import java.util.HashSet;
 
 import dorfgen.conversion.DorfMap;
@@ -13,17 +12,13 @@ import dorfgen.conversion.SiteStructureGenerator.StructureSpace;
 import dorfgen.conversion.SiteStructureGenerator.WallSegment;
 import dorfgen.worldgen.RiverMaker;
 import dorfgen.worldgen.WorldConstructionMaker;
-import net.minecraft.block.BlockLadder;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.World;
 
 public class ItemDebug extends Item
 {
@@ -35,6 +30,7 @@ public class ItemDebug extends Item
         this.setCreativeTab(CreativeTabs.tabTools);
     }
 
+    @SuppressWarnings("unused")
     @Override
     public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player)
     {
@@ -56,8 +52,8 @@ public class ItemDebug extends Item
         }
         WorldConstructionMaker maker = new WorldConstructionMaker();
 
-        int h = maker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x, z, scale);
-        int r = maker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.riverMap, x, z, scale);
+        int h = WorldConstructionMaker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x, z, scale);
+        int r = WorldConstructionMaker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.riverMap, x, z, scale);
         mess = "";
         //
         int embarkX = (x / scale);
@@ -77,7 +73,7 @@ public class ItemDebug extends Item
         int key = kx + 8192 * kz;
 
         boolean middle = false;
-        HashSet<Site> ret = dorfs.sitesByCoord.get(key);
+        HashSet<Site> ret = DorfMap.sitesByCoord.get(key);
         boolean hasRivers = false;
         if (site != null && site.rgbmap != null)
         {

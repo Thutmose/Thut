@@ -1,15 +1,16 @@
 package li.cil.oc.api.prefab;
 
-import com.google.common.base.Charsets;
-import li.cil.oc.api.manual.ContentProvider;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+
+import com.google.common.base.Charsets;
+
+import li.cil.oc.api.manual.ContentProvider;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * Basic implementation of a content provider based on Minecraft's resource
@@ -23,7 +24,6 @@ import java.util.ArrayList;
  * have a page with the same path as one in OpenComputers, it is practically
  * unreachable (because the OC provider is always queried first).
  */
-@SuppressWarnings("UnusedDeclaration")
 public class ResourceContentProvider implements ContentProvider {
     private final String resourceDomain;
 

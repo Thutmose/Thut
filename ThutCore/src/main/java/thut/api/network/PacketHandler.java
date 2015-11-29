@@ -1,11 +1,16 @@
 package thut.api.network;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import com.google.common.collect.Lists;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -13,16 +18,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.EnumParticleTypes;
 import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler.MessageClient.MessageHandlerClient;
@@ -107,15 +102,25 @@ public class PacketHandler
                         int[] affected = nbt.getIntArray("affected");
                         Vector3 vTemp = Vector3.getNewVectorFromPool();
                         Vector3 vMid = Vector3.getNewVectorFromPool().set(mid);
-                        vMid.addTo(0.5, 0.5, 0.5);
-                        int[] toFill = new int[3];
+                        List<Integer> locs = Lists.newArrayList();
                         for (int i : affected)
                         {
+                            locs.add(i);
+                        }
+                        Collections.shuffle(locs);
+                        int max = 200;
+                        vMid.addTo(0.5, 0.5, 0.5);
+                        int[] toFill = new int[3];
+                        int n = 0;
+                        for (Integer i : locs)
+                        {
+                            n++;
                             Cruncher.fillFromInt(toFill, i);
                             vTemp.set(toFill);
                             vTemp.addTo(vMid);
                             player.worldObj.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y, vTemp.z,
                                     0, 0, 0);
+                            if (n > max) break;
                         }
                         vTemp.freeVectorFromPool();
                         vMid.freeVectorFromPool();
@@ -193,7 +198,6 @@ public class PacketHandler
         {
             public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
             {
-                byte channel = buffer.readByte();
 
             }
 

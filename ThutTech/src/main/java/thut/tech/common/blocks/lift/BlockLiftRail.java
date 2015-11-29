@@ -1,32 +1,13 @@
 package thut.tech.common.blocks.lift;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
-//import appeng.api.me.tiles.IGridTileEntity;
-
-import scala.collection.Iterator;
-import thut.api.ThutBlocks;
-import thut.tech.common.TechCore;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
+import thut.api.ThutBlocks;
+import thut.tech.common.TechCore;
 
 public class BlockLiftRail extends Block implements ITileEntityProvider//, IRebar
 {

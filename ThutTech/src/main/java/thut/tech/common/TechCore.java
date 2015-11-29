@@ -1,34 +1,14 @@
 package thut.tech.common;
 
-import static thut.tech.common.network.PacketPipeline.*;
+import static thut.tech.common.network.PacketPipeline.packetPipeline;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.block.statemap.StateMap;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
-import thut.api.ThutBlocks;
-import thut.api.entity.IMultibox;
-import thut.api.maths.Matrix3;
-import thut.api.maths.Vector3;
-import thut.core.common.CreativeTabThut;
-import thut.tech.ThutTechReference;
-import thut.tech.common.blocks.lift.BlockLift;
-import thut.tech.common.handlers.BlockHandler;
-import thut.tech.common.handlers.ConfigHandler;
-import thut.tech.common.handlers.ItemHandler;
-import thut.tech.common.network.PacketPipeline.ClientPacket.MessageHandlerClient;
-import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -40,6 +20,18 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.entity.IMultibox;
+import thut.api.maths.Matrix3;
+import thut.api.maths.Vector3;
+import thut.core.common.CreativeTabThut;
+import thut.tech.ThutTechReference;
+import thut.tech.common.handlers.BlockHandler;
+import thut.tech.common.handlers.ConfigHandler;
+import thut.tech.common.handlers.ItemHandler;
+import thut.tech.common.network.PacketPipeline.ClientPacket;
+import thut.tech.common.network.PacketPipeline.ClientPacket.MessageHandlerClient;
+import thut.tech.common.network.PacketPipeline.ServerPacket;
+import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
 
 @Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, version = ThutTechReference.VERSION)
 public class TechCore
@@ -93,7 +85,6 @@ public class TechCore
         Object o = evt.entity;
         if (o instanceof IMultibox)
         {
-            EntityLivingBase e = (EntityLivingBase) o;
             IMultibox b = (IMultibox) o;
             for (String s : b.getBoxes().keySet())
             {

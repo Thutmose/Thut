@@ -1,10 +1,7 @@
 package thut.api.pathing;
 
-import java.util.Arrays;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.pathfinding.PathEntity;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
 import thut.api.maths.Vector3;

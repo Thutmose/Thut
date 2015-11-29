@@ -2,36 +2,28 @@ package thut.tech.client.render;
 
 import org.lwjgl.opengl.GL11;
 
-import scala.actors.threadpool.Arrays;
-import thut.api.ThutBlocks;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
+import thut.api.ThutBlocks;
+import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 
+@SuppressWarnings("rawtypes")
 public class RenderLiftController extends TileEntitySpecialRenderer
 {
 
     // public static final int ID =
     // RenderingRegistry.getNextAvailableRenderId();
 
-    private ModelLiftController _model;
-    // private RenderBlocks blocks;
-    private static final double _renderMin = 1.0 / 16.0;
-    private static final double _renderMax = 15.0 / 16.0;
     private ResourceLocation    texture;
 
     public static class ModelLiftController extends ModelBase
@@ -66,7 +58,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
     public RenderLiftController()
     {
-        _model = new ModelLiftController();
     }
 
     @Override

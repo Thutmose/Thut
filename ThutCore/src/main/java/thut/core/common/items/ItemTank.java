@@ -3,9 +3,6 @@ package thut.core.common.items;
 import java.util.List;
 import java.util.Map;
 
-import thut.api.ThutItems;
-import thut.core.common.ThutCore;
-import thut.core.common.blocks.BlockFluid;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,6 +17,9 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.ThutItems;
+import thut.core.common.ThutCore;
+import thut.core.common.blocks.BlockFluid;
 
 public class ItemTank extends Item implements IFluidContainerItem
 {
@@ -170,7 +170,7 @@ public class ItemTank extends Item implements IFluidContainerItem
     /**
      * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
      */
-    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List par3List)
+    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> par3List)
     {
     	ItemStack tank = new ItemStack(par1, 1, 0);
     	tank.setStackDisplayName("Empty Tank");

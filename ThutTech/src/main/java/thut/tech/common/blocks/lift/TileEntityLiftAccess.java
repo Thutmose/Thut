@@ -1,36 +1,24 @@
 package thut.tech.common.blocks.lift;
 
 
-import static net.minecraft.util.EnumFacing.*;
+import static net.minecraft.util.EnumFacing.DOWN;
+import static net.minecraft.util.EnumFacing.UP;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
-
-import javax.print.attribute.standard.SheetCollate;
 
 import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.Environment;
-import li.cil.oc.api.network.Message;
-import li.cil.oc.api.network.Node;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.TileEntityEnvironment;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import scala.actors.threadpool.Arrays;
-import thut.api.ThutBlocks;
-import thut.api.maths.Vector3;
-import thut.tech.common.entity.EntityLift;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
@@ -39,9 +27,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
-import net.minecraft.world.World;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.common.MinecraftForge;
+import thut.api.ThutBlocks;
+import thut.api.maths.Vector3;
+import thut.tech.common.entity.EntityLift;
 
 public class TileEntityLiftAccess extends TileEntityEnvironment implements ITickable// implements IPeripheral//, IGridMachine, IDirectionalMETile
 {
@@ -302,6 +290,8 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 		   par1.setInteger("meta", metaData);
 		   if(blockID==null)
 			   blockID = ThutBlocks.liftRail;
+		   if(blockID==null)
+		       blockID = worldObj.getBlockState(getPos()).getBlock();
 		   par1.setString("block id", blockID.getLocalizedName());
 		   par1.setInteger("floor", floor);
 		   par1.setByteArray("sides", sides);
@@ -327,7 +317,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 	      floor = par1.getInteger("floor");
 	      liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
 	      root = Vector3.getNewVectorFromPool();
-	      root = root.readFromNBT(par1, "root");
+	      root = Vector3.readFromNBT(par1, "root");
 	      sides = par1.getByteArray("sides");
 	      if(sides.length!=6)
 	    	  sides = new byte[6];
@@ -391,7 +381,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 	   
 	   public void setCalled(boolean called)
 	   {
-	       IBlockState state = worldObj.getBlockState(getPos());
+//	       IBlockState state = worldObj.getBlockState(getPos());
 	       boolean isCalled = false;//((Boolean)state.getValue(BlockLift.CALLED))
 		   if(called!=isCalled)
 		   {
@@ -492,7 +482,8 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 	    /**
 	     * Overriden in a sign to provide the text.
 	     */
-		@Override
+		@SuppressWarnings("rawtypes")
+        @Override
 	    public Packet getDescriptionPacket()
 	    {
 	        NBTTagCompound nbttagcompound = new NBTTagCompound();

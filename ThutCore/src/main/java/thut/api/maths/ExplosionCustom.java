@@ -2,6 +2,7 @@ package thut.api.maths;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,31 +11,27 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.S27PacketExplosion;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.ChunkCache;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
+import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.TickHandler;
 import thut.api.TickHandler.BlockChange;
 import thut.api.WorldCache;
@@ -62,7 +59,7 @@ public class ExplosionCustom extends Explosion
 	private float explosionSize;
 	private boolean isSmoking = false;
 	Entity exploder;
-	public Set affectedBlockPositions = new HashSet();
+	public Set<BlockPos> affectedBlockPositions = new HashSet<BlockPos>();
 
 	public ExplosionCustom(World world, Entity par2Entity, double x, double y, double z, float power)
 	{
@@ -170,7 +167,6 @@ public class ExplosionCustom extends Explosion
 		}
 		Vector3 absorbedLoc = Vector3.getNewVectorFromPool();
 		float remainingEnergy = 0;
-		int id = hitLocation.getBlockId(worldObj);
 		density -= resist;
 
 		while (energy > 0 && density > 0)
@@ -178,7 +174,6 @@ public class ExplosionCustom extends Explosion
 			locations.add(hitLocation.subtract(velocity.normalize()));
 			blasts.add(blast);
 			hitLocation = hitLocation.add(velocity.normalize());
-			id = hitLocation.getBlockId(worldObj);
 			velocity.add(acceleration);
 			resist = Math.max(hitLocation.getExplosionResistance(this, worldObj), 0);
 			blast = Math.min(energy * (resist / density), energy);
@@ -203,13 +198,8 @@ public class ExplosionCustom extends Explosion
 			{
 				if (strength != 0)
 				{
-					int rad = (int) Math.max(max, Math.min(max, strength * 2));
 					ExplosionCustom boo = new ExplosionCustom(worldObj, exploder, source, strength * factor);
-					// ExplosionStuff boom = new ExplosionStuff(boo, max,
-					// strength * factor, worldObj, source);
-					// System.out.println("radius: "+rad);
 					boo.doExplosion();
-					// explosions.add(boom);
 
 				}
 			}
@@ -392,90 +382,42 @@ public class ExplosionCustom extends Explosion
 		List<Long> toRemove = new ArrayList<Long>();
 		final ExplosionCustom boom = this;
 
-		int count = 0;
-//		System.out.println("Starting Explosion Algorithm");
-		Long time = System.nanoTime();
 		Vector3 r = Vector3.getNewVectorFromPool(), rAbs = Vector3.getNewVectorFromPool(),
 				rHat = Vector3.getNewVectorFromPool(), rTest = Vector3.getNewVectorFromPool(),
 				rTestPrev = Vector3.getNewVectorFromPool(), rTestAbs = Vector3.getNewVectorFromPool();
 		int index;
-		int index2;
+		long index2;
 
 		final double scaleFactor = 1500;
 
 		double radSq = radius * radius, rMag;
 
-		int n = 0;
-		int l = 0;
-		int g = 0;
-		int f = 0, x, y, z;
 		float resist;
-
-		Float value;
-		int prevX = 0, prevY = 0, prevZ = 0;
-		int currentRadius = 0, subIndex = 0;
-		int nextRadius = 1;
-
-		int currentRadSq = 0;
-		int nextRadCb = 1;
-
-		int radCbDiff = 1;
-		int radSqDiff = 1;
-		int[] toFill = new int[3];
 
 		double str;
 
 		// TODO make this do a compounded resist instead, to lower ram use
-		HashMap<Integer, Float> resists = new HashMap<Integer, Float>();
+		HashMap<Long, Float> resists = new HashMap<Long, Float>();
+		HashMap<BlockPos, Float> resists2 = new HashMap<>();
 		BitSet blocked = new BitSet();
-		// HashMap blocked = new HashMap();
-
-		double absorbed = 0;
 
 		int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));
 		int max = (int) MAX_RADIUS * 2;
-		int blockedNum = 0;
-		int blockedNum2 = 0;
 		num = Math.min(num, max);
 		num = Math.min(num, 1000);
 		radSq = num * num / 4;
 
 		Map<Integer, List<Entity>> victims = getEntitiesInRange(num / 2);
-		List<Integer> affectedThisRadius = new ArrayList();
+		List<Integer> affectedThisRadius = new ArrayList<Integer>();
 		for (int i = 0; i < num * num * num; i++)
 		{
+			Cruncher.indexToVals(i, r);
+			
+			if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;//TODO replace 255 with some way to get height
 
-			if (i >= nextRadCb)
-			{
-				nextRadius++;
-				currentRadius++;
-				int temp = (2 * nextRadius - 1);
-				nextRadCb = temp * temp * temp;
-				temp = (2 * currentRadius - 1);
-				currentRadSq = temp * temp * temp;
-				radCbDiff = nextRadCb - currentRadSq;
-				radSqDiff = (2 * nextRadius - 1) * (2 * nextRadius - 1) - temp * temp;
-				blockedNum = 0;
-				if(!affectedThisRadius.isEmpty())
-				{
-					ClientUpdateInfo info = new ClientUpdateInfo(affectedThisRadius, centre, dimension);
-					ExplosionVictimTicker.clientUpdates.addElement(info);
-					affectedThisRadius.clear();
-				}
-			}
-			subIndex = (i - currentRadSq);
-
-			Cruncher.indexToVals(currentRadius, subIndex, radSqDiff, radCbDiff, toFill);
-			x = toFill[0];
-			z = toFill[1];
-			y = toFill[2];
-
-			if (y + centre.y < 0 || y + centre.y > 255) continue;//TODO replace 255 with some way to get height
-
-			double rSq = x * x + y * y + z * z;
+			double rSq = r.magSq();
 			if (rSq > radSq) continue;
-
-			r.set(x, y, z);
+			
 			rMag = Math.sqrt(rSq);
 			rAbs.set(r).addTo(centre);
 			rHat.set(r.normalize());
@@ -483,18 +425,12 @@ public class ExplosionCustom extends Explosion
 			rHat.scalarMultBy(1 / ((double) (num / 2)));
 			if (blocked.get(index))
 			{
-				blockedNum++;
-				blockedNum2++;
 				continue;
 			}
-			if (i != 0 && blockedNum >= radCbDiff - 1)
-			{
-				System.out.println("completely blocked");
-				break;
-			}
+			
 			str = strength * scaleFactor / rSq;
-			index2 = Cruncher.getVectorInt(r);
-			if (rAbs.isAir(worldObj) && !(x == 0 && y == 0 && z == 0))
+			index2 = Cruncher.getVectorLong(r);
+			if (rAbs.isAir(worldObj) && !(r.isEmpty()))
 			{
 				if (victims.containsKey(index2))
 				{
@@ -505,7 +441,7 @@ public class ExplosionCustom extends Explosion
 				}
 				if(rMag < 5)
 				{
-					affectedThisRadius.add(index2);//TODO decide if I want to do this in air
+					affectedThisRadius.add(Cruncher.getVectorInt(r));//TODO decide if I want to do this in air
 				}
 				continue;
 			}
@@ -517,28 +453,28 @@ public class ExplosionCustom extends Explosion
 			}
 			if (!canBreak(rAbs))
 			{
-				// System.out.println("not allowed");
 				blocked.set(index);
 				continue;
 			}
 			float res;
-
-			if (resists.containsKey(index2))
-			{
-				res = resists.get(index2);
-			}
+//			BlockPos pos = new BlockPos(r.x, r.y, r.z);
+			
+            if (resists.containsKey(index2))
+            {
+                res = resists.get(index2);
+                res += getExplosionResistance(rAbs, boom, worldObj);
+                resists.put(index2, res);
+            }
 			else
 			{
 				res = getExplosionResistance(rAbs, boom, worldObj);
 				if (res > 1) res = res * res;
 				resists.put(index2, res);
+//				resists2.put(pos, res);
 			}
 			if (res > str)
 			{
-				// Cruncher.setBlocked(blocked, rHat, rMag, num);
 				blocked.set(index);
-				absorbed += str;
-				blockedNum++;
 				continue;
 			}
 			boolean stop = false;
@@ -554,18 +490,21 @@ public class ExplosionCustom extends Explosion
 				{
 					rTestAbs.set(rTest).addTo(centre);
 
-					index2 = Cruncher.getVectorInt(rTest);
-
-					if (resists.containsKey(index2))
-					{
-						res = resists.get(index2);
-					}
-					else
-					{
-						res = getExplosionResistance(rTestAbs, boom, worldObj);
-						if (res > 1) res = res * res;
-						resists.put(index2, res);
-					}
+					index2 = Cruncher.getVectorLong(rTest);
+//					pos = new BlockPos(rTest.x, rTest.y, rTest.z);
+					     
+		            if (resists.containsKey(index2))
+		            {
+		                res = resists.get(index2);
+//		                res += getExplosionResistance(rTestAbs, boom, worldObj);
+//                        resists2.put(pos, res);
+		            }
+		            else
+		            {
+		                res = getExplosionResistance(rTestAbs, boom, worldObj);
+		                if (res > 1) res = res * res;
+		                resists.put(index2, res);
+		            }
 
 					resist += res;
 
@@ -573,7 +512,6 @@ public class ExplosionCustom extends Explosion
 					{
 						stop = true;
 						blocked.set(index);
-						blockedNum++;
 						break;
 					}
 					double d1 = rTest.magSq();
@@ -583,7 +521,6 @@ public class ExplosionCustom extends Explosion
 					{
 						stop = true;
 						blocked.set(index);
-						blockedNum++;
 						break;
 					}
 				}
@@ -602,11 +539,10 @@ public class ExplosionCustom extends Explosion
 			if (!affected.contains(chunk)) affected.add(chunk);
 			Block block = getBlock(rAbs, worldObj, boom.dimension);
 			addChunkPosition(rAbs);
-			count++;
 			doMeteorStuff(block, rAbs);
 
 			str = strength * scaleFactor / rSq;
-			index2 = Cruncher.getVectorInt(r);
+			index2 = Cruncher.getVectorLong(r);
 			if (victims.containsKey(index2))
 			{
 				for (Entity e : victims.get(index2))
@@ -614,19 +550,12 @@ public class ExplosionCustom extends Explosion
 					ExplosionVictimTicker.addVictim(e, (float) str, boom);
 				}
 			}
-			affectedThisRadius.add(index2);
+			affectedThisRadius.add(Cruncher.getVectorInt(r));
 		}
-		double dt = (System.nanoTime() - time) / 1000000000d;
-
-		float ratioBlocks = (blockedNum) / (float) (num * num * num);
-
-//		System.out.println("Time elapsed: " + dt + "s value absorbed: " + absorbed + " Ratio Blocked:" + ratioBlocks);
-//		System.out.println(" Removed:" + count + " Blocked:" + blocked.size() + " Radius:" + num / 2);// TODO
-																										// remove
-			
+		
 		doExplosionB(false);
 
-		ExplosionEvent evt = new ExplosionEvent.Detonate(boom.world, boom, new ArrayList());
+		ExplosionEvent evt = new ExplosionEvent.Detonate(boom.world, boom, new ArrayList<Entity>());
 		MinecraftForge.EVENT_BUS.post(evt);
 
 		r.freeVectorFromPool();
@@ -639,15 +568,15 @@ public class ExplosionCustom extends Explosion
 		return toRemove;
 	}
 
-	List getEntitiesWithinDistance(Vector3 centre, Class targetClass, int distance, int dimension)
+	List<Object> getEntitiesWithinDistance(Vector3 centre, Class<Entity> targetClass, int distance, int dimension)
 	{
-		Vector entities = ExplosionCustom.worldEntities.get(dimension);
-		List list = new ArrayList();
+		Vector<?> entities = ExplosionCustom.worldEntities.get(dimension);
+		List<Object> list = new ArrayList<Object>();
 		double dsq = distance * distance;
 		Vector3 point = Vector3.getNewVectorFromPool();
 		if (entities != null)
 		{
-			List temp = new ArrayList(entities);
+			List<?> temp = new ArrayList<Object>(entities);
 			for (Object o : temp)
 			{
 				if (targetClass.isInstance(o))
@@ -666,8 +595,8 @@ public class ExplosionCustom extends Explosion
 
 	HashMap<Integer, List<Entity>> getEntitiesInRange(int distance)
 	{
-		HashMap<Integer, List<Entity>> ret = new HashMap();
-		List ents = getEntitiesWithinDistance(centre, Entity.class, distance, dimension);
+		HashMap<Integer, List<Entity>> ret = new HashMap<Integer, List<Entity>>();
+		List<Object> ents = getEntitiesWithinDistance(centre, Entity.class, distance, dimension);
 		for (Object o : ents)
 		{
 			Entity e = (Entity) o;
@@ -678,14 +607,14 @@ public class ExplosionCustom extends Explosion
 			int y = MathHelper.floor_double(e.posY - centre.y);
 			int z = MathHelper.floor_double(e.posZ - centre.z);
 			int key = Cruncher.getVectorInt(x, y, z);
-			List temp;
+			List<Entity> temp;
 			if (ret.containsKey(key))
 			{
 				temp = ret.get(key);
 			}
 			else
 			{
-				temp = new ArrayList();
+				temp = new ArrayList<Entity>();
 				ret.put(key, temp);
 			}
 			temp.add(e);
@@ -724,9 +653,10 @@ public class ExplosionCustom extends Explosion
 				{
 					boom.getRemovedBlocks(radius, strength, worldObj, centre);
 					lock[0] = false;
+					TickHandler.cleanup();
 				}
 			});
-			newBoom.setPriority(9);
+			newBoom.setPriority(Thread.MIN_PRIORITY);
 			newBoom.setName(newBoom.getName().replace("Thread", "ExplosionThread"));
 			newBoom.start();
 		}
@@ -790,7 +720,7 @@ public class ExplosionCustom extends Explosion
 		public static Vector<VictimStuff>		victims			= new Vector<ExplosionCustom.VictimStuff>();
 		public static Vector<ClientUpdateInfo>	clientUpdates	= new Vector<ExplosionCustom.ClientUpdateInfo>();
 		public final static Map<Long, Float>	resists			= new ConcurrentHashMap<Long, Float>();
-		private static HashSet					toRemove		= new HashSet();
+		private static HashSet<Object>					toRemove		= new HashSet<Object>();
 
 		@SubscribeEvent
 		public void tick(WorldTickEvent evt)
@@ -800,8 +730,8 @@ public class ExplosionCustom extends Explosion
 			{
 				if(clientUpdates.size() > 0)
 				{
-					//System.out.println("There are "+clientUpdates.size());
-					ArrayList<ClientUpdateInfo> temp = new ArrayList(clientUpdates);
+//					System.out.println("There are "+clientUpdates.size());
+					ArrayList<ClientUpdateInfo> temp = new ArrayList<ClientUpdateInfo>(clientUpdates);
 					for(ClientUpdateInfo i: temp)
 					{
 						NBTTagCompound nbt = new NBTTagCompound();
@@ -816,7 +746,7 @@ public class ExplosionCustom extends Explosion
 				}
 				if(victims.size() > 0)
 				{
-					ArrayList<VictimStuff> temp = new ArrayList(victims);
+					ArrayList<VictimStuff> temp = new ArrayList<VictimStuff>(victims);
 					for (VictimStuff v : temp)
 					{
 						applyDamage(v);
@@ -828,20 +758,19 @@ public class ExplosionCustom extends Explosion
 			}
 			else
 			{
-				Vector entities = worldEntities.get(evt.world.provider.getDimensionId());
+				Vector<Entity> entities = worldEntities.get(evt.world.provider.getDimensionId());
 				if (entities == null)
 				{
-					entities = new Vector();
+					entities = new Vector<Entity>();
 				}
 				entities.clear();
-				entities.addAll(evt.world.loadedEntityList);
+				entities.addAll((Collection<Entity>) evt.world.loadedEntityList);
 				worldEntities.put(evt.world.provider.getDimensionId(), entities);
 			}
 		}
 
 		public static void applyDamage(VictimStuff v)
 		{
-			boolean damagePlayerTest = true;
 			World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(v.dimension);
 			Entity hit = world.getEntityByID(v.entity);
 			// System.out.println(v.entity+" "+v.damage);
@@ -863,7 +792,7 @@ public class ExplosionCustom extends Explosion
 	static final ExplosionCustom							instance		= new ExplosionCustom(null, null,
 			Vector3.getNewVectorFromPool(), 0);
 	public static final Vector<ExplosionStuff>				explosions		= new Vector<ExplosionStuff>();
-	public static final ConcurrentHashMap<Integer, Vector>	worldEntities	= new ConcurrentHashMap();
+	public static final ConcurrentHashMap<Integer, Vector<Entity>>	worldEntities	= new ConcurrentHashMap<Integer, Vector<Entity>>();
 	private static int maxThreads = -1;
 	private static final Thread boomThread = new Thread(new Runnable()
 	{
@@ -882,9 +811,9 @@ public class ExplosionCustom extends Explosion
 						maxThreads = Runtime.getRuntime().availableProcessors();
 					}
 					num = maxThreads;
-					ArrayList<ExplosionStuff> booms = new ArrayList(explosions);
+					ArrayList<ExplosionStuff> booms = new ArrayList<ExplosionStuff>(explosions);
 					num = Math.min(num, booms.size());
-					Set toRemove = new HashSet();
+					Set<ExplosionStuff> toRemove = new HashSet<ExplosionStuff>();
 					for (int i = 0; i < num; i++)
 					{
 						ExplosionStuff boom = booms.get(i);
@@ -924,69 +853,18 @@ public class ExplosionCustom extends Explosion
 	{
 		boomThread.setName("explosionThread");
 		System.out.println("Starting explosion thread");
-		FMLCommonHandler.instance().bus().register(new ExplosionVictimTicker());
+		MinecraftForge.EVENT_BUS.register(new ExplosionVictimTicker());
 		boomThread.start();
 	}
-
-	public static void clearInstance()
-	{
-		ExplosionCustom.blocks.clear();
-		toClear[0] = true;
-	}
-
-	private static ExplosionCustom getInstance()
-	{
-		return instance;
-	}
-
-	static HashMap<Integer, Vector<BlockChange>> blocks = new HashMap();
-
+	
 	static Block getBlock(Vector3 location, IBlockAccess worldObj, int dimension)
 	{
-		BlockChange b1 = new BlockChange(location, dimension, null);
-		getInstance();
-		for (BlockChange b : ExplosionCustom.getListForWorld(dimension))
-		{
-			if (b.equals(b1)) return b.blockTo;
-		}
+	    //TODO remove this method
 		return location.getBlock(worldObj);
 	}
 
 	static float getExplosionResistance(Vector3 location, ExplosionCustom blast, IBlockAccess worldObj)
 	{
 		return location.getExplosionResistance(blast, worldObj);
-	}
-
-	public static void addBlockChange(Vector3 location, World worldObj, Block blockTo, int meta)
-	{
-		addBlockChange(new BlockChange(location, worldObj.provider.getDimensionId(), blockTo, meta), worldObj);
-	}
-
-	public static void addBlockChange(BlockChange b1, World worldObj)
-	{
-
-		if (b1.location.y > 255) return;
-
-		getInstance();
-		for (BlockChange b : ExplosionCustom.getListForWorld(worldObj.provider.getDimensionId()))
-		{
-			if (b.equals(b1)) return;
-		}
-		toClear[0] = false;
-		getInstance();
-		ExplosionCustom.getListForWorld(worldObj.provider.getDimensionId()).add(b1);
-	}
-
-	public static Vector<BlockChange> getListForWorld(int dimension)
-	{
-		getInstance();
-		Vector<BlockChange> ret = ExplosionCustom.blocks.get(dimension);
-		if (ret == null)
-		{
-			ret = new Vector<BlockChange>();
-			getInstance();
-			ExplosionCustom.blocks.put(dimension, ret);
-		}
-		return ret;
 	}
 }

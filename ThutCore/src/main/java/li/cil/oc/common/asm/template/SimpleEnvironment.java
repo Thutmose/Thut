@@ -8,7 +8,6 @@ import net.minecraft.tileentity.TileEntity;
 // This is a template implementation of methods injected into classes that are
 // marked for component functionality. These methods will be copied into tile
 // entities marked as simple components as necessary by the class transformer.
-@SuppressWarnings("unused")
 public abstract class SimpleEnvironment extends TileEntity implements SimpleComponentImpl {
     @Override
     public Node node() {

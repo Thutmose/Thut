@@ -1,20 +1,31 @@
 package thut.tech.common.entity;
 
-import static thut.api.ThutBlocks.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-import scala.collection.Iterator;
+import com.google.common.collect.Lists;
+
+import io.netty.buffer.ByteBuf;
+import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.StatCollector;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import thut.api.ThutBlocks;
 import thut.api.entity.IMultibox;
 import thut.api.maths.Matrix3;
@@ -23,38 +34,6 @@ import thut.tech.common.blocks.lift.BlockLiftRail;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
 import thut.tech.common.items.ItemLinker;
-import thut.tech.common.network.PacketPipeline;
-import thut.tech.common.network.PacketPipeline.ClientPacket;
-
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemAxe;
-import net.minecraft.item.ItemDye;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityHopper;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.StatCollector;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IMultibox
 {
@@ -79,7 +58,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     Random                                   r                 = new Random();
     public UUID                              id                = UUID.randomUUID();
     public UUID                              owner;
-    private static HashMap<UUID, EntityLift> lifts             = new HashMap();
+    private static HashMap<UUID, EntityLift> lifts             = new HashMap<UUID, EntityLift>();
 
     public double prevFloorY = 0;
     public double prevFloor  = 0;
@@ -342,8 +321,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void clearLiquids()
     {
-        int rad = (int) (Math.floor(size / 2));
-
+//        int rad = (int) (Math.floor(size / 2));
+//
         // Vector3 thisloc = Vector3.getNewVectorFromPool().set(this);
         // Vector3 v = Vector3.getNewVectorFromPool();
         // for (int i = -rad; i <= rad; i++)
@@ -410,10 +389,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
+    @SuppressWarnings("unused")//TODO make use of this
     private boolean consumePower()
     {
         boolean power = false;
-        int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
+//        int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
         double energyCost = 0;// (destinationY - posY)*ENERGYCOST*sizeFactor;
         if (energyCost <= 0) return true;
         if (!power) toMoveY = false;
@@ -423,7 +403,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void checkCollision()
     {
-        List list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX - (size + 1), posY,
+        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX - (size + 1), posY,
                 posZ - (size + 1), posX + (size + 1), posY + 6, posZ + (size + 1)));
 
         if (list != null && !list.isEmpty())
@@ -444,7 +424,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
      * other. Args: entity */
     public void applyEntityCollision(Entity entity)
     {
-        boolean collided = false;
         Vector3 v = Vector3.getNewVectorFromPool();
         Vector3 v1 = Vector3.getNewVectorFromPool();
 
@@ -779,7 +758,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         mainBox.boxMin().set(-size / 2d, 0, -size / 2d);
         mainBox.boxMax().set(size / 2d, 1, size / 2d);
 
-        Matrix3 m2, m3, m4;
+        Matrix3 m2;
         if (!boxes.containsKey("base"))
         {
             m2 = new Matrix3();
@@ -800,7 +779,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void setOffsets()
     {
 
-        Vector3 v2, v3, v4;
+        Vector3 v2;
         if (!offsets.containsKey("base"))
         {
             v2 = Vector3.getNewVectorFromPool();

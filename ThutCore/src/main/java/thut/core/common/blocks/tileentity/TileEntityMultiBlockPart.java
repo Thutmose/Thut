@@ -1,6 +1,7 @@
 package thut.core.common.blocks.tileentity;
 
-import static thut.api.ThutBlocks.*;
+import static net.minecraft.init.Blocks.brick_block;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -121,6 +122,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     /** Overriden in a sign to provide the text. */
+    @SuppressWarnings("rawtypes")
     @Override
     public Packet getDescriptionPacket()
     {

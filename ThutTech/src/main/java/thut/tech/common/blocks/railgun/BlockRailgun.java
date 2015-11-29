@@ -1,7 +1,5 @@
 package thut.tech.common.blocks.railgun;
 
-import thut.api.maths.Vector3;
-import thut.tech.common.TechCore;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -11,6 +9,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
+import thut.api.maths.Vector3;
+import thut.tech.common.TechCore;
 
 public class BlockRailgun extends Block implements ITileEntityProvider{
 

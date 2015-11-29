@@ -3,22 +3,17 @@ package thut.core.common.items;
 import java.util.HashMap;
 import java.util.List;
 
-import thut.api.ThutBlocks;
-import thut.api.ThutItems;
-import thut.core.common.ThutCore;
-import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.ThutItems;
+import thut.core.common.ThutCore;
 
 public class ItemDusts extends Item
 {
@@ -58,7 +53,7 @@ public class ItemDusts extends Item
     /**
      * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
      */
-    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List par3List)
+    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> par3List)
     {
         for (int j = 0; j < lastDust; ++j)
         {

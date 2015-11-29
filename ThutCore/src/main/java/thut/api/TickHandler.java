@@ -2,28 +2,25 @@ package thut.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 
@@ -35,7 +32,6 @@ public class TickHandler
 	public TickHandler()
 	{
 		MinecraftForge.EVENT_BUS.register(this);
-		FMLCommonHandler.instance().bus().register(this);
 		new PacketHandler();
 		instance = this;
 	}
@@ -48,7 +44,7 @@ public class TickHandler
 		return instance;
 	}
 
-	public HashMap<Integer, Vector<BlockChange>>	blocks		= new HashMap();
+	public HashMap<Integer, Vector<BlockChange>>	blocks		= new HashMap<Integer, Vector<BlockChange>>();
 	public static int								maxChanges	= 200;
 	public HashMap<Integer, WorldCache> worldCaches = new HashMap<Integer, WorldCache>();
 
@@ -66,11 +62,11 @@ public class TickHandler
 			try
 			{
 				//TODO see if this stuff is needed
-				TreeSet ticktreeset = ReflectionHelper.getPrivateValue(WorldServer.class, (WorldServer) evt.world, 5);
-				Set tickset = ReflectionHelper.getPrivateValue(WorldServer.class, (WorldServer) evt.world, 4);
-				List tickentrylist = ReflectionHelper.getPrivateValue(WorldServer.class, (WorldServer) evt.world, 17);
-				int i = ((Set) ticktreeset).size();
-				int j = ((Set)tickset).size();
+				TreeSet<?> ticktreeset = ((WorldServer) evt.world).pendingTickListEntriesTreeSet;
+				Set<?> tickset = ((WorldServer) evt.world).pendingTickListEntriesHashSet;
+				List<NextTickListEntry> tickentrylist = ((WorldServer) evt.world).pendingTickListEntriesThisTick;
+				int i = ticktreeset.size();
+				int j = tickset.size();
 				
 				if(i!=j)
 				{
@@ -121,63 +117,10 @@ public class TickHandler
                     }
 				    temp.freeVectorFromPool();
 					new Exception().printStackTrace();
-					((Set)ticktreeset).clear();;
-					((Set)tickset).clear();
+					ticktreeset.clear();;
+					tickset.clear();
 					tickentrylist.clear();
 					i = 0;
-				}
-				boolean remove = false;
-				if (i > 2000 && remove)
-				{
-					TreeSet t = (TreeSet) ticktreeset;
-					Set h = (Set) tickset;
-					List a = (List) tickentrylist;
-					int n = 0;
-
-					int[] blocks = new int[4096];
-					Vector3 temp = Vector3.getNewVectorFromPool();
-
-					for (j = 0; j < i; ++j)
-					{
-						NextTickListEntry next = (NextTickListEntry) t.first();
-
-						temp.set(next.position);
-						
-						Block b = temp.getBlock(evt.world);
-
-						blocks[Block.getIdFromBlock(b)]++;
-						if(b.getMaterial() == Material.circuits ||
-								(b.getTickRandomly() 
-								&& (!
-								(b.getClass().getName().contains("pokecube")
-								||b.getClass().getName().contains("thut")
-								||b==Blocks.grass
-								||b==Blocks.tallgrass
-								||b.getMaterial() == Material.water
-								||b.getMaterial() == Material.leaves))))
-							continue;
-						if(b!=Blocks.grass)
-						n++;
-						t.remove(next);
-						h.remove(next);
-						a.add(next);
-
-					}
-					int most = 0;
-					int highId = 0;
-					for (int m = 0; m < 4096; m++)
-					{
-						if (blocks[m] > most)
-						{
-							highId = m;
-							most = blocks[m];
-						}
-						if(blocks[m]>0)
-						{
-//							System.out.println(blocks[m]+" "+Block.getBlockById(m).getTickRandomly()+" "+Block.getBlockById(m));
-						}
-					}
-					//evt.world.scheduledUpdatesAreImmediate = false;
 				}
 			}
 			catch (Exception e)
@@ -191,9 +134,9 @@ public class TickHandler
 			return;
 
 		int num = 0;
-		ArrayList<BlockChange> removed = new ArrayList<BlockChange>();
+		ArrayList<BlockChange> removed = Lists.newArrayList();
 		Vector<BlockChange> blocks = this.blocks.get(evt.world.provider.getDimensionId());
-		ArrayList<BlockChange> toRemove = new ArrayList(blocks);
+		ArrayList<BlockChange> toRemove = Lists.newArrayList(blocks);
 
 		for (int i = 0; i < toRemove.size(); i++)
 		{
@@ -261,6 +204,33 @@ public class TickHandler
 	{
 		addBlockChange(new BlockChange(location, dimension, blockTo, meta), dimension);
 	}
+	
+	static Map<Thread, ArrayList<BlockChange>> lists = Maps.newConcurrentMap();
+
+	public static void cleanup()
+	{
+        Thread thread = Thread.currentThread();
+	    lists.remove(thread);
+	}
+	
+	private static ArrayList<BlockChange> getList()
+	{
+	    Thread thread = Thread.currentThread();
+	    if(lists.containsKey(thread))
+	    {
+	        ArrayList<BlockChange> ret = lists.get(thread);
+	        ret.clear();
+	        return ret;
+	        
+	    }
+	    else
+	    {
+	        ArrayList<BlockChange> ret;
+	        ret = Lists.newArrayList();
+	        lists.put(thread, ret);
+	        return ret;
+	    }
+	}
 
 	public static void addBlockChange(BlockChange b1, int dimension)
 	{
@@ -268,7 +238,8 @@ public class TickHandler
 		if (b1.location.y > 255) return;
 
 		getInstance();
-		ArrayList<BlockChange> blocks = new ArrayList(TickHandler.getListForDimension(dimension));
+		ArrayList<BlockChange> blocks = getList();
+		blocks.addAll(TickHandler.getListForDimension(dimension));
 		for (BlockChange b : blocks)
 		{
 			if (b.equals(b1)) return;

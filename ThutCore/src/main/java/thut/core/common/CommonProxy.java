@@ -1,13 +1,13 @@
 package thut.core.common;
 
-import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
+import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
+import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 
 public class CommonProxy
 {

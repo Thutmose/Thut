@@ -1,23 +1,16 @@
 package thut.tech.common.handlers;
 
+import static net.minecraft.init.Blocks.stone;
 import static net.minecraft.init.Items.iron_ingot;
-import static thut.api.ThutItems.*;
-import static thut.api.ThutBlocks.*;
+import static net.minecraft.init.Items.redstone;
+import static thut.api.ThutBlocks.lift;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.oredict.OreDictionary;
-import thut.api.ThutItems;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import thut.tech.common.items.ItemLinker;
 
 public class ItemHandler 
 {
-	private static List<Item> items = new ArrayList<Item>();
-	
 	public static void registerItems()
 	{
 		new ItemLinker();

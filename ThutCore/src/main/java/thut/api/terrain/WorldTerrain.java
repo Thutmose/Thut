@@ -1,15 +1,8 @@
 package thut.api.terrain;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import thut.api.maths.Vector3;
 
 public class WorldTerrain {
 
@@ -45,7 +38,6 @@ public class WorldTerrain {
 		nbt.setInteger("xCoord", x);
 		nbt.setInteger("zCoord", z);
 		boolean saved = false;
-		int count = 0;
     	for(int i = 0; i<16; i++)
     	{
     		TerrainSegment t = getTerrain(x, i, z, true);
@@ -53,7 +45,6 @@ public class WorldTerrain {
     		t.checkToSave();
     		if(!t.toSave)
 			{
-    			count++;
 				continue;
 			}
     		saved = true;
@@ -119,7 +110,7 @@ public class WorldTerrain {
 	
 	public static class TerrainMap
 	{
-		final HashMap terrain = new HashMap();
+		final HashMap<Long, TerrainSegment> terrain = new HashMap<Long, TerrainSegment>();
 		
 		public TerrainMap(){}
 		

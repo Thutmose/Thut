@@ -1,29 +1,24 @@
 package thut.tech.common.handlers;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraftforge.client.model.ModelLoader;
+import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.api.ThutBlocks;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
-import thut.tech.common.blocks.lift.BlockLiftRail;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.blocks.railgun.BlockRailgun;
 import thut.tech.common.blocks.railgun.TileEntityRailgun;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.entity.EntityProjectile;
-import net.minecraft.block.Block;
-import net.minecraft.block.properties.IProperty;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 
 public class BlockHandler {
 
@@ -76,7 +71,7 @@ public class BlockHandler {
 		 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
 		 */
 		public void getSubItems(Item par1, CreativeTabs par2CreativeTabs,
-				List par3List) {
+				List<ItemStack> par3List) {
 			for (int j = 0; j < 2; ++j) {
 				par3List.add(new ItemStack(par1, 1, j));
 			}

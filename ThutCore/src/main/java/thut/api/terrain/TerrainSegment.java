@@ -9,22 +9,13 @@ import static thut.api.terrain.BiomeType.SKY;
 import static thut.api.terrain.BiomeType.VILLAGE;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
-import io.netty.buffer.Unpooled;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
@@ -50,7 +41,7 @@ public class TerrainSegment {
 	public static final int GRIDSIZE = 4;
 	int[] biomes = new int[GRIDSIZE*GRIDSIZE*GRIDSIZE];
 	
-	HashMap<String, ITerrainEffect> effects = new HashMap();
+	HashMap<String, ITerrainEffect> effects = new HashMap<String, ITerrainEffect>();
 	
 	public TerrainSegment(int x, int y, int z) 
 	{
@@ -91,9 +82,7 @@ public class TerrainSegment {
 	public void setBiome(int x, int y, int z, int biome)
 	{
 		int relX = (x&15)/GRIDSIZE, relY = (y&15)/GRIDSIZE, relZ = (z&15)/GRIDSIZE;
-		int pre = biomes[relX + GRIDSIZE * relY + GRIDSIZE * GRIDSIZE * relZ];
 		biomes[relX + GRIDSIZE * relY + GRIDSIZE * GRIDSIZE * relZ] = biome;
-		int post = biomes[relX + GRIDSIZE * relY + GRIDSIZE * GRIDSIZE * relZ];
 		if(biome>255) toSave = true;
 		
 	}
@@ -110,7 +99,7 @@ public class TerrainSegment {
         int j = MathHelper.floor_double(y / 16.0D);
         int k = MathHelper.floor_double(z / 16.0D);
         
-        ret = i==chunkX&&k==chunkZ;//&&j==chunkY;
+        ret = i==chunkX&&k==chunkZ&&j==chunkY;
 		return ret;
 	}
 	
@@ -136,7 +125,7 @@ public class TerrainSegment {
 					
 					boolean bool = true;
 			        int i1 = MathHelper.floor_double(v.intX()+i / 16.0D);
-			        int j1 = MathHelper.floor_double(v.intY()+i / 16.0D);
+//			        int j1 = MathHelper.floor_double(v.intY()+i / 16.0D);
 			        int k1 = MathHelper.floor_double(v.intZ()+i / 16.0D);
 			        
 			        bool = i1==v.intX()/16&&k1==v.intZ()/16;//&&j==chunkY;
@@ -145,7 +134,6 @@ public class TerrainSegment {
 					if(bool)
 					{
 						temp.set(v).add(i,j,k);
-						Block b1 = temp.getBlock(world);
 						if(temp.getBlock(world)==b||(b==null&&temp.getBlock(world)==null))
 						{
 							ret++;
@@ -200,15 +188,6 @@ public class TerrainSegment {
 		}
 	}
 	
-	private void setEffects(int[] effects)
-	{
-		if(effects.length==effects.length)
-		for(int i = 0; i<effects.length; i++)
-		{
-			effects[i] = effects[i];
-		}
-	}
-	
 	public int getBiome(int x, int y, int z)
 	{
 		int ret = 0;
@@ -238,10 +217,8 @@ public class TerrainSegment {
 				for(int k = 0; k<GRIDSIZE; k++)
 				{
 					temp.set(chunkX*16+i*16/GRIDSIZE, chunkY*16+j*16/GRIDSIZE, chunkZ*16+k*16/GRIDSIZE);
-					long time = System.nanoTime();
 					int biome = adjustedCaveBiome(world, temp);
 					int biome2 = adjustedNonCaveBiome(world, temp);
-					double dt = (System.nanoTime()-time)/1000000000D;
 					if(biome>255||biome2>255)
 						toSave = true;
 					if(biome==-1)
@@ -377,7 +354,6 @@ public class TerrainSegment {
         		|| BiomeDatabase.contains(b, Type.BEACH)
         		;
         
-		double slope =  0.1;//!notLake?getAverageSlope(world, v, 5):0;
 		int water = v.blockCount2(world, Blocks.water, 3);
         if(water>4)
         {

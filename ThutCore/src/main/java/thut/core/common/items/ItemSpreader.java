@@ -1,14 +1,11 @@
 package thut.core.common.items;
 
-import thut.api.ThutItems;
-import thut.api.maths.Vector3;
-import thut.core.common.ThutCore;
-import thut.core.common.blocks.BlockFluid;
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import thut.api.ThutItems;
+import thut.core.common.ThutCore;
 
 public class ItemSpreader extends Item
 {

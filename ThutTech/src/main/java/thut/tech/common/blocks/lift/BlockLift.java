@@ -5,17 +5,10 @@ import java.util.Random;
 
 import com.google.common.base.Predicate;
 
-import thut.api.ThutBlocks;
-import thut.api.maths.Vector3;
-import thut.tech.common.TechCore;
-import thut.tech.common.entity.EntityLift;
-import thut.tech.common.items.ItemLinker;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockState;
@@ -24,31 +17,31 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.ThutBlocks;
+import thut.api.maths.Vector3;
+import thut.tech.common.TechCore;
+import thut.tech.common.entity.EntityLift;
+import thut.tech.common.items.ItemLinker;
 
 public class BlockLift extends Block implements ITileEntityProvider// ,
                                                                    // IConnectableRedNet
 {
-    public static final PropertyEnum VARIANT = PropertyEnum.create("variant", EnumType.class, new Predicate()
+    public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class, new Predicate<EnumType>()
     {
         public boolean apply(EnumType type)
         {
             return type.getMetadata() < 4;
-        }
-
-        public boolean apply(Object p_apply_1_)
-        {
-            return this.apply((EnumType) p_apply_1_);
         }
     });
     public static final PropertyBool CALLED  = PropertyBool.create("called");
@@ -97,9 +90,9 @@ public class BlockLift extends Block implements ITileEntityProvider// ,
         if (state.getValue(VARIANT) == EnumType.LIFT)
         {
             int size;
-            boolean rails = (size = checkRailsForSpawn(worldObj, true, pos)) > 0;
+            size = checkRailsForSpawn(worldObj, true, pos);
             ItemStack[][] stacks;
-            boolean blocks = (stacks = checkBlocks(worldObj, size, pos)) != null;
+            stacks = checkBlocks(worldObj, size, pos);
 
             if (stacks != null && !worldObj.isRemote && player.getHeldItem() != null
                     && player.getHeldItem().getItem() instanceof ItemLinker)
@@ -195,8 +188,6 @@ public class BlockLift extends Block implements ITileEntityProvider// ,
             boolean bool = true;
             boolean rightBlock = false;
             int rail = (int) (1 + Math.floor(sizes[j] / 2));
-            int colmn = (int) (sizes[j] / 2);
-
             int[][] sides = { { rail, 0 }, { -rail, 0 }, { 0, rail }, { 0, -rail } };
 
             for (int i = 0; i < 3; i++)
@@ -303,7 +294,7 @@ public class BlockLift extends Block implements ITileEntityProvider// ,
 
     /** returns a list of blocks with the same ID, but different meta (eg: wood
      * returns 4 blocks) */
-    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List par3List)
+    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> par3List)
     {
         for (int j = 0; j < 2; j++)
         {

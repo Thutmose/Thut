@@ -1,18 +1,14 @@
 package thut.api.maths;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.signum;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -20,7 +16,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -30,8 +25,6 @@ public class Matrix3
 {
 
 	public Vector3[]				rows	= new Vector3[3];
-	private static AxisAlignedBB[]	pool	= new AxisAlignedBB[10000];
-	private static int				index	= 0;
 
 	public static synchronized AxisAlignedBB getAABB(double minX, double minY, double minZ, double maxX, double maxY,
 			double maxZ)
@@ -171,7 +164,7 @@ public class Matrix3
 	public List<Vector3> corners(boolean rotate)
 	{
 		// if (corners.isEmpty())
-		List<Vector3> corners = new ArrayList();
+		List<Vector3> corners = new ArrayList<Vector3>();
 
 		for (int i = 0; i < 8; i++)
 			corners.add(Vector3.getNewVectorFromPool());
@@ -742,8 +735,7 @@ public class Matrix3
         double maxY = entityBox.maxY;
         double maxZ = entityBox.maxZ;
         double factor = 0.75d;
-        double dx = max(maxX - minX, 1) / factor + e.motionX, dy = max(maxY - minY, 1) / factor + e.motionY,
-                dz = max(maxZ - minZ, 1) / factor + e.motionZ, r;
+        double dx = max(maxX - minX, 1) / factor + e.motionX, dz = max(maxZ - minZ, 1) / factor + e.motionZ, r;
 	    
 	    boolean collide = false;
 	    AxisAlignedBB b1;
@@ -1044,7 +1036,7 @@ public class Matrix3
 
 	public boolean intersects(Matrix3 b)
 	{
-		List<Vector3> cornersB = new ArrayList();
+		List<Vector3> cornersB = new ArrayList<Vector3>();
 		Vector3 v1 = boxCentre();
 		for (Vector3 v : b.corners(v1))
 			cornersB.add(v);
@@ -1054,7 +1046,7 @@ public class Matrix3
 
 	public boolean intersects(List<Vector3> mesh)
 	{
-		List<Vector3> cornersA = new ArrayList();
+		List<Vector3> cornersA = new ArrayList<Vector3>();
 		Vector3 v1 = boxCentre();
 		for (Vector3 v : corners(v1))
 			cornersA.add(v);
@@ -1126,7 +1118,6 @@ public class Matrix3
 	private static boolean containsOrigin(List<Vector3> points)
 	{
 		int index = 0;
-		int n = 0;
 		Vector3 base = points.get(index);
 		double dist = Double.MAX_VALUE;
 		for (int i = 0; i < points.size(); i++)
@@ -1165,7 +1156,6 @@ public class Matrix3
 				if (d1 <= d && signum(d) == signum(d1))
 				{
 					ret = true;
-					n++;
 					return true;
 				}
 			}
@@ -1181,12 +1171,12 @@ public class Matrix3
 		rows[2].clear();
 		return this;
 	}
-	private ArrayList collidingBoundingBoxes;
-    public List getCollidingBoxes(AxisAlignedBB box, World world, IBlockAccess access)
+	private ArrayList<AxisAlignedBB> collidingBoundingBoxes;
+    public List<AxisAlignedBB> getCollidingBoxes(AxisAlignedBB box, World world, IBlockAccess access)
     {
     	
     	if(collidingBoundingBoxes == null)
-    		collidingBoundingBoxes = new ArrayList();
+    		collidingBoundingBoxes = new ArrayList<AxisAlignedBB>();
     	
         this.collidingBoundingBoxes.clear();
         int i = MathHelper.floor_double(box.minX);

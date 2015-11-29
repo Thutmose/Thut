@@ -13,7 +13,7 @@ import thut.api.maths.Vector3;
 
 public class BiomeDatabase 
 {
-	public static HashMap<BiomeGenBase, Type[]> biomeTypes = new HashMap();
+	public static HashMap<BiomeGenBase, Type[]> biomeTypes = new HashMap<BiomeGenBase, Type[]>();
 	
 	public static BiomeType getBiome(BiomeGenBase b)
 	{
@@ -78,8 +78,6 @@ public class BiomeDatabase
 	
 	public static int getBiomeType(String name)
 	{
-		int ret = 0;
-		
 		for(BiomeType b: BiomeType.values())
 		{
 			if(b.name.equalsIgnoreCase(name))

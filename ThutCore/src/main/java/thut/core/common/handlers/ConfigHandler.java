@@ -4,14 +4,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import thut.api.maths.Vector3;
-import thut.core.common.items.ItemDusts;
-import thut.core.common.items.ItemSpout;
-import thut.core.common.items.ItemSpreader;
-import thut.core.common.items.ItemTank;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import thut.core.common.items.ItemDusts;
+import thut.core.common.items.ItemSpout;
+import thut.core.common.items.ItemTank;
 
 public class ConfigHandler {
 

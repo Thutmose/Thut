@@ -7,7 +7,6 @@ import static net.minecraft.util.EnumFacing.SOUTH;
 import static net.minecraft.util.EnumFacing.WEST;
 
 import java.awt.Color;
-import java.util.Arrays;
 import java.util.HashSet;
 
 import javax.vecmath.Vector3d;

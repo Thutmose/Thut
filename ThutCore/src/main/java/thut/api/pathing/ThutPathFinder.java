@@ -7,8 +7,6 @@ import static net.minecraft.util.EnumFacing.SOUTH;
 import static net.minecraft.util.EnumFacing.UP;
 import static net.minecraft.util.EnumFacing.WEST;
 
-import java.util.Arrays;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
@@ -22,8 +20,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IntHashMap;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
-import thut.api.entity.IMultibox;
-import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 
 /** between the sub and main path creation.
@@ -39,25 +35,13 @@ public class ThutPathFinder
 	/** The path being generated backwards */
 	private final ThutPath		pathb			= new ThutPath();
 	/** The points in the path */
-	private final IntHashMap	pointMap		= new IntHashMap();
+	private final IntHashMap<PathPoint>	pointMap		= new IntHashMap<PathPoint>();
 	/** Selection of path points to add to the path */
 	private final PathPoint[]	pathOptionsf	= new PathPoint[64];
 	/** Selection of path points to add to the path */
 	private final PathPoint[]	pathOptionsb	= new PathPoint[64];
-	/** should the PathFinder go through wodden door blocks */
-	private boolean				isWoddenDoorAllowed;
-
 	private final IPathingMob mob;
-//	private final IPokemob		pokemob;
-//	private final PokedexEntry	entry;
-	/** should the PathFinder disregard BlockMovement type materials in its
-	 * path */
-	private boolean				isMovementBlockAllowed;
-	private boolean				isPathingInWater;
-	private boolean				isPathingInAir;
 	private int					PATHTIME	= 5000000;
-	/** tells the FathFinder to not stop pathing underwater */
-	private boolean				canEntityDrown;
 
 	Vector3	v0	= Vector3.getNewVectorFromPool();
 	Vector3	v1	= Vector3.getNewVectorFromPool();
@@ -66,11 +50,6 @@ public class ThutPathFinder
 			boolean drown)
 	{
 		this.worldMap = world;
-		this.isWoddenDoorAllowed = doors;
-		this.isMovementBlockAllowed = block;
-		this.isPathingInWater = entity.swims();
-		this.isPathingInAir = entity.flys() || entity.floats();
-		this.canEntityDrown = !entity.swims();
 		mob = entity;
 //		pokemob = poke;
 //		entry = poke.getPokedexEntry();
@@ -96,7 +75,6 @@ public class ThutPathFinder
 		this.pathb.clearPath();
 		this.pathf.clearPath();
 		this.pointMap.clearMap();
-		boolean flag = this.isPathingInWater;
 		int i = MathHelper.floor_double(entity.getEntityBoundingBox().minY + 0.5D);
 
 		if (!mob.swims() && entity.isInWater())
@@ -151,11 +129,8 @@ public class ThutPathFinder
 		pathb.addPoint(end);
 
 		long starttime = System.nanoTime();
-		int tries = 0;
 		// IPokemob pokemob = (IPokemob) entity;
 		PATHTIME = mob.getPathTime();
-		long time = 0;
-
 		// if(true) return null;
 		Vector3 size = Vector3.getNewVectorFromPool();
 		size.set(mob.getMobSizes());
@@ -326,8 +301,6 @@ public class ThutPathFinder
 		int i = 1;
 		PathPoint pathpoint2 = end;
 
-		long starttime = System.nanoTime();
-
 		for (pathpoint2 = end; pathpoint2.previous != null; pathpoint2 = pathpoint2.previous)
 		{
 			++i;
@@ -347,12 +320,7 @@ public class ThutPathFinder
 	private boolean isEmpty(Vector3 e, int x, int y, int z, EnumFacing from)
 	{
 		Vector3 v = v0.set(x + 0.5, y, z + 0.5);
-		double dx = e.x / 2.2d;
-		double dy = e.y;
-		double dz = e.z / 2.2d;
 		Block b = v.getBlock(worldMap);
-		Vector3 dir = v1.set(from);
-
 		if (mob.getBlockPathWeight(worldMap, e) < 0) { return false; }
 		if (b instanceof BlockDoor)
 		{
@@ -394,9 +362,6 @@ public class ThutPathFinder
 		{
 			if (mDown != Material.water) return false;
 		}
-		Block here = worldMap.getBlockState(pos).getBlock();
-		Material mHere = here.getMaterial();
-
 		return isEmpty(e, x, y, z, from) && (mDown == Material.water || !isEmpty(e, x, y - 1, z, from));
 
 	}
@@ -461,7 +426,6 @@ public class ThutPathFinder
 					{
 						Block down = v0.set(point1).getBlock(worldMap);
 						v1.set(point1);
-						float f =  this.mob.getBlockPathWeight(worldMap, v0);
 						float f1 =  this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
 										// check if this causes cmod exp
 
@@ -495,7 +459,6 @@ public class ThutPathFinder
 						{
 							Block down = v0.set(point1).getBlock(worldMap);
 							v1.set(point1);
-							float f =  this.mob.getBlockPathWeight(worldMap, v0);
 							float f1 =  this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
 							if (down.getMaterial().isLiquid())
 							{
@@ -525,7 +488,6 @@ public class ThutPathFinder
 						{
 							Block down = v0.set(point1).getBlock(worldMap);
 							v1.set(point1);
-							float f =  this.mob.getBlockPathWeight(worldMap, v0);
 							float f1 =  this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
 											// check if this causes cmod exp
 							if (down.getMaterial().isLiquid())

@@ -1,7 +1,5 @@
 package thut.tech.common.blocks.railgun;
 
-import thut.api.maths.Vector3;
-import thut.tech.common.entity.EntityProjectile;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
@@ -9,6 +7,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import thut.api.maths.Vector3;
+import thut.tech.common.entity.EntityProjectile;
 
 public class TileEntityRailgun extends TileEntity {
 

@@ -1,50 +1,51 @@
 package thut.core.common.blocks;
 
-import static net.minecraft.init.Blocks.*;
-import static thut.api.ThutBlocks.concrete;
+import static net.minecraft.init.Blocks.activator_rail;
+import static net.minecraft.init.Blocks.carrots;
+import static net.minecraft.init.Blocks.detector_rail;
+import static net.minecraft.init.Blocks.fire;
+import static net.minecraft.init.Blocks.golden_rail;
+import static net.minecraft.init.Blocks.lever;
+import static net.minecraft.init.Blocks.potatoes;
+import static net.minecraft.init.Blocks.rail;
+import static net.minecraft.init.Blocks.reeds;
+import static net.minecraft.init.Blocks.snow;
+import static net.minecraft.init.Blocks.torch;
+import static net.minecraft.init.Blocks.vine;
+import static net.minecraft.init.Blocks.waterlily;
+import static net.minecraft.init.Blocks.web;
+import static net.minecraft.init.Blocks.wheat;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import com.google.common.collect.ImmutableList;
 
-import thut.api.ThutBlocks;
-import thut.api.block.IHardenableFluid;
-import thut.api.block.IViscousFluid;
-import thut.api.block.PropertyInteger;
-import thut.api.maths.Vector3;
-import thut.core.client.ClientProxy;
-import thut.core.common.ThutCore;
-import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
-import thut.core.common.handlers.ConfigHandler;
-
-import net.minecraft.block.*;
-import net.minecraft.block.material.MapColor;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockCarpet;
+import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockRedstoneComparator;
+import net.minecraft.block.BlockRedstoneTorch;
+import net.minecraft.block.BlockSign;
+import net.minecraft.block.BlockStem;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockState;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemDye;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.*;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
@@ -53,12 +54,18 @@ import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.BlockFluidFinite;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.ThutBlocks;
+import thut.api.block.IHardenableFluid;
+import thut.api.block.IViscousFluid;
+import thut.api.block.PropertyInteger;
+import thut.api.maths.Vector3;
+import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
 
+@SuppressWarnings("rawtypes")
 public class BlockFluid extends BlockFluidFinite implements IViscousFluid
 {
     public static final PropertyInteger COLOUR = new PropertyInteger("colour");
@@ -78,7 +85,6 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
         FLUID_RENDER_PROPS = builder.build().toArray(new IUnlistedProperty[0]);
     }
 
-    private Random    r             = new Random();
     public boolean    solidifiable  = false;
     public double     rate          = 0.9;
     public boolean    wanderer      = false;
@@ -668,7 +674,7 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
      * 
      * @param collidingEntity
      *            the Entity colliding with this Block */
-    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List list,
+    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list,
             Entity collidingEntity)
     {
         AxisAlignedBB[] boxes = getBoxes(worldIn, pos);

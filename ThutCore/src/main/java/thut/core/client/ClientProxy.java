@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -14,7 +13,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutItems;
 import thut.core.client.render.model.ModelFluid;
 import thut.core.common.CommonProxy;
-import thut.core.common.blocks.BlockFluid;
 import thut.core.common.items.ItemDusts;
 import thut.core.common.items.ItemDusts.Dust;
 

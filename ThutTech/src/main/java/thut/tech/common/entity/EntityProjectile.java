@@ -1,25 +1,14 @@
 package thut.tech.common.entity;
 
-import java.util.Iterator;
-
-import thut.api.maths.ExplosionCustom;
-import thut.api.maths.ExplosionCustom.ExplosionStuff;
-import thut.api.maths.Vector3;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockFalling;
-import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import thut.api.maths.ExplosionCustom;
+import thut.api.maths.Vector3;
 
 public class EntityProjectile extends EntityFallingBlock {
 
@@ -115,9 +104,9 @@ public class EntityProjectile extends EntityFallingBlock {
 
             if (!this.worldObj.isRemote)
             {
-                int i = MathHelper.floor_double(this.posX);
-                int j = MathHelper.floor_double(this.posY);
-                int k = MathHelper.floor_double(this.posZ);
+//                int i = MathHelper.floor_double(this.posX);
+//                int j = MathHelper.floor_double(this.posY);
+//                int k = MathHelper.floor_double(this.posZ);
             }
         }
     }
@@ -130,8 +119,6 @@ public class EntityProjectile extends EntityFallingBlock {
     public Vector3 getAccelerationFromRails(Vector3 here)
     {
     	Vector3 ret = Vector3.getNewVectorFromPool();
-    	int meta = here.getBlockMetadata(worldObj);
-    	
     	EnumFacing dir = null;
     	
     	for(EnumFacing side: EnumFacing.values())
