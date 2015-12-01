@@ -398,7 +398,6 @@ public class ExplosionCustom extends Explosion
 
 		// TODO make this do a compounded resist instead, to lower ram use
 		HashMap<Long, Float> resists = new HashMap<Long, Float>();
-		HashMap<BlockPos, Float> resists2 = new HashMap<>();
 		BitSet blocked = new BitSet();
 
 		int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));

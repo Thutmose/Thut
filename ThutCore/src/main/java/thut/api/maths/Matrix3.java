@@ -483,8 +483,6 @@ public class Matrix3
 		AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
 		
 		double yShift = 0;
-//		if(e.riddenByEntity!=null)
-//			yShift += e.riddenByEntity.stepHeight;
 		
 		double factor = 0.75d;
 		double dx = max(maxX - minX, 1) / factor + e.motionX, dy = max(maxY - minY, 1) / factor + e.motionY,
@@ -506,7 +504,6 @@ public class Matrix3
 		}
 		temp1.set(diffs);
 		AxisAlignedBB b1 = box.boxCentre().getAABB().expand(dx, dy, dz);
-//		System.out.println("b1:"+b1+" "+dy);
 		List<AxisAlignedBB> aabbs = getCollidingBoxes(b1, e.worldObj, world);
 		Vector3[][] subBoxes = box.splitBox();
 
@@ -707,9 +704,7 @@ public class Matrix3
 			e.setEntityBoundingBox(new AxisAlignedBB(e.getEntityBoundingBox().minX, boundingBox.minY, e.getEntityBoundingBox().minZ,
 					e.getEntityBoundingBox().maxX, boundingBox.maxY, e.getEntityBoundingBox().maxZ));
 			
-//			temp1.clear();
 		}
-//		temp1.clear();
 		temp.freeVectorFromPool();
 		dir.freeVectorFromPool();
 		ent.freeVectorFromPool();
@@ -910,7 +905,7 @@ public class Matrix3
         
         e.setEntityBoundingBox(new AxisAlignedBB(e.getEntityBoundingBox().minX, boundingBox.minY, e.getEntityBoundingBox().minZ,
                 e.getEntityBoundingBox().maxX, boundingBox.maxY, e.getEntityBoundingBox().maxZ));
-	    
+        
 	    return collide;
 	}
 

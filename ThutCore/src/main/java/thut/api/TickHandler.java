@@ -2,25 +2,21 @@ package thut.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.Vector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
-import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
+import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 
@@ -59,74 +55,74 @@ public class TickHandler
 
 		if (evt.phase == Phase.START && !evt.world.isRemote)
 		{
-			try
-			{
-				//TODO see if this stuff is needed
-				TreeSet<?> ticktreeset = ((WorldServer) evt.world).pendingTickListEntriesTreeSet;
-				Set<?> tickset = ((WorldServer) evt.world).pendingTickListEntriesHashSet;
-				List<NextTickListEntry> tickentrylist = ((WorldServer) evt.world).pendingTickListEntriesThisTick;
-				int i = ticktreeset.size();
-				int j = tickset.size();
-				
-				if(i!=j)
-				{
-                    Vector3 temp = Vector3.getNewVectorFromPool();
-                    Vector3 temp1 = Vector3.getNewVectorFromPool();
-				    System.out.println(ticktreeset.size()+" "+tickset.size());
-                    for(Object o: tickset)
-                    {
-                        NextTickListEntry next = (NextTickListEntry) o;
-                        temp.set(next.position);
-                        boolean has = false;
-                        for(Object o1: ticktreeset)
-                        {
-                            NextTickListEntry next1 = (NextTickListEntry) o1;
-                            temp1.set(next1.position);
-                            if(temp1.sameBlock(temp))
-                            {
-                                has = true;
-                                break;
-                            }
-                        }
-                        if(!has)
-                        {
-                            Block b = temp.getBlock(evt.world);
-                            System.out.println(b+" "+temp+" "+" "+next.getBlock());
-                        }
-                    }
-                    for(Object o: ticktreeset)
-                    {
-                        NextTickListEntry next = (NextTickListEntry) o;
-                        temp.set(next.position);
-                        boolean has = false;
-                        for(Object o1: tickset)
-                        {
-                            NextTickListEntry next1 = (NextTickListEntry) o1;
-                            temp1.set(next1.position);
-                            if(temp1.sameBlock(temp))
-                            {
-                                has = true;
-                                break;
-                            }
-                        }
-                        if(!has)
-                        {
-                            Block b = temp.getBlock(evt.world);
-                            System.out.println(b+" "+temp+" ");
-                        }
-                    }
-				    temp.freeVectorFromPool();
-					new Exception().printStackTrace();
-					ticktreeset.clear();;
-					tickset.clear();
-					tickentrylist.clear();
-					i = 0;
-				}
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
+//			try
+//			{
+//				//TODO see if this stuff is needed
+//				TreeSet<?> ticktreeset = ((WorldServer) evt.world).pendingTickListEntriesTreeSet;
+//				Set<?> tickset = ((WorldServer) evt.world).pendingTickListEntriesHashSet;
+//				List<NextTickListEntry> tickentrylist = ((WorldServer) evt.world).pendingTickListEntriesThisTick;
+//				int i = ticktreeset.size();
+//				int j = tickset.size();
+//				
+//				if(i!=j)
+//				{
+//                    Vector3 temp = Vector3.getNewVectorFromPool();
+//                    Vector3 temp1 = Vector3.getNewVectorFromPool();
+//				    System.out.println(ticktreeset.size()+" "+tickset.size());
+//                    for(Object o: tickset)
+//                    {
+//                        NextTickListEntry next = (NextTickListEntry) o;
+//                        temp.set(next.position);
+//                        boolean has = false;
+//                        for(Object o1: ticktreeset)
+//                        {
+//                            NextTickListEntry next1 = (NextTickListEntry) o1;
+//                            temp1.set(next1.position);
+//                            if(temp1.sameBlock(temp))
+//                            {
+//                                has = true;
+//                                break;
+//                            }
+//                        }
+//                        if(!has)
+//                        {
+//                            Block b = temp.getBlock(evt.world);
+//                            System.out.println(b+" "+temp+" "+" "+next.getBlock());
+//                        }
+//                    }
+//                    for(Object o: ticktreeset)
+//                    {
+//                        NextTickListEntry next = (NextTickListEntry) o;
+//                        temp.set(next.position);
+//                        boolean has = false;
+//                        for(Object o1: tickset)
+//                        {
+//                            NextTickListEntry next1 = (NextTickListEntry) o1;
+//                            temp1.set(next1.position);
+//                            if(temp1.sameBlock(temp))
+//                            {
+//                                has = true;
+//                                break;
+//                            }
+//                        }
+//                        if(!has)
+//                        {
+//                            Block b = temp.getBlock(evt.world);
+//                            System.out.println(b+" "+temp+" ");
+//                        }
+//                    }
+//				    temp.freeVectorFromPool();
+//					new Exception().printStackTrace();
+//					ticktreeset.clear();;
+//					tickset.clear();
+//					tickentrylist.clear();
+//					i = 0;
+//				}
+//			}
+//			catch (Exception e)
+//			{
+//				e.printStackTrace();
+//			}
 		}
 
 		if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimensionId())
@@ -157,6 +153,7 @@ public class TickHandler
 		if (evt.world.provider.getDimensionId() == 0)
 		{
 			blocks.clear();
+			ExplosionCustom.explosions.clear();
 		}
 		worldCaches.remove(evt.world.provider.getDimensionId());
 	}

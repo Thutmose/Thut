@@ -1,7 +1,6 @@
 package thut.core.common.items;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -17,7 +16,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import thut.api.ThutItems;
 import thut.api.TickHandler;
-import thut.api.maths.Cruncher;
 import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
