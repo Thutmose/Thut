@@ -43,7 +43,7 @@ import net.minecraftforge.fluids.IFluidBlock;
 public class Vector3
 {
 
-    static final HashMap<Thread, ThreadedPool> vectorPools = new HashMap<Thread, ThreadedPool>();
+    public static final HashMap<Thread, ThreadedPool> vectorPools = new HashMap<Thread, ThreadedPool>();
 
     public static final Vector3 secondAxis    = Vector3.getNewVectorFromPool().set(0, 1, 0);
     public static final Vector3 secondAxisNeg = Vector3.getNewVectorFromPool().set(0, -1, 0);

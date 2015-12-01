@@ -92,7 +92,7 @@ public class ThutCore
                 CheckResult result = ForgeVersion.getResult(((ModContainer) o));
                 if(result.status == Status.OUTDATED)
                 {
-                    String mess = "Current Listed Release Version of Pokecube Revival is "+result.target+", but you have "+ ThutCoreReference.VERSION+".";
+                    String mess = "Current Listed Release Version of Thut Core is "+result.target+", but you have "+ ThutCoreReference.VERSION+".";
                     mess += "\nIf you find bugs, please update and check if they still occur before reporting them.";
                     (event.player).addChatMessage(new ChatComponentText(mess));
                 }

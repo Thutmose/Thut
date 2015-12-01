@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutItems;
+import thut.api.network.PacketHandler;
 import thut.core.client.render.model.ModelFluid;
 import thut.core.common.CommonProxy;
 import thut.core.common.items.ItemDusts;
@@ -24,7 +25,7 @@ public class ClientProxy extends CommonProxy {
 	public void initClient()
 	{
 		mc = FMLClientHandler.instance().getClient();
-
+		PacketHandler.provider = this;
         Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ThutItems.tank, 0, new ModelResourceLocation("thutcore:tank", "inventory") );
 
         Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ThutItems.spout, 0, new ModelResourceLocation("thutcore:spout", "inventory") );

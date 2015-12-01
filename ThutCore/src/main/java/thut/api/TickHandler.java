@@ -53,76 +53,19 @@ public class TickHandler
 	public void worldTickEvent(WorldTickEvent evt)
 	{
 
-		if (evt.phase == Phase.START && !evt.world.isRemote)
+		if (evt.phase == Phase.START)
 		{
-//			try
-//			{
-//				//TODO see if this stuff is needed
-//				TreeSet<?> ticktreeset = ((WorldServer) evt.world).pendingTickListEntriesTreeSet;
-//				Set<?> tickset = ((WorldServer) evt.world).pendingTickListEntriesHashSet;
-//				List<NextTickListEntry> tickentrylist = ((WorldServer) evt.world).pendingTickListEntriesThisTick;
-//				int i = ticktreeset.size();
-//				int j = tickset.size();
-//				
-//				if(i!=j)
-//				{
-//                    Vector3 temp = Vector3.getNewVectorFromPool();
-//                    Vector3 temp1 = Vector3.getNewVectorFromPool();
-//				    System.out.println(ticktreeset.size()+" "+tickset.size());
-//                    for(Object o: tickset)
-//                    {
-//                        NextTickListEntry next = (NextTickListEntry) o;
-//                        temp.set(next.position);
-//                        boolean has = false;
-//                        for(Object o1: ticktreeset)
-//                        {
-//                            NextTickListEntry next1 = (NextTickListEntry) o1;
-//                            temp1.set(next1.position);
-//                            if(temp1.sameBlock(temp))
-//                            {
-//                                has = true;
-//                                break;
-//                            }
-//                        }
-//                        if(!has)
-//                        {
-//                            Block b = temp.getBlock(evt.world);
-//                            System.out.println(b+" "+temp+" "+" "+next.getBlock());
-//                        }
-//                    }
-//                    for(Object o: ticktreeset)
-//                    {
-//                        NextTickListEntry next = (NextTickListEntry) o;
-//                        temp.set(next.position);
-//                        boolean has = false;
-//                        for(Object o1: tickset)
-//                        {
-//                            NextTickListEntry next1 = (NextTickListEntry) o1;
-//                            temp1.set(next1.position);
-//                            if(temp1.sameBlock(temp))
-//                            {
-//                                has = true;
-//                                break;
-//                            }
-//                        }
-//                        if(!has)
-//                        {
-//                            Block b = temp.getBlock(evt.world);
-//                            System.out.println(b+" "+temp+" ");
-//                        }
-//                    }
-//				    temp.freeVectorFromPool();
-//					new Exception().printStackTrace();
-//					ticktreeset.clear();;
-//					tickset.clear();
-//					tickentrylist.clear();
-//					i = 0;
-//				}
-//			}
-//			catch (Exception e)
-//			{
-//				e.printStackTrace();
-//			}
+		    if(evt.world.getTotalWorldTime()%20==0)
+		    {
+		        ArrayList<Thread> threads = Lists.newArrayList(Vector3.vectorPools.keySet());
+		        for(Thread thread: threads)
+		        {
+		            if(!thread.isAlive())
+		            {
+		                Vector3.vectorPools.remove(thread);
+		            }
+		        }
+		    }
 		}
 
 		if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimensionId())
@@ -208,6 +151,7 @@ public class TickHandler
 	{
         Thread thread = Thread.currentThread();
 	    lists.remove(thread);
+	    System.gc();
 	}
 	
 	private static ArrayList<BlockChange> getList()

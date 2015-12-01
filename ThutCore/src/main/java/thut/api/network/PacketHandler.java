@@ -22,11 +22,11 @@ import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler.MessageClient.MessageHandlerClient;
 import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
-import thut.core.common.ThutCore;
 
 public class PacketHandler
 {
     public static SimpleNetworkWrapper packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel("thut.api");
+    public static IPlayerProvider provider;
 
     static
     {
@@ -142,7 +142,7 @@ public class PacketHandler
             @Override
             public MessageServer onMessage(MessageClient message, MessageContext ctx)
             {
-                handleClientSide(ThutCore.proxy.getPlayer(), message.buffer);
+                handleClientSide(provider.getPlayer(), message.buffer);
                 return null;
             }
         }

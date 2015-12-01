@@ -104,48 +104,20 @@ public class ItemSpout extends Item
     {
 
         if (worldObj.isRemote) return itemstack;
-
-        // int num = 50;
-        // Vector3 r1 = Vector3.getNewVectorFromPool();
-        // System.out.println("Starting tests");
-        //
-        // int m = 0;
-        // int n = 0;
-        // double total = 0;
-        // for (int j = 0; j < 10; j++)
-        // {
-        // BitSet blocked = new BitSet();
-        // Long time = System.nanoTime();
-        // for (int i = 0; i < num * num * num; i++)
-        // {
-        // Cruncher.indexToVals(i, r1);
-        // int index = Cruncher.getVectorInt(r1);
-        // if (blocked.get(index))
-        // {
-        // System.out.println(r1);
-        // }
-        // blocked.set(index);
-        // }
-        // total += (System.nanoTime() - time) / 1000d;
-        // n++;
-        // }
-        // int dt = (int) (total / n);
-        //
-        // System.out.println( " " + dt+" microseconds "+m);
-        TickHandler.maxChanges = 2000000;
-        Vector3 loc = Vector3.getNewVectorFromPool().set(player);
-        ExplosionCustom.MAX_RADIUS = 250;
-        Random rand = new Random();
-        int num = 1;
-        int dist = 0;
-        for (int i = 0; i < num; i++)
-        {
-            float strength = 5f * rand.nextFloat();
-            loc.set(player).addTo(dist * rand.nextGaussian(), dist * rand.nextGaussian(), dist * rand.nextGaussian());
-            ExplosionCustom boom = new ExplosionCustom(worldObj, player, loc, strength);
-//            System.out.println(boom + " " + strength);
-            boom.doExplosion();
-        }
+        
+//        TickHandler.maxChanges = 200;
+//        Vector3 loc = Vector3.getNewVectorFromPool().set(player);
+//        ExplosionCustom.MAX_RADIUS = 250;
+//        Random rand = new Random();
+//        int num = 1;
+//        int dist = 0;
+//        for (int i = 0; i < num; i++)
+//        {
+//            float strength = 100f;// * rand.nextFloat();
+//            loc.set(player).addTo(dist * rand.nextGaussian(), dist * rand.nextGaussian(), dist * rand.nextGaussian());
+//            ExplosionCustom boom = new ExplosionCustom(worldObj, player, loc, strength);
+//            boom.doExplosion();
+//        }
 
         return itemstack;
     }

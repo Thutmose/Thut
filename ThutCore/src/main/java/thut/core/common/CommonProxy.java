@@ -5,11 +5,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import thut.api.network.IPlayerProvider;
 import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
 import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
 import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 
-public class CommonProxy
+public class CommonProxy implements IPlayerProvider
 {
 
 	public void initClient() {}
