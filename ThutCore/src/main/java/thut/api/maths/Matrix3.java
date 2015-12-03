@@ -490,6 +490,9 @@ public class Matrix3
 		dx = Math.abs(dx);
 		dy = Math.abs(dy);
 		dz = Math.abs(dz);
+        dx = Math.max(dx, 1.5);
+        dy = Math.max(dy, 1.5);
+        dz = Math.max(dz, 1.5);
 		int max = 50;
 		if (diffs.mag() > max)
 		{

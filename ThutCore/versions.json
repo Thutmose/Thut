@@ -1,10 +1,11 @@
 {
   "homepage": "http://www.curse.com/mc-mods/minecraft/224428-thutcore",
   "promos": {
-    "1.8.8-latest": "2.1.6",
-    "1.8.8-recommended": "2.1.6"
+    "1.8.8-latest": "2.1.7",
+    "1.8.8-recommended": "2.1.7"
   },
   "1.8.8": {
+    "2.1.7": "increase minimum size for checking collisions, fixes small mobs sometimes falling through floor",
     "2.1.6": "tweaks to blast code, fixed API issues, fixed error in version update message",
     "2.1.5": "tweaks to matrix code, added forge version checking"
   }
