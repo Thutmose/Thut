@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -25,6 +26,7 @@ import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 import thut.core.common.CreativeTabThut;
 import thut.tech.ThutTechReference;
+import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.BlockHandler;
 import thut.tech.common.handlers.ConfigHandler;
 import thut.tech.common.handlers.ItemHandler;
@@ -71,6 +73,12 @@ public class TechCore
     public void postInit(FMLPostInitializationEvent e)
     {
     	ItemHandler.registerRecipes();
+    }
+
+    @EventHandler
+    public void serverStop(FMLServerStoppedEvent e)
+    {
+        EntityLift.clear();
     }
 
     @SideOnly(Side.CLIENT)

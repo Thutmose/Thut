@@ -88,7 +88,7 @@ public class ItemLinker extends Item
                 return false;
             }
 
-            EntityLift lift = EntityLift.getLiftFromUUID(liftID);
+            EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
 
             if (player.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)

@@ -59,6 +59,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public UUID                              id                = UUID.randomUUID();
     public UUID                              owner;
     private static HashMap<UUID, EntityLift> lifts             = new HashMap<UUID, EntityLift>();
+    private static HashMap<UUID, EntityLift> lifts2            = new HashMap<UUID, EntityLift>();
 
     public double prevFloorY = 0;
     public double prevFloor  = 0;
@@ -321,8 +322,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void clearLiquids()
     {
-//        int rad = (int) (Math.floor(size / 2));
-//
+        // int rad = (int) (Math.floor(size / 2));
+        //
         // Vector3 thisloc = Vector3.getNewVectorFromPool().set(this);
         // Vector3 v = Vector3.getNewVectorFromPool();
         // for (int i = -rad; i <= rad; i++)
@@ -389,11 +390,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
-    @SuppressWarnings("unused")//TODO make use of this
+    @SuppressWarnings("unused") // TODO make use of this
     private boolean consumePower()
     {
         boolean power = false;
-//        int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
+        // int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
         double energyCost = 0;// (destinationY - posY)*ENERGYCOST*sizeFactor;
         if (energyCost <= 0) return true;
         if (!power) toMoveY = false;
@@ -403,8 +404,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void checkCollision()
     {
-        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX - (size + 1), posY,
-                posZ - (size + 1), posX + (size + 1), posY + 6, posZ + (size + 1)));
+        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX - (size + 1),
+                posY, posZ - (size + 1), posX + (size + 1), posY + 6, posZ + (size + 1)));
 
         if (list != null && !list.isEmpty())
         {
@@ -463,7 +464,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (entity instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer) entity;
-            if(Math.abs(player.motionY)<0.1 && !player.capabilities.isFlying)
+            if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
                 entity.onGround = true;
                 entity.fallDistance = 0;
@@ -484,7 +485,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean interactFirst(EntityPlayer player)
     {
         ItemStack item = player.getHeldItem();
-
+        System.out.println(id + " " + this+" "+lifts2.get(id));
         if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker)
         {
             if (item.getTagCompound() == null)
@@ -503,7 +504,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             if (!worldObj.isRemote && owner != null)
             {
                 Entity ownerentity = worldObj.getPlayerEntityByUUID(owner);
-                String message = StatCollector.translateToLocalFormatted("msg.lift.owner", ownerentity.getCommandSenderName());
+                String message = StatCollector.translateToLocalFormatted("msg.lift.owner",
+                        ownerentity.getCommandSenderName());
 
                 player.addChatMessage(new ChatComponentText(message));
             }
@@ -583,7 +585,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         NBTTagCompound tag = new NBTTagCompound();
         writeBlocks(tag);
         buff.writeNBTTagCompoundToBuffer(tag);
-
+        lifts.put(id, this);
         data.writeBoolean(owner != null);
         if (owner != null)
         {
@@ -599,11 +601,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
         size = data.readDouble();
         id = new UUID(data.readLong(), data.readLong());
+        
         for (int i = 0; i < 64; i++)
         {
             floors[i] = data.readInt();
         }
-        lifts.put(id, this);
+        lifts2.put(id, this);
         this.setSize((float) this.size, 1f);
 
         PacketBuffer buff = new PacketBuffer(data);
@@ -651,8 +654,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             NBTTagCompound held = nbt.getCompoundTag("replacement");
             inventory[0] = ItemStack.loadItemStackFromNBT(held);
         }
-
-        lifts.put(id, this);
         readList(nbt);
         readBlocks(nbt);
     }
@@ -715,6 +716,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 for (int j = 0; j < size; j++)
                 {
                     ItemStack b = blocks[i][j];
+                    if (b == null || b.getItem() == null) b = new ItemStack(Blocks.iron_block);
+
                     nbt.setInteger("block" + i + "," + j, Item.getIdFromItem(b.getItem()));
                     nbt.setInteger("meta", b.getItemDamage());
                 }
@@ -746,9 +749,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 }
         }
     }
-
-    public static EntityLift getLiftFromUUID(UUID uuid)
+    
+    public static void clear()
     {
+        lifts2.clear();
+        lifts.clear();
+    }
+
+    public static EntityLift getLiftFromUUID(UUID uuid, boolean client)
+    {
+        if(client) return lifts2.get(uuid);
         return lifts.get(uuid);
     }
 
