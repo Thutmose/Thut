@@ -280,32 +280,6 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
 
         int k1;
         int l1;
-//        int i2;
-
-        // if (biomegenbase != BiomeGenBase.desert && biomegenbase !=
-        // BiomeGenBase.desertHills && !flag && this.rand.nextInt(8) == 0
-        // && TerrainGen.populate(provider, worldObj, rand, x, z, flag, LAKE))
-        // {
-        // k1 = k + this.rand.nextInt(16) + 8;
-        // l1 = this.rand.nextInt(worldObj.getHeight());
-        // i2 = l + this.rand.nextInt(16) + 8;
-        // (new WorldGenLakes(Blocks.water)).generate(this.worldObj, this.rand,
-        // k1, l1, i2);
-        // }
-        //
-        // if (TerrainGen.populate(provider, worldObj, rand, x, z, flag, LAVA)
-        // && !flag && this.rand.nextInt(16) == 0)
-        // {
-        // k1 = k + this.rand.nextInt(16) + 8;
-        // l1 = this.rand.nextInt(this.rand.nextInt(worldObj.getHeight()-8) +
-        // 8);
-        // i2 = l + this.rand.nextInt(16) + 8;
-        //
-        // if (l1 < 63 || this.rand.nextInt(10) == 0)
-        // {
-        // (new WorldGenLakes(Blocks.lava)).generate(this.worldObj, this.rand,
-        // k1, l1, i2);
-        // }
         // }//TODO ponds and lakes in appropriate biomes
 
         boolean doGen = TerrainGen.populate(provider, worldObj, rand, x, z, flag, DUNGEON);

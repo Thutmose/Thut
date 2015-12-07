@@ -528,10 +528,6 @@ public class DorfMap
                                 + scale / 2))
                     return false;
             }
-            else
-            {
-
-            }
             return true;
         }
     }

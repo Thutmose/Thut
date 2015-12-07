@@ -7,10 +7,8 @@ import java.util.HashSet;
 import dorfgen.conversion.DorfMap;
 import dorfgen.conversion.DorfMap.Region;
 import dorfgen.conversion.DorfMap.Site;
-import dorfgen.conversion.SiteStructureGenerator.SiteStructures;
-import dorfgen.conversion.SiteStructureGenerator.StructureSpace;
-import dorfgen.conversion.SiteStructureGenerator.WallSegment;
-import dorfgen.worldgen.RiverMaker;
+import dorfgen.conversion.SiteMapColours;
+import dorfgen.conversion.SiteStructureGenerator;
 import dorfgen.worldgen.WorldConstructionMaker;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -52,8 +50,10 @@ public class ItemDebug extends Item
         }
         WorldConstructionMaker maker = new WorldConstructionMaker();
 
-        int h = WorldConstructionMaker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x, z, scale);
-        int r = WorldConstructionMaker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.riverMap, x, z, scale);
+        int h = WorldConstructionMaker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x, z,
+                scale);
+        int r = WorldConstructionMaker.bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.riverMap, x, z,
+                scale);
         mess = "";
         //
         int embarkX = (x / scale);
@@ -77,108 +77,12 @@ public class ItemDebug extends Item
         boolean hasRivers = false;
         if (site != null && site.rgbmap != null)
         {
-            SiteStructures structures = WorldGenerator.instance.structureGen.getStructuresForSite(site);
-
-            StructureSpace space = structures.getStructure(x, z, scale);
-            WallSegment wall = structures.getWall(x, z, scale);
-            System.out.println(space + " " + wall);
-            if (wall != null)
-            {
-                boolean surrounded = true;
-                boolean nearStruct = false;
-                if (!nearStruct)
-                {
-                    nearStruct = structures.isStructure(x - 1, z, scale);
-                    if (nearStruct)
-                    {
-                        boolean t1 = !wall.isInWall(site, x, z - 1, scale);
-                        boolean t2 = !wall.isInWall(site, x, z + 1, scale);
-                        surrounded = !(t1 || t2);
-                    }
-                }
-                if (!nearStruct)
-                {
-                    nearStruct = structures.isStructure(x + 1, z, scale);
-                    if (nearStruct)
-                    {
-                        boolean t1 = !wall.isInWall(site, x, z - 1, scale);
-                        boolean t2 = !wall.isInWall(site, x, z + 1, scale);
-                        surrounded = !(t1 || t2);
-                    }
-                }
-                if (!nearStruct)
-                {
-                    nearStruct = structures.isStructure(x, z - 1, scale);
-                    if (nearStruct)
-                    {
-                        boolean t1 = !wall.isInWall(site, x - 1, z, scale);
-                        boolean t2 = !wall.isInWall(site, x + 1, z, scale);
-                        surrounded = !(t1 || t2);
-                    }
-                }
-                if (!nearStruct)
-                {
-                    nearStruct = structures.isStructure(x, z + 1, scale);
-                    if (nearStruct)
-                    {
-                        boolean t1 = !wall.isInWall(site, x - 1, z, scale);
-                        boolean t2 = !wall.isInWall(site, x + 1, z, scale);
-                        surrounded = !(t1 || t2);
-                    }
-                }
-                if (!nearStruct)
-                {
-                    // if(WorldGenerator.scale/SiteStructureGenerator.SITETOBLOCK
-                    // > 1)
-                    {
-                        if (surrounded) surrounded = wall.isInWall(site, x - 1, z - 1, scale);
-                        if (surrounded) surrounded = wall.isInWall(site, x + 1, z - 1, scale);
-                        if (surrounded) surrounded = wall.isInWall(site, x - 1, z + 1, scale);
-                        if (surrounded) surrounded = wall.isInWall(site, x + 1, z + 1, scale);
-                    }
-                    // else
-                    // {
-                    //// if(surrounded)
-                    //// surrounded = wall.isInWall(site, x - 1, z, scale);
-                    //// if(surrounded)
-                    //// surrounded = wall.isInWall(site, x + 1, z, scale);
-                    //// if(surrounded)
-                    //// surrounded = wall.isInWall(site, x, z + 1, scale);
-                    //// if(surrounded)
-                    //// surrounded = wall.isInWall(site, x, z + 1, scale);
-                    // }
-                }
-                // System.out.println("surrounded "+surrounded);
-                middle = surrounded;
-            }
-
+            int width = (scale / SiteStructureGenerator.SITETOBLOCK);
+            int pixelX = (x - site.corners[0][0] * scale - scale / 2 - width / 2) / width;
+            int pixelY = (z - site.corners[0][1] * scale - scale / 2 - width / 2) / width;
+            mess = "" + SiteMapColours.getMatch(site.rgbmap[pixelX][pixelY]);
+            player.addChatMessage(new ChatComponentText(mess));
         }
-        if (site != null)
-        {
-            // embarkX = (x/scale)*scale;
-            // embarkZ = (z/scale)*scale;
-            //
-            // if(embarkX/scale != site.x || embarkZ/scale != site.z)
-            // {
-            // middle = false;
-            // }
-            // else
-            // {
-            // int relX = x%scale + 8;
-            // int relZ = z%scale + 8;
-            // middle = relX/16 == scale/32 && relZ/16 == scale/32;
-            // System.out.println(relX+" "+relZ);
-            // }
-            // System.out.println(MapGenSites.shouldSiteSpawn(x, z, site));
-        }
-
-        int biome = dorfs.biomeMap[kx][kz];
-        mess += " " + middle;
-//        if(site!=null)
-//        mess += Arrays.toString(WorldConstructionMaker.getClosestRoadEnd(x, z, site));
-         mess += " In a River: "+RiverMaker.isInRiver(x, z)+" "+dorfs.riverMap[kx][kz];
-
-        player.addChatMessage(new ChatComponentText(mess));
 
         return itemstack;
     }
