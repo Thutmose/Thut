@@ -1,7 +1,6 @@
 package thut.core.common.items;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,8 +14,6 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import thut.api.ThutItems;
-import thut.api.TickHandler;
-import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
 import thut.core.common.blocks.BlockFluid;
@@ -105,20 +102,6 @@ public class ItemSpout extends Item
 
         if (worldObj.isRemote) return itemstack;
         
-//        TickHandler.maxChanges = 200;
-//        Vector3 loc = Vector3.getNewVectorFromPool().set(player);
-//        ExplosionCustom.MAX_RADIUS = 250;
-//        Random rand = new Random();
-//        int num = 1;
-//        int dist = 0;
-//        for (int i = 0; i < num; i++)
-//        {
-//            float strength = 100f;// * rand.nextFloat();
-//            loc.set(player).addTo(dist * rand.nextGaussian(), dist * rand.nextGaussian(), dist * rand.nextGaussian());
-//            ExplosionCustom boom = new ExplosionCustom(worldObj, player, loc, strength);
-//            boom.doExplosion();
-//        }
-
         return itemstack;
     }
 
