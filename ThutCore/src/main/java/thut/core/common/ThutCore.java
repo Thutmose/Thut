@@ -22,6 +22,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import thut.api.TickHandler;
 import thut.api.maths.Cruncher;
+import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
 import thut.core.common.handlers.ConfigHandler;
 import thut.reference.ThutCoreReference;
@@ -49,6 +50,11 @@ public class ThutCore
     // Configuration Handler that handles the config file
     public ConfigHandler config;
 
+    public ThutCore()
+    {
+        BiomeDatabase.getNameFromType(0);
+    }
+    
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {

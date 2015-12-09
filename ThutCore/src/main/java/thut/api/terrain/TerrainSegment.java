@@ -8,14 +8,17 @@ import static thut.api.terrain.BiomeType.VILLAGE;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.village.Village;
@@ -459,9 +462,20 @@ public class TerrainSegment
         nbt.setInteger("y", chunkY);
         nbt.setInteger("z", chunkZ);
 
+        NBTTagList biomeList = new NBTTagList();
+        for(BiomeType t: BiomeType.values())
+        {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString("name", t.name);
+            tag.setInteger("id", t.getType());
+            biomeList.appendTag(tag);
+        }
+        nbt.setTag("ids", biomeList);
         // TODO save terraineffects including class for constructing.
     }
 
+    static Map<Integer, Integer> idReplacements = Maps.newHashMap();
+    
     public static TerrainSegment readFromNBT(NBTTagCompound nbt)
     {
         TerrainSegment t = null;
@@ -469,6 +483,32 @@ public class TerrainSegment
         int x = nbt.getInteger("x");
         int y = nbt.getInteger("y");
         int z = nbt.getInteger("z");
+        if(nbt.hasKey("ids"))
+        {
+            NBTTagList tags = (NBTTagList) nbt.getTag("ids");
+            for(int i = 0; i<tags.tagCount(); i++)
+            {
+                NBTTagCompound tag = tags.getCompoundTagAt(i);
+                String name = tag.getString("name");
+                int id = tag.getInteger("id");
+                BiomeType type = BiomeType.getBiome(name, false);
+                if(type.getType()!=id && !idReplacements.containsKey(id))
+                {
+                    idReplacements.put(id, type.getType());
+                }
+            }
+        }
+        if(!idReplacements.isEmpty())
+        {
+            for(int i = 0; i<biomes.length; i++)
+            {
+                if(idReplacements.containsKey(biomes[i]))
+                {
+                    biomes[i] = idReplacements.get(biomes[i]);
+                }
+            }
+        }
+        
         t = new TerrainSegment(x, y, z);
         t.init = false;
         t.setBiome(biomes);

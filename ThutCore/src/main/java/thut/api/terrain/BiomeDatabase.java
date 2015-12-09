@@ -4,17 +4,23 @@ import java.util.HashMap;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
+import net.minecraftforge.fml.common.registry.PersistentRegistryManager;
 import thut.api.maths.Vector3;
 
 public class BiomeDatabase 
 {
 	public static HashMap<BiomeGenBase, Type[]> biomeTypes = new HashMap<BiomeGenBase, Type[]>();
-	
+
+    public static final FMLControlledNamespacedRegistry<BiomeType> biomeTypeRegistry = PersistentRegistryManager
+            .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 1024, 256, true, null);
+    
 	public static BiomeType getBiome(BiomeGenBase b)
 	{
 		if(b!=null)
@@ -96,7 +102,7 @@ public class BiomeDatabase
 	public static String getNameFromType(int type)
 	{
 		if(type>255)
-			return BiomeType.values()[type-256].name;
+			return biomeTypeRegistry.getObjectById(type).name;
 		else if(BiomeGenBase.getBiome(type)!=null)
 			return BiomeGenBase.getBiome(type).biomeName;
 		else
@@ -106,7 +112,7 @@ public class BiomeDatabase
 	public static String getReadableNameFromType(int type)
 	{
 		if(type>255)
-			return BiomeType.values()[type-256].readableName;
+			return biomeTypeRegistry.getObjectById(type).readableName;
 		else if(BiomeGenBase.getBiome(type)!=null)
 			return BiomeGenBase.getBiome(type).biomeName;
 		else
