@@ -23,241 +23,243 @@ import thut.api.network.PacketHandler;
 public class TickHandler
 {
 
-	private static TickHandler instance;
+    private static TickHandler instance;
 
-	public TickHandler()
-	{
-		MinecraftForge.EVENT_BUS.register(this);
-		new PacketHandler();
-		instance = this;
-	}
+    public TickHandler()
+    {
+        MinecraftForge.EVENT_BUS.register(this);
+        new PacketHandler();
+        instance = this;
+    }
 
-	public static TickHandler getInstance()
-	{
+    public static TickHandler getInstance()
+    {
+        if (instance == null) new TickHandler();
+        return instance;
+    }
 
-		if (instance == null) new TickHandler();
+    public HashMap<Integer, Vector<BlockChange>> blocks      = new HashMap<Integer, Vector<BlockChange>>();
+    public static int                            maxChanges  = 200;
+    /** This is a map of dimension to worldcache, it can be used for thread-safe
+     * world access */
+    public HashMap<Integer, WorldCache>          worldCaches = new HashMap<Integer, WorldCache>();
 
-		return instance;
-	}
+    public WorldCache getWorldCache(int dimension)
+    {
+        return worldCaches.get(dimension);
+    }
 
-	public HashMap<Integer, Vector<BlockChange>>	blocks		= new HashMap<Integer, Vector<BlockChange>>();
-	public static int								maxChanges	= 200;
-	public HashMap<Integer, WorldCache> worldCaches = new HashMap<Integer, WorldCache>();
+    @SubscribeEvent
+    public void worldTickEvent(WorldTickEvent evt)
+    {
+        // At the start of the phase, once per second, check to see if any of
+        // the vectorpools should be removed.
+        if (evt.phase == Phase.START)
+        {
+            if (evt.world.getTotalWorldTime() % 20 == 0)
+            {
+                ArrayList<Thread> threads = Lists.newArrayList(Vector3.vectorPools.keySet());
+                for (Thread thread : threads)
+                {
+                    if (!thread.isAlive())
+                    {
+                        Vector3.vectorPools.remove(thread);
+                    }
+                }
+            }
+        }
+        if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimensionId())
+                || blocks.get(evt.world.provider.getDimensionId()).size() == 0 || evt.world.isRemote)
+            return;
 
-	public WorldCache getWorldCache(int dimension)
-	{
-		return worldCaches.get(dimension);
-	}
-	
-	@SubscribeEvent
-	public void worldTickEvent(WorldTickEvent evt)
-	{
+        int num = 0;
+        ArrayList<BlockChange> removed = Lists.newArrayList();
+        Vector<BlockChange> blocks = this.blocks.get(evt.world.provider.getDimensionId());
+        ArrayList<BlockChange> toRemove = Lists.newArrayList(blocks);
 
-		if (evt.phase == Phase.START)
-		{
-		    if(evt.world.getTotalWorldTime()%20==0)
-		    {
-		        ArrayList<Thread> threads = Lists.newArrayList(Vector3.vectorPools.keySet());
-		        for(Thread thread: threads)
-		        {
-		            if(!thread.isAlive())
-		            {
-		                Vector3.vectorPools.remove(thread);
-		            }
-		        }
-		    }
-		}
+        // remove the blocks needed for that world.
+        for (int i = 0; i < toRemove.size(); i++)
+        {
+            BlockChange b = toRemove.get(i);
+            b.changeBlock(evt.world);
+            removed.add(b);
+            num++;
+            if (num >= maxChanges * 5) break;
+        }
+        for (BlockChange b : removed)
+            blocks.remove(b);
+        removed.clear();
+    }
 
-		if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimensionId())
-				|| blocks.get(evt.world.provider.getDimensionId()).size() == 0 || evt.world.isRemote)
-			return;
+    @SubscribeEvent
+    public void WorldUnloadEvent(Unload evt)
+    {
+        if (evt.world.provider.getDimensionId() == 0)
+        {
+            blocks.clear();
+            ExplosionCustom.explosions.clear();
+        }
+        // Remove world cache for dimension
+        worldCaches.remove(evt.world.provider.getDimensionId());
+    }
 
-		int num = 0;
-		ArrayList<BlockChange> removed = Lists.newArrayList();
-		Vector<BlockChange> blocks = this.blocks.get(evt.world.provider.getDimensionId());
-		ArrayList<BlockChange> toRemove = Lists.newArrayList(blocks);
+    @SubscribeEvent
+    public void WorldLoadEvent(Load evt)
+    {
+        if (evt.world.isRemote) return;
+        // Initialize a world cache for this dimension
+        worldCaches.put(evt.world.provider.getDimensionId(), new WorldCache(evt.world));
+    }
 
-		for (int i = 0; i < toRemove.size(); i++)
-		{
-			BlockChange b = toRemove.get(i);
-			b.changeBlock(evt.world);
-			removed.add(b);
-			num++;
-			if (num >= maxChanges * 5) break;
-		}
-		for (BlockChange b : removed)
-			blocks.remove(b);
-		removed.clear();
-	}
+    @SubscribeEvent
+    public void ChunkLoadEvent(net.minecraftforge.event.world.ChunkEvent.Load evt)
+    {
+        if (evt.world.isRemote) return;
+        // Add the chunk to the corresponding world cache.
+        WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
+        if (world == null)
+        {
+            world = new WorldCache(evt.world);
+            worldCaches.put(evt.world.provider.getDimensionId(), world);
+        }
+        world.addChunk(evt.getChunk());
+    }
 
-	@SubscribeEvent
-	public void WorldUnloadEvent(Unload evt)
-	{
-		if (evt.world.provider.getDimensionId() == 0)
-		{
-			blocks.clear();
-			ExplosionCustom.explosions.clear();
-		}
-		worldCaches.remove(evt.world.provider.getDimensionId());
-	}
+    @SubscribeEvent
+    public void ChunkUnLoadEvent(net.minecraftforge.event.world.ChunkEvent.Unload evt)
+    {
+        if (evt.world.isRemote) return;
+        // Remove the chunk from the cache
+        WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
+        if (world != null)
+        {
+            world.removeChunk(evt.getChunk());
+        }
+    }
 
-	@SubscribeEvent
-	public void WorldLoadEvent(Load evt)
-	{
-		if(evt.world.isRemote)
-			return;
-		worldCaches.put(evt.world.provider.getDimensionId(), new WorldCache(evt.world));
-	}
+    public static void addBlockChange(Vector3 location, int dimension, Block blockTo)
+    {
+        addBlockChange(location, dimension, blockTo, 0);
+    }
 
-	@SubscribeEvent
-	public void ChunkLoadEvent(net.minecraftforge.event.world.ChunkEvent.Load evt)
-	{
-		if(evt.world.isRemote)
-			return;
-		WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
-		if(world==null)
-		{
-			world = new WorldCache(evt.world);
-			worldCaches.put(evt.world.provider.getDimensionId(), world);
-		}
-		world.addChunk(evt.getChunk());
-	}
+    public static void addBlockChange(Vector3 location, int dimension, Block blockTo, int meta)
+    {
+        addBlockChange(new BlockChange(location, dimension, blockTo, meta), dimension);
+    }
 
-	@SubscribeEvent
-	public void ChunkUnLoadEvent(net.minecraftforge.event.world.ChunkEvent.Unload evt)
-	{
-		if(evt.world.isRemote)
-			return;
-		WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
-		if(world!=null)
-		{
-			world.removeChunk(evt.getChunk());
-		}
-	}
+    static Map<Thread, ArrayList<BlockChange>> lists = Maps.newConcurrentMap();
 
-	public static void addBlockChange(Vector3 location, int dimension, Block blockTo)
-	{
-		addBlockChange(location, dimension, blockTo, 0);
-	}
-
-	public static void addBlockChange(Vector3 location, int dimension, Block blockTo, int meta)
-	{
-		addBlockChange(new BlockChange(location, dimension, blockTo, meta), dimension);
-	}
-	
-	static Map<Thread, ArrayList<BlockChange>> lists = Maps.newConcurrentMap();
-
-	public static void cleanup()
-	{
+    public static void cleanup()
+    {
         Thread thread = Thread.currentThread();
-	    lists.remove(thread);
-	    System.gc();
-	}
-	
-	private static ArrayList<BlockChange> getList()
-	{
-	    Thread thread = Thread.currentThread();
-	    if(lists.containsKey(thread))
-	    {
-	        ArrayList<BlockChange> ret = lists.get(thread);
-	        ret.clear();
-	        return ret;
-	        
-	    }
-	    else
-	    {
-	        ArrayList<BlockChange> ret;
-	        ret = Lists.newArrayList();
-	        lists.put(thread, ret);
-	        return ret;
-	    }
-	}
+        lists.remove(thread);
+        System.gc();
+    }
 
-	public static void addBlockChange(BlockChange b1, int dimension)
-	{
+    private static ArrayList<BlockChange> getList()
+    {
+        Thread thread = Thread.currentThread();
+        if (lists.containsKey(thread))
+        {
+            ArrayList<BlockChange> ret = lists.get(thread);
+            ret.clear();
+            return ret;
 
-		if (b1.location.y > 255) return;
+        }
+        else
+        {
+            ArrayList<BlockChange> ret;
+            ret = Lists.newArrayList();
+            lists.put(thread, ret);
+            return ret;
+        }
+    }
 
-		getInstance();
-		ArrayList<BlockChange> blocks = getList();
-		blocks.addAll(TickHandler.getListForDimension(dimension));
-		for (BlockChange b : blocks)
-		{
-			if (b.equals(b1)) return;
-		}
-		getInstance();
-		TickHandler.getListForDimension(dimension).add(b1);
-	}
+    public static void addBlockChange(BlockChange b1, int dimension)
+    {
 
-	public static Vector<BlockChange> getListForWorld(World worldObj)
-	{
-		Vector<BlockChange> ret = getInstance().blocks.get(worldObj.provider.getDimensionId());
-		if (ret == null)
-		{
-			ret = new Vector<BlockChange>();
-			getInstance().blocks.put(worldObj.provider.getDimensionId(), ret);
-		}
-		return ret;
-	}
+        if (b1.location.y > 255) return;
 
-	public static Vector<BlockChange> getListForDimension(int dim)
-	{
-		Vector<BlockChange> ret = getInstance().blocks.get(dim);
-		if (ret == null)
-		{
-			ret = new Vector<BlockChange>();
-			getInstance().blocks.put(dim, ret);
-		}
-		return ret;
-	}
+        getInstance();
+        ArrayList<BlockChange> blocks = getList();
+        blocks.addAll(TickHandler.getListForDimension(dimension));
+        for (BlockChange b : blocks)
+        {
+            if (b.equals(b1)) return;
+        }
+        getInstance();
+        TickHandler.getListForDimension(dimension).add(b1);
+    }
 
-	public static class BlockChange
-	{
-		public int		dimension;
-		public Vector3	location;
-		public Block	blockTo;
-		public Block	blockFrom;
-		public int		metaTo	= 0;
-		public int		flag	= 3;
+    public static Vector<BlockChange> getListForWorld(World worldObj)
+    {
+        Vector<BlockChange> ret = getInstance().blocks.get(worldObj.provider.getDimensionId());
+        if (ret == null)
+        {
+            ret = new Vector<BlockChange>();
+            getInstance().blocks.put(worldObj.provider.getDimensionId(), ret);
+        }
+        return ret;
+    }
 
-		public BlockChange(Vector3 location, int dim, Block blockTo)
-		{
-			dimension = dim;
-			this.location = location.copy();
-			this.blockTo = blockTo;
-		}
+    public static Vector<BlockChange> getListForDimension(int dim)
+    {
+        Vector<BlockChange> ret = getInstance().blocks.get(dim);
+        if (ret == null)
+        {
+            ret = new Vector<BlockChange>();
+            getInstance().blocks.put(dim, ret);
+        }
+        return ret;
+    }
 
-		public BlockChange(Vector3 location, int dim, Block blockTo, int meta)
-		{
-			dimension = dim;
-			this.location = location.copy();
-			this.blockTo = blockTo;
-			this.metaTo = meta;
-		}
+    public static class BlockChange
+    {
+        public int     dimension;
+        public Vector3 location;
+        public Block   blockTo;
+        public Block   blockFrom;
+        public int     metaTo = 0;
+        public int     flag   = 3;
 
-		public boolean changeBlock(World worldObj)
-		{
-			boolean ret = location.setBlock(worldObj, blockTo, metaTo, flag);
-			return ret;
-		}
+        public BlockChange(Vector3 location, int dim, Block blockTo)
+        {
+            dimension = dim;
+            this.location = location.copy();
+            this.blockTo = blockTo;
+        }
 
-		@Override
-		public String toString()
-		{
-			return blockTo + " " + dimension + " " + location;
-		}
+        public BlockChange(Vector3 location, int dim, Block blockTo, int meta)
+        {
+            dimension = dim;
+            this.location = location.copy();
+            this.blockTo = blockTo;
+            this.metaTo = meta;
+        }
 
-		@Override
-		public boolean equals(Object o)
-		{
-			if (o instanceof BlockChange)
-			{
-				BlockChange b = (BlockChange) o;
-				return dimension == b.dimension && location.sameBlock(b.location);
-			}
+        public boolean changeBlock(World worldObj)
+        {
+            boolean ret = location.setBlock(worldObj, blockTo, metaTo, flag);
+            return ret;
+        }
 
-			return false;
-		}
+        @Override
+        public String toString()
+        {
+            return blockTo + " " + dimension + " " + location;
+        }
 
-	}
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o instanceof BlockChange)
+            {
+                BlockChange b = (BlockChange) o;
+                return dimension == b.dimension && location.sameBlock(b.location);
+            }
+
+            return false;
+        }
+
+    }
 }
