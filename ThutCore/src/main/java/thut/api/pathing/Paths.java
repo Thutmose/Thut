@@ -23,7 +23,7 @@ public class Paths {
 	}
 
 
-    public PathEntity getPathEntityToEntity(Entity entityA, Entity entityB, float distance, boolean doors, boolean block, boolean water, boolean air, boolean drown)
+    public PathEntity getPathEntityToEntity(Entity entityA, Entity entityB, float distance)
     {
 //    	System.out.println(Arrays.toString(cacheLock));
     	while(cacheLock[0])
@@ -41,12 +41,13 @@ public class Paths {
     		return null;
     	
     	cacheLock[1] = true;
-        PathEntity pathentity = (new ThutPathFinder(chunks, (IPathingMob)entityA, doors, block, water, air, drown)).createEntityPathTo(entityA, entityB, distance);
+        PathEntity pathentity = (new JPSPather(chunks, (IPathingMob)entityA)).createEntityPathTo(chunks, entityA, entityB, distance);
         cacheLock[1] = false;
+        
         return pathentity;
     }
 
-    public PathEntity getEntityPathToXYZ(Entity entity, int x, int y, int z, float distance, boolean doors, boolean block, boolean water, boolean air, boolean drown)
+    public PathEntity getEntityPathToXYZ(Entity entity, int x, int y, int z, float distance)
     {
     	if(x==0&&z==0)
     	{
@@ -68,10 +69,10 @@ public class Paths {
     		return null;
     	
     	cacheLock[1] = true;
-        ThutPathFinder pather = new ThutPathFinder(chunks, (IPathingMob)entity, doors, block, water, air, drown);
+        ThutPathFinder pather = new JPSPather(chunks, (IPathingMob)entity);
         PathEntity pathentity = pather.createEntityPathTo(entity, x, y, z, distance);
         cacheLock[1] = false;
-//    	if(true) return null;
+        
         return pathentity;
     }
 }

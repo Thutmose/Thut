@@ -475,6 +475,18 @@ public class Vector3
         return vHat;
     }
 
+    /** Normalizes this vector.
+     * 
+     * @param vector
+     * @return unit vector in direction of vector. */
+    public Vector3 norm()
+    {
+        double vmag = mag();
+        if (vmag == 0) return clear();
+        this.scalarMultBy(1 / vmag);
+        return this;
+    }
+
     /** Returns the unit vector in with the same direction as vector.
      * 
      * @param vector
@@ -1711,6 +1723,10 @@ public class Vector3
         {
             int[] p = (int[]) o;
             this.set(p[0], p[1], p[2]);
+        }
+        else if(o instanceof Double)
+        {
+            x = y = z = (double) o;
         }
         return this;
     }

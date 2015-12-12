@@ -99,8 +99,6 @@ public class ItemSpout extends Item
     @Override
     public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-
-        if (worldObj.isRemote) return itemstack;
         
         return itemstack;
     }

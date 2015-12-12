@@ -81,6 +81,7 @@ public class TechCore
         EntityLift.clear();
     }
 
+    @SuppressWarnings("rawtypes")
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void livingRender(RenderLivingEvent.Post evt)
