@@ -1,11 +1,10 @@
 package li.cil.oc.api;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fml.common.event.FMLInterModComms;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This is a pure utility class to more comfortably register things that can
@@ -21,7 +20,6 @@ import net.minecraftforge.fml.common.event.FMLInterModComms;
  * copy this class while keeping the package name, to avoid conflicts if this
  * class gets updated.
  */
-@SuppressWarnings("rawtypes")
 public final class IMC {
     /**
      * Register a callback that is used as a filter for assembler templates.
@@ -238,6 +236,29 @@ public final class IMC {
      */
     public static void registerWrenchTool(String callback) {
         FMLInterModComms.sendMessage(MOD_ID, "registerWrenchTool", callback);
+    }
+
+    /**
+     * Register a callback for checking if an item is a wrench.
+     * <p/>
+     * This is used to determine whether certain item stacks are wrench items,
+     * which is used, for example, when "itemizing" a drone.
+     * <p/>
+     * The returned value must <tt>true</tt> if the item stack is a wrench,
+     * <tt>false</tt> otherwise.
+     * <p/>
+     * Signature of callbacks must be:
+     * <pre>
+     * boolean callback(ItemStack stack)
+     * </pre>
+     * <p/>
+     * Callbacks must be declared as <tt>packagePath.className.methodName</tt>.
+     * For example: <tt>com.example.Integration.callbackMethod</tt>.
+     *
+     * @param callback the callback to register as a wrench tool tester.
+     */
+    public static void registerWrenchToolCheck(String callback) {
+        FMLInterModComms.sendMessage(MOD_ID, "registerWrenchToolCheck", callback);
     }
 
     /**

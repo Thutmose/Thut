@@ -34,8 +34,7 @@ import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
 
-public class BlockLift extends Block implements ITileEntityProvider// ,
-                                                                   // IConnectableRedNet
+public class BlockLift extends Block implements ITileEntityProvider
 {
     public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class, new Predicate<EnumType>()
     {

@@ -22,6 +22,7 @@ import net.minecraftforge.oredict.OreDictionary;
  *
  * @see li.cil.oc.api.network.ManagedEnvironment
  */
+@SuppressWarnings("UnusedDeclaration")
 public abstract class DriverBlock implements li.cil.oc.api.driver.Block {
     protected final ItemStack[] blocks;
 

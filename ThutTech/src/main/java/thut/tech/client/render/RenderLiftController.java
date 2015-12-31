@@ -108,16 +108,16 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 
             Tessellator t = Tessellator.getInstance();
-            t.getWorldRenderer().func_181668_a(GL11.GL_QUADS, DefaultVertexFormats.field_181707_g);//.startDrawing(GL11.GL_QUADS);
+            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);//.startDrawing(GL11.GL_QUADS);
 
             GL11.glTranslated(0, 0, -0.001 * (0 + 0.5));
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1F);
             {
-                t.getWorldRenderer().func_181662_b(1, 1, 0).func_181673_a(0, 0).func_181675_d();
-                t.getWorldRenderer().func_181662_b(1, 0, 0).func_181673_a(0, 1).func_181675_d();
+                t.getWorldRenderer().pos(1, 1, 0).tex(0, 0).endVertex();
+                t.getWorldRenderer().pos(1, 0, 0).tex(0, 1).endVertex();
 
-                t.getWorldRenderer().func_181662_b(0, 0, 0).func_181673_a(1, 1).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0, 1, 0).func_181673_a(1, 0).func_181675_d();
+                t.getWorldRenderer().pos(0, 0, 0).tex(1, 1).endVertex();
+                t.getWorldRenderer().pos(0, 1, 0).tex(1, 0).endVertex();
             }
 
             t.draw();
@@ -167,7 +167,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
 
             Tessellator t = Tessellator.getInstance();
-            t.getWorldRenderer().func_181668_a(GL11.GL_QUADS, DefaultVertexFormats.field_181707_g);//.startDrawing(GL11.GL_QUADS);
+            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);//.startDrawing(GL11.GL_QUADS);
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / (double) 4;
             int actFloor = floor + page * 16;
             double[] uvs = locationFromNumber((actFloor + 1) % 10);
@@ -178,26 +178,26 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             {
 
                 GL11.glTranslated(x + 0.01, y + 0.06, -0.001 * (5 + 1));
-                t.getWorldRenderer().func_181662_b(0.15, 0.15, 0).func_181673_a(uvs[0], uvs[2]).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0.15, 0.0, 0).func_181673_a(uvs[0], uvs[3]).func_181675_d();
+                t.getWorldRenderer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).endVertex();
+                t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).endVertex();
 
-                t.getWorldRenderer().func_181662_b(0, 0.0, 0).func_181673_a(uvs[1], uvs[3]).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0, 0.15, 0).func_181673_a(uvs[1], uvs[2]).func_181675_d();
+                t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).endVertex();
+                t.getWorldRenderer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).endVertex();
 
-                t.getWorldRenderer().func_181662_b(0.15 + 0.1, 0.15, 0).func_181673_a(uvs1[0], uvs1[2]).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0.15 + 0.1, 0, 0).func_181673_a(uvs1[0], uvs1[3]).func_181675_d();
+                t.getWorldRenderer().pos(0.15 + 0.1, 0.15, 0).tex(uvs1[0], uvs1[2]).endVertex();
+                t.getWorldRenderer().pos(0.15 + 0.1, 0, 0).tex(uvs1[0], uvs1[3]).endVertex();
 
-                t.getWorldRenderer().func_181662_b(0 + 0.1, 0, 0).func_181673_a(uvs1[1], uvs1[3]).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0 + 0.1, 0.15, 0).func_181673_a(uvs1[1], uvs1[2]).func_181675_d();
+                t.getWorldRenderer().pos(0 + 0.1, 0, 0).tex(uvs1[1], uvs1[3]).endVertex();
+                t.getWorldRenderer().pos(0 + 0.1, 0.15, 0).tex(uvs1[1], uvs1[2]).endVertex();
             }
             else
             {
                 GL11.glTranslated(x + 0.05, y + 0.06, -0.001 * (5 + 1));
-                t.getWorldRenderer().func_181662_b(0.15, 0.15, 0).func_181673_a(uvs[0], uvs[2]).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0.15, 0.0, 0).func_181673_a(uvs[0], uvs[3]).func_181675_d();
+                t.getWorldRenderer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).endVertex();
+                t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).endVertex();
 
-                t.getWorldRenderer().func_181662_b(0, 0.0, 0).func_181673_a(uvs[1], uvs[3]).func_181675_d();
-                t.getWorldRenderer().func_181662_b(0, 0.15, 0).func_181673_a(uvs[1], uvs[2]).func_181675_d();
+                t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).endVertex();
+                t.getWorldRenderer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).endVertex();
             }
 
             t.draw();
@@ -236,14 +236,14 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / (double) 4;
             GL11.glTranslated(x, y, -0.001 * (colour + 1));
             Tessellator t = Tessellator.getInstance();
-            t.getWorldRenderer().func_181668_a(GL11.GL_QUADS, DefaultVertexFormats.field_181707_g);//.startDrawing(GL11.GL_QUADS);
+            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);//.startDrawing(GL11.GL_QUADS);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.5F);
 
-            t.getWorldRenderer().func_181662_b(0.25, 0.25, 0).func_181673_a(0, 0).func_181675_d();
-            t.getWorldRenderer().func_181662_b(0.25, 0, 0).func_181673_a(0, 1).func_181675_d();
+            t.getWorldRenderer().pos(0.25, 0.25, 0).tex(0, 0).endVertex();
+            t.getWorldRenderer().pos(0.25, 0, 0).tex(0, 1).endVertex();
 
-            t.getWorldRenderer().func_181662_b(0, 0, 0).func_181673_a(1, 1).func_181675_d();
-            t.getWorldRenderer().func_181662_b(0, 0.25, 0).func_181673_a(1, 0).func_181675_d();
+            t.getWorldRenderer().pos(0, 0, 0).tex(1, 1).endVertex();
+            t.getWorldRenderer().pos(0, 0.25, 0).tex(1, 0).endVertex();
 
             t.draw();
             

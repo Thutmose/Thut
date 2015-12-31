@@ -1,9 +1,9 @@
 package li.cil.oc.util;
 
+import net.minecraftforge.fml.common.FMLCommonHandler;
+
 import java.util.Collections;
 import java.util.Set;
-
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public final class SideTracker {
     private static final Set<Thread> serverThreads = Collections.newSetFromMap(new java.util.WeakHashMap<Thread, Boolean>());

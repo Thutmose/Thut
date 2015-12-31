@@ -1,8 +1,8 @@
 package li.cil.oc.api.machine;
 
-import java.util.Map;
-
 import net.minecraft.item.ItemStack;
+
+import java.util.Map;
 
 /**
  * This interface provides access to arguments passed to a {@link Callback}.
@@ -18,7 +18,6 @@ import net.minecraft.item.ItemStack;
  * first argument you would use <tt>checkAny(0)</tt>. This is worth mentioning
  * because Lua starts its indexes at one.
  */
-@SuppressWarnings("rawtypes")
 public interface Arguments extends Iterable<Object> {
     /**
      * The total number of arguments that were passed to the function.

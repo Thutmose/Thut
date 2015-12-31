@@ -108,7 +108,7 @@ public class PacketHandler
                             locs.add(i);
                         }
                         Collections.shuffle(locs);
-                        int max = 200;
+                        int max = 50;
                         vMid.addTo(0.5, 0.5, 0.5);
                         int[] toFill = new int[3];
                         int n = 0;

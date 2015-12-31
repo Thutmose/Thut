@@ -7,6 +7,7 @@ import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -33,7 +34,7 @@ public class ClientProxy extends CommonProxy
         ModelLoader.setCustomStateMapper(ThutBlocks.lift, (new StateMap.Builder()).withName(BlockLift.VARIANT)
                 .ignore(new IProperty[] { BlockLift.CALLED, BlockLift.CURRENT }).build());
 
-        ModelBakery.addVariantName(Item.getItemFromBlock(ThutBlocks.lift), "thuttech:lift", "thuttech:liftcontroller");
+        ModelBakery.registerItemVariants(Item.getItemFromBlock(ThutBlocks.lift), new ResourceLocation("thuttech:lift"), new ResourceLocation("thuttech:liftcontroller"));
     }
 
     @SuppressWarnings("unchecked")

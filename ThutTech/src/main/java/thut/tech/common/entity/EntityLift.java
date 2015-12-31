@@ -505,7 +505,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             {
                 Entity ownerentity = worldObj.getPlayerEntityByUUID(owner);
                 String message = StatCollector.translateToLocalFormatted("msg.lift.owner",
-                        ownerentity.getCommandSenderName());
+                        ownerentity.getName());
 
                 player.addChatMessage(new ChatComponentText(message));
             }

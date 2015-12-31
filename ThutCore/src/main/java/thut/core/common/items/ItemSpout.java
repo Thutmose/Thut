@@ -14,6 +14,7 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import thut.api.ThutItems;
+import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
 import thut.core.common.blocks.BlockFluid;
@@ -99,7 +100,18 @@ public class ItemSpout extends Item
     @Override
     public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-        
+
+        Vector3 v = Vector3.getNewVectorFromPool();
+        int range = 50;
+        int num = 2;
+        float power = 1;
+        for (int i = 0; i < num; i++)
+        {
+            v.set(player).addTo(range * (Math.random() - 0.5), range * (Math.random() - 0.5),
+                    range * (Math.random() - 0.5));
+            ExplosionCustom boom = new ExplosionCustom(worldObj, player, v, power);
+            boom.doExplosion();
+        }
         return itemstack;
     }
 

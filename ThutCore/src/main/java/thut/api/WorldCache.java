@@ -26,32 +26,32 @@ public class WorldCache implements IBlockAccess
         world = world_;
     }
 
-    void addChunk(Chunk chunk)
+    synchronized void addChunk(Chunk chunk)
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
         chunks.put(key, chunk);
     }
 
-    void removeChunk(Chunk chunk)
+    synchronized void removeChunk(Chunk chunk)
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
         chunks.remove(key);
     }
 
-    public Chunk getChunk(int chunkX, int chunkZ)
+    synchronized public Chunk getChunk(int chunkX, int chunkZ)
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
         return chunks.get(key);
     }
 
     @Override
-    public boolean extendedLevelsInChunkCache()
+    synchronized public boolean extendedLevelsInChunkCache()
     {
         return false;
     }
 
     @Override
-    public TileEntity getTileEntity(BlockPos pos)
+    synchronized public TileEntity getTileEntity(BlockPos pos)
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
@@ -62,14 +62,14 @@ public class WorldCache implements IBlockAccess
     }
 
     @Override
-    public int getCombinedLight(BlockPos pos, int p_175626_2_)
+    synchronized public int getCombinedLight(BlockPos pos, int p_175626_2_)
     {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public IBlockState getBlockState(BlockPos pos)
+    synchronized public IBlockState getBlockState(BlockPos pos)
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
@@ -80,33 +80,33 @@ public class WorldCache implements IBlockAccess
     }
 
     @Override
-    public boolean isAirBlock(BlockPos pos)
+    synchronized public boolean isAirBlock(BlockPos pos)
     {
         return getBlockState(pos) == null || getBlockState(pos).getBlock().isAir(this, pos);
     }
 
     @Override
-    public BiomeGenBase getBiomeGenForCoords(BlockPos pos)
+    synchronized public BiomeGenBase getBiomeGenForCoords(BlockPos pos)
     {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public int getStrongPower(BlockPos pos, EnumFacing direction)
+    synchronized public int getStrongPower(BlockPos pos, EnumFacing direction)
     {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public WorldType getWorldType()
+    synchronized public WorldType getWorldType()
     {
         return world.getWorldInfo().getTerrainType();
     }
 
     @Override
-    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+    synchronized public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);

@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -36,7 +37,7 @@ public class ClientProxy extends CommonProxy {
         	String modid = dust.modid;
         	String name = dust.name;
         	String ident =  modid+":"+name;
-        	ModelBakery.addVariantName(ThutItems.dusts, ident);
+        	ModelBakery.registerItemVariants(ThutItems.dusts, new ResourceLocation(ident));
         	
         	Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ThutItems.dusts, id, new ModelResourceLocation(ident, "inventory") );
         }

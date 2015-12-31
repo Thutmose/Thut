@@ -18,6 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
  *
  * @see li.cil.oc.api.network.ManagedEnvironment
  */
+@SuppressWarnings("UnusedDeclaration")
 public abstract class DriverItem implements li.cil.oc.api.driver.Item {
     protected final ItemStack[] items;
 

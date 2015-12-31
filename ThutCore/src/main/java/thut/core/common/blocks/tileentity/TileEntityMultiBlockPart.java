@@ -92,9 +92,9 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     @Override
-    public ItemStack getStackInSlotOnClosing(int i)
+    public ItemStack removeStackFromSlot(int i)
     {
-        return core != null ? core.getStackInSlotOnClosing(i) : null;
+        return core != null ? core.removeStackFromSlot(i) : null;
     }
 
     @Override
@@ -177,9 +177,9 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     @Override
-    public String getCommandSenderName()
+    public String getName()
     {
-        if (core != null) return core.getCommandSenderName();
+        if (core != null) return core.getName();
         return null;
     }
 
