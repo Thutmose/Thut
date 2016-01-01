@@ -35,7 +35,7 @@ import thut.tech.common.network.PacketPipeline.ClientPacket.MessageHandlerClient
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
 
-@Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, version = ThutTechReference.VERSION)
+@Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, version = ThutTechReference.VERSION, acceptedMinecraftVersions = ThutTechReference.MCVERSIONS)
 public class TechCore
 {
     @SidedProxy(clientSide = ThutTechReference.CLIENT_PROXY_CLASS, serverSide = ThutTechReference.COMMON_PROXY_CLASS)
@@ -72,7 +72,7 @@ public class TechCore
     @EventHandler
     public void postInit(FMLPostInitializationEvent e)
     {
-    	ItemHandler.registerRecipes();
+        ItemHandler.registerRecipes();
     }
 
     @EventHandler
@@ -114,7 +114,7 @@ public class TechCore
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glDisable(GL11.GL_CULL_FACE);
         GL11.glDisable(GL11.GL_BLEND);
-        
+
         GL11.glPopMatrix();
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glEnable(GL11.GL_LIGHTING);

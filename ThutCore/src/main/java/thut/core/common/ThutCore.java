@@ -27,7 +27,7 @@ import thut.api.terrain.TerrainManager;
 import thut.core.common.handlers.ConfigHandler;
 import thut.reference.ThutCoreReference;
 
-@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL)
+@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
 
 public class ThutCore
 {
@@ -38,7 +38,7 @@ public class ThutCore
     @Instance(ThutCoreReference.MOD_ID)
     public static ThutCore instance;
 
-    public static final String modid = ThutCoreReference.MOD_ID;
+    public static final String    modid   = ThutCoreReference.MOD_ID;
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
 
     public static Block[] blocks;
@@ -54,7 +54,7 @@ public class ThutCore
     {
         BiomeDatabase.getNameFromType(0);
     }
-    
+
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
@@ -80,7 +80,7 @@ public class ThutCore
     {
         new UpdateNotifier();
     }
-    
+
     public static class UpdateNotifier
     {
         public UpdateNotifier()
@@ -96,13 +96,14 @@ public class ThutCore
                 MinecraftForge.EVENT_BUS.unregister(this);
                 Object o = Loader.instance().getIndexedModList().get(ThutCoreReference.MOD_ID);
                 CheckResult result = ForgeVersion.getResult(((ModContainer) o));
-                if(result.status == Status.OUTDATED)
+                if (result.status == Status.OUTDATED)
                 {
-                    String mess = "Current Listed Release Version of Thut Core is "+result.target+", but you have "+ ThutCoreReference.VERSION+".";
+                    String mess = "Current Listed Release Version of Thut Core is " + result.target + ", but you have "
+                            + ThutCoreReference.VERSION + ".";
                     mess += "\nIf you find bugs, please update and check if they still occur before reporting them.";
                     (event.player).addChatMessage(new ChatComponentText(mess));
                 }
-                
+
             }
         }
     }
