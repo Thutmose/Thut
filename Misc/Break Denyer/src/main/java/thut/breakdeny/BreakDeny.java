@@ -23,14 +23,16 @@ public class BreakDeny
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-        if (event.getSide() == Side.SERVER) MinecraftForge.EVENT_BUS.register(this);
+        if (event.getSide() != Side.SERVER) return;
+        MinecraftForge.EVENT_BUS.register(this);
+        new Config(event);
     }
 
     @SubscribeEvent
     public void denyBreak(BreakEvent event)
     {
         EntityPlayer player = event.getPlayer();
-        if (!isOp(player)) event.setCanceled(true);
+        if (!isOp(player) && !Config.isWhitelisted(event.state.getBlock())) event.setCanceled(true);
     }
 
     @SubscribeEvent
