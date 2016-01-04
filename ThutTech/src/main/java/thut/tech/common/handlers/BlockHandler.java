@@ -13,6 +13,8 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.tech.common.TechCore;
+import thut.tech.common.blocks.door.BlockDoor;
+import thut.tech.common.blocks.door.TileEntityDoor;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.blocks.railgun.BlockRailgun;
@@ -31,7 +33,10 @@ public class BlockHandler {
 		Block railgun = new BlockRailgun();
 		GameRegistry.registerTileEntity(TileEntityRailgun.class,
 				"thuttech:railgun");
-
+		
+		Block door = new BlockDoor();
+		GameRegistry.registerTileEntity(TileEntityDoor.class, "thuttech:door");
+		
 		EntityRegistry.registerModEntity(EntityLift.class, "thuttechlift", 1,
 				TechCore.instance, 32, 1, true);
 
@@ -40,6 +45,7 @@ public class BlockHandler {
 
 		GameRegistry.registerBlock(railgun, ItemBlock.class, "railgun");
 		GameRegistry.registerBlock(lift, ItemLiftBlock.class, "lift");
+		GameRegistry.registerBlock(door, "door");
 		
 	}
 

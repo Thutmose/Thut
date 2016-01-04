@@ -20,9 +20,11 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutBlocks;
+import thut.tech.client.render.RenderDoor;
 import thut.tech.client.render.RenderLift;
 import thut.tech.client.render.RenderLiftController;
 import thut.tech.common.CommonProxy;
+import thut.tech.common.blocks.door.TileEntityDoor;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.blocks.railgun.BlockRailgun;
@@ -56,6 +58,7 @@ public class ClientProxy extends CommonProxy
     public void initClient()
     {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDoor.class, new RenderDoor());
 
         RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new RenderLift());
 
