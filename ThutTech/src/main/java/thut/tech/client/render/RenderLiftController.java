@@ -5,8 +5,8 @@ import org.lwjgl.opengl.GL11;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -94,17 +94,13 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
 
+            GlStateManager.disableLighting();
             GL11.glPushMatrix();
             if (renderengine != null)
             {
                 texture = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
                 renderengine.bindTexture(texture);
             }
-            GL11.glPushAttrib(GL11.GL_BLEND);
-            GL11.glEnable(GL11.GL_BLEND);
-            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
-            RenderHelper.disableStandardItemLighting();
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 
             Tessellator t = Tessellator.getInstance();
@@ -121,10 +117,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             }
 
             t.draw();
-
-            GL11.glEnable(GL11.GL_LIGHTING);
-            GL11.glPopAttrib();
-            GL11.glPopAttrib();
             GL11.glPopMatrix();
 
             drawFloorNumbers(monitor.getSidePage(dir));
@@ -143,8 +135,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                     drawOverLay(monitor, j + 1, 3, dir);
                 }
             }
-            RenderHelper.enableStandardItemLighting();
-
+            GlStateManager.enableLighting();
             GL11.glPopMatrix();
         }
     }
@@ -161,10 +152,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                 texture = new ResourceLocation("thuttech:textures/blocks/font.png");
                 renderengine.bindTexture(texture);
             }
-            GL11.glPushAttrib(GL11.GL_BLEND);
-            GL11.glEnable(GL11.GL_BLEND);
-            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
 
             Tessellator t = Tessellator.getInstance();
             t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);//.startDrawing(GL11.GL_QUADS);
@@ -202,10 +189,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
             t.draw();
 
-            GL11.glEnable(GL11.GL_LIGHTING);
-            // GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glPopAttrib();
-            GL11.glPopAttrib();
             GL11.glPopMatrix();
         }
 
@@ -227,10 +210,8 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                 renderengine.bindTexture(texture);
             }
 
-            GL11.glPushAttrib(GL11.GL_BLEND);
-            GL11.glEnable(GL11.GL_BLEND);
+            GlStateManager.enableBlend();
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
             
             floor -= 1;
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / (double) 4;
@@ -246,11 +227,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             t.getWorldRenderer().pos(0, 0.25, 0).tex(1, 0).endVertex();
 
             t.draw();
-            
-            GL11.glEnable(GL11.GL_LIGHTING);
-            // GL11.glEnable(GL11.GL_TEXTURE_2D);
-            GL11.glPopAttrib();
-            GL11.glPopAttrib();
+            GlStateManager.disableBlend();
             GL11.glPopMatrix();
         }
 

@@ -4,9 +4,12 @@ import java.util.UUID;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
@@ -35,27 +38,7 @@ public class ItemLinker extends Item
      * pressed. Args: itemStack, world, entityPlayer */
     public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-//        if (worldObj.isRemote || itemstack.getItemDamage() != 10) return itemstack;
-//
-//        Vector3 here = Vector3.getNewVectorFromPool().set(player);
-//        BiomeGenBase b = here.getBiome(worldObj);
-//
-//        Vector3 direction = Vector3.getNewVectorFromPool().set(player.getLookVec());
-//        Vector3 location2 = Vector3.getNextSurfacePoint(worldObj, here, direction, 255);
-//        ExplosionCustom boom = new ExplosionCustom(worldObj, player, here, 200);
-//        System.out.println(Arrays.toString(BiomeDictionary.getTypesForBiome(b)) + " " + location2);
-//        
-//        boom.doExplosion();
-        
-        
-
-        
-        // EntityProjectile p = new EntityProjectile(worldObj, here.x, here.y,
-        // here.z, Blocks.stone);
-        // here.set(player.getLookVec()).scalarMultBy(0);
-        // here.setVelocities(p);
-        // worldObj.spawnEntityInWorld(p);
-        //
+        if(player.isSneaking()) player.inventory.addItemStackToInventory(TechCore.getInfoBook());
         return itemstack;
     }
 
@@ -69,7 +52,7 @@ public class ItemLinker extends Item
         else
         {
             IBlockState state = worldObj.getBlockState(pos);
-            
+
             if (state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER && !player.isSneaking())
             {
@@ -97,9 +80,9 @@ public class ItemLinker extends Item
                 te.setLift(lift);
                 int floor = te.getButtonFromClick(side, hitX, hitY, hitZ);
                 te.setFloor(floor);
-                
+
                 String message = StatCollector.translateToLocalFormatted("msg.floorSet.name", floor);
-                
+
                 if (worldObj.isRemote) player.addChatMessage(new ChatComponentText(message));
                 return true;
             }

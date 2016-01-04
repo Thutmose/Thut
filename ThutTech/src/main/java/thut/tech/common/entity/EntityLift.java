@@ -485,7 +485,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean interactFirst(EntityPlayer player)
     {
         ItemStack item = player.getHeldItem();
-        System.out.println(id + " " + this+" "+lifts2.get(id));
         if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker)
         {
             if (item.getTagCompound() == null)
@@ -504,8 +503,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             if (!worldObj.isRemote && owner != null)
             {
                 Entity ownerentity = worldObj.getPlayerEntityByUUID(owner);
-                String message = StatCollector.translateToLocalFormatted("msg.lift.owner",
-                        ownerentity.getName());
+                String message = StatCollector.translateToLocalFormatted("msg.lift.owner", ownerentity.getName());
 
                 player.addChatMessage(new ChatComponentText(message));
             }
@@ -539,6 +537,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 }
                 this.setCurrentItemOrArmor(0, item2);
             }
+        }
+        else if (player.isSneaking() && item == null && (owner == null || owner.equals(player.getUniqueID()))) // &&
+        // !worldObj.isRemote)
+        {
+            if (this.getHeldItem() != null && !worldObj.isRemote)
+            {
+                this.entityDropItem(getHeldItem(), 1);
+            }
+            this.setCurrentItemOrArmor(0, null);
+
         }
 
         return false;
@@ -601,7 +609,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
         size = data.readDouble();
         id = new UUID(data.readLong(), data.readLong());
-        
+
         for (int i = 0; i < 64; i++)
         {
             floors[i] = data.readInt();
@@ -749,7 +757,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 }
         }
     }
-    
+
     public static void clear()
     {
         lifts2.clear();
@@ -758,7 +766,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public static EntityLift getLiftFromUUID(UUID uuid, boolean client)
     {
-        if(client) return lifts2.get(uuid);
+        if (client) return lifts2.get(uuid);
         return lifts.get(uuid);
     }
 

@@ -6,6 +6,12 @@ import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
@@ -121,5 +127,77 @@ public class TechCore
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glDepthMask(true);
+    }
+
+    public static ItemStack getInfoBook()
+    {
+
+        ItemStack stack = new ItemStack(Items.written_book);
+        stack.setTagCompound(new NBTTagCompound());
+        stack.getTagCompound().setString("author", "Thutmose");
+        stack.getTagCompound().setString("title", "ThutTech Manual");
+        stack.getTagCompound().setBoolean("resolved", true);
+        NBTTagList list = new NBTTagList();
+
+        String page1 = StatCollector.translateToLocal("ttinfo.page1.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page1.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page1.3.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page1.4.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page1.5.name");
+
+        String page2 = StatCollector.translateToLocal("ttinfo.page2.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page2.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page2.3.name");
+
+        String page3 = StatCollector.translateToLocal("ttinfo.page3.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page3.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page3.3.name");
+
+        String page4 = StatCollector.translateToLocal("ttinfo.page4.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page4.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page4.3.name");
+
+        String page5 = StatCollector.translateToLocal("ttinfo.page5.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page5.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page5.3.name");
+
+        String page6 = StatCollector.translateToLocal("ttinfo.page6.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page6.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page6.3.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page6.4.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page6.5.name");
+
+        String page7 = StatCollector.translateToLocal("ttinfo.page7.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page7.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page7.3.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page7.4.name");
+
+        String page8 = StatCollector.translateToLocal("ttinfo.page8.1.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page8.2.name") + "\n"
+                + StatCollector.translateToLocal("ttinfo.page8.3.name");
+
+        String page9 = StatCollector.translateToLocal("ttinfo.page9.name") + "\n" + "\n" + "setFloor(number)\n" + "\n"
+                + "getFloor()\n" + "\n" + "callFloor(number)\n" + "\n" + "callYValue(number)";
+
+        NBTTagString page = new NBTTagString(page1);
+        list.appendTag(page);
+        page = new NBTTagString(page2);
+        list.appendTag(page);
+        page = new NBTTagString(page3);
+        list.appendTag(page);
+        page = new NBTTagString(page4);
+        list.appendTag(page);
+        page = new NBTTagString(page5);
+        list.appendTag(page);
+        page = new NBTTagString(page6);
+        list.appendTag(page);
+        page = new NBTTagString(page7);
+        list.appendTag(page);
+        page = new NBTTagString(page8);
+        list.appendTag(page);
+        page = new NBTTagString(page9);
+        list.appendTag(page);
+        stack.getTagCompound().setTag("pages", list);
+        return stack;
     }
 }

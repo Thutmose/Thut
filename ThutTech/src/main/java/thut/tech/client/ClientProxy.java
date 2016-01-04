@@ -40,6 +40,15 @@ public class ClientProxy extends CommonProxy
 
         ModelBakery.registerItemVariants(Item.getItemFromBlock(ThutBlocks.lift), new ResourceLocation("thuttech:lift"),
                 new ResourceLocation("thuttech:liftcontroller"));
+        
+//      RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<Entity>()
+//      {
+//          @Override
+//          public Render<? super Entity> createRenderFor(RenderManager manager)
+//          {
+//              return new RenderLift();
+//          }
+//      });
     }
 
     @SuppressWarnings("unchecked")
@@ -48,14 +57,7 @@ public class ClientProxy extends CommonProxy
     {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController());
 
-        RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<Entity>()
-        {
-            @Override
-            public Render<? super Entity> createRenderFor(RenderManager manager)
-            {
-                return new RenderLift();
-            }
-        });
+        RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new RenderLift());
 
         Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(ThutBlocks.lift),
                 0, new ModelResourceLocation("thuttech:lift", "inventory"));

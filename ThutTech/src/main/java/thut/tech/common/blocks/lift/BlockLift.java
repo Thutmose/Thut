@@ -301,18 +301,6 @@ public class BlockLift extends Block implements ITileEntityProvider
         }
     }
 
-    protected ItemStack createStackedBlock(int par1)
-    {
-        return new ItemStack(this, 1, par1);
-    }
-
-    /** Determines the damage on the item the block drops. Used in cloth and
-     * wood. */
-    public int damageDropped(int par1)
-    {
-        return par1;
-    }
-
     /** Rotate the block. For vanilla blocks this rotates around the axis passed
      * in (generally, it should be the "face" that was hit). Note: for mod
      * blocks, this is up to the block and modder to decide. It is not mandated
@@ -337,6 +325,16 @@ public class BlockLift extends Block implements ITileEntityProvider
     {
         return false;// RotationHelper.rotateVanillaBlock(this, worldObj, x, y,
                      // z, axis);
+    }
+
+    @Override
+    /**
+     * Gets the metadata of the item this Block can drop. This method is called when the block gets destroyed. It
+     * returns the metadata of the dropped item based on the old metadata of the block.
+     */
+    public int damageDropped(IBlockState state)
+    {
+        return this.getMetaFromState(state);
     }
 
     @Override

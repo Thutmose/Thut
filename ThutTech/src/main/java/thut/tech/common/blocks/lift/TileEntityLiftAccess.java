@@ -180,7 +180,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             }
 
         }
-        if (liftID != null && !liftID.equals(empty) && (lift == null||lift.isDead))
+        if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead))
         {
             lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
             if (lift == null) return;
@@ -330,9 +330,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 
     public void doButtonClick(EnumFacing side, float hitX, float hitY, float hitZ)
     {
-        System.out.println(liftID+" "+lift);
-        lift = null;
-        if (liftID != null && !liftID.equals(empty) && lift == null)
+        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj.isRemote))
         {
             lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
         }
@@ -362,19 +360,9 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         {
             if (button == floor)
             {
-                // worldObj.setBlockState(getPos(),
-                // worldObj.getBlockState(getPos()).withProperty(BlockLift.CALLED,
-                // true));
-                // this.validate();
-                // worldObj.setTileEntity(getPos(), this);
             }
             else
             {
-                // worldObj.setBlockState(getPos(),
-                // worldObj.getBlockState(getPos()).withProperty(BlockLift.CALLED,
-                // false));
-                // this.validate();
-                // worldObj.setTileEntity(getPos(), this);
                 if (lift.getCurrentFloor() == floor) lift.setCurrentFloor(-1);
             }
 
