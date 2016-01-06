@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
@@ -46,6 +47,15 @@ public class BreakDeny
 
     @SubscribeEvent
     public void denyFrameInteract(EntityInteractEvent event)
+    {
+        if (event.entity instanceof EntityItemFrame)
+        {
+            if (!isOp(event.entityPlayer)) event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public void denyFrameAttack(AttackEntityEvent event)
     {
         if (event.entity instanceof EntityItemFrame)
         {
