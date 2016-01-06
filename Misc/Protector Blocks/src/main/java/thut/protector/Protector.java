@@ -25,12 +25,9 @@ import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 @Mod(modid = Protector.MODID, name = "Protector", version = Protector.VERSION, acceptableRemoteVersions = "*", acceptedMinecraftVersions = Protector.MCVERSIONS)
 public class Protector
@@ -38,9 +35,6 @@ public class Protector
     public static final String MODID      = "protector";
     public static final String VERSION    = "1.0.0";
     public final static String MCVERSIONS = "[1.8.8,1.8.9]";
-
-    @SidedProxy
-    public static CommonProxy proxy;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -61,17 +55,6 @@ public class Protector
         }
     }
 
-    public static class CommonProxy
-    {
-
-    }
-
-    @SideOnly(Side.CLIENT)
-    public static class ClientProxy extends CommonProxy
-    {
-
-    }
-
     public static class ProtectionBlock extends Block implements ITileEntityProvider
     {
         public static final ProtectionBlock instance = new ProtectionBlock();
@@ -81,7 +64,7 @@ public class Protector
         {
             super(Material.iron);
             setCreativeTab(CreativeTabs.tabBlock);
-            setUnlocalizedName(MODID + ":" + name);
+            setUnlocalizedName(name);
         }
 
         @Override
@@ -190,7 +173,7 @@ public class Protector
         {
             if (placer == null || evt.getPlayer() == null || !inRange(evt.pos)) return;
             if (evt.getPlayer().getUniqueID().equals(placer)) return;
-            for (String s : allowedAccess)
+            if(!evt.pos.equals(getPos()))for (String s : allowedAccess)
             {
                 if (s.equals(evt.getPlayer().getUniqueID().toString())) return;
             }
@@ -227,5 +210,7 @@ public class Protector
             player.addChatComponentMessage(new ChatComponentText("Protected Area, Access Denied"));
             evt.setCanceled(true);
         }
+        
+        //TODO render event handler for dwawing outline
     }
 }
