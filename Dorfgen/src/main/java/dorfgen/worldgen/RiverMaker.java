@@ -51,8 +51,13 @@ public class RiverMaker
             {
                 x1 = (x + i1);
                 z1 = (z + k1);
-
-                h = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x + i1, z + k1, scale);
+                if (x1 >= WorldGenerator.instance.dorfs.waterMap.length
+                        || z1 >= WorldGenerator.instance.dorfs.waterMap[0].length)
+                {
+                    h = 1;
+                }
+                else h = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x + i1, z + k1,
+                        scale);
                 boolean river = isInRiver(x1, z1);
                 if (!river) continue;
                 int j = h - 1;
@@ -101,6 +106,11 @@ public class RiverMaker
         int kx = x / scale;// Abs/(scale);
         int kz = z / scale;// Abs/(scale);
         int key = kx + 8192 * kz;
+        if (kx >= WorldGenerator.instance.dorfs.waterMap.length
+                || kz >= WorldGenerator.instance.dorfs.waterMap[0].length)
+        {
+            return false;
+        }
 
         int rgb = dorfs.structureMap[kx][kz];
         Color col1 = new Color(rgb);
@@ -310,16 +320,18 @@ public class RiverMaker
 
             }
         }
-        
-         try
-         {
-//         System.out.println(Arrays.toString(point1)+" "+Arrays.toString(point2) +" "+Arrays.toString(point3)+" "+Arrays.toString(point4)+" "+river);
-         }
-         catch (Exception e)
-         {
-         // TODO Auto-generated catch block
-             e.printStackTrace();
-         }
+
+        try
+        {
+            // System.out.println(Arrays.toString(point1)+"
+            // "+Arrays.toString(point2) +" "+Arrays.toString(point3)+"
+            // "+Arrays.toString(point4)+" "+river);
+        }
+        catch (Exception e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         if (point1 != null && point2 != null)
         {

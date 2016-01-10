@@ -52,6 +52,8 @@ public class Interpolator
             int pixelX = xAbs / scale;
             int pixelY = yAbs / scale;
 
+            if(pixelX>=image.length || pixelY>=image[0].length) return 0;
+            
             int val = image[pixelX][pixelY];
             double x = (xAbs - scale * pixelX) / (double) scale, y = (yAbs - scale * pixelY) / (double) scale;
 
@@ -111,6 +113,7 @@ public class Interpolator
         {
             int pixelX = xAbs / scale;
             int pixelY = yAbs / scale;
+            if(pixelX>=image.length || pixelY>=image[0].length) return 10;
             updateCoefficients(image, pixelX, pixelY);
             int val = image[pixelX][pixelY];
             double x = (xAbs - scale * pixelX) / (double) scale, y = (yAbs - scale * pixelY) / (double) scale;

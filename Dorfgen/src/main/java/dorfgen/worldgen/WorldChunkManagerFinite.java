@@ -101,8 +101,10 @@ public class WorldChunkManagerFinite extends WorldChunkManager
             for (int k1 = 0; k1 < 16; k1++)
             {
                 index = (i1) + (k1) * 16;
-                biomes[index] = BiomeGenBase.getBiome(
-                        getBiomeFromMaps(x + i1 - WorldGenerator.shift.getX(), z + k1 - WorldGenerator.shift.getZ()));
+                int biome = getBiomeFromMaps(x + i1 - WorldGenerator.shift.getX(),
+                        z + k1 - WorldGenerator.shift.getZ());
+                
+                biomes[index] = BiomeGenBase.getBiome(biome);
             }
         }
         return biomes;

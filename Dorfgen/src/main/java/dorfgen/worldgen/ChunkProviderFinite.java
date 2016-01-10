@@ -40,22 +40,23 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
     private World                    worldObj;
     /** are map structures going to be generated (e.g. strongholds) */
     private final boolean            mapFeaturesEnabled;
-//    private MapGenBase               caveGenerator             = new MapGenUGRegions();
-//    /** Holds Stronghold Generator */
-//    private MapGenStronghold         strongholdGenerator       = new MapGenStronghold();
+    // private MapGenBase caveGenerator = new MapGenUGRegions();
+    // /** Holds Stronghold Generator */
+    // private MapGenStronghold strongholdGenerator = new MapGenStronghold();
     /** Holds Village Generator */
-    private MapGenVillage            villageGenerator          = new MapGenSites();
+    private MapGenVillage            villageGenerator    = new MapGenSites();
     /** Holds Mineshaft Generator */
-    private MapGenMineshaft          mineshaftGenerator        = new MapGenMineshaft();
-//    private MapGenScatteredFeature   scatteredFeatureGenerator = new MapGenScatteredFeature();
+    private MapGenMineshaft          mineshaftGenerator  = new MapGenMineshaft();
+    // private MapGenScatteredFeature scatteredFeatureGenerator = new
+    // MapGenScatteredFeature();
     /** Holds ravine generator */
-    private MapGenBase               ravineGenerator           = new MapGenRavine();
-    private RiverMaker               riverMaker                = new RiverMaker();
-    private WorldConstructionMaker   constructor               = new WorldConstructionMaker();
+    private MapGenBase               ravineGenerator     = new MapGenRavine();
+    private RiverMaker               riverMaker          = new RiverMaker();
+    private WorldConstructionMaker   constructor         = new WorldConstructionMaker();
     /** The biomes that are used to generate the chunk */
     private BiomeGenBase[]           biomesForGeneration;
-    public BicubicInterpolator       bicubicInterpolator       = new BicubicInterpolator();
-    public CachedBicubicInterpolator cachedInterpolator        = new CachedBicubicInterpolator();
+    public BicubicInterpolator       bicubicInterpolator = new BicubicInterpolator();
+    public CachedBicubicInterpolator cachedInterpolator  = new CachedBicubicInterpolator();
 
     {
         mineshaftGenerator = (MapGenMineshaft) TerrainGen.getModdedMapGen(mineshaftGenerator, MINESHAFT);
@@ -74,7 +75,7 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
     public void populateBlocksFromImage(int scale, int chunkX, int chunkZ, ChunkPrimer primer)
     {
         int index;
-        int x1, z1, w;
+        int x1, z1, w = 0;
         int x = chunkX * 16;
         int z = chunkZ * 16;
         boolean water = false;
@@ -85,12 +86,22 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
             {
                 x1 = (x + i1) / scale;
                 z1 = (z + k1) / scale;
-                w = WorldGenerator.instance.dorfs.waterMap[x1][z1];
-                int h1 = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x + i1, z + k1,
-                        scale);
+                int h1 = 0;
+                if (x1 >= WorldGenerator.instance.dorfs.waterMap.length
+                        || z1 >= WorldGenerator.instance.dorfs.waterMap[0].length)
+                {
+                    w = -1;
+                    water = true;
+                }
+                else
+                {
+                    w = WorldGenerator.instance.dorfs.waterMap[x1][z1];
+                    h1 = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x + i1, z + k1,
+                            scale);
+                    water = w > 0 || (WorldGenerator.instance.dorfs.countLarger(0,
+                            WorldGenerator.instance.dorfs.waterMap, x1, z1, 1) > 0);
+                }
                 h1 = Math.max(h1, 10);
-                water = w > 0 || (WorldGenerator.instance.dorfs.countLarger(0, WorldGenerator.instance.dorfs.waterMap,
-                        x1, z1, 1) > 0);
 
                 double s = worldObj.provider.getHeight() / 256d;
                 if (h1 > worldObj.provider.getHorizon()) h1 = (int) (h1 * s);
@@ -236,15 +247,15 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
         if (true) // TODO find out why this keeps being called, it keeps
                   // spawning lairs.
             return;
-//        if (this.mapFeaturesEnabled)
-//        {
-//            // this.mineshaftGenerator.func_151539_a(this, this.worldObj,
-//            // p_82695_1_, p_82695_2_, (Block[])null);
-//            // this.villageGenerator.func_151539_a(this, this.worldObj,
-//            // p_82695_1_, p_82695_2_, (Block[])null);
-//            // this.scatteredFeatureGenerator.func_151539_a(this, this.worldObj,
-//            // p_82695_1_, p_82695_2_, (Block[])null);
-//        }
+        // if (this.mapFeaturesEnabled)
+        // {
+        // // this.mineshaftGenerator.func_151539_a(this, this.worldObj,
+        // // p_82695_1_, p_82695_2_, (Block[])null);
+        // // this.villageGenerator.func_151539_a(this, this.worldObj,
+        // // p_82695_1_, p_82695_2_, (Block[])null);
+        // // this.scatteredFeatureGenerator.func_151539_a(this, this.worldObj,
+        // // p_82695_1_, p_82695_2_, (Block[])null);
+        // }
     }
 
     @Override
@@ -344,7 +355,12 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
             {
                 x1 = x + i1 / scale;
                 z1 = z + k1 / scale;
-                h1 = WorldGenerator.instance.dorfs.elevationMap[x1][z1];
+                if (x1 >= WorldGenerator.instance.dorfs.elevationMap.length
+                        || z1 >= WorldGenerator.instance.dorfs.elevationMap[0].length)
+                {
+                    h1 = 10;
+                }
+                else h1 = WorldGenerator.instance.dorfs.elevationMap[x1][z1];
                 int b1 = biomesForGeneration[i1 + 16 * k1].biomeID;
                 boolean beach = false;
 
