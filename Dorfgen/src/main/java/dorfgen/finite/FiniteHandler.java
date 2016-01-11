@@ -30,7 +30,7 @@ public class FiniteHandler
         int[] shift = new int[2];
         shift[0] = WorldGenerator.shift.getX();
         shift[1] = WorldGenerator.shift.getY();
-
+        //TODO maybe make a config as to which map to use for wrapping.
         if (!isInImage(WorldGenerator.instance.dorfs.biomeMap, shift, WorldGenerator.scale, pos))
         {
             int[][] image = WorldGenerator.instance.dorfs.biomeMap;
@@ -63,6 +63,7 @@ public class FiniteHandler
             }
 
             boolean newIn = isInImage(WorldGenerator.instance.dorfs.biomeMap, shift, WorldGenerator.scale, pos);
+            //TODO remove this print when done.
             if (evt.entity instanceof EntityPlayer) System.out.println(
                     pos + " " + xMin + " " + xMax + " " + yMin + " " + yMax + " " + scale + " " + posOld + " " + newIn);
             TelDestination tele = new TelDestination(evt.entity.dimension, pos);
