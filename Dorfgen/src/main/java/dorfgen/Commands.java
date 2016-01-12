@@ -48,6 +48,7 @@ public class Commands implements ICommand
 	@Override
 	public void processCommand(ICommandSender sender, String[] args)
 	{
+	    //TODO command to say which building player is in in the site.
 		if(args.length > 1 && args[0].equalsIgnoreCase("tp") && sender instanceof EntityPlayer)
 		{
 			String name = args[1];
