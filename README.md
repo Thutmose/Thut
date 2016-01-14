@@ -7,4 +7,7 @@ this contains some generic and helper classes used by a set of my mods.  It cont
 #Dorfgen
 This is my dwarf fortress world generator mod.  It loads in the exports from dwarf fortress legends mode.
 
+#Misc
+These are small, usually server-side only, mods.
+
 Page under construction.
