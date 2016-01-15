@@ -9,5 +9,3 @@ This is my dwarf fortress world generator mod.  It loads in the exports from dwa
 
 #Misc
 These are small, usually server-side only, mods.
-
-Page under construction.
