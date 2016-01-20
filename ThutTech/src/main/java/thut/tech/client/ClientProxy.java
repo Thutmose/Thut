@@ -3,18 +3,14 @@ package thut.tech.client;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.statemap.StateMap;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -42,15 +38,16 @@ public class ClientProxy extends CommonProxy
 
         ModelBakery.registerItemVariants(Item.getItemFromBlock(ThutBlocks.lift), new ResourceLocation("thuttech:lift"),
                 new ResourceLocation("thuttech:liftcontroller"));
-        
-//      RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<Entity>()
-//      {
-//          @Override
-//          public Render<? super Entity> createRenderFor(RenderManager manager)
-//          {
-//              return new RenderLift();
-//          }
-//      });
+
+        // RenderingRegistry.registerEntityRenderingHandler(EntityLift.class,
+        // new IRenderFactory<Entity>()
+        // {
+        // @Override
+        // public Render<? super Entity> createRenderFor(RenderManager manager)
+        // {
+        // return new RenderLift();
+        // }
+        // });
     }
 
     @SuppressWarnings("unchecked")

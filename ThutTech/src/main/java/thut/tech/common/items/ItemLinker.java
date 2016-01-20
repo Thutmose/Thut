@@ -4,12 +4,9 @@ import java.util.UUID;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
@@ -38,7 +35,7 @@ public class ItemLinker extends Item
      * pressed. Args: itemStack, world, entityPlayer */
     public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-        if(player.isSneaking()) player.inventory.addItemStackToInventory(TechCore.getInfoBook());
+        if (player.isSneaking()) player.inventory.addItemStackToInventory(TechCore.getInfoBook());
         return itemstack;
     }
 

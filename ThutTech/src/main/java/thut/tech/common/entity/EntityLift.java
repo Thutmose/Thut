@@ -462,7 +462,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             v1.moveEntity(entity);
         }
         if (entity instanceof EntityPlayer)
-        {
+        {//TODO make sure this properly removes things.
             EntityPlayer player = (EntityPlayer) entity;
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {

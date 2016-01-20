@@ -19,7 +19,7 @@ group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.ht
 archivesBaseName = "thuttech"
 
 minecraft {
-    version = "1.8.9-11.15.0.1671"
+    version = "1.8.9-11.15.0.1708"
     runDir = "run"
     
     replace "@VERSION@", project.version
