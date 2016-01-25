@@ -41,7 +41,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     static final int DESTINATIONYDW     = 25;
     static final int CURRENTFLOORDW     = 26;
 
-    public double                            size              = 1;
+    @Deprecated
+    public double  size    = 1;
+    //TODO swap over to using this, to allow not-odd-square lifts.
+    public int[][] corners = new int[2][2];
+
     public double                            speedUp           = ConfigHandler.LiftSpeedUp;
     public double                            speedDown         = -ConfigHandler.LiftSpeedDown;
     public static int                        ACCELERATIONTICKS = 20;
@@ -462,7 +466,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             v1.moveEntity(entity);
         }
         if (entity instanceof EntityPlayer)
-        {//TODO make sure this properly removes things.
+        {// TODO make sure this properly removes things.
             EntityPlayer player = (EntityPlayer) entity;
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
