@@ -54,6 +54,8 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     public int   metaData = 0;
     public Block blockID  = Blocks.air;
 
+    public int[][] corners = new int[2][2];
+    
     boolean loaded = false;
 
     public int     floor        = 0;
@@ -99,6 +101,11 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             metaData = blockID.getMetaFromState(worldObj.getBlockState(getPos()));
             here = Vector3.getNewVectorFromPool().set(this);
             first = false;
+        }
+        
+        if(metaData != 1 && blockID == ThutBlocks.lift)
+        {
+            return;
         }
 
         if ((lift == null || lift.isDead)) // &&floor!=0)
@@ -311,6 +318,13 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             par1.setLong("idLess", liftID.getLeastSignificantBits());
             par1.setLong("idMost", liftID.getMostSignificantBits());
         }
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+
+        int[] toStore = { xMin, zMin, xMax, zMax };
+        par1.setIntArray("corners", toStore);
     }
 
     public void readFromNBT(NBTTagCompound par1)
@@ -326,6 +340,18 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         if (sides.length != 6) sides = new byte[6];
         sidePages = par1.getByteArray("sidePages");
         if (sidePages.length != 6) sidePages = new byte[6];
+        if (par1.hasKey("corners"))
+        {
+            int[] read = par1.getIntArray("corners");
+            int xMin = read[0];
+            int zMin = read[1];
+            int xMax = read[2];
+            int zMax = read[3];
+            corners[0][0] = xMin;
+            corners[0][1] = zMin;
+            corners[1][0] = xMax;
+            corners[1][1] = zMax;
+        }
     }
 
     public void doButtonClick(EnumFacing side, float hitX, float hitY, float hitZ)
@@ -335,6 +361,42 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
+        if(metaData != 1 && blockID == ThutBlocks.lift)
+        {
+            if(button==2)
+            {
+                corners[0][0] = Math.max(-2, corners[0][0]-1);
+            }
+            if(button==3)
+            {
+                corners[0][0] = Math.min(0, corners[0][0]+1);
+            }
+            if(button==6)
+            {
+                corners[0][1] = Math.max(-2, corners[0][1]-1);
+            }
+            if(button==7)
+            {
+                corners[0][1] = Math.min(0, corners[0][1]+1);
+            }
+            
+            if(button==10)
+            {
+                corners[1][0] = Math.max(0, corners[1][0]-1);
+            }
+            if(button==11)
+            {
+                corners[1][0] = Math.min(2, corners[1][0]+1);
+            }
+            if(button==14)
+            {
+                corners[1][1] = Math.max(0, corners[1][1]-1);
+            }
+            if(button==15)
+            {
+                corners[1][1] = Math.min(2, corners[1][1]+1);
+            }
+        }
         worldObj.markBlockForUpdate(getPos());
         if (!worldObj.isRemote && lift != null)
         {
@@ -438,7 +500,8 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         }
         case 1:
         {
-            return 0 + 16 * page;
+            ret = 1 + (int) (((1 - hitX) * 4) % 4) + 4 * (int) (((1 - hitZ) * 4) % 4);
+            return ret + 16 * page;
         }
         case 2:
         {

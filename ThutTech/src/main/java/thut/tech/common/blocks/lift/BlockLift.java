@@ -88,20 +88,24 @@ public class BlockLift extends Block implements ITileEntityProvider
     {
         if (state.getValue(VARIANT) == EnumType.LIFT)
         {
-            int size;
-            size = checkRailsForSpawn(worldObj, true, pos);
             ItemStack[][] stacks;
-            stacks = checkBlocks(worldObj, size, pos);
-
+            TileEntityLiftAccess te = (TileEntityLiftAccess) worldObj.getTileEntity(pos);
+            stacks = checkBlocks(worldObj, te, pos);
             if (stacks != null && !worldObj.isRemote && player.getHeldItem() != null
                     && player.getHeldItem().getItem() instanceof ItemLinker)
             {
-                removeBlocks(worldObj, size, pos);
-                EntityLift lift = new EntityLift(worldObj, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, size);
+                removeBlocks(worldObj, te, pos);
+                EntityLift lift = new EntityLift(worldObj, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
                 lift.blocks = stacks;
+                lift.corners = te.corners.clone();
                 lift.owner = player.getUniqueID();
                 worldObj.spawnEntityInWorld(lift);
-                player.addChatMessage(new ChatComponentText("Sucessfully Made Lift of size "+size));
+                player.addChatMessage(new ChatComponentText("Sucessfully Made Lift"));
+                return true;
+            }
+            else if (te != null && side == EnumFacing.UP)
+            {
+                te.doButtonClick(side, hitX, hitY, hitZ);
                 return true;
             }
             return false;
@@ -165,59 +169,19 @@ public class BlockLift extends Block implements ITileEntityProvider
         }
     }
 
-    public int checkRailsForSpawn(World worldObj, boolean axis, BlockPos pos)
+    public ItemStack[][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
     {
-        int[] sizes = { 5, 3, 1 };
-
-        int ret = -1;// TODO check rails
-
-        for (int j = 0; j < 3; j++)
-        {
-            int check = sizes[j];
-            if (checkBlocks(worldObj, check, pos) != null) return check;
-        }
-
-        // BlockCoord pos = new BlockCoord();
-        Vector3 loc = Vector3.getNewVectorFromPool();
-        int x = pos.getX();
-        int y = pos.getY();
-        int z = pos.getZ();
-        for (int j = 0; j < 3; j++)
-        {
-            boolean bool = true;
-            boolean rightBlock = false;
-            int rail = (int) (1 + Math.floor(sizes[j] / 2));
-            int[][] sides = { { rail, 0 }, { -rail, 0 }, { 0, rail }, { 0, -rail } };
-
-            for (int i = 0; i < 3; i++)
-            {
-                loc.set(x + sides[axis ? 2 : 0][0], y + i, z + sides[axis ? 2 : 0][1]);
-                BlockLiftRail.isRail(worldObj, loc.getPos());
-                bool = bool && rightBlock;
-                loc.set(x + sides[axis ? 3 : 1][0], y + i, z + sides[axis ? 3 : 1][1]);
-                BlockLiftRail.isRail(worldObj, loc.getPos());
-                bool = bool && rightBlock;
-
-            }
-            if (bool)
-            {
-                ret = sizes[j];
-                break;
-            }
-        }
-        loc.freeVectorFromPool();
-
-        return ret;
-    }
-
-    public ItemStack[][] checkBlocks(World worldObj, int size, BlockPos pos)
-    {
-        ItemStack[][] ret = new ItemStack[size][size];
-
-        int rad = (size / 2);
+        
+        int xMin = te.corners[0][0];
+        int zMin = te.corners[0][1];
+        int xMax = te.corners[1][0];
+        int zMax = te.corners[1][1];
+        
+        ItemStack[][] ret = new ItemStack[(xMax-xMin) + 1][(zMax-zMin)+ 1];
+        System.out.println(ret.length+" "+(zMax-zMin));
         Vector3 loc = Vector3.getNewVectorFromPool().set(pos);
-        for (int i = -rad; i <= rad; i++)
-            for (int j = -rad; j <= rad; j++)
+        for (int i = xMin; i <= xMax; i++)
+            for (int j = zMin; j <= zMax; j++)
             {
                 if (!(i == 0 && j == 0))
                 {
@@ -225,7 +189,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                     Block b;
                     if ((b = state.getBlock()).isNormalCube())
                     {
-                        ret[i + rad][j + rad] = new ItemStack(b, 1, b.getMetaFromState(state));
+                        ret[i - xMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
                     }
                     else
                     {
@@ -235,19 +199,22 @@ public class BlockLift extends Block implements ITileEntityProvider
                 }
                 else
                 {
-                    ret[i + rad][j + rad] = new ItemStack(this);
+                    ret[i - xMin][j - zMin] = new ItemStack(this);
                 }
             }
         loc.freeVectorFromPool();
         return ret;
     }
 
-    public void removeBlocks(World worldObj, int size, BlockPos pos)
+    public void removeBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
     {
-        int rad = (size / 2);
+        int xMin = te.corners[0][0];
+        int zMin = te.corners[0][1];
+        int xMax = te.corners[1][0];
+        int zMax = te.corners[1][1];
         Vector3 loc = Vector3.getNewVectorFromPool();
-        for (int i = -rad; i <= rad; i++)
-            for (int j = -rad; j <= rad; j++)
+        for (int i = xMin; i <= xMax; i++)
+            for (int j = zMin; j <= zMax; j++)
                 for (int k = 0; k < 1; k++)
                 {
                     worldObj.setBlockToAir(loc.set(pos).add(i, k, j).getPos());
@@ -280,7 +247,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     public TileEntity createTileEntity(World world, int metadata)
     {
         if (metadata == 1) { return new TileEntityLiftAccess(); }
-        return null;
+        return new TileEntityLiftAccess();
     }
 
     ////////////////////////////////////////////////////// RedStone

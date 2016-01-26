@@ -47,12 +47,7 @@ public class RenderLift extends RendererLivingEntity
 	{
 		if(te instanceof EntityLift)
 		{
-			EntityLift laser = (EntityLift)te;
-
-			float scale = (float) laser.size*0.4f;
-
-			renderBase(te, scale,x,y,z);
-
+			renderBase(te, 1,x,y,z);
 		}
 
 	}
@@ -66,17 +61,20 @@ public class RenderLift extends RendererLivingEntity
         	GL11.glPushMatrix();
         	GL11.glTranslated(x, y, z);
         	GL11.glScaled(0.999, 0.999, 0.999);
-        	
-        	for(int i = (int) (-lift.size/2); i<lift.size/2; i++)
-        		for(int j = (int) (-lift.size/2); j<lift.size/2;j ++)
-        		{
 
+            int xMin = lift.corners[0][0];
+            int zMin = lift.corners[0][1];
+            int xMax = lift.corners[1][0];
+            int zMax = lift.corners[1][1];
+        	for(int i = xMin; i<=xMax; i++)
+        		for(int j = zMin; j<=zMax;j ++)
+        		{
         			Block b = Blocks.iron_block;
         			int meta = 0;
-        			if(lift.blocks!=null)
+        			if(lift.blocks!=null && lift.blocks.length>(i - xMin) && lift.blocks[0].length > j - zMin)
         			{
-        				b = Block.getBlockFromItem(lift.blocks[i + (int) (lift.size/2)][j + (int) (lift.size/2)].getItem());
-        				meta = lift.blocks[i + (int) (lift.size/2)][j + (int) (lift.size/2)].getItemDamage();
+        				b = Block.getBlockFromItem(lift.blocks[i - xMin][j - zMin].getItem());
+        				meta = lift.blocks[i - xMin][j - zMin].getItemDamage();
         			}
         			if(i==0&&j==0&&lift.getHeldItem()!=null)
         			{
@@ -94,7 +92,7 @@ public class RenderLift extends RendererLivingEntity
 
         	        
         	        IBlockState iblockstate = b.getStateFromMeta(meta);
-
+//        	        System.out.println(iblockstate+" "+i+" "+j+" "+xMax+" "+xMin+" "+zMax+" "+zMin);
         	        if (iblockstate.getBlock().getMaterial() != Material.air)
         	        {
         	            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
