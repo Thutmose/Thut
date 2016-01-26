@@ -557,6 +557,7 @@ public class ExplosionCustom extends Explosion
                 {
                     boom.getRemovedBlocks(radius, strength, worldObj, centre);
                     lock[0] = false;
+                    lock[1] = false;
                     TickHandler.cleanup();
                 }
             });
@@ -711,7 +712,8 @@ public class ExplosionCustom extends Explosion
                     int num;
                     if (maxThreads == -1)
                     {
-                        maxThreads = Runtime.getRuntime().availableProcessors();
+                        maxThreads = Runtime.getRuntime().availableProcessors()/2;
+                        maxThreads = Math.max(1, maxThreads);
                     }
                     num = maxThreads;
                     ArrayList<ExplosionStuff> booms = new ArrayList<ExplosionStuff>(explosions);
@@ -724,7 +726,7 @@ public class ExplosionCustom extends Explosion
                         {
                             boom.doBoom();
                         }
-                        else
+                        else if(!boom.lock[1])
                         {
                             toRemove.add(boom);
                         }

@@ -100,11 +100,12 @@ public class ItemSpout extends Item
     @Override
     public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-
+        if(itemstack.getItemDamage()!=15) return itemstack;
+        
         Vector3 v = Vector3.getNewVectorFromPool();
         int range = 50;
-        int num = 2;
-        float power = 1;
+        int num = 10;
+        float power = 10;
         for (int i = 0; i < num; i++)
         {
             v.set(player).addTo(range * (Math.random() - 0.5), range * (Math.random() - 0.5),

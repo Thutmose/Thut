@@ -2,6 +2,7 @@ package thut.api;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Vector;
 
@@ -16,6 +17,7 @@ import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
+import thut.api.WorldCache.ChunkCache;
 import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -43,6 +45,7 @@ public class TickHandler
     /** This is a map of dimension to worldcache, it can be used for thread-safe
      * world access */
     public HashMap<Integer, WorldCache>          worldCaches = new HashMap<Integer, WorldCache>();
+    HashMap<Integer, HashSet<Long>>              toRefresh   = new HashMap<>();
 
     public WorldCache getWorldCache(int dimension)
     {
@@ -64,6 +67,17 @@ public class TickHandler
                     if (!thread.isAlive())
                     {
                         Vector3.vectorPools.remove(thread);
+                    }
+                }
+                if (evt.world.getTotalWorldTime() % 40 == 0)
+                {
+                    WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
+                    if (world != null)
+                    {
+                        for (ChunkCache chunk : world.chunks.values())
+                        {
+                            chunk.update();
+                        }
                     }
                 }
             }
