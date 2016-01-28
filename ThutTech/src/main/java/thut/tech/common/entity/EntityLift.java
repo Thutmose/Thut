@@ -450,13 +450,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean interactFirst(EntityPlayer player)
     {
         ItemStack item = player.getHeldItem();
-
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-        System.out.println(blocks.length+" "+blocks[0].length+" "+xMin+" "+xMax+" "+zMin+" "+zMax+" "+worldObj.isRemote);
-        
         
         if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker)
         {

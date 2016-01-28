@@ -14,12 +14,12 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "2.2.5"
+version = "2.2.6"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
 
 minecraft {
-    version = "1.8.9-11.15.0.1708"
+    version = "1.8.9-11.15.1.1722"
     runDir = "run"
     
     replace "@VERSION@", project.version
