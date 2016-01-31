@@ -1,7 +1,6 @@
 package thut.tech.common.blocks.lift;
 
 import static net.minecraft.util.EnumFacing.DOWN;
-import static net.minecraft.util.EnumFacing.UP;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,6 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.Visibility;
 import li.cil.oc.api.prefab.TileEntityEnvironment;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
@@ -75,6 +73,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     public boolean read     = false;
     public boolean redstone = true;
     public boolean powered  = false;
+    boolean called = false;
 
     public TileEntityLiftAccess()
     {
@@ -114,22 +113,17 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             calledFloor = 0;
             currentFloor = 0;
         }
-        // else if(lift==null && liftID!=null)
-        // {
-        // lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
-        // }
 
         if (node != null && node.network() == null)
         {
             Network.joinOrCreateNetwork(this);
         }
 
-        if (blockID == ThutBlocks.liftRail && lift != null)
+        if (lift != null)
         {
-            boolean check = (int) lift.posY == getPos().getY();
+            boolean check = (int) lift.posY + 2 == getPos().getY() && lift.motionY == 0;
             setCalled(check);
             time++;
-            return;
         }
 
         if (lift != null && floor > 0)
@@ -151,14 +145,14 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 
             calledFloor = lift.getDestinationFloor();
 
-            if (calledFloor == floor)
-            {
-                setCalled(true);
-            }
-            else
-            {
-                setCalled(false);
-            }
+//            if (calledFloor == floor)
+//            {
+//                setCalled(true);
+//            }
+//            else
+//            {
+//                setCalled(false);
+//            }
 
             if (calledFloor != calledFloorOld)
             {
@@ -168,23 +162,6 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
                 // worldObj.scheduledUpdatesAreImmediate = false;
             }
             currentFloor = lift.getCurrentFloor();
-            IBlockState state = getWorld().getBlockState(getPos());
-            boolean valid = (state.getBlock() instanceof BlockLift);
-
-            if (valid && currentFloor == this.floor && state.getValue(BlockLift.CURRENT) != Boolean.TRUE)
-            {
-                // worldObj.setBlockState(getPos(),
-                // state.withProperty(BlockLift.CURRENT, Boolean.TRUE));
-                // this.validate();
-                // worldObj.setTileEntity(getPos(), this);
-            }
-            else if (valid && currentFloor != this.floor && state.getValue(BlockLift.CURRENT) == Boolean.TRUE)
-            {
-                // worldObj.setBlockState(getPos(),
-                // state.withProperty(BlockLift.CURRENT, Boolean.FALSE));
-                // this.validate();
-                // worldObj.setTileEntity(getPos(), this);
-            }
 
         }
         if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead))
@@ -435,20 +412,11 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     public void setCalled(boolean called)
     {
         // IBlockState state = worldObj.getBlockState(getPos());
-        boolean isCalled = false;// ((Boolean)state.getValue(BlockLift.CALLED))
+        boolean isCalled = this.called;// ((Boolean)state.getValue(BlockLift.CALLED))
         if (called != isCalled)
         {
-            // worldObj.setBlockState(getPos(),
-            // state.withProperty(BlockLift.CALLED, called));
-            // this.validate();
-            // worldObj.setTileEntity(getPos(), this);
-            for (EnumFacing side : EnumFacing.values())
-            {
-                if (side != UP && side != DOWN)
-                {
-                    // updateBlock(side);
-                }
-            }
+            this.called = called;
+            worldObj.notifyNeighborsOfStateChange(getPos(), getBlockType());
         }
     }
 

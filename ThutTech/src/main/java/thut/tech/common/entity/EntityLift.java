@@ -313,7 +313,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             for (int j = zMin; j <= zMax; j++)
             {
                 ret = ret && (v.set(thisloc).addTo(i, 0, j)).clearOfBlocks(worldObj);
-                ret = ret && (v.set(thisloc).addTo(i, 5, j)).clearOfBlocks(worldObj);
+                ret = ret && (v.set(thisloc).addTo(i, 3, j)).clearOfBlocks(worldObj);
             }
         // TODO decide if I want to re-add rail checks
         return ret;

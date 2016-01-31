@@ -25,6 +25,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -36,15 +37,16 @@ import thut.tech.common.items.ItemLinker;
 
 public class BlockLift extends Block implements ITileEntityProvider
 {
-    public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class, new Predicate<EnumType>()
-    {
-        public boolean apply(EnumType type)
-        {
-            return type.getMetadata() < 4;
-        }
-    });
-    public static final PropertyBool CALLED  = PropertyBool.create("called");
-    public static final PropertyBool CURRENT = PropertyBool.create("current");
+    public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class,
+            new Predicate<EnumType>()
+            {
+                public boolean apply(EnumType type)
+                {
+                    return type.getMetadata() < 4;
+                }
+            });
+    public static final PropertyBool           CALLED  = PropertyBool.create("called");
+    public static final PropertyBool           CURRENT = PropertyBool.create("current");
 
     public int size = 5;
 
@@ -152,8 +154,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                     return true;
                 }
             }
-            else if(te==null)
-                new Exception().printStackTrace();
+            else if (te == null) new Exception().printStackTrace();
         }
         return true;
     }
@@ -171,14 +172,14 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     public ItemStack[][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
     {
-        
+
         int xMin = te.corners[0][0];
         int zMin = te.corners[0][1];
         int xMax = te.corners[1][0];
         int zMax = te.corners[1][1];
-        
-        ItemStack[][] ret = new ItemStack[(xMax-xMin) + 1][(zMax-zMin)+ 1];
-        System.out.println(ret.length+" "+(zMax-zMin));
+
+        ItemStack[][] ret = new ItemStack[(xMax - xMin) + 1][(zMax - zMin) + 1];
+
         Vector3 loc = Vector3.getNewVectorFromPool().set(pos);
         for (int i = xMin; i <= xMax; i++)
             for (int j = zMin; j <= zMax; j++)
@@ -252,6 +253,29 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     ////////////////////////////////////////////////////// RedStone
     ////////////////////////////////////////////////////// stuff/////////////////////////////////////////////////
+    @Override
+    public int getWeakPower(IBlockAccess worldIn, BlockPos pos, IBlockState state, EnumFacing side)
+    {
+        if (state.getValue(VARIANT) == EnumType.CONTROLLER)
+        {
+            TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+            if (te.lift!=null && (int)te.lift.posY == te.getPos().getY() - 2 && te.lift.motionY == 0) return 15;
+        }
+        return 0;
+    }
+
+    /**
+     * Can this block provide power. Only wire currently seems to have this change based on its state.
+     */
+    public boolean canProvidePower()
+    {
+        return true;
+    }
+
+    public int getStrongPower(IBlockAccess worldIn, BlockPos pos, IBlockState state, EnumFacing side)
+    {
+        return 0;
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -295,10 +319,9 @@ public class BlockLift extends Block implements ITileEntityProvider
     }
 
     @Override
-    /**
-     * Gets the metadata of the item this Block can drop. This method is called when the block gets destroyed. It
-     * returns the metadata of the dropped item based on the old metadata of the block.
-     */
+    /** Gets the metadata of the item this Block can drop. This method is called
+     * when the block gets destroyed. It returns the metadata of the dropped
+     * item based on the old metadata of the block. */
     public int damageDropped(IBlockState state)
     {
         return this.getMetaFromState(state);
