@@ -53,7 +53,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     public Block blockID  = Blocks.air;
 
     public int[][] corners = new int[2][2];
-    
+
     boolean loaded = false;
 
     public int     floor        = 0;
@@ -73,7 +73,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     public boolean read     = false;
     public boolean redstone = true;
     public boolean powered  = false;
-    boolean called = false;
+    boolean        called   = false;
 
     public TileEntityLiftAccess()
     {
@@ -101,11 +101,8 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             here = Vector3.getNewVectorFromPool().set(this);
             first = false;
         }
-        
-        if(metaData != 1 && blockID == ThutBlocks.lift)
-        {
-            return;
-        }
+
+        if (metaData != 1 && blockID == ThutBlocks.lift) { return; }
 
         if ((lift == null || lift.isDead)) // &&floor!=0)
         {
@@ -145,14 +142,14 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
 
             calledFloor = lift.getDestinationFloor();
 
-//            if (calledFloor == floor)
-//            {
-//                setCalled(true);
-//            }
-//            else
-//            {
-//                setCalled(false);
-//            }
+            // if (calledFloor == floor)
+            // {
+            // setCalled(true);
+            // }
+            // else
+            // {
+            // setCalled(false);
+            // }
 
             if (calledFloor != calledFloorOld)
             {
@@ -338,40 +335,40 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        if(metaData != 1 && blockID == ThutBlocks.lift)
+        if (metaData != 1 && blockID == ThutBlocks.lift)
         {
-            if(button==2)
+            if (button == 2)
             {
-                corners[0][0] = Math.max(-2, corners[0][0]-1);
+                corners[0][0] = Math.max(-2, corners[0][0] - 1);
             }
-            if(button==3)
+            if (button == 3)
             {
-                corners[0][0] = Math.min(0, corners[0][0]+1);
+                corners[0][0] = Math.min(0, corners[0][0] + 1);
             }
-            if(button==6)
+            if (button == 6)
             {
-                corners[0][1] = Math.max(-2, corners[0][1]-1);
+                corners[0][1] = Math.max(-2, corners[0][1] - 1);
             }
-            if(button==7)
+            if (button == 7)
             {
-                corners[0][1] = Math.min(0, corners[0][1]+1);
+                corners[0][1] = Math.min(0, corners[0][1] + 1);
             }
-            
-            if(button==10)
+
+            if (button == 10)
             {
-                corners[1][0] = Math.max(0, corners[1][0]-1);
+                corners[1][0] = Math.max(0, corners[1][0] - 1);
             }
-            if(button==11)
+            if (button == 11)
             {
-                corners[1][0] = Math.min(2, corners[1][0]+1);
+                corners[1][0] = Math.min(2, corners[1][0] + 1);
             }
-            if(button==14)
+            if (button == 14)
             {
-                corners[1][1] = Math.max(0, corners[1][1]-1);
+                corners[1][1] = Math.max(0, corners[1][1] - 1);
             }
-            if(button==15)
+            if (button == 15)
             {
-                corners[1][1] = Math.min(2, corners[1][1]+1);
+                corners[1][1] = Math.min(2, corners[1][1] + 1);
             }
         }
         worldObj.markBlockForUpdate(getPos());
@@ -541,9 +538,9 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     }
 
     /*
-     * Open Computers stuff after here
+     * Sets floor associated with this block
      */
-    @Callback
+    @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
     public Object[] setFloor(Context context, Arguments args)
     {
         floor = args.checkInteger(0);
@@ -551,37 +548,72 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     }
 
     /*
-     * Open Computers stuff after here
+     * Returns floor associated with this block
      */
-    @Callback
+    @Callback(doc = "returns the Floor assigned to the Controller")
     public Object[] getFloor(Context context, Arguments args)
     {
         return new Object[] { floor };
     }
 
     /*
-     * Open Computers stuff after here
+     * Calls lift to specified Floor
      */
-    @Callback
-    public Object[] callFloor(Context context, Arguments args)
+    @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
+    public Object[] callFloor(Context context, Arguments args) throws Exception
     {
         if (lift != null)
         {
             lift.call(args.checkInteger(0));
+            return new Object[] {};
         }
-        return new Object[] {};
+        throw new Exception("no connected lift");
     }
 
     /*
-     * Open Computers stuff after here
+     * Calls lift to specified Y value
      */
-    @Callback
-    public Object[] callYValue(Context context, Arguments args)
+    @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
+    public Object[] callYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
         {
             lift.callYValue(args.checkInteger(0));
+            return new Object[] {};
         }
-        return new Object[] {};
+        throw new Exception("no connected lift");
     }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current Y value of the lift.")
+    public Object[] getYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (int) lift.posY };
+
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Returns the Y value of the controller for the specified floor
+     */
+    @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
+    public Object[] getFloorYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            int floor = args.checkInteger(0);
+
+            if (floor > 0 && floor <= 64)
+            {
+                int value = lift.floors[floor - 1];
+                if (value == -1) throw new Exception("floor "+floor+" is not assigned");
+                return new Object[] { value };
+            }
+            throw new Exception("floor out of bounds");
+        }
+        throw new Exception("no connected lift");
+    }
+
 }
