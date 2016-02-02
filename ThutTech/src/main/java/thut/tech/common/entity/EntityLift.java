@@ -432,6 +432,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             EntityPlayer player = (EntityPlayer) entity;
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
+                // TODO see if I can find out how to make this properly act like
+                // it is on the ground, without needing the allow flying below.
                 entity.onGround = true;
                 entity.fallDistance = 0;
             }
