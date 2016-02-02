@@ -402,6 +402,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         v.setToVelocity(entity).subtractFrom(v1.setToVelocity(this));
         v1.clear();
         Matrix3.doCollision(aabbs, entity.getEntityBoundingBox(), entity, 0, v, v1);
+        boolean collidedY = false;
         if (!v1.isEmpty())
         {
             if (v1.y >= 0)
@@ -422,7 +423,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             if (v1.x != 0) entity.motionX = 0;
             if (v1.y != 0) entity.motionY = motionY;
             if (v1.z != 0) entity.motionZ = 0;
-
+            if (v1.y != 0) collidedY = true;
             v1.addTo(v.set(entity));
             v1.moveEntity(entity);
         }
@@ -436,7 +437,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             }
             if (!player.capabilities.isCreativeMode)
             {
-                if (player.posY < posY + 5) player.capabilities.allowFlying = true;
+                if (player.posY < posY + 5 && collidedY) player.capabilities.allowFlying = true;
                 else player.capabilities.allowFlying = false;
             }
         }
@@ -450,7 +451,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean interactFirst(EntityPlayer player)
     {
         ItemStack item = player.getHeldItem();
-        
+
         if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker)
         {
             if (item.getTagCompound() == null)
