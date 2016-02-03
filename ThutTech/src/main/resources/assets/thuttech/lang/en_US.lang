@@ -23,13 +23,13 @@ ttinfo.page1.3.name=The following pages will describe how to create and operate 
 ttinfo.page1.4.name= 
 ttinfo.page1.5.name=The first thing you will need to do, is craft an Elevator Block, Two or more Elevator Control Blocks, and a Device Linker.
 
-ttinfo.page2.1.name=To start with, place the Elevator block, then surround it with either 8 (3x3), 24(5x5), or no normal blocks.
+ttinfo.page2.1.name=To start with, place the Elevator block, then surround it with normal blocks. Then use the gui on top to select the size.
 ttinfo.page2.2.name= 
 ttinfo.page2.3.name=A normal block can be any block which is a normal cube building block, like dirt, stone, resource blocks, etc.
 
 ttinfo.page3.1.name=Next right click the elevator block with the Device Linker, and it will convert it into an elevator, and will use the blocks around it as well.
 ttinfo.page3.2.name= 
-ttinfo.page3.3.name=The elevator will first try to find 5x5 blocks, then 3x3, the finally choose to use none if the previous are not found.
+ttinfo.page3.3.name=If the icons shown do not have a normal block underneath of them, the creation will fail.
 
 ttinfo.page4.1.name=Next Shift-Right-Click the elevator with the Device Linker.  This will bind the linker to the Elevator.
 ttinfo.page4.2.name= 
