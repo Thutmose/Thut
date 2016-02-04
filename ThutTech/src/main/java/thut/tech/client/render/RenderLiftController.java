@@ -66,7 +66,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         TileEntityLiftAccess monitor = (TileEntityLiftAccess) tileentity;
         if (monitor.getBlockType() == ThutBlocks.liftRail) return;
 
-        if (monitor.metaData == 0 && monitor.getBlockType() == ThutBlocks.lift)
+        if (monitor.getBlockMetadata() == 0 && monitor.getBlockType() == ThutBlocks.lift)
         {
             GL11.glPushMatrix();
 

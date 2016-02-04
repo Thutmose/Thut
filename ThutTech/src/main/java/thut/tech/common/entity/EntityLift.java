@@ -13,6 +13,7 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -428,19 +429,17 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             v1.moveEntity(entity);
         }
         if (entity instanceof EntityPlayer)
-        {// TODO make sure this properly removes things.
+        {
             EntityPlayer player = (EntityPlayer) entity;
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
-                // TODO see if I can find out how to make this properly act like
-                // it is on the ground, without needing the allow flying below.
                 entity.onGround = true;
                 entity.fallDistance = 0;
             }
-            if (!player.capabilities.isCreativeMode)
+            if (!player.capabilities.isCreativeMode && !player.worldObj.isRemote)
             {
-                if (player.posY < posY + 5 && collidedY) player.capabilities.allowFlying = true;
-                else player.capabilities.allowFlying = false;
+                EntityPlayerMP entityplayer = (EntityPlayerMP) player;
+                if (collidedY) entityplayer.playerNetServerHandler.floatingTickCount = 0;
             }
         }
 
