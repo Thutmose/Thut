@@ -103,9 +103,9 @@ public class ItemSpout extends Item
         if(itemstack.getItemDamage()!=15) return itemstack;
         
         Vector3 v = Vector3.getNewVectorFromPool();
-        int range = 50;
-        int num = 10;
-        float power = 10;
+        int range = 5;
+        int num = 1;
+        float power = 0.11f;
         for (int i = 0; i < num; i++)
         {
             v.set(player).addTo(range * (Math.random() - 0.5), range * (Math.random() - 0.5),

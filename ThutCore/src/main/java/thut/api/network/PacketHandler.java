@@ -11,6 +11,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -26,7 +30,7 @@ import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
 public class PacketHandler
 {
     public static SimpleNetworkWrapper packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel("thut.api");
-    public static IPlayerProvider provider;
+    public static IPlayerProvider      provider;
 
     static
     {
@@ -100,34 +104,15 @@ public class PacketHandler
                         NBTTagCompound nbt = buffer.readNBTTagCompoundFromBuffer();
                         int[] mid = nbt.getIntArray("mid");
                         int[] affected = nbt.getIntArray("affected");
-                        Vector3 vTemp = Vector3.getNewVectorFromPool();
-                        Vector3 vMid = Vector3.getNewVectorFromPool().set(mid);
                         List<Integer> locs = Lists.newArrayList();
                         for (int i : affected)
                         {
                             locs.add(i);
                         }
-                        Collections.shuffle(locs);
-                        int max = 50;
-                        vMid.addTo(0.5, 0.5, 0.5);
-                        int[] toFill = new int[3];
-                        int n = 0;
-                        for (Integer i : locs)
-                        {
-                            n++;
-                            Cruncher.fillFromInt(toFill, i);
-                            vTemp.set(toFill);
-                            vTemp.addTo(vMid);
-                            player.worldObj.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y, vTemp.z,
-                                    0, 0, 0);
-                            if (n > max) break;
-                        }
-                        vTemp.freeVectorFromPool();
-                        vMid.freeVectorFromPool();
+                        new ParticleTicker(player.dimension, locs, mid);
                     }
                     catch (Exception e)
                     {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
@@ -136,7 +121,6 @@ public class PacketHandler
                     int id = buffer.readInt();
                     if (player.worldObj.getEntityByID(id) != null) player.worldObj.getEntityByID(id).setDead();
                 }
-
             }
 
             @Override
@@ -240,5 +224,45 @@ public class PacketHandler
     public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)
     {
         packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
+    }
+
+    public static class ParticleTicker
+    {
+        public final int           dimension;
+        public final List<Integer> locs;
+        public final int[]         mid;
+
+        public ParticleTicker(int dimension, List<Integer> locs, int[] mid)
+        {
+            this.dimension = dimension;
+            this.locs = locs;
+            this.mid = mid;
+            if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) MinecraftForge.EVENT_BUS.register(this);
+        }
+
+        @SubscribeEvent
+        public void tick(ClientTickEvent evt)
+        {
+            MinecraftForge.EVENT_BUS.unregister(this);
+            Vector3 vTemp = Vector3.getNewVectorFromPool();
+            Collections.shuffle(locs);
+            int max = 50;
+            Vector3 vMid = Vector3.getNewVectorFromPool().set(mid);
+            vMid.addTo(0.5, 0.5, 0.5);
+            int[] toFill = new int[3];
+            int n = 0;
+            for (Integer i : locs)
+            {
+                n++;
+                Cruncher.fillFromInt(toFill, i);
+                vTemp.set(toFill);
+                vTemp.addTo(vMid);
+                provider.getPlayer().worldObj.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y,
+                        vTemp.z, 0, 0, 0);
+                if (n > max) break;
+            }
+            vTemp.freeVectorFromPool();
+            vMid.freeVectorFromPool();
+        }
     }
 }
