@@ -41,7 +41,8 @@ import thut.tech.common.network.PacketPipeline.ClientPacket.MessageHandlerClient
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
 
-@Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, version = ThutTechReference.VERSION, acceptedMinecraftVersions = ThutTechReference.MCVERSIONS)
+@Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, dependencies = ThutTechReference.DEPSTRING,
+version = ThutTechReference.VERSION, acceptedMinecraftVersions = ThutTechReference.MCVERSIONS)
 public class TechCore
 {
     @SidedProxy(clientSide = ThutTechReference.CLIENT_PROXY_CLASS, serverSide = ThutTechReference.COMMON_PROXY_CLASS)
