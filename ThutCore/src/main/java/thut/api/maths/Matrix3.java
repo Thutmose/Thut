@@ -71,9 +71,9 @@ public class Matrix3
 
     public Matrix3()
     {
-        rows[0] = Vector3.getNewVectorFromPool();
-        rows[1] = Vector3.getNewVectorFromPool();
-        rows[2] = Vector3.getNewVectorFromPool();
+        rows[0] = Vector3.getNewVector();
+        rows[1] = Vector3.getNewVector();
+        rows[2] = Vector3.getNewVector();
         // for(int i = 0; i< 8; i++)
         // corners[i] = Vector3.getVector();
     }
@@ -131,12 +131,10 @@ public class Matrix3
 
     public Vector3 boxCentre()
     {
-        Vector3 mid = Vector3.getNewVectorFromPool();
+        Vector3 mid = Vector3.getNewVector();
         Vector3 temp1 = boxMax().copy();
         Vector3 temp2 = boxMax().copy();
         mid.set(temp2.subtractFrom((temp1.subtractFrom(boxMin())).scalarMultBy(0.5)));
-        temp2.freeVectorFromPool();
-        temp1.freeVectorFromPool();
         return mid;
     }
 
@@ -162,7 +160,7 @@ public class Matrix3
         List<Vector3> corners = new ArrayList<Vector3>();
 
         for (int i = 0; i < 8; i++)
-            corners.add(Vector3.getNewVectorFromPool());
+            corners.add(Vector3.getNewVector());
 
         corners.get(0).set(boxMin());
         corners.get(1).set(boxMax());
@@ -179,8 +177,8 @@ public class Matrix3
         else mid = null;
         if (!boxRotation().isEmpty() && mid != null)
         {
-            Vector3 temp = Vector3.getNewVectorFromPool();
-            Vector3 temp2 = Vector3.getNewVectorFromPool();
+            Vector3 temp = Vector3.getNewVector();
+            Vector3 temp2 = Vector3.getNewVector();
             for (int i = 0; i < 8; i++)
             {
                 corners.get(i).subtractFrom(mid);
@@ -189,9 +187,6 @@ public class Matrix3
                 corners.get(i).set(corners.get(i).rotateAboutAngles(boxRotation().y, boxRotation().z, temp2, temp));
                 corners.get(i).addTo(mid);
             }
-            temp.freeVectorFromPool();
-            temp2.freeVectorFromPool();
-            mid.freeVectorFromPool();
         }
 
         return corners;
@@ -374,7 +369,6 @@ public class Matrix3
     {
         Vector3 v1 = boxCentre();
         Vector3[] corners = corners(v1);
-        v1.freeVectorFromPool();
         double dx = boxMax().x - boxMin().x;
         double dz = boxMax().z - boxMin().z;
         dx = Math.abs(dx);
@@ -416,18 +410,6 @@ public class Matrix3
                 ret[i][6] = dir3.scalarMult(i + 1).addTo(min3);
                 ret[i][7] = dir4.scalarMult(i + 1).addTo(min4);
             }
-            min1.freeVectorFromPool();
-            min2.freeVectorFromPool();
-            min3.freeVectorFromPool();
-            min4.freeVectorFromPool();
-            max1.freeVectorFromPool();
-            max2.freeVectorFromPool();
-            max3.freeVectorFromPool();
-            max4.freeVectorFromPool();
-            dir1.freeVectorFromPool();
-            dir2.freeVectorFromPool();
-            dir3.freeVectorFromPool();
-            dir4.freeVectorFromPool();
             return ret;
         }
         return new Vector3[][] { corners };
@@ -455,15 +437,11 @@ public class Matrix3
 
     public Vector3 doTileCollision(IBlockAccess world, Entity e, Vector3 offset, Vector3 diffs, boolean moveEntity)
     {
-        Vector3 temp = Vector3.getNewVectorFromPool();
-        Vector3 dir = Vector3.getNewVectorFromPool();
-        Vector3 temp1 = Vector3.getNewVectorFromPool();
-        Vector3 ent = Vector3.getNewVectorFromPool();
+        Vector3 temp1 = Vector3.getNewVector();
 
         Matrix3 box = copy().addOffsetTo(offset);
         Vector3 v1 = box.boxCentre();
         Vector3[] corners = box.corners(v1);
-        v1.freeVectorFromPool();
 
         double minX = Double.MAX_VALUE, minZ = Double.MAX_VALUE, minY = Double.MAX_VALUE;
         double maxX = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
@@ -476,7 +454,6 @@ public class Matrix3
             if (v.x < minX) minX = v.x;
             if (v.y < minY) minY = v.y;
             if (v.z < minZ) minZ = v.z;
-            v.freeVectorFromPool();
         }
         if (e.riddenByEntity != null) maxY += (e.riddenByEntity.height + e.getMountedYOffset());
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
@@ -497,7 +474,7 @@ public class Matrix3
         {
             System.err.println(e + " Is too large");
             System.out.println(offset);
-            System.err.println(Vector3.getNewVectorFromPool().setToVelocity(e) + " " + diffs);
+            System.err.println(Vector3.getNewVector().setToVelocity(e) + " " + diffs);
             System.err.println(diffs.equals(offset));
             new Exception().printStackTrace();
             dx = dy = dz = 1;
@@ -509,9 +486,6 @@ public class Matrix3
         List<AxisAlignedBB> aabbs = getCollidingBoxes(b1, e.worldObj, world);
         Vector3[][] subBoxes = box.splitBox();
 
-        box.boxMax().freeVectorFromPool();
-        box.boxMin().freeVectorFromPool();
-        box.boxRotation().freeVectorFromPool();
         box = null;
 
         for (Vector3[] corner : subBoxes)
@@ -531,7 +505,6 @@ public class Matrix3
                 if (v.x < minX) minX = v.x;
                 if (v.y < minY) minY = v.y;
                 if (v.z < minZ) minZ = v.z;
-                v.freeVectorFromPool();
             }
 
             boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
@@ -707,9 +680,6 @@ public class Matrix3
                             e.getEntityBoundingBox().maxX, boundingBox.maxY, e.getEntityBoundingBox().maxZ));
 
         }
-        temp.freeVectorFromPool();
-        dir.freeVectorFromPool();
-        ent.freeVectorFromPool();
         return temp1;
     }
 
@@ -919,13 +889,11 @@ public class Matrix3
 
     public boolean doTileCollision(IBlockAccess world, Vector3 location, Entity e, Vector3 diffs)
     {
-        Vector3 diffs1 = Vector3.getNewVectorFromPool().set(diffs);
-        Vector3 off = Vector3.getNewVectorFromPool().set(location);
-        
+        Vector3 diffs1 = Vector3.getNewVector().set(diffs);
+        Vector3 off = Vector3.getNewVector().set(location);
+
         diffs1.set(doTileCollision(world, e, off, diffs, false));
         double x = diffs1.x, y = diffs1.y, z = diffs1.z;
-        diffs1.freeVectorFromPool();
-        off.freeVectorFromPool();
         return !(x == diffs.x && (y == diffs.y || Math.abs(y - diffs.y) < 0.5) && z == diffs.z);
     }
 
@@ -934,8 +902,8 @@ public class Matrix3
         boolean ret = false;
         Vector3 ent = location;
         Vector3[] corners = corners(boxCentre());
-        Vector3 temp = Vector3.getNewVectorFromPool();
-        Vector3 dir = Vector3.getNewVectorFromPool();
+        Vector3 temp = Vector3.getNewVector();
+        Vector3 dir = Vector3.getNewVector();
         for (int i = 0; i < 8; i++)
         {
             Vector3 v = corners[i];
@@ -956,12 +924,6 @@ public class Matrix3
                 }
             }
         }
-        for (Vector3 v : corners)
-        {
-            v.freeVectorFromPool();
-        }
-        temp.freeVectorFromPool();
-        dir.freeVectorFromPool();
         return ret;
     }
 
@@ -969,9 +931,7 @@ public class Matrix3
     {
         boolean ret = false;
         if (e == null) return false;
-        Vector3 temp = Vector3.getNewVectorFromPool();
-        Vector3 dir = Vector3.getNewVectorFromPool();
-        Vector3 ent = Vector3.getNewVectorFromPool();
+        Vector3 ent = Vector3.getNewVector();
         ent.set(e);
         corners(true);
         if (e instanceof IMultibox)
@@ -991,14 +951,7 @@ public class Matrix3
                 boxOff.reverse();
                 ent.reverse();
                 Vector3.empty.clear();
-                if (hit)
-                {
-
-                    temp.freeVectorFromPool();
-                    ent.freeVectorFromPool();
-                    dir.freeVectorFromPool();
-                    return true;
-                }
+                if (hit) { return true; }
             }
 
         }
@@ -1007,15 +960,9 @@ public class Matrix3
             Matrix3 box = new Matrix3();
             box.set(e.getEntityBoundingBox());
             boolean hit = box.intersects(this);
-            box.boxMax().freeVectorFromPool();
-            box.boxMin().freeVectorFromPool();
-            box.boxRotation().freeVectorFromPool();
             box = null;
             if (hit) { return true; }
         }
-        temp.freeVectorFromPool();
-        ent.freeVectorFromPool();
-        dir.freeVectorFromPool();
         return ret;
     }
 
@@ -1036,7 +983,6 @@ public class Matrix3
         Vector3 v1 = boxCentre();
         for (Vector3 v : b.corners(v1))
             cornersB.add(v);
-        v1.freeVectorFromPool();
         return intersects(cornersB);
     }
 
@@ -1046,13 +992,8 @@ public class Matrix3
         Vector3 v1 = boxCentre();
         for (Vector3 v : corners(v1))
             cornersA.add(v);
-        v1.freeVectorFromPool();
         List<Vector3> diffs = diff(cornersA, mesh);
         boolean temp = containsOrigin(diffs);
-        for (Vector3 v : diffs)
-        {
-            if (v != null) v.freeVectorFromPool();
-        }
         return temp;
 
     }
@@ -1076,7 +1017,6 @@ public class Matrix3
                 }
                 if (!has) ret.add(v);
             }
-            vc.freeVectorFromPool();
         }
         return ret;
     }
@@ -1086,7 +1026,7 @@ public class Matrix3
     private List<Vector3> diff(List<Vector3> cornersA, List<Vector3> cornersB)
     {
         ArrayList<Vector3> ret = new ArrayList<Vector3>();
-        Vector3 c = Vector3.getNewVectorFromPool();
+        Vector3 c = Vector3.getNewVector();
         if (pointSet == null) pointSet = new Vector3[100];
 
         // Vector3[] pointSet = new Vector3[cornersA.size() * cornersB.size()];
@@ -1100,7 +1040,6 @@ public class Matrix3
                 pointSet[n++] = c.copy();
             }
         }
-        c.freeVectorFromPool();
         for (int i = 0; i < n; i++)
         {
             Vector3 v = pointSet[i];

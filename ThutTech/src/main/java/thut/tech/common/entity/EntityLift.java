@@ -288,20 +288,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean checkBlocks(double dir)
     {
         boolean ret = true;
-        Vector3 thisloc = Vector3.getNewVectorFromPool().set(this).addTo(0, dir, 0);
+        Vector3 thisloc = Vector3.getNewVector().set(this).addTo(0, dir, 0);
 
         if (called)
         {
-            if (dir > 0 && thisloc.y > getDestY())
-            {
-                thisloc.freeVectorFromPool();
-                return false;
-            }
-            if (dir < 0 && thisloc.y < getDestY())
-            {
-                thisloc.freeVectorFromPool();
-                return false;
-            }
+            if (dir > 0 && thisloc.y > getDestY()) { return false; }
+            if (dir < 0 && thisloc.y < getDestY()) { return false; }
         }
 
         int xMin = corners[0][0];
@@ -309,7 +301,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int xMax = corners[1][0];
         int zMax = corners[1][1];
 
-        Vector3 v = Vector3.getNewVectorFromPool();
+        Vector3 v = Vector3.getNewVector();
         for (int i = xMin; i <= xMax; i++)
             for (int j = zMin; j <= zMax; j++)
             {
@@ -324,8 +316,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         // int rad = (int) (Math.floor(size / 2));
         //
-        // Vector3 thisloc = Vector3.getNewVectorFromPool().set(this);
-        // Vector3 v = Vector3.getNewVectorFromPool();
+        // Vector3 thisloc = Vector3.getNewVector().set(this);
+        // Vector3 v = Vector3.getNewVector();
         // for (int i = -rad; i <= rad; i++)
         // for (int j = -rad; j <= rad; j++)
         // {
@@ -387,8 +379,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
      * other. Args: entity */
     public void applyEntityCollision(Entity entity)
     {
-        Vector3 v = Vector3.getNewVectorFromPool();
-        Vector3 v1 = Vector3.getNewVectorFromPool();
+        Vector3 v = Vector3.getNewVector();
+        Vector3 v1 = Vector3.getNewVector();
 
         int xMin = corners[0][0];
         int zMin = corners[0][1];
@@ -442,10 +434,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 if (collidedY) entityplayer.playerNetServerHandler.floatingTickCount = 0;
             }
         }
-
-        v.freeVectorFromPool();
-        v1.freeVectorFromPool();
-
     }
 
     /** First layer of player interaction */
@@ -839,7 +827,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         Vector3 v2;
         if (!offsets.containsKey("base"))
         {
-            v2 = Vector3.getNewVectorFromPool();
+            v2 = Vector3.getNewVector();
             offsets.put("base", v2);
         }
         else

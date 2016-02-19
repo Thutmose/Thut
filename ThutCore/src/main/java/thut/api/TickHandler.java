@@ -61,14 +61,6 @@ public class TickHandler
         {
             if (evt.world.getTotalWorldTime() % 20 == 0)
             {
-                ArrayList<Thread> threads = Lists.newArrayList(Vector3.vectorPools.keySet());
-                for (Thread thread : threads)
-                {
-                    if (!thread.isAlive())
-                    {
-                        Vector3.vectorPools.remove(thread);
-                    }
-                }
                 if (evt.world.getTotalWorldTime() % 40 == 0)
                 {
                     WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());

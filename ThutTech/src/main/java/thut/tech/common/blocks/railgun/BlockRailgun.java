@@ -29,7 +29,7 @@ public class BlockRailgun extends Block implements ITileEntityProvider{
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumFacing side, float hitX, float hitY, float hitZ)
     {
 		TileEntityRailgun railgun = (TileEntityRailgun) worldIn.getTileEntity(pos);
-		Vector3 dir = Vector3.getNewVectorFromPool().set(playerIn.getLookVec());
+		Vector3 dir = Vector3.getNewVector().set(playerIn.getLookVec());
 		dir.y = 0;
 		railgun.setDir(dir);
 		railgun.fire();

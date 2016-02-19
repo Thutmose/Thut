@@ -95,8 +95,8 @@ public class TechCore
         if (!Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()) return;
 
         EntityPlayer p = proxy.getPlayer(null);
-        Vector3 v = Vector3.getNewVectorFromPool().set(p);
-        Vector3 v1 = Vector3.getNewVectorFromPool();
+        Vector3 v = Vector3.getNewVector().set(p);
+        Vector3 v1 = Vector3.getNewVector();
         Object o = evt.entity;
         if (o instanceof IMultibox)
         {
@@ -107,8 +107,6 @@ public class TechCore
                         123456);
             }
         }
-        v.freeVectorFromPool();
-        v1.freeVectorFromPool();
     }
 
     @SideOnly(Side.CLIENT)

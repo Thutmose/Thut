@@ -6,7 +6,6 @@ import static java.lang.Math.atan2;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,106 +41,38 @@ import net.minecraftforge.fluids.IFluidBlock;
 /** @author Thutmose */
 public class Vector3
 {
-
-    public static final HashMap<Thread, ThreadedPool> vectorPools = new HashMap<Thread, ThreadedPool>();
-
-    public static final Vector3 secondAxis    = Vector3.getNewVectorFromPool().set(0, 1, 0);
-    public static final Vector3 secondAxisNeg = Vector3.getNewVectorFromPool().set(0, -1, 0);
-    public static final Vector3 firstAxis     = Vector3.getNewVectorFromPool().set(1, 0, 0);
-    public static final Vector3 firstAxisNeg  = Vector3.getNewVectorFromPool().set(-1, 0, 0);
-    public static final Vector3 thirdAxis     = Vector3.getNewVectorFromPool().set(0, 0, 1);
-    public static final Vector3 thirdAxisNeg  = Vector3.getNewVectorFromPool().set(0, 0, -1);
-    public static final Vector3 empty         = Vector3.getNewVectorFromPool();
+    public static final Vector3 secondAxis    = Vector3.getNewVector().set(0, 1, 0);
+    public static final Vector3 secondAxisNeg = Vector3.getNewVector().set(0, -1, 0);
+    public static final Vector3 firstAxis     = Vector3.getNewVector().set(1, 0, 0);
+    public static final Vector3 firstAxisNeg  = Vector3.getNewVector().set(-1, 0, 0);
+    public static final Vector3 thirdAxis     = Vector3.getNewVector().set(0, 0, 1);
+    public static final Vector3 thirdAxisNeg  = Vector3.getNewVector().set(0, 0, -1);
+    public static final Vector3 empty         = Vector3.getNewVector();
 
     public double           x;
     public double           y;
     public double           z;
     public static final int length = 3;
-    Vector3                 v, v1, vHat;
-
-    // private static final Vector3[] pool = new Vector3[1000000];
-    // public static int poolIndex = 0;
-
-    public static int numMade  = 0;
-    public static int numFound = 0;
-    public static int numFreed = 0;
 
     private Vector3()
     {
-        numMade++;
         this.x = this.y = this.z = 0;
-        // new Exception().printStackTrace();
     }
 
+    @Deprecated
     public static Vector3 getNewVectorFromPool()
     {
-        ThreadedPool pool = vectorPools.get(Thread.currentThread());
-        if (pool == null)
-        {
-            pool = new ThreadedPool();
-            vectorPools.put(Thread.currentThread(), pool);
-        }
-        return pool.getVector();
+        return getNewVector();
     }
 
+    public static Vector3 getNewVector()
+    {
+        return new Vector3();
+    }
+
+    @Deprecated
     public void freeVectorFromPool()
     {
-        Thread thread = Thread.currentThread();
-        ThreadedPool pool = vectorPools.get(thread);
-        if (pool == null)
-        {
-            pool = new ThreadedPool();
-            vectorPools.put(thread, pool);
-        }
-        pool.freeVector(this);
-    }
-
-    private static class ThreadedPool
-    {
-        private final Vector3[] pool      = new Vector3[1000000];
-        int                     poolIndex = 0;
-
-        public Vector3 getVector()
-        {
-            if (poolIndex > 0)
-            {
-                Vector3 ret = pool[poolIndex - 1];
-                poolIndex--;
-                numFound++;
-                if (ret != null)
-                {
-                    return ret;
-                }
-                else
-                {
-                    System.err.println("someone put null in the pool");
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 10000; i++)
-                {
-                    new Vector3().freeVectorFromPool();
-                }
-            }
-            return new Vector3();
-        }
-
-        public void freeVector(Vector3 toFree)
-        {
-            if (poolIndex < pool.length - 1)
-            {
-                if (poolIndex > 0 && pool[poolIndex - 1] == toFree)
-                {
-                    System.err.println("freeing a vector already in pool");
-                    new Exception().printStackTrace();
-                    return;
-                }
-                numFreed++;
-                pool[poolIndex] = toFree.clear();
-                poolIndex++;
-            }
-        }
     }
 
     private Vector3(double x, double y, double z)
@@ -189,8 +120,8 @@ public class Vector3
     private Vector3(Object a, Object b)
     {
         this();
-        Vector3 A = Vector3.getNewVectorFromPool().set(a);
-        Vector3 B = Vector3.getNewVectorFromPool().set(b);
+        Vector3 A = Vector3.getNewVector().set(a);
+        Vector3 B = Vector3.getNewVector().set(b);
         this.set(B.subtract(A));
     }
 
@@ -311,7 +242,7 @@ public class Vector3
 
     public Vector3 offset(EnumFacing side)
     {
-        return add(Vector3.getNewVectorFromPool().set(side));
+        return add(Vector3.getNewVector().set(side));
     }
 
     public Vector3 offsetBy(EnumFacing side)
@@ -447,7 +378,7 @@ public class Vector3
 
     public static Vector3 entity(Entity e)
     {
-        if (e != null) return Vector3.getNewVectorFromPool().set(e.posX, e.posY + e.height / 2, e.posZ);
+        if (e != null) return Vector3.getNewVector().set(e.posX, e.posY + e.height / 2, e.posZ);
         return null;
     }
 
@@ -469,7 +400,7 @@ public class Vector3
     public Vector3 normalize()
     {
         double vmag = mag();
-        if (vHat == null) vHat = Vector3.getNewVectorFromPool();
+        Vector3 vHat = getNewVector();
         if (vmag == 0) return vHat.clear();
         vHat.set(this).scalarMultBy(1 / vmag);
         return vHat;
@@ -493,8 +424,7 @@ public class Vector3
      * @return unit vector in direction of vector. */
     public Vector3 toSpherical()
     {
-        if (v == null) v = Vector3.getNewVectorFromPool();
-        Vector3 vectorSpher = v;
+        Vector3 vectorSpher = getNewVector();
         vectorSpher.x = mag();
         vectorSpher.y = acos(this.get(1) / vectorSpher.x) - PI / 2;
         vectorSpher.z = atan2(this.get(2), this.x);
@@ -503,9 +433,8 @@ public class Vector3
 
     public Vector3 horizonalPerp()
     {
-        if (v == null) v = Vector3.getNewVectorFromPool();
-        Vector3 vectorH = v.set(x, 0, z);
-        return vectorH.rotateAboutLine(secondAxis, PI / 2, v).normalize();
+        Vector3 vectorH = getNewVector().set(x, 0, z);
+        return vectorH.rotateAboutLine(secondAxis, PI / 2, vectorH).normalize();
     }
 
     /** Adds vectorA to vectorB
@@ -515,7 +444,7 @@ public class Vector3
      * @return */
     public Vector3 add(Vector3 vectorB)
     {
-        Vector3 vectorC = Vector3.getNewVectorFromPool();
+        Vector3 vectorC = Vector3.getNewVector();
         for (int i = 0; i < 3; i++)
         {
             vectorC.set(i, this.get(i) + vectorB.get(i));
@@ -530,7 +459,7 @@ public class Vector3
      * @return */
     public Vector3 subtract(Vector3 vectorB)
     {
-        Vector3 vectorC = Vector3.getNewVectorFromPool();
+        Vector3 vectorC = Vector3.getNewVector();
         for (int i = 0; i < 3; i++)
         {
             vectorC.set(i, this.get(i) - vectorB.get(i));
@@ -597,7 +526,7 @@ public class Vector3
      * @return */
     public Vector3 scalarMult(double constant)
     {
-        Vector3 newVector = Vector3.getNewVectorFromPool();
+        Vector3 newVector = Vector3.getNewVector();
         for (int i = 0; i < Vector3.length; i++)
         {
             newVector.set(i, constant * this.get(i));
@@ -605,7 +534,7 @@ public class Vector3
         return newVector;
     }
 
-    public static Vector3 vecMult = Vector3.getNewVectorFromPool();
+    public static Vector3 vecMult = Vector3.getNewVector();
 
     /** Left multiplies the Matrix by the Vector
      * 
@@ -638,7 +567,7 @@ public class Vector3
     {
         if (line.magSq() != 1) line = line.normalize();
 
-        if (ret == null) ret = Vector3.getNewVectorFromPool();
+        if (ret == null) ret = Vector3.getNewVector();
         double[][] mat = rotBox;// new double[3][3];
         // Matrix3 TransMatrix = rotBox.clear();
 
@@ -729,7 +658,7 @@ public class Vector3
 
     public static Vector3 findMidPoint(List<Vector3> points)
     {
-        Vector3 mid = Vector3.getNewVectorFromPool();
+        Vector3 mid = Vector3.getNewVector();
         for (int j = 0; j < points.size(); j++)
         {
             mid.addTo(points.get(j));
@@ -753,7 +682,7 @@ public class Vector3
 
     public Vector3 copy()
     {
-        Vector3 newVector = Vector3.getNewVectorFromPool().set(x, y, z);
+        Vector3 newVector = Vector3.getNewVector().set(x, y, z);
         return newVector;
     }
 
@@ -774,7 +703,7 @@ public class Vector3
     {
         if (!nbt.hasKey(tag + "x")) return null;
 
-        Vector3 ret = Vector3.getNewVectorFromPool();
+        Vector3 ret = Vector3.getNewVector();
         ret.x = nbt.getDouble(tag + "x");
         ret.y = nbt.getDouble(tag + "y");
         ret.z = nbt.getDouble(tag + "z");
@@ -790,7 +719,7 @@ public class Vector3
 
     public static Vector3 readFromBuff(ByteBuf dat)
     {
-        Vector3 ret = Vector3.getNewVectorFromPool();
+        Vector3 ret = Vector3.getNewVector();
         ret.x = dat.readDouble();
         ret.y = dat.readDouble();
         ret.z = dat.readDouble();
@@ -830,11 +759,11 @@ public class Vector3
             if (!(Int(xtest) == Int(xprev) && Int(ytest) == Int(yprev) && Int(ztest) == Int(zprev)))
             {
 
-                Vector3 test = Vector3.getNewVectorFromPool().set(xtest, ytest, ztest);
+                Vector3 test = Vector3.getNewVector().set(xtest, ytest, ztest);
                 boolean clear = test.clearOfBlocks(worldObj);
                 test.freeVectorFromPool();
 
-                if (!clear) { return Vector3.getNewVectorFromPool().set(Int(xtest), Int(ytest), Int(ztest)); }
+                if (!clear) { return Vector3.getNewVector().set(Int(xtest), Int(ytest), Int(ztest)); }
             }
 
             yprev = ytest;
@@ -893,7 +822,7 @@ public class Vector3
             double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
 
             boolean check = isPointClearBlocks(xtest, ytest, ztest, worldObj);
-            if (!check) { return Vector3.getNewVectorFromPool().set(xtest, ytest, ztest); }
+            if (!check) { return Vector3.getNewVector().set(xtest, ytest, ztest); }
         }
         return null;
     }
@@ -911,7 +840,7 @@ public class Vector3
     {
         direction = direction.normalize();
         double dx, dy, dz;
-        Vector3 temp = Vector3.getNewVectorFromPool();
+        Vector3 temp = Vector3.getNewVector();
         for (double i = 0; i < range; i += 0.5)
         {
             dx = i * direction.x;
@@ -924,7 +853,7 @@ public class Vector3
                                                                                                // ytest,
                                                                                                // ztest,
                                                                                                // worldObj);
-            if (!check) { return Vector3.getNewVectorFromPool().set(xtest, ytest, ztest); }
+            if (!check) { return Vector3.getNewVector().set(xtest, ytest, ztest); }
         }
         return null;
     }
@@ -1039,8 +968,8 @@ public class Vector3
     {
         boolean ret = false;
 
-        if (v == null) v = Vector3.getNewVectorFromPool();
-        if (v1 == null) v1 = Vector3.getNewVectorFromPool();
+        Vector3 v = Vector3.getNewVector();
+        Vector3 v1 = Vector3.getNewVector();
         v.set(this);
         ret = v.addTo(v1.set(0, e.height, 0)).isClearOfBlocks(worldObj);
         if (!ret) return ret;
@@ -1071,7 +1000,7 @@ public class Vector3
         if (block == null || block == Blocks.air || !block.isCollidable()) return true;
 
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
-        Vector3 v = getNewVectorFromPool().set(x, y, z);
+        Vector3 v = getNewVector().set(x, y, z);
 
         if (worldObj instanceof World) block.addCollisionBoxesToList((World) worldObj, pos, state,
                 v.getAABB().expand(-0.03, -0.03, -0.03), aabbs, null);
@@ -1300,7 +1229,7 @@ public class Vector3
             World worldObj, Entity excluded)
     {
         direction = direction.normalize();
-        
+
         double dx, dy, dz;
         List<Entity> ret = new ArrayList<Entity>();
 
@@ -1401,7 +1330,7 @@ public class Vector3
     public Vector3 getTopBlockPos(World world)
     {
         int y = getTopBlockY(world);
-        return Vector3.getNewVectorFromPool().set(intX(), y, intZ());
+        return Vector3.getNewVector().set(intX(), y, intZ());
     }
 
     public int[] getMinMaxY(World world, int range)
@@ -1429,7 +1358,7 @@ public class Vector3
 
     public int getMaxY(World world, int x, int z)
     {
-        Vector3 temp = Vector3.getNewVectorFromPool().set(x, y, z);
+        Vector3 temp = Vector3.getNewVector().set(x, y, z);
         int y = temp.getTopBlockY(world);
 
         if (Int(y) == intY()) return y;
@@ -1472,7 +1401,7 @@ public class Vector3
     public int blockCount(IBlockAccess world, Block block, int range)
     {
         int ret = 0;
-        if (v == null) v = this.copy();
+        Vector3 v = this.copy();
         for (int i = -range; i <= range; i++)
             for (int j = -range; j <= range; j++)
                 for (int k = -range; k <= range; k++)
@@ -1490,7 +1419,7 @@ public class Vector3
     public int blockCount2(World world, Block block, int range)
     {
         int ret = 0;
-        if (v == null) v = this.copy();
+        Vector3 v = this.copy();
         Chunk chunk = world.getChunkFromBlockCoords(new BlockPos(intX(), 0, intZ()));
         Block testBlock;
         for (int i = -range / 2; i <= range / 2; i++)
@@ -1551,7 +1480,7 @@ public class Vector3
 
     public Vector3 add(double i, double j, double k)
     {
-        return Vector3.getNewVectorFromPool().set(x + i, j + y, k + z);
+        return Vector3.getNewVector().set(x + i, j + y, k + z);
     }
 
     public Vector3 addTo(double i, double j, double k)
@@ -1567,8 +1496,8 @@ public class Vector3
         return world.getLight(getPos());
     }
 
-    static Vector3 move1 = Vector3.getNewVectorFromPool();
-    static Vector3 move2 = Vector3.getNewVectorFromPool();
+    static Vector3 move1 = Vector3.getNewVector();
+    static Vector3 move2 = Vector3.getNewVector();
 
     public static boolean movePointOutOfBlocks(Vector3 v, World world)
     {
@@ -1724,7 +1653,7 @@ public class Vector3
             int[] p = (int[]) o;
             this.set(p[0], p[1], p[2]);
         }
-        else if(o instanceof Double)
+        else if (o instanceof Double)
         {
             x = y = z = (double) o;
         }
@@ -1782,10 +1711,9 @@ public class Vector3
             list.addAll((Collection<?>) matching);
         }
         double rMag;
-        Vector3 r = Vector3.getNewVectorFromPool(), rAbs = Vector3.getNewVectorFromPool(),
-                rHat = Vector3.getNewVectorFromPool(), rTest = Vector3.getNewVectorFromPool(),
-                rTestPrev = Vector3.getNewVectorFromPool(), rTestAbs = Vector3.getNewVectorFromPool(),
-                ret = Vector3.getNewVectorFromPool();
+        Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(),
+                rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(), rTestAbs = Vector3.getNewVector(),
+                ret = Vector3.getNewVector();
 
         loop:
         for (int i = 0; i < size * size * size; i++)

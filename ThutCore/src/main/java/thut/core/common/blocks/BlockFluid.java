@@ -253,9 +253,8 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
 
         if (!changed && this instanceof IHardenableFluid)
         {
-            Vector3 vec = Vector3.getNewVectorFromPool().set(pos);
+            Vector3 vec = Vector3.getNewVector().set(pos);
             ((IHardenableFluid) this).tryHarden(world, vec);
-            vec.freeVectorFromPool();
         }
     }
 
@@ -361,7 +360,7 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
     public int tryToFlowVerticallyInto(World world, BlockPos pos, int amtToInput)
     {
         IBlockState myState = world.getBlockState(pos);
-        Vector3 temp = Vector3.getNewVectorFromPool().set(pos);
+        Vector3 temp = Vector3.getNewVector().set(pos);
         BlockPos other = temp.addTo(0, densityDir, 0).getPos();
         int n = 0;
         while (other.getY() > 0)
@@ -382,7 +381,6 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
             n++;
         }
         other = new BlockPos(other.getX(), other.getY(), other.getZ());
-        temp.freeVectorFromPool();
 
         if (other.getY() < 0 || other.getY() >= world.getHeight())
         {
@@ -674,14 +672,13 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
      * 
      * @param collidingEntity
      *            the Entity colliding with this Block */
-    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list,
-            Entity collidingEntity)
+    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask,
+            List<AxisAlignedBB> list, Entity collidingEntity)
     {
         AxisAlignedBB[] boxes = getBoxes(worldIn, pos);
 
-        if(getFluid().getViscosity() < 6000) return;
-        
-        
+        if (getFluid().getViscosity() < 6000) return;
+
         if (boxes != null)
         {
             for (AxisAlignedBB box : boxes)
@@ -697,10 +694,10 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
         double[] heights;
 
         TileEntity te = worldObj.getTileEntity(pos);
-        if(te instanceof TileEntityBlockFluid)
+        if (te instanceof TileEntityBlockFluid)
         {
             TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
-            if(tile.corner == null)
+            if (tile.corner == null)
             {
                 heights = getCornerHeights(worldObj, x, y, z);
             }
@@ -713,9 +710,8 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
                 heights[3] = tile.corner[1][0];
             }
         }
-        else
-        heights = getCornerHeights(worldObj, x, y, z);
-        
+        else heights = getCornerHeights(worldObj, x, y, z);
+
         double hN = (heights[0] + heights[3]) / 2;
         double hS = (heights[1] + heights[2]) / 2;
         double hE = (heights[2] + heights[3]) / 2;
@@ -782,7 +778,7 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
 
     public float getFluidHeightForCollision(IBlockAccess world, int x, int y, int z)
     {
-        Vector3 vec = Vector3.getNewVectorFromPool().set(x, y, z);
+        Vector3 vec = Vector3.getNewVector().set(x, y, z);
         int meta = vec.getBlockMetadata(world);
         Block id = vec.getBlock(world);
         if (id instanceof BlockFluid)

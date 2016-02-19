@@ -180,7 +180,7 @@ public class BlockLift extends Block implements ITileEntityProvider
 
         ItemStack[][] ret = new ItemStack[(xMax - xMin) + 1][(zMax - zMin) + 1];
 
-        Vector3 loc = Vector3.getNewVectorFromPool().set(pos);
+        Vector3 loc = Vector3.getNewVector().set(pos);
         for (int i = xMin; i <= xMax; i++)
             for (int j = zMin; j <= zMax; j++)
             {
@@ -194,7 +194,6 @@ public class BlockLift extends Block implements ITileEntityProvider
                     }
                     else
                     {
-                        loc.freeVectorFromPool();
                         return null;
                     }
                 }
@@ -203,7 +202,6 @@ public class BlockLift extends Block implements ITileEntityProvider
                     ret[i - xMin][j - zMin] = new ItemStack(this);
                 }
             }
-        loc.freeVectorFromPool();
         return ret;
     }
 
@@ -213,7 +211,7 @@ public class BlockLift extends Block implements ITileEntityProvider
         int zMin = te.corners[0][1];
         int xMax = te.corners[1][0];
         int zMax = te.corners[1][1];
-        Vector3 loc = Vector3.getNewVectorFromPool();
+        Vector3 loc = Vector3.getNewVector();
         for (int i = xMin; i <= xMax; i++)
             for (int j = zMin; j <= zMax; j++)
                 for (int k = 0; k < 1; k++)
@@ -259,14 +257,13 @@ public class BlockLift extends Block implements ITileEntityProvider
         if (state.getValue(VARIANT) == EnumType.CONTROLLER)
         {
             TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-            if (te.lift!=null && (int)te.lift.posY == te.getPos().getY() - 2 && te.lift.motionY == 0) return 15;
+            if (te.lift != null && (int) te.lift.posY == te.getPos().getY() - 2 && te.lift.motionY == 0) return 15;
         }
         return 0;
     }
 
-    /**
-     * Can this block provide power. Only wire currently seems to have this change based on its state.
-     */
+    /** Can this block provide power. Only wire currently seems to have this
+     * change based on its state. */
     public boolean canProvidePower()
     {
         return true;

@@ -46,8 +46,8 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     protected int                         PATHTIME     = 5000000;
     protected final Matrix3               box          = new Matrix3();
 
-    Vector3 v0 = Vector3.getNewVectorFromPool();
-    Vector3 v1 = Vector3.getNewVectorFromPool();
+    Vector3 v0 = Vector3.getNewVector();
+    Vector3 v1 = Vector3.getNewVector();
 
     public ThutPathFinder(IBlockAccess world, IPathingMob entity)
     {
@@ -147,10 +147,9 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         // IPokemob pokemob = (IPokemob) entity;
         PATHTIME = mob.getPathTime();
         // if(true) return null;
-        Vector3 size = Vector3.getNewVectorFromPool();
+        Vector3 size = Vector3.getNewVector();
         size.set(mob.getMobSizes());
         PathPoint pathpoint3 = getSubPath(size, start, end, pathf, distance);
-        size.freeVectorFromPool();
         // if(true) return null;
 
         double dt = ((System.nanoTime() - starttime) / 1000000d);
@@ -406,7 +405,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     protected int findOptions(Vector3 pokemob, PathPoint current, PathPoint end, PathPoint[] pathOptions)
     {
         int ret = 0;
-        int scale = 1;//(int) Math.max(Math.ceil(pokemob.x), 1);
+        int scale = 1;// (int) Math.max(Math.ceil(pokemob.x), 1);
 
         for (int l = 0; l < scale; l++)
         {
@@ -444,7 +443,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
                 boolean safe = false;
                 PathPoint point = openPoint(x, y, z);
-                Vector3 check = Vector3.getNewVectorFromPool();
+                Vector3 check = Vector3.getNewVector();
                 if (isSafe(pokemob, x, y, z, check = getOpposite(side, check)))
                 {
                     PathPoint point1 = openPoint(x, y - 1, z);
@@ -535,7 +534,6 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                         }
                     }
                 }
-                check.freeVectorFromPool();
             }
         }
         return ret;

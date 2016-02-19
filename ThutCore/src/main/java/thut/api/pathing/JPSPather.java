@@ -38,8 +38,9 @@ public class JPSPather extends ThutPathFinder
 
             if (pathf.isPathEmpty())
             {
-                //TODO debug when this occurs
-//                System.out.println("no path " + point + " " + pointf[2] + " " + start + " " + end);
+                // TODO debug when this occurs
+                // System.out.println("no path " + point + " " + pointf[2] + " "
+                // + start + " " + end);
             }
             if (pathf.isPathEmpty()) { return pointf[2]; }
 
@@ -63,12 +64,12 @@ public class JPSPather extends ThutPathFinder
     {
         int ret = 0;
 
-        Vector3 here = Vector3.getNewVectorFromPool().set(current);
-        Vector3 dest = Vector3.getNewVectorFromPool().set(end);
-        Vector3 closestToDest = Vector3.getNewVectorFromPool();
+        Vector3 here = Vector3.getNewVector().set(current);
+        Vector3 dest = Vector3.getNewVector().set(end);
+        Vector3 closestToDest = Vector3.getNewVector();
 
         getBlockedPoint(pokemob, here, dest, closestToDest);
-        
+
         if (closestToDest.sameBlock(dest))
         {
             if (!end.isFirst)
@@ -84,15 +85,12 @@ public class JPSPather extends ThutPathFinder
             // dense for JPS.
             double size = pokemob.x * pokemob.z;
             if (size < 1) size = 0;
-            if (ret >= 3&& closestToDest.distToSq(here) > 100)
+            if (ret >= 3 && closestToDest.distToSq(here) > 100)
             {
                 current = openPoint(closestToDest.intX(), closestToDest.intY(), closestToDest.intZ());
                 ret = super.findOptions(pokemob, current, end, pathOptions);
             }
         }
-        here.freeVectorFromPool();
-        dest.freeVectorFromPool();
-        closestToDest.freeVectorFromPool();
         return ret;
     }
 
@@ -109,13 +107,11 @@ public class JPSPather extends ThutPathFinder
         {
             temp.set(t2);
             temp.addTo(0.5, 0, 0.5).addTo(direction.reverse().scalarMultBy(1.5));
-            t2.freeVectorFromPool();
         }
         else
         {
             temp.set(dest);
         }
-        direction.freeVectorFromPool();
     }
 
     /** Finds the closest location to the target where the pokemob can path the
@@ -148,7 +144,7 @@ public class JPSPather extends ThutPathFinder
             if (!(x == Int(xprev) && y == Int(yprev) && z == Int(zprev)))
             {
                 boolean clear = isSafe(e, x, y, z, direction);
-                if (!clear) { return Vector3.getNewVectorFromPool().set(Int(xtest), Int(ytest), Int(ztest)); }
+                if (!clear) { return Vector3.getNewVector().set(Int(xtest), Int(ytest), Int(ztest)); }
             }
             yprev = ytest;
             xprev = xtest;

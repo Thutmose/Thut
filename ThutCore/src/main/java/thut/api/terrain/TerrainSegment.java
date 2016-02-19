@@ -39,9 +39,9 @@ public class TerrainSegment
     public boolean        toSave = false;
     public boolean        isSky  = false;
     public boolean        init   = true;
-    Vector3               temp   = Vector3.getNewVectorFromPool();
-    Vector3               temp1  = Vector3.getNewVectorFromPool();
-    Vector3               mid    = Vector3.getNewVectorFromPool();
+    Vector3               temp   = Vector3.getNewVector();
+    Vector3               temp1  = Vector3.getNewVector();
+    Vector3               mid    = Vector3.getNewVector();
 
     public static final int GRIDSIZE = 4;
 
@@ -54,7 +54,7 @@ public class TerrainSegment
             {
                 if (world.provider.doesWaterVaporize()) return -1;
                 boolean sky = false;
-                Vector3 temp1 = Vector3.getNewVectorFromPool();
+                Vector3 temp1 = Vector3.getNewVector();
                 outer:
                 for (int i = 0; i < GRIDSIZE; i++)
                     for (int j = 0; j < GRIDSIZE; j++)
@@ -65,7 +65,6 @@ public class TerrainSegment
                                 sky = sky || temp1.isOnSurfaceIgnoringWater(chunk, world);
                             if (sky) break outer;
                         }
-                temp1.freeVectorFromPool();
                 if (sky) return -1;
 
                 if (!sky && count(world, Blocks.water, v, 1) > 2) return BiomeType.CAVE_WATER.getType();
@@ -187,7 +186,7 @@ public class TerrainSegment
 
     public static int count(World world, Block b, Vector3 v, int range)
     {
-        Vector3 temp = Vector3.getNewVectorFromPool();
+        Vector3 temp = Vector3.getNewVector();
         temp.set(v);
         int ret = 0;
         for (int i = -range; i <= range; i++)
@@ -211,7 +210,6 @@ public class TerrainSegment
                         }
                     }
                 }
-        temp.freeVectorFromPool();
         return ret;
     }
 
@@ -463,7 +461,7 @@ public class TerrainSegment
         nbt.setInteger("z", chunkZ);
 
         NBTTagList biomeList = new NBTTagList();
-        for(BiomeType t: BiomeType.values())
+        for (BiomeType t : BiomeType.values())
         {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setString("name", t.name);
@@ -475,7 +473,7 @@ public class TerrainSegment
     }
 
     static Map<Integer, Integer> idReplacements = Maps.newHashMap();
-    
+
     public static TerrainSegment readFromNBT(NBTTagCompound nbt)
     {
         TerrainSegment t = null;
@@ -483,32 +481,32 @@ public class TerrainSegment
         int x = nbt.getInteger("x");
         int y = nbt.getInteger("y");
         int z = nbt.getInteger("z");
-        if(nbt.hasKey("ids"))
+        if (nbt.hasKey("ids"))
         {
             NBTTagList tags = (NBTTagList) nbt.getTag("ids");
-            for(int i = 0; i<tags.tagCount(); i++)
+            for (int i = 0; i < tags.tagCount(); i++)
             {
                 NBTTagCompound tag = tags.getCompoundTagAt(i);
                 String name = tag.getString("name");
                 int id = tag.getInteger("id");
                 BiomeType type = BiomeType.getBiome(name, false);
-                if(type.getType()!=id && !idReplacements.containsKey(id))
+                if (type.getType() != id && !idReplacements.containsKey(id))
                 {
                     idReplacements.put(id, type.getType());
                 }
             }
         }
-        if(!idReplacements.isEmpty())
+        if (!idReplacements.isEmpty())
         {
-            for(int i = 0; i<biomes.length; i++)
+            for (int i = 0; i < biomes.length; i++)
             {
-                if(idReplacements.containsKey(biomes[i]))
+                if (idReplacements.containsKey(biomes[i]))
                 {
                     biomes[i] = idReplacements.get(biomes[i]);
                 }
             }
         }
-        
+
         t = new TerrainSegment(x, y, z);
         t.init = false;
         t.setBiome(biomes);

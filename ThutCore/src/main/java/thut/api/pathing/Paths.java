@@ -10,8 +10,8 @@ public class Paths {
 
 	public final World world;
 	public ChunkCache chunks;
-	public Vector3 lastSite = Vector3.getNewVectorFromPool();
-	Vector3 v = Vector3.getNewVectorFromPool();
+	public Vector3 lastSite = Vector3.getNewVector();
+	Vector3 v = Vector3.getNewVector();
 	public long lastTime = 0;
 	/**
 	 * 0 = updating cache, 1 = using cache;

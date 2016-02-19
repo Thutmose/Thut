@@ -37,7 +37,7 @@ public class ItemSpout extends Item
     {
         boolean ret = false;
         int toDrain = 0;
-        Vector3 hit = Vector3.getNewVectorFromPool().set(pos);
+        Vector3 hit = Vector3.getNewVector().set(pos);
         Vector3 next = hit.offset(side);
 
         boolean full = !player.isSneaking();
@@ -102,7 +102,7 @@ public class ItemSpout extends Item
     {
         if(itemstack.getItemDamage()!=15) return itemstack;
         
-        Vector3 v = Vector3.getNewVectorFromPool();
+        Vector3 v = Vector3.getNewVector();
         int range = 5;
         int num = 1;
         float power = 0.11f;

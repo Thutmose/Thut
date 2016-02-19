@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.Entity;
@@ -19,7 +20,7 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import thut.tech.common.entity.EntityLift;
 
 @SuppressWarnings("rawtypes")
-public class RenderLift extends RendererLivingEntity
+public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
 {
 
 	float pitch = 0.0f;
@@ -33,13 +34,11 @@ public class RenderLift extends RendererLivingEntity
 		render(entity, d0, d1, d2);
 	}
 	
-//	private IModelCustom modelTurret;
 	ResourceLocation texture;
 	
-	public RenderLift()
+	public RenderLift(RenderManager manager)
 	{
-		super(Minecraft.getMinecraft().getRenderManager(), null, 0);
-//		modelTurret = AdvancedModelLoader.loadModel(new ResourceLocation("thuttech","models/lift.obj"));
+		super(manager, null, 0);
 	}
 
 

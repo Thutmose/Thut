@@ -244,10 +244,10 @@ public class PacketHandler
         public void tick(ClientTickEvent evt)
         {
             MinecraftForge.EVENT_BUS.unregister(this);
-            Vector3 vTemp = Vector3.getNewVectorFromPool();
+            Vector3 vTemp = Vector3.getNewVector();
             Collections.shuffle(locs);
             int max = 50;
-            Vector3 vMid = Vector3.getNewVectorFromPool().set(mid);
+            Vector3 vMid = Vector3.getNewVector().set(mid);
             vMid.addTo(0.5, 0.5, 0.5);
             int[] toFill = new int[3];
             int n = 0;
@@ -261,8 +261,6 @@ public class PacketHandler
                         vTemp.z, 0, 0, 0);
                 if (n > max) break;
             }
-            vTemp.freeVectorFromPool();
-            vMid.freeVectorFromPool();
         }
     }
 }

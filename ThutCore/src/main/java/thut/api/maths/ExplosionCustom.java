@@ -72,7 +72,7 @@ public class ExplosionCustom extends Explosion
         this.world = world;
         dimension = world.provider.getDimensionId();
         strength = power;
-        centre = Vector3.getNewVectorFromPool().set(x, y, z);
+        centre = Vector3.getNewVector().set(x, y, z);
 
         worldObj = TickHandler.getInstance().getWorldCache(dimension);
 
@@ -161,7 +161,7 @@ public class ExplosionCustom extends Explosion
             boo.doExplosion();
             return;
         }
-        Vector3 absorbedLoc = Vector3.getNewVectorFromPool();
+        Vector3 absorbedLoc = Vector3.getNewVector();
         float remainingEnergy = 0;
         density -= resist;
 
@@ -210,7 +210,6 @@ public class ExplosionCustom extends Explosion
             boo.doExplosion();
             // explosions.add(boom);
         }
-        absorbedLoc.freeVectorFromPool();
     }
 
     Map<EntityLivingBase, Float> damages  = new HashMap<EntityLivingBase, Float>();
@@ -282,9 +281,8 @@ public class ExplosionCustom extends Explosion
         List<Integer> toRemove = new ArrayList<Integer>();
         final ExplosionCustom boom = this;
 
-        Vector3 r = Vector3.getNewVectorFromPool(), rAbs = Vector3.getNewVectorFromPool(),
-                rHat = Vector3.getNewVectorFromPool(), rTest = Vector3.getNewVectorFromPool(),
-                rTestPrev = Vector3.getNewVectorFromPool(), rTestAbs = Vector3.getNewVectorFromPool();
+        Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(),
+                rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(), rTestAbs = Vector3.getNewVector();
         int index;
         int index2;
 
@@ -299,7 +297,7 @@ public class ExplosionCustom extends Explosion
         // TODO make this do a compounded resist instead, to lower ram use
         HashMap<Integer, Float> resists = new HashMap<Integer, Float>();
         BitSet blocked = new BitSet();
-        //used to speed up the checking of if a resist exists in the map
+        // used to speed up the checking of if a resist exists in the map
         BitSet checked = new BitSet();
 
         int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));
@@ -312,17 +310,17 @@ public class ExplosionCustom extends Explosion
         for (int i = 0; i < num * num * num; i++)
         {
             Cruncher.indexToVals(i, r);
-            
-            if((i>0 && i<27) || affectedThisRadius.size() > 100)
+
+            if ((i > 0 && i < 27) || affectedThisRadius.size() > 100)
             {
-                if(!affectedThisRadius.isEmpty())
+                if (!affectedThisRadius.isEmpty())
                 {
                     ClientUpdateInfo info = new ClientUpdateInfo(affectedThisRadius, centre, dimension);
                     ExplosionVictimTicker.clientUpdates.addElement(info);
                     affectedThisRadius.clear();
                 }
             }
-            
+
             if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;// TODO
                                                                      // replace
                                                                      // 255 with
@@ -400,7 +398,7 @@ public class ExplosionCustom extends Explosion
 
                     index2 = Cruncher.getVectorInt(rTest);
 
-                    if(checked.get(index2))
+                    if (checked.get(index2))
                     {
                         res = resists.get(index2);
                     }
@@ -409,8 +407,7 @@ public class ExplosionCustom extends Explosion
                         res = rTestAbs.getExplosionResistance(boom, worldObj);
                         if (res > 1) res = res * res;
                     }
-                    
-                    
+
                     resist += res;
 
                     if (!canBreak(rTestAbs))
@@ -461,14 +458,6 @@ public class ExplosionCustom extends Explosion
         doExplosionB(false);
         ExplosionEvent evt = new ExplosionEvent.Detonate(boom.world, boom, new ArrayList<Entity>());
         MinecraftForge.EVENT_BUS.post(evt);
-
-        r.freeVectorFromPool();
-        rAbs.freeVectorFromPool();
-        rHat.freeVectorFromPool();
-        rTest.freeVectorFromPool();
-        rTestPrev.freeVectorFromPool();
-        rTestAbs.freeVectorFromPool();
-        // }
         return toRemove;
     }
 
@@ -477,7 +466,7 @@ public class ExplosionCustom extends Explosion
         Vector<?> entities = ExplosionCustom.worldEntities.get(dimension);
         List<Object> list = new ArrayList<Object>();
         double dsq = distance * distance;
-        Vector3 point = Vector3.getNewVectorFromPool();
+        Vector3 point = Vector3.getNewVector();
         if (entities != null)
         {
             List<?> temp = new ArrayList<Object>(entities);
@@ -493,7 +482,6 @@ public class ExplosionCustom extends Explosion
                 }
             }
         }
-        point.freeVectorFromPool();
         return list;
     }
 
@@ -694,7 +682,7 @@ public class ExplosionCustom extends Explosion
     static final boolean[] toClear = { false, false };
 
     static final ExplosionCustom                                   instance      = new ExplosionCustom(null, null,
-            Vector3.getNewVectorFromPool(), 0);
+            Vector3.getNewVector(), 0);
     public static final Vector<ExplosionStuff>                     explosions    = new Vector<ExplosionStuff>();
     public static final ConcurrentHashMap<Integer, Vector<Entity>> worldEntities = new ConcurrentHashMap<Integer, Vector<Entity>>();
     private static int                                             maxThreads    = -1;
@@ -712,7 +700,7 @@ public class ExplosionCustom extends Explosion
                     int num;
                     if (maxThreads == -1)
                     {
-                        maxThreads = Runtime.getRuntime().availableProcessors()/2;
+                        maxThreads = Runtime.getRuntime().availableProcessors() / 2;
                         maxThreads = Math.max(1, maxThreads);
                     }
                     num = maxThreads;
@@ -726,7 +714,7 @@ public class ExplosionCustom extends Explosion
                         {
                             boom.doBoom();
                         }
-                        else if(!boom.lock[1])
+                        else if (!boom.lock[1])
                         {
                             toRemove.add(boom);
                         }

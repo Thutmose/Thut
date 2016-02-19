@@ -7,12 +7,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 
-import li.cil.oc.api.Network;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
-import li.cil.oc.api.network.Visibility;
-import li.cil.oc.api.prefab.TileEntityEnvironment;
+import li.cil.oc.api.network.SimpleComponent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -24,16 +22,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraftforge.fml.common.Optional;
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
 
-public class TileEntityLiftAccess extends TileEntityEnvironment implements ITickable// implements
-                                                                                    // IPeripheral//,
-                                                                                    // IGridMachine,
-                                                                                    // IDirectionalMETile
+@net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
+public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
 {
-
     public int        power     = 0;
     public int        prevPower = 1;
     public EntityLift lift;
@@ -42,7 +38,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     List<Entity> list     = new ArrayList<Entity>();
     Vector3      here;
 
-    public Vector3                      root      = Vector3.getNewVectorFromPool();
+    public Vector3                      root      = Vector3.getNewVector();
     public TileEntityLiftAccess         rootNode;
     public Vector<TileEntityLiftAccess> connected = new Vector<TileEntityLiftAccess>();
     EnumFacing                          sourceSide;
@@ -81,15 +77,6 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         // including computers. They are connected to nodes of neighboring
         // blocks, forming a network that way. That network is also used for
         // distributing energy among components for the mod.
-        try
-        {
-            node = Network.newNode(this, Visibility.Network).withConnector().withComponent("lift", Visibility.Network)
-                    .create();
-        }
-        catch (Exception e)
-        {
-            // e.printStackTrace();
-        }
     }
 
     public void update()
@@ -98,7 +85,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         {
             blockID = worldObj.getBlockState(getPos()).getBlock();
             metaData = blockID.getMetaFromState(worldObj.getBlockState(getPos()));
-            here = Vector3.getNewVectorFromPool().set(this);
+            here = Vector3.getNewVector().set(this);
             first = false;
         }
 
@@ -109,11 +96,6 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             calledYValue = -1;
             calledFloor = 0;
             currentFloor = 0;
-        }
-
-        if (node != null && node.network() == null)
-        {
-            Network.joinOrCreateNetwork(this);
         }
 
         if (lift != null)
@@ -229,9 +211,9 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     {
         super.invalidate();
         clearConnections();
-        // new Exception().printStackTrace();
     }
 
+    @Override
     public void onChunkUnload()
     {
         super.onChunkUnload();
@@ -308,7 +290,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         blockID = Block.getBlockFromName(par1.getString("block id"));
         floor = par1.getInteger("floor");
         liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
-        root = Vector3.getNewVectorFromPool();
+        root = Vector3.getNewVector();
         root = Vector3.readFromNBT(par1, "root");
         sides = par1.getByteArray("sides");
         if (sides.length != 6) sides = new byte[6];
@@ -523,7 +505,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
     {
         if (here == null || here.isEmpty())
         {
-            here = Vector3.getNewVectorFromPool().set(this);
+            here = Vector3.getNewVector().set(this);
         }
 
         if (rootNode != null) return rootNode;
@@ -541,6 +523,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
      * Sets floor associated with this block
      */
     @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
+    @Optional.Method(modid = "OpenComputers")
     public Object[] setFloor(Context context, Arguments args)
     {
         floor = args.checkInteger(0);
@@ -551,6 +534,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
      * Returns floor associated with this block
      */
     @Callback(doc = "returns the Floor assigned to the Controller")
+    @Optional.Method(modid = "OpenComputers")
     public Object[] getFloor(Context context, Arguments args)
     {
         return new Object[] { floor };
@@ -560,6 +544,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
      * Calls lift to specified Floor
      */
     @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
+    @Optional.Method(modid = "OpenComputers")
     public Object[] callFloor(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -574,6 +559,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
      * Calls lift to specified Y value
      */
     @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
+    @Optional.Method(modid = "OpenComputers")
     public Object[] callYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -588,6 +574,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
      * Returns the Yvalue of the lift.
      */
     @Callback(doc = "returns the current Y value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
     public Object[] getYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null) return new Object[] { (int) lift.posY };
@@ -599,6 +586,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
      * Returns the Y value of the controller for the specified floor
      */
     @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
+    @Optional.Method(modid = "OpenComputers")
     public Object[] getFloorYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -608,7 +596,7 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
             if (floor > 0 && floor <= 64)
             {
                 int value = lift.floors[floor - 1];
-                if (value == -1) throw new Exception("floor "+floor+" is not assigned");
+                if (value == -1) throw new Exception("floor " + floor + " is not assigned");
                 return new Object[] { value };
             }
             throw new Exception("floor out of bounds");
@@ -616,4 +604,9 @@ public class TileEntityLiftAccess extends TileEntityEnvironment implements ITick
         throw new Exception("no connected lift");
     }
 
+    @Override
+    public String getComponentName()
+    {
+        return "lift";
+    }
 }
