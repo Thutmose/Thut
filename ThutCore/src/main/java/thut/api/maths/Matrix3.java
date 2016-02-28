@@ -26,17 +26,8 @@ public class Matrix3
 
     public Vector3[] rows = new Vector3[3];
 
-    public static synchronized AxisAlignedBB getAABB(double minX, double minY, double minZ, double maxX, double maxY,
-            double maxZ)
+    public static AxisAlignedBB getAABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ)
     {
-        // if (index > 0)
-        // {
-        // AxisAlignedBB ret = pool[index - 1];
-        // index--;
-        // if (ret != null) return ret.setBounds(minX, minY, minZ, maxX, maxY,
-        // maxZ);
-        // }
-
         return new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
@@ -58,15 +49,6 @@ public class Matrix3
         return new AxisAlignedBB(x1, y1, z1, x2, y2, z2);
     }
 
-    public static synchronized void freeAABB(AxisAlignedBB box)
-    {
-        // if (index < pool.length - 1 && index >= 0)
-        // {
-        // pool[index] = box;
-        // index++;
-        // }
-    }
-
     int size = 3;
 
     public Matrix3()
@@ -74,8 +56,6 @@ public class Matrix3
         rows[0] = Vector3.getNewVector();
         rows[1] = Vector3.getNewVector();
         rows[2] = Vector3.getNewVector();
-        // for(int i = 0; i< 8; i++)
-        // corners[i] = Vector3.getVector();
     }
 
     public Matrix3(double[] a, double[] b, double[] c)
@@ -84,8 +64,6 @@ public class Matrix3
         rows[0].set(a[0], a[1], a[2]);
         rows[1].set(b[0], b[1], b[2]);
         rows[2].set(c[0], c[1], c[2]);
-        // for(int i = 0; i< 8; i++)
-        // corners[i] = Vector3.getVector();
     }
 
     public Matrix3(Vector3 a, Vector3 b, Vector3 c)
@@ -93,8 +71,6 @@ public class Matrix3
         rows[0] = a.copy();
         rows[1] = b.copy();
         rows[2] = c.copy();
-        // for(int i = 0; i< 8; i++)
-        // corners[i] = Vector3.getVector();
     }
 
     public Matrix3(Vector3 a, Vector3 b)
@@ -110,7 +86,7 @@ public class Matrix3
 
     public Vector3 get(int i)
     {
-        assert(i < 3);
+        assert (i < 3);
         return rows[i];
     }
 
@@ -140,7 +116,7 @@ public class Matrix3
 
     public double get(int i, int j)
     {
-        assert(i < 3);
+        assert (i < 3);
         return rows[i].get(j);
     }
 
@@ -210,7 +186,7 @@ public class Matrix3
 
     public Matrix3 set(int i, Vector3 j)
     {
-        assert(i < 3);
+        assert (i < 3);
         rows[i] = j;
         return this;
     }

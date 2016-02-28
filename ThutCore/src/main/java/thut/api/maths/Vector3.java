@@ -49,10 +49,10 @@ public class Vector3
     public static final Vector3 thirdAxisNeg  = Vector3.getNewVector().set(0, 0, -1);
     public static final Vector3 empty         = Vector3.getNewVector();
 
-    public double           x;
-    public double           y;
-    public double           z;
-    public static final int length = 3;
+    public double               x;
+    public double               y;
+    public double               z;
+    public static final int     length        = 3;
 
     private Vector3()
     {
@@ -315,7 +315,7 @@ public class Vector3
 
     public double get(int i)
     {
-        assert(i < 3);
+        assert (i < 3);
         return i == 0 ? x : i == 1 ? y : z;
     }
 
@@ -821,7 +821,9 @@ public class Vector3
 
             double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
 
-            boolean check = isPointClearBlocks(xtest, ytest, ztest, worldObj);
+            boolean check = isPointClearBlocks(xtest, ytest - dy, ztest - dz, worldObj);
+            check = check && isPointClearBlocks(xtest - dx, ytest, ztest - dz, worldObj);
+            check = check && isPointClearBlocks(xtest - dx, ytest - dy, ztest, worldObj);
             if (!check) { return Vector3.getNewVector().set(xtest, ytest, ztest); }
         }
         return null;

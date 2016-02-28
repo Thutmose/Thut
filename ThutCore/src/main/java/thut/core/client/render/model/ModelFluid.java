@@ -111,51 +111,64 @@ public class ModelFluid implements IModelCustomData
     public static class BakedFluid implements IFlexibleBakedModel, ISmartBlockModel
     {
 
-        private static final int x[] = { 0, 0, 1, 1 };
-        private static final int z[] = { 0, 1, 1, 0 };
-        private static final float eps = 1e-3f;
+        private static final int                           x[]        = { 0, 0, 1, 1 };
+        private static final int                           z[]        = { 0, 1, 1, 0 };
+        private static final float                         eps        = 1e-3f;
 
-        private final LoadingCache<Long, BakedFluid> modelCache = CacheBuilder.newBuilder().maximumSize(200).build(new CacheLoader<Long, BakedFluid>()
-        {
-            public BakedFluid load(Long key) throws Exception
-            {
-                boolean statePresent = (key & 1) != 0;
-                key >>>= 1;
-                int[] cornerRound = new int[4];
-                for(int i = 0; i < 4; i++)
-                {
-                    cornerRound[i] = (int)(key & 0x3FF);
-                    key >>>= 10;
-                }
-                int flowRound = (int)(key & 0x7FF) - 1024;
-                return new BakedFluid(transformation, format, color, still, flowing, gas, statePresent, cornerRound, flowRound);
-            }
-        });
+        private final LoadingCache<Long, BakedFluid>       modelCache = CacheBuilder.newBuilder().maximumSize(200)
+                .build(new CacheLoader<Long, BakedFluid>()
+                                                                              {
+                                                                                  public BakedFluid load(Long key)
+                                                                                          throws Exception
+                                                                                  {
+                                                                                      boolean statePresent = (key
+                                                                                              & 1) != 0;
+                                                                                      key >>>= 1;
+                                                                                      int[] cornerRound = new int[4];
+                                                                                      for (int i = 0; i < 4; i++)
+                                                                                      {
+                                                                                          cornerRound[i] = (int) (key
+                                                                                                  & 0x3FF);
+                                                                                          key >>>= 10;
+                                                                                      }
+                                                                                      int flowRound = (int) (key
+                                                                                              & 0x7FF) - 1024;
+                                                                                      return new BakedFluid(
+                                                                                              transformation, format,
+                                                                                              color, still, flowing,
+                                                                                              gas, statePresent,
+                                                                                              cornerRound, flowRound);
+                                                                                  }
+                                                                              });
 
-        private final Optional<TRSRTransformation> transformation;
-        private final VertexFormat format;
-        private final int color;
-        private final TextureAtlasSprite still, flowing;
-        private final boolean gas;
+        private final Optional<TRSRTransformation>         transformation;
+        private final VertexFormat                         format;
+        private final int                                  color;
+        private final TextureAtlasSprite                   still, flowing;
+        private final boolean                              gas;
         private final EnumMap<EnumFacing, List<BakedQuad>> faceQuads;
 
-        public BakedFluid(Optional<TRSRTransformation> transformation, VertexFormat format, int color, TextureAtlasSprite still, TextureAtlasSprite flowing, boolean gas)
+        public BakedFluid(Optional<TRSRTransformation> transformation, VertexFormat format, int color,
+                TextureAtlasSprite still, TextureAtlasSprite flowing, boolean gas)
         {
-            this(transformation, format, color, still, flowing, gas, Optional.<IExtendedBlockState>absent());
+            this(transformation, format, color, still, flowing, gas, Optional.<IExtendedBlockState> absent());
         }
 
-        public BakedFluid(Optional<TRSRTransformation> transformation, VertexFormat format, int color, TextureAtlasSprite still, TextureAtlasSprite flowing, boolean gas, Optional<IExtendedBlockState> stateOption)
+        public BakedFluid(Optional<TRSRTransformation> transformation, VertexFormat format, int color,
+                TextureAtlasSprite still, TextureAtlasSprite flowing, boolean gas,
+                Optional<IExtendedBlockState> stateOption)
         {
-            this(transformation, format, color, still, flowing, gas, stateOption.isPresent(), getCorners(stateOption), getFlow(stateOption));
+            this(transformation, format, color, still, flowing, gas, stateOption.isPresent(), getCorners(stateOption),
+                    getFlow(stateOption));
         }
 
         private static int[] getCorners(Optional<IExtendedBlockState> stateOption)
         {
-            int[] cornerRound = new int[]{0, 0, 0, 0, 0};
-            if(stateOption.isPresent())
+            int[] cornerRound = new int[] { 0, 0, 0, 0, 0 };
+            if (stateOption.isPresent())
             {
                 IExtendedBlockState state = stateOption.get();
-                for(int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     cornerRound[i] = Math.round(state.getValue(BlockFluidBase.LEVEL_CORNERS[i]) * 768);
                 }
@@ -167,14 +180,16 @@ public class ModelFluid implements IModelCustomData
         private static int getFlow(Optional<IExtendedBlockState> stateOption)
         {
             int flowRound = -1000;
-            if(stateOption.isPresent())
+            if (stateOption.isPresent())
             {
-                flowRound = (int)Math.round(Math.toDegrees(stateOption.get().getValue(BlockFluidBase.FLOW_DIRECTION)));
+                flowRound = (int) Math.round(Math.toDegrees(stateOption.get().getValue(BlockFluidBase.FLOW_DIRECTION)));
             }
             return flowRound;
         }
 
-        public BakedFluid(Optional<TRSRTransformation> transformation, VertexFormat format, int color, TextureAtlasSprite still, TextureAtlasSprite flowing, boolean gas, boolean statePresent, int[] cornerRound, int flowRound)
+        public BakedFluid(Optional<TRSRTransformation> transformation, VertexFormat format, int color,
+                TextureAtlasSprite still, TextureAtlasSprite flowing, boolean gas, boolean statePresent,
+                int[] cornerRound, int flowRound)
         {
             this.transformation = transformation;
             this.format = format;
@@ -183,17 +198,17 @@ public class ModelFluid implements IModelCustomData
             this.gas = gas;
 
             faceQuads = Maps.newEnumMap(EnumFacing.class);
-            for(EnumFacing side : EnumFacing.values())
+            for (EnumFacing side : EnumFacing.values())
             {
-                faceQuads.put(side, ImmutableList.<BakedQuad>of());
+                faceQuads.put(side, ImmutableList.<BakedQuad> of());
             }
 
-            if(statePresent)
+            if (statePresent)
             {
                 float[] y = new float[4];
-                for(int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i++)
                 {
-                    if(gas)
+                    if (gas)
                     {
                         y[i] = 1 - cornerRound[i] / 768f;
                     }
@@ -203,13 +218,13 @@ public class ModelFluid implements IModelCustomData
                     }
                 }
                 this.color = cornerRound[4];
-                float flow = (float)Math.toRadians(flowRound);
+                float flow = (float) Math.toRadians(flowRound);
 
                 // top
 
                 TextureAtlasSprite topSprite = flowing;
                 float scale = 4;
-                if(flow < -999F)
+                if (flow < -999F)
                 {
                     flow = 0;
                     scale = 8;
@@ -223,15 +238,13 @@ public class ModelFluid implements IModelCustomData
                 UnpackedBakedQuad.Builder builder = new UnpackedBakedQuad.Builder(format);
                 builder.setQuadOrientation(side);
                 builder.setQuadColored();
-                for(int i = gas ? 3 : 0; i != (gas ? -1 : 4); i+= (gas ? -1 : 1))
+                for (int i = gas ? 3 : 0; i != (gas ? -1 : 4); i += (gas ? -1 : 1))
                 {
-                    putVertex(
-                        builder, side,
-                        x[i], y[i], z[i],
-                        topSprite.getInterpolatedU(8 + c * (x[i] * 2 - 1) + s * (z[i] * 2 - 1)),
-                        topSprite.getInterpolatedV(8 + c * (x[(i + 1) % 4] * 2 - 1) + s * (z[(i + 1) % 4] * 2 - 1)));
+                    putVertex(builder, side, x[i], y[i], z[i],
+                            topSprite.getInterpolatedU(8 + c * (x[i] * 2 - 1) + s * (z[i] * 2 - 1)), topSprite
+                                    .getInterpolatedV(8 + c * (x[(i + 1) % 4] * 2 - 1) + s * (z[(i + 1) % 4] * 2 - 1)));
                 }
-                faceQuads.put(side, ImmutableList.<BakedQuad>of(builder.build()));
+                faceQuads.put(side, ImmutableList.<BakedQuad> of(builder.build()));
 
                 // bottom
 
@@ -239,38 +252,33 @@ public class ModelFluid implements IModelCustomData
                 builder = new UnpackedBakedQuad.Builder(format);
                 builder.setQuadOrientation(side);
                 builder.setQuadColored();
-                for(int i = gas ? 3 : 0; i != (gas ? -1 : 4); i+= (gas ? -1 : 1))
+                for (int i = gas ? 3 : 0; i != (gas ? -1 : 4); i += (gas ? -1 : 1))
                 {
-                    putVertex(
-                        builder, side,
-                        z[i], gas ? 1 : 0, x[i],
-                        still.getInterpolatedU(z[i] * 16),
-                        still.getInterpolatedV(x[i] * 16));
+                    putVertex(builder, side, z[i], gas ? 1 : 0, x[i], still.getInterpolatedU(z[i] * 16),
+                            still.getInterpolatedV(x[i] * 16));
                 }
-                faceQuads.put(side, ImmutableList.<BakedQuad>of(builder.build()));
+                faceQuads.put(side, ImmutableList.<BakedQuad> of(builder.build()));
 
                 // sides
 
-                for(int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     side = EnumFacing.getHorizontal((5 - i) % 4);
                     BakedQuad q[] = new BakedQuad[2];
 
-                    for(int k = 0; k < 2; k++)
+                    for (int k = 0; k < 2; k++)
                     {
                         builder = new UnpackedBakedQuad.Builder(format);
                         builder.setQuadOrientation(side);
                         builder.setQuadColored();
-                        for(int j = 0; j < 4; j++)
+                        for (int j = 0; j < 4; j++)
                         {
                             int l = (k * 3) + (1 - 2 * k) * j;
                             float yl = z[l] * y[(i + x[l]) % 4];
-                            if(gas && z[l] == 0) yl = 1;
-                            putVertex(
-                                builder, side,
-                                x[(i + x[l]) % 4], yl, z[(i + x[l]) % 4],
-                                flowing.getInterpolatedU(x[l] * 8),
-                                flowing.getInterpolatedV((gas ? yl : 1 - yl) * 8));
+                            if (gas && z[l] == 0) yl = 1;
+                            putVertex(builder, side, x[(i + x[l]) % 4], yl, z[(i + x[l]) % 4],
+                                    flowing.getInterpolatedU(x[l] * 8),
+                                    flowing.getInterpolatedV((gas ? yl : 1 - yl) * 8));
                         }
                         q[k] = builder.build();
                     }
@@ -284,27 +292,26 @@ public class ModelFluid implements IModelCustomData
                 UnpackedBakedQuad.Builder builder = new UnpackedBakedQuad.Builder(format);
                 builder.setQuadOrientation(EnumFacing.UP);
                 builder.setQuadColored();
-                for(int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i++)
                 {
-                    putVertex(
-                        builder, EnumFacing.UP,
-                        z[i], x[i], 0,
-                        still.getInterpolatedU(x[i] * 16),
-                        still.getInterpolatedV(z[i] * 16));
+                    putVertex(builder, EnumFacing.UP, z[i], x[i], 0, still.getInterpolatedU(x[i] * 16),
+                            still.getInterpolatedV(z[i] * 16));
                 }
-                faceQuads.put(EnumFacing.SOUTH, ImmutableList.<BakedQuad>of(builder.build()));
+                faceQuads.put(EnumFacing.SOUTH, ImmutableList.<BakedQuad> of(builder.build()));
             }
         }
 
-        private void putVertex(UnpackedBakedQuad.Builder builder, EnumFacing side, float x, float y, float z, float u, float v)
+        private void putVertex(UnpackedBakedQuad.Builder builder, EnumFacing side, float x, float y, float z, float u,
+                float v)
         {
-            for(int e = 0; e < format.getElementCount(); e++)
+            for (int e = 0; e < format.getElementCount(); e++)
             {
-                switch(format.getElement(e).getUsage())
+                switch (format.getElement(e).getUsage())
                 {
                 case POSITION:
-                    float[] data = new float[]{ x - side.getDirectionVec().getX() * eps, y, z - side.getDirectionVec().getZ() * eps, 1 };
-                    if(transformation.isPresent())
+                    float[] data = new float[] { x - side.getDirectionVec().getX() * eps, y,
+                            z - side.getDirectionVec().getZ() * eps, 1 };
+                    if (transformation.isPresent())
                     {
                         Vector4f vec = new Vector4f(data);
                         transformation.get().getMatrix().transform(vec);
@@ -314,19 +321,18 @@ public class ModelFluid implements IModelCustomData
                     break;
                 case COLOR:
                     float d = LightUtil.diffuseLight(side);
-                    builder.put(e,
-                        d * ((color >> 16) & 0xFF) / 255f,
-                        d * ((color >> 8) & 0xFF) / 255f,
-                        d * (color & 0xFF) / 255f,
-                        ((color >> 24) & 0xFF) / 255f);
+                    builder.put(e, d * ((color >> 16) & 0xFF) / 255f, d * ((color >> 8) & 0xFF) / 255f,
+                            d * (color & 0xFF) / 255f, ((color >> 24) & 0xFF) / 255f);
                     break;
-                case UV: if(format.getElement(e).getIndex() == 0)
-                {
-                    builder.put(e, u, v, 0f, 1f);
-                    break;
-                }
+                case UV:
+                    if (format.getElement(e).getIndex() == 0)
+                    {
+                        builder.put(e, u, v, 0f, 1f);
+                        break;
+                    }
                 case NORMAL:
-                    builder.put(e, (float)side.getFrontOffsetX(), (float)side.getFrontOffsetY(), (float)side.getFrontOffsetZ(), 0f);
+                    builder.put(e, (float) side.getFrontOffsetX(), (float) side.getFrontOffsetY(),
+                            (float) side.getFrontOffsetZ(), 0f);
                     break;
                 default:
                     builder.put(e);
@@ -377,13 +383,13 @@ public class ModelFluid implements IModelCustomData
 
         public IBakedModel handleBlockState(IBlockState state)
         {
-            if(state instanceof IExtendedBlockState)
+            if (state instanceof IExtendedBlockState)
             {
-                IExtendedBlockState exState = (IExtendedBlockState)state;
+                IExtendedBlockState exState = (IExtendedBlockState) state;
                 int[] cornerRound = getCorners(Optional.of(exState));
                 int flowRound = getFlow(Optional.of(exState));
                 long key = flowRound + 1024;
-                for(int i = 3; i >= 0; i--)
+                for (int i = 3; i >= 0; i--)
                 {
                     key <<= 10;
                     key |= cornerRound[i];
@@ -397,18 +403,19 @@ public class ModelFluid implements IModelCustomData
     }
 
     @Override
-    public IModel process(ImmutableMap<String, String> customData)
+    public IModel process(ImmutableMap customData)
     {
-        if(!customData.containsKey("fluid")) return this;
+        if (!customData.containsKey("fluid")) return this;
 
-        String fluidStr = customData.get("fluid");
+        String fluidStr = (String) customData.get("fluid");
         JsonElement e = new JsonParser().parse(fluidStr);
         String fluid = e.getAsString();
-        if(!FluidRegistry.isFluidRegistered(fluid))
+        if (!FluidRegistry.isFluidRegistered(fluid))
         {
             FMLLog.severe("fluid '%s' not found", fluid);
             return waterModel;
         }
         return new ModelFluid(FluidRegistry.getFluid(fluid));
     }
+
 }
