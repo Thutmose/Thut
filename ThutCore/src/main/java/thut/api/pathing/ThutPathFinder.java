@@ -407,6 +407,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         int ret = 0;
         int scale = 1;// (int) Math.max(Math.ceil(pokemob.x), 1);
 
+        Vector3 check = Vector3.getNewVector();
         for (int l = 0; l < scale; l++)
         {
             if (ret > pathOptions.length - 10) return ret;
@@ -443,8 +444,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
                 boolean safe = false;
                 PathPoint point = openPoint(x, y, z);
-                Vector3 check = Vector3.getNewVector();
-                if (isSafe(pokemob, x, y, z, check = getOpposite(side, check)))
+                if (isSafe(pokemob, x, y, z, getOpposite(side, check)))
                 {
                     PathPoint point1 = openPoint(x, y - 1, z);
                     if (!point.isFirst)

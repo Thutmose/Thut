@@ -745,7 +745,7 @@ public class Vector3
         direction = direction.normalize();
         double xprev = source.x, yprev = source.y, zprev = source.z;
         double dx, dy, dz;
-
+        Vector3 test = Vector3.getNewVector();
         for (double i = 0; i < range; i += 1)
         {
             dx = i * direction.x;
@@ -758,10 +758,8 @@ public class Vector3
 
             if (!(Int(xtest) == Int(xprev) && Int(ytest) == Int(yprev) && Int(ztest) == Int(zprev)))
             {
-
-                Vector3 test = Vector3.getNewVector().set(xtest, ytest, ztest);
+                test.set(xtest, ytest, ztest);
                 boolean clear = test.clearOfBlocks(worldObj);
-                test.freeVectorFromPool();
 
                 if (!clear) { return Vector3.getNewVector().set(Int(xtest), Int(ytest), Int(ztest)); }
             }
@@ -1689,6 +1687,7 @@ public class Vector3
         Class<?> seekingClass = null;
         boolean isInterface = false;
         boolean blockList = false;
+        Vector3 temp = getNewVector();
         if (matching instanceof Block)
         {
             seekingBlock = (Block) matching;
@@ -1717,7 +1716,7 @@ public class Vector3
 
             Cruncher.indexToVals(i, r);
             rAbs.set(r).addTo(this);
-            rHat.set(r.normalize());
+            rHat.set(temp.set(r).norm());
             double rm;
             if ((rm = r.mag()) > size || rm > sightDistance) continue;
 
@@ -1729,7 +1728,7 @@ public class Vector3
             float dj = 1;
             for (float j = 0F; j <= rMag; j += dj)
             {
-                rTest = rHat.scalarMult(j);
+                rTest = temp.set(rHat).scalarMultBy(j);
 
                 if (!(rTest.sameBlock(rTestPrev)))
                 {
@@ -1748,45 +1747,21 @@ public class Vector3
                     if (seekingBlock != null && b == seekingBlock)
                     {
                         ret.set(rTestAbs);
-                        r.freeVectorFromPool();
-                        rAbs.freeVectorFromPool();
-                        rHat.freeVectorFromPool();
-                        rTest.freeVectorFromPool();
-                        rTestPrev.freeVectorFromPool();
-                        rTestAbs.freeVectorFromPool();
                         return ret;
                     }
                     else if (!isInterface && seekingClass != null && b.getClass().isAssignableFrom(seekingClass))
                     {
                         ret.set(rTestAbs);
-                        r.freeVectorFromPool();
-                        rAbs.freeVectorFromPool();
-                        rHat.freeVectorFromPool();
-                        rTest.freeVectorFromPool();
-                        rTestPrev.freeVectorFromPool();
-                        rTestAbs.freeVectorFromPool();
                         return ret;
                     }
                     else if (seekingClass != null && list.contains(seekingClass))
                     {
                         ret.set(rTestAbs);
-                        r.freeVectorFromPool();
-                        rAbs.freeVectorFromPool();
-                        rHat.freeVectorFromPool();
-                        rTest.freeVectorFromPool();
-                        rTestPrev.freeVectorFromPool();
-                        rTestAbs.freeVectorFromPool();
                         return ret;
                     }
                     else if (blockList && list.contains(b))
                     {
                         ret.set(rTestAbs);
-                        r.freeVectorFromPool();
-                        rAbs.freeVectorFromPool();
-                        rHat.freeVectorFromPool();
-                        rTest.freeVectorFromPool();
-                        rTestPrev.freeVectorFromPool();
-                        rTestAbs.freeVectorFromPool();
                         return ret;
                     }
                     else if (!rTestAbs.isClearOfBlocks(world))
@@ -1802,14 +1777,6 @@ public class Vector3
                 }
             }
         }
-
-        r.freeVectorFromPool();
-        rAbs.freeVectorFromPool();
-        rHat.freeVectorFromPool();
-        rTest.freeVectorFromPool();
-        rTestPrev.freeVectorFromPool();
-        rTestAbs.freeVectorFromPool();
-        ret.freeVectorFromPool();
         return null;
     }
 

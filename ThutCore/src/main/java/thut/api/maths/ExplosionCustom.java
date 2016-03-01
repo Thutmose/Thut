@@ -105,9 +105,17 @@ public class ExplosionCustom extends Explosion
 
         if (owner != null)
         {
-            BreakEvent evt = new BreakEvent(world, location.getPos(), location.getBlockState(world), owner);
-            MinecraftForge.EVENT_BUS.post(evt);
-            if (evt.isCanceled()) return false;
+            try
+            {
+                BreakEvent evt = new BreakEvent(world, location.getPos(), location.getBlockState(world), owner);
+                MinecraftForge.EVENT_BUS.post(evt);
+                if (evt.isCanceled()) return false;
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                return false;
+            }
         }
 
         return ret;
@@ -294,9 +302,9 @@ public class ExplosionCustom extends Explosion
 
         double str;
 
-        // TODO make this do a compounded resist instead, to lower ram use
         HashMap<Integer, Float> resists = new HashMap<Integer, Float>();
-        BitSet blocked = new BitSet();
+        
+        HashSet<Integer> blockedSet = new HashSet<>();
         // used to speed up the checking of if a resist exists in the map
         BitSet checked = new BitSet();
 
@@ -321,12 +329,7 @@ public class ExplosionCustom extends Explosion
                 }
             }
 
-            if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;// TODO
-                                                                     // replace
-                                                                     // 255 with
-                                                                     // some way
-                                                                     // to get
-                                                                     // height
+            if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;
 
             double rSq = r.magSq();
             if (rSq > radSq) continue;
@@ -336,7 +339,7 @@ public class ExplosionCustom extends Explosion
             rHat.set(r.normalize());
             index = Cruncher.getVectorInt(rHat.scalarMultBy(num / 2));
             rHat.scalarMultBy(1 / ((double) (num / 2)));
-            if (blocked.get(index))
+            if (blockedSet.contains(index))
             {
                 continue;
             }
@@ -353,12 +356,7 @@ public class ExplosionCustom extends Explosion
                 }
                 if (rMag < 5)
                 {
-                    affectedThisRadius.add(Cruncher.getVectorInt(r));// TODO
-                                                                     // decide
-                                                                     // if I
-                                                                     // want to
-                                                                     // do this
-                                                                     // in air
+                    affectedThisRadius.add(Cruncher.getVectorInt(r));
                 }
                 continue;
             }
@@ -370,7 +368,7 @@ public class ExplosionCustom extends Explosion
             }
             if (!canBreak(rAbs))
             {
-                blocked.set(index);
+                blockedSet.add(index);
                 continue;
             }
             float res;
@@ -380,7 +378,7 @@ public class ExplosionCustom extends Explosion
             checked.set(index2);
             if (res > str)
             {
-                blocked.set(index);
+                blockedSet.add(index);
                 continue;
             }
             boolean stop = false;
@@ -413,7 +411,7 @@ public class ExplosionCustom extends Explosion
                     if (!canBreak(rTestAbs))
                     {
                         stop = true;
-                        blocked.set(index);
+                        blockedSet.add(index);
                         break;
                     }
                     double d1 = rTest.magSq();
@@ -422,7 +420,7 @@ public class ExplosionCustom extends Explosion
                     if (resist > str)
                     {
                         stop = true;
-                        blocked.set(index);
+                        blockedSet.add(index);
                         break;
                     }
                 }
@@ -436,7 +434,8 @@ public class ExplosionCustom extends Explosion
 
             if (chunk == null)
             {
-                new Exception().printStackTrace();
+                System.out.println("No chunk at "+rAbs);
+                Thread.dumpStack();
             }
             if (!affected.contains(chunk)) affected.add(chunk);
             Block block = rAbs.getBlock(worldObj);

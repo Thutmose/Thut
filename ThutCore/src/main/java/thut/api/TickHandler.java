@@ -66,7 +66,7 @@ public class TickHandler
                     WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
                     if (world != null)
                     {
-                        for (ChunkCache chunk : world.chunks.values())
+                        for (ChunkCache chunk : world.cache)
                         {
                             chunk.update();
                         }

@@ -1,7 +1,7 @@
 package thut.api;
 
+import java.util.HashSet;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
@@ -10,6 +10,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.LongHashMap;
 import net.minecraft.util.ReportedException;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.IBlockAccess;
@@ -25,8 +26,9 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
  * @author Thutmose */
 public class WorldCache implements IBlockAccess
 {
-    public final World             world;
-    ConcurrentHashMap<Long, ChunkCache> chunks = new ConcurrentHashMap<Long, ChunkCache>();
+    public final World                    world;
+    private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
+    final HashSet<ChunkCache>             cache = new HashSet<>();
 
     public WorldCache(World world_)
     {
@@ -36,19 +38,24 @@ public class WorldCache implements IBlockAccess
     void addChunk(Chunk chunk)
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
-        chunks.put(key, new ChunkCache(chunk));
+        ChunkCache chunkcache = new ChunkCache(chunk);
+        map.add(key, chunkcache);
+        cache.add(chunkcache);
     }
 
     void removeChunk(Chunk chunk)
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
-        chunks.remove(key);
+        ChunkCache chunkcache = map.remove(key);
+        cache.remove(chunkcache);
     }
 
     public Chunk getChunk(int chunkX, int chunkZ)
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
-        return chunks.get(key).chunk;
+        ChunkCache chunkcache = map.getValueByKey(key);
+        if (chunkcache == null) return null;
+        return chunkcache.chunk;
     }
 
     @Override
@@ -63,7 +70,7 @@ public class WorldCache implements IBlockAccess
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
         long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = chunks.get(key);
+        ChunkCache chunk = map.getValueByKey(key);
         if (chunk == null) return null;
         return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
     }
@@ -71,7 +78,6 @@ public class WorldCache implements IBlockAccess
     @Override
     public int getCombinedLight(BlockPos pos, int p_175626_2_)
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -81,7 +87,7 @@ public class WorldCache implements IBlockAccess
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
         long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = chunks.get(key);
+        ChunkCache chunk = map.getValueByKey(key);
         if (chunk == null) return null;
         return chunk.getBlockState(pos);
     }
@@ -95,14 +101,12 @@ public class WorldCache implements IBlockAccess
     @Override
     public BiomeGenBase getBiomeGenForCoords(BlockPos pos)
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public int getStrongPower(BlockPos pos, EnumFacing direction)
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -118,22 +122,22 @@ public class WorldCache implements IBlockAccess
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
         long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = chunks.get(key);
+        ChunkCache chunk = map.getValueByKey(key);
         if (chunk == null || chunk.isEmpty()) return _default;
         return getBlockState(pos).getBlock().isSideSolid(this, pos, side);
     }
 
     public static class ChunkCache
     {
-        Chunk chunk;
+        Chunk                          chunk;
         private ExtendedBlockStorage[] storageArrays;
-        
+
         public ChunkCache(Chunk chunk)
         {
             this.chunk = chunk;
             update();
         }
-        
+
         public boolean isEmpty()
         {
             return false;
@@ -180,16 +184,27 @@ public class WorldCache implements IBlockAccess
 
         public synchronized void update()
         {
-            storageArrays = new ExtendedBlockStorage[chunk.getBlockStorageArray().length];
-            for(int i = 0; i<storageArrays.length; i++)
+            if (storageArrays == null) storageArrays = new ExtendedBlockStorage[chunk.getBlockStorageArray().length];
+            for (int i = 0; i < storageArrays.length; i++)
             {
-                if(chunk.getBlockStorageArray()[i]!=null)
+                if (chunk.getBlockStorageArray()[i] != null)
                 {
-                    storageArrays[i] = new ExtendedBlockStorage(i, false);
-                    storageArrays[i].setData(chunk.getBlockStorageArray()[i].getData().clone());
+                    char[] to;
+                    char[] from = chunk.getBlockStorageArray()[i].getData();
+                    if (storageArrays[i] == null)
+                    {
+                        storageArrays[i] = new ExtendedBlockStorage(i, false);
+                    }
+                    to = storageArrays[i].getData();
+                    System.arraycopy(from, 0, to, 0, to.length);
+                    storageArrays[i].setData(to);
+                }
+                else
+                {
+                    storageArrays[i] = null;
                 }
             }
         }
-        
+
     }
 }
