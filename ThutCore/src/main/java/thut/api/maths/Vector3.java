@@ -1005,8 +1005,7 @@ public class Vector3
         Vector3 v = getNewVector().set(x, y, z);
 
         if (worldObj instanceof World) block.addCollisionBoxesToList((World) worldObj, pos, state,
-                v.getAABB().expand(-0.03, -0.03, -0.03), aabbs, null);
-        v.freeVectorFromPool();
+                v.getAABB().expand(0.03, 0.03, 0.03), aabbs, null);
         if (aabbs.size() == 0) return true;
 
         for (AxisAlignedBB aabb : aabbs)
@@ -1247,24 +1246,19 @@ public class Vector3
 
             if (!check)
             {
-                // System.out.println("not clear"+Vector3.getVector().set(xtest,
-                // ytest, ztest).getBlock(worldObj));
                 break;
             }
 
-            // if(!((int)xtest==(int)xprev&&(int)ytest==(int)yprev&&(int)ztest==(int)zprev))
+            double x0 = xtest, y0 = ytest, z0 = ztest;
+            List<Entity> targets = worldObj.getEntitiesWithinAABBExcludingEntity(excluded,
+                    new AxisAlignedBB(x0 - size, y0 - size, z0 - size, x0 + size, y0 + size, z0 + size));
+            if (targets != null && targets.size() > 0)
             {
-                double x0 = xtest, y0 = ytest, z0 = ztest;
-                List<Entity> targets = worldObj.getEntitiesWithinAABBExcludingEntity(excluded,
-                        new AxisAlignedBB(x0 - size, y0 - size, z0 - size, x0 + size, y0 + size, z0 + size));
-                if (targets != null && targets.size() > 0)
+                for (Entity e : targets)
                 {
-                    for (Entity e : targets)
+                    if (e instanceof EntityLivingBase && !ret.contains(e) && e != excluded.riddenByEntity)
                     {
-                        if (e instanceof EntityLivingBase && !ret.contains(e) && e != excluded.riddenByEntity)
-                        {
-                            ret.add(e);
-                        }
+                        ret.add(e);
                     }
                 }
             }
