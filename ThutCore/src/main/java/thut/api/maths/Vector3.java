@@ -6,6 +6,7 @@ import static java.lang.Math.atan2;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -1682,7 +1683,7 @@ public class Vector3
     public Vector3 findClosestVisibleObject(IBlockAccess world, boolean water, int sightDistance, Object matching)
     {
         int size = Math.min(sightDistance, 30);
-        ArrayList<Object> list = new ArrayList<Object>();
+        List<Object> list = new ArrayList<Object>();
         Block seekingBlock = null;
         Class<?> seekingClass = null;
         boolean isInterface = false;
@@ -1709,6 +1710,8 @@ public class Vector3
         Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(),
                 rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(), rTestAbs = Vector3.getNewVector(),
                 ret = Vector3.getNewVector();
+
+        HashMap<Class<?>, List<Object>> interfaces = new HashMap<>();
 
         loop:
         for (int i = 0; i < size * size * size; i++)
@@ -1737,13 +1740,21 @@ public class Vector3
 
                     if (isInterface)
                     {
-                        list.clear();
-                        for (Object o : b.getClass().getInterfaces())
+                        List<Object> tempList;
+                        if ((tempList = interfaces.get(b.getClass())) != null)
                         {
-                            list.add(o);
                         }
+                        else
+                        {
+                            tempList = new ArrayList<>();
+                            interfaces.put(b.getClass(), tempList);
+                            for (Object o : b.getClass().getInterfaces())
+                            {
+                                tempList.add(o);
+                            }
+                        }
+                        list = tempList;
                     }
-
                     if (seekingBlock != null && b == seekingBlock)
                     {
                         ret.set(rTestAbs);
