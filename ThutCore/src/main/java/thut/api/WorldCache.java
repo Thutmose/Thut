@@ -1,7 +1,9 @@
 package thut.api;
 
-import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
+
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
@@ -28,7 +30,7 @@ public class WorldCache implements IBlockAccess
 {
     public final World                    world;
     private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
-    final HashSet<ChunkCache>             cache = new HashSet<>();
+    final Set<ChunkCache>                 cache = Sets.newConcurrentHashSet();
 
     public WorldCache(World world_)
     {
