@@ -2,7 +2,8 @@ package thut.core.common;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.common.ForgeVersion.CheckResult;
@@ -28,27 +29,26 @@ import thut.core.common.handlers.ConfigHandler;
 import thut.reference.ThutCoreReference;
 
 @Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
-
 public class ThutCore
 {
 
     @SidedProxy(clientSide = ThutCoreReference.CLIENT_PROXY_CLASS, serverSide = ThutCoreReference.COMMON_PROXY_CLASS)
-    public static CommonProxy proxy;
+    public static CommonProxy     proxy;
 
     @Instance(ThutCoreReference.MOD_ID)
-    public static ThutCore instance;
+    public static ThutCore        instance;
 
     public static final String    modid   = ThutCoreReference.MOD_ID;
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
 
-    public static Block[] blocks;
-    public static Item[]  items;
+    public static Block[]         blocks;
+    public static Item[]          items;
 
-    public static BiomeGenBase volcano;
-    public static BiomeGenBase chalk;
+    public static BiomeGenBase    volcano;
+    public static BiomeGenBase    chalk;
 
     // Configuration Handler that handles the config file
-    public ConfigHandler config;
+    public ConfigHandler          config;
 
     public ThutCore()
     {
@@ -98,13 +98,25 @@ public class ThutCore
                 CheckResult result = ForgeVersion.getResult(((ModContainer) o));
                 if (result.status == Status.OUTDATED)
                 {
-                    String mess = "Current Listed Release Version of Thut Core is " + result.target + ", but you have "
-                            + ThutCoreReference.VERSION + ".";
-                    mess += "\nIf you find bugs, please update and check if they still occur before reporting them.";
-                    (event.player).addChatMessage(new ChatComponentText(mess));
+                    IChatComponent mess = getOutdatedMessage(result, "Thut Core ");
+                    (event.player).addChatMessage(mess);
                 }
 
             }
         }
+    }
+
+    public static IChatComponent getOutdatedMessage(CheckResult result, String name)
+    {
+        String linkName = "[" + EnumChatFormatting.GREEN + name + result.target + EnumChatFormatting.WHITE;
+        String link = "" + result.url;
+        String linkComponent = "{\"text\":\"" + linkName + "\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\""
+                + link + "\"}}";
+
+        String info = "\"" + EnumChatFormatting.RED + "New " + name
+                + " version available, please update before reporting bugs.\nClick the green link for the page to download.\n"
+                + "\"";
+        String mess = "[" + info + "," + linkComponent + ",\"]\"]";
+        return IChatComponent.Serializer.jsonToComponent(mess);
     }
 }
