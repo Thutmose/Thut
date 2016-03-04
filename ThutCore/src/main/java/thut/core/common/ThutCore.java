@@ -98,7 +98,7 @@ public class ThutCore
                 CheckResult result = ForgeVersion.getResult(((ModContainer) o));
                 if (result.status == Status.OUTDATED)
                 {
-                    IChatComponent mess = getOutdatedMessage(result, "Thut Core ");
+                    IChatComponent mess = getOutdatedMessage(result, "Thut Core");
                     (event.player).addChatMessage(mess);
                 }
 
@@ -108,7 +108,7 @@ public class ThutCore
 
     public static IChatComponent getOutdatedMessage(CheckResult result, String name)
     {
-        String linkName = "[" + EnumChatFormatting.GREEN + name + result.target + EnumChatFormatting.WHITE;
+        String linkName = "[" + EnumChatFormatting.GREEN + name + " " + result.target + EnumChatFormatting.WHITE;
         String link = "" + result.url;
         String linkComponent = "{\"text\":\"" + linkName + "\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\""
                 + link + "\"}}";
