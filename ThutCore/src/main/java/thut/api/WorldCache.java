@@ -49,7 +49,7 @@ public class WorldCache implements IBlockAccess
     {
         long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
         ChunkCache chunkcache = map.remove(key);
-        cache.remove(chunkcache);
+        if (chunkcache != null) cache.remove(chunkcache);
     }
 
     public Chunk getChunk(int chunkX, int chunkZ)
