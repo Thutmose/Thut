@@ -3,10 +3,11 @@
   "promos": {
     "1.8.8-latest": "2.1.9",
     "1.8.8-recommended": "2.1.9",
-    "1.8.9-latest": "2.3.3",
-    "1.8.9-recommended": "2.3.3"
+    "1.8.9-latest": "2.3.4",
+    "1.8.9-recommended": "2.3.4"
   },
   "1.8.9": {
+    "2.3.4": "Predicate support for block finder.",
     "2.3.3": "Fixes rare crash on changing worlds",
     "2.3.1": "Memory improvements",
     "2.2.3": "Fixes AIOB error from explosion particles."

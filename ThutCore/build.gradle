@@ -20,7 +20,7 @@ dependencies {
     compile "li.cil.oc:OpenComputers:MC1.8.9-1.5.+:api"
 }
  
-version = "2.3.4"
+version = "2.3.5"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thutcore"
  
