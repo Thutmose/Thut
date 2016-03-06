@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
@@ -1680,12 +1681,16 @@ public class Vector3
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public Vector3 findClosestVisibleObject(IBlockAccess world, boolean water, int sightDistance, Object matching)
     {
         int size = Math.min(sightDistance, 30);
         List<Object> list = new ArrayList<Object>();
         Block seekingBlock = null;
         Class<?> seekingClass = null;
+        boolean predicate = matching instanceof Predicate<?>;
+        Predicate<Object> matcher = null;
+        if (predicate) matcher = (Predicate<Object>) matching;
         boolean isInterface = false;
         boolean blockList = false;
         Vector3 temp = getNewVector();
@@ -1732,12 +1737,12 @@ public class Vector3
             for (float j = 0F; j <= rMag; j += dj)
             {
                 rTest = temp.set(rHat).scalarMultBy(j);
-
                 if (!(rTest.sameBlock(rTestPrev)))
                 {
                     rTestAbs.set(rTest).addTo(this);
-                    Block b = rTestAbs.getBlock(world);
-
+                    IBlockState state = rTestAbs.getBlockState(world);
+                    if (state == null) continue loop;
+                    Block b = state.getBlock();
                     if (isInterface)
                     {
                         List<Object> tempList;
@@ -1755,7 +1760,12 @@ public class Vector3
                         }
                         list = tempList;
                     }
-                    if (seekingBlock != null && b == seekingBlock)
+                    if (matcher != null && matcher.test(state))
+                    {
+                        ret.set(rTestAbs);
+                        return ret;
+                    }
+                    else if (seekingBlock != null && b == seekingBlock)
                     {
                         ret.set(rTestAbs);
                         return ret;
@@ -1777,12 +1787,10 @@ public class Vector3
                     }
                     else if (!rTestAbs.isClearOfBlocks(world))
                     {
-                        // blocked.set(index);
                         continue loop;
                     }
                     else if (!water && b.getMaterial() == Material.water)
                     {
-                        // blocked.set(index);
                         continue loop;
                     }
                 }
