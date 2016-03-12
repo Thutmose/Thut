@@ -380,7 +380,7 @@ public class Vector3
 
     public static Vector3 entity(Entity e)
     {
-        if (e != null) return Vector3.getNewVector().set(e.posX, e.posY + e.height / 2, e.posZ);
+        if (e != null) return Vector3.getNewVector().set(e.posX, e.posY + e.getEyeHeight(), e.posZ);
         return null;
     }
 
@@ -873,7 +873,7 @@ public class Vector3
         if (looker == null || target == null) return false;
         Vector3 look = entity(looker);
         Vector3 t = entity(target);
-        return isVisibleRange(looker.worldObj, t, look, look.distanceTo(t));
+        return isVisibleRange(looker.worldObj, t, look, look.distanceTo(t) + looker.width + target.width);
     }
 
     public Entity firstEntityExcluding(double range, Vector3 direction, World worldObj, boolean effect, Entity excluded)
