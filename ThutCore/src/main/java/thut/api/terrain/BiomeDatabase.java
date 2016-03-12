@@ -21,15 +21,6 @@ public class BiomeDatabase
     public static final FMLControlledNamespacedRegistry<BiomeType> biomeTypeRegistry = PersistentRegistryManager
             .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 1024, 256, true, null);
 
-    public static BiomeType getBiome(BiomeGenBase b)
-    {
-        if (b != null)
-        {
-            if (b.biomeName.toLowerCase().contains("flower")) return BiomeType.FLOWER;
-        }
-        return BiomeType.NONE;
-    }
-
     public static boolean contains(BiomeGenBase b, Type type)
     {
         boolean ret = false;
@@ -48,6 +39,15 @@ public class BiomeDatabase
             if (ret) break;
         }
         return ret;
+    }
+
+    public static BiomeType getBiome(BiomeGenBase b)
+    {
+        if (b != null)
+        {
+            if (b.biomeName.toLowerCase().contains("flower")) return BiomeType.FLOWER;
+        }
+        return BiomeType.NONE;
     }
 
     public static String getBiome(World world, Vector3 v)

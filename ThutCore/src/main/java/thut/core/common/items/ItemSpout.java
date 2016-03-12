@@ -31,7 +31,43 @@ public class ItemSpout extends Item
         ThutItems.spout = this;
     }
 
+    public ArrayList<ItemStack> getTanks(EntityPlayer player)
+    {
+        ArrayList<ItemStack> ret = new ArrayList<ItemStack>();
+
+        for (ItemStack stack : player.inventory.mainInventory)
+        {
+            if (stack != null && stack.getItem() instanceof IFluidContainerItem)
+            {
+                IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
+                if (tank.getFluid(stack) != null) ret.add(stack);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
+    {
+        if(itemstack.getItemDamage()!=15) return itemstack;
+        
+        Vector3 v = Vector3.getNewVector();
+        int range = 5;
+        int num = 1;
+        float power = 0.11f;
+        for (int i = 0; i < num; i++)
+        {
+            v.set(player).addTo(range * (Math.random() - 0.5), range * (Math.random() - 0.5),
+                    range * (Math.random() - 0.5));
+            ExplosionCustom boom = new ExplosionCustom(worldObj, player, v, power);
+            boom.doExplosion();
+        }
+        return itemstack;
+    }
+
     // TODO move this to real method
+    @Override
     public boolean onItemUse(ItemStack itemstack, EntityPlayer player, World worldObj, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ)
     {
@@ -91,41 +127,6 @@ public class ItemSpout extends Item
                     tank.drain(stack, 1000, !player.capabilities.isCreativeMode);
                     next.setBlock(worldObj, b, 0, 3);
                 }
-            }
-        }
-
-        return ret;
-    }
-
-    @Override
-    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
-    {
-        if(itemstack.getItemDamage()!=15) return itemstack;
-        
-        Vector3 v = Vector3.getNewVector();
-        int range = 5;
-        int num = 1;
-        float power = 0.11f;
-        for (int i = 0; i < num; i++)
-        {
-            v.set(player).addTo(range * (Math.random() - 0.5), range * (Math.random() - 0.5),
-                    range * (Math.random() - 0.5));
-            ExplosionCustom boom = new ExplosionCustom(worldObj, player, v, power);
-            boom.doExplosion();
-        }
-        return itemstack;
-    }
-
-    public ArrayList<ItemStack> getTanks(EntityPlayer player)
-    {
-        ArrayList<ItemStack> ret = new ArrayList<ItemStack>();
-
-        for (ItemStack stack : player.inventory.mainInventory)
-        {
-            if (stack != null && stack.getItem() instanceof IFluidContainerItem)
-            {
-                IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
-                if (tank.getFluid(stack) != null) ret.add(stack);
             }
         }
 

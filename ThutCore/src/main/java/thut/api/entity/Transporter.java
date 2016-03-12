@@ -38,9 +38,66 @@ import thut.api.network.PacketHandler.MessageClient;
 public class Transporter
 {
 
+    static class METeleporter extends Teleporter
+    {
+
+        final TelDestination destination;
+
+        public METeleporter(WorldServer par1WorldServer, TelDestination d)
+        {
+            super(par1WorldServer);
+            this.destination = d;
+        }
+
+        @Override
+        public boolean makePortal(Entity par1Entity)
+        {
+            return false;
+        }
+
+        @Override
+        public boolean placeInExistingPortal(Entity par1Entity, float par8)
+        {
+            return false;
+        }
+
+        @Override
+        public void placeInPortal(Entity par1Entity, float par8)
+        {
+            par1Entity.setLocationAndAngles(this.destination.x, this.destination.y, this.destination.z,
+                    par1Entity.rotationYaw, 0.0F);
+            par1Entity.motionX = par1Entity.motionY = par1Entity.motionZ = 0.0D;
+        }
+
+        @Override
+        public void removeStalePortalLocations(long par1)
+        {
+
+        }
+
+    }
+
     public static class TelDestination
     {
 
+        final World  dim;
+
+        final double x;
+
+        final double y;
+
+        final double z;
+        final Vector3 loc;
+        final int xOff;
+        final int yOff;
+
+        final int zOff;
+
+        public TelDestination(int dim, Vector3 loc)
+        {
+            this(FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dim), loc.getAABB(),
+                    loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
+        }
         public TelDestination(World _dim, AxisAlignedBB srcBox, double _x, double _y, double _z, int tileX, int tileY,
                 int tileZ)
         {
@@ -53,28 +110,74 @@ public class Transporter
             this.zOff = tileZ;
             this.loc = Vector3.getNewVector().set(x, y, z);
         }
-
         public TelDestination(World _dim, Vector3 loc)
         {
             this(_dim, loc.getAABB(), loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
         }
+    }
 
-        public TelDestination(int dim, Vector3 loc)
+    static void checkChunk(World world, Entity entity)
+    {
+        int cx = MathHelper.floor_double(entity.posX / 16.0D);
+        int cy = MathHelper.floor_double(entity.posZ / 16.0D);
+        world.getChunkFromChunkCoords(cx, cy);
+    }
+
+    static void copyMoreEntityData(EntityLiving oldEntity, EntityLiving newEntity)
+    {
+        float s = oldEntity.getAIMoveSpeed();
+        if (s != 0) newEntity.setAIMoveSpeed(s);
+    }
+
+    static void extractEntityFromWorld(World world, Entity entity)
+    {
+        // Immediately remove entity from world without calling setDead(), which
+        // has
+        // undesirable side effects on some entities.
+        if (entity instanceof EntityPlayer)
         {
-            this(FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dim), loc.getAABB(),
-                    loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
+            world.playerEntities.remove(entity);
+            world.updateAllPlayersSleepingFlag();
         }
+        int i = entity.chunkCoordX;
+        int j = entity.chunkCoordZ;
+        if (entity.addedToChunk && world.getChunkProvider().chunkExists(i, j))
+            world.getChunkFromChunkCoords(i, j).removeEntity(entity);
+        world.loadedEntityList.remove(entity);
+        ((WorldServer) world).getEntityTracker().untrackEntity(entity);
+    }
 
-        final World  dim;
-        final double x;
-        final double y;
-        final double z;
+    static Entity instantiateEntityFromNBT(Class<? extends Entity> cls, NBTTagCompound nbt, WorldServer world)
+    {
+        try
+        {
+            Entity entity = cls.getConstructor(World.class).newInstance(world);
+            entity.readFromNBT(nbt);
+            return entity;
+        }
+        catch (Exception e)
+        {
+            System.out.printf("Could not instantiate %s: %s\n", cls, e);
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-        final Vector3 loc;
+    static void sendDimensionRegister(EntityPlayerMP player, int dimensionID)
+    {
+        int providerID = DimensionManager.getProviderType(dimensionID);
+        ForgeMessage msg = new ForgeMessage.DimensionRegisterMessage(dimensionID, providerID);
+        FMLEmbeddedChannel channel = NetworkRegistry.INSTANCE.getChannel("FORGE", Side.SERVER);
+        channel.attr(FMLOutboundHandler.FML_MESSAGETARGET).set(FMLOutboundHandler.OutboundTarget.PLAYER);
+        channel.attr(FMLOutboundHandler.FML_MESSAGETARGETARGS).set(player);
+        channel.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+    }
 
-        final int xOff;
-        final int yOff;
-        final int zOff;
+    static void setVelocity(Entity entity, Vector3 v)
+    {
+        entity.motionX = v.x;
+        entity.motionY = v.y;
+        entity.motionZ = v.z;
     }
 
     /** Mostly from dimensional doors.. which mostly got it form X-Comp.
@@ -185,62 +288,6 @@ public class Transporter
         return entity;
     }
 
-    static class METeleporter extends Teleporter
-    {
-
-        final TelDestination destination;
-
-        public METeleporter(WorldServer par1WorldServer, TelDestination d)
-        {
-            super(par1WorldServer);
-            this.destination = d;
-        }
-
-        @Override
-        public void placeInPortal(Entity par1Entity, float par8)
-        {
-            par1Entity.setLocationAndAngles(this.destination.x, this.destination.y, this.destination.z,
-                    par1Entity.rotationYaw, 0.0F);
-            par1Entity.motionX = par1Entity.motionY = par1Entity.motionZ = 0.0D;
-        }
-
-        @Override
-        public boolean makePortal(Entity par1Entity)
-        {
-            return false;
-        }
-
-        @Override
-        public boolean placeInExistingPortal(Entity par1Entity, float par8)
-        {
-            return false;
-        }
-
-        @Override
-        public void removeStalePortalLocations(long par1)
-        {
-
-        }
-
-    }
-
-    public static Entity teleportEntityAndRider(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
-    {
-
-        Entity rider = entity.riddenByEntity;
-        if (rider != null)
-        {
-            rider.mountEntity(null);
-            rider = teleportEntityAndRider(rider, t2, dimension, destBlocked);
-        }
-        entity = teleportEntity(entity, t2, dimension, destBlocked);
-        if (entity != null && !entity.isDead && rider != null && !rider.isDead)
-        {
-            rider.mountEntity(entity);
-        }
-        return entity;
-    }
-
     public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
     {
         Entity newEntity = null;
@@ -261,75 +308,21 @@ public class Transporter
         return newEntity;
     }
 
-    static Entity teleportWithinDimension(Entity entity, Vector3 p, boolean destBlocked)
+    public static Entity teleportEntityAndRider(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
     {
-        if (entity instanceof EntityPlayerMP) return teleportPlayerWithinDimension((EntityPlayerMP) entity, p);
-        else return teleportEntityToWorld(entity, p, (WorldServer) entity.worldObj, destBlocked);
-    }
 
-    static Entity teleportPlayerWithinDimension(EntityPlayerMP entity, Vector3 p)
-    {
-        entity.setPositionAndUpdate(p.x, p.y, p.z);
-        entity.worldObj.updateEntityWithOptionalForce(entity, false);
+        Entity rider = entity.riddenByEntity;
+        if (rider != null)
+        {
+            rider.mountEntity(null);
+            rider = teleportEntityAndRider(rider, t2, dimension, destBlocked);
+        }
+        entity = teleportEntity(entity, t2, dimension, destBlocked);
+        if (entity != null && !entity.isDead && rider != null && !rider.isDead)
+        {
+            rider.mountEntity(entity);
+        }
         return entity;
-    }
-
-    static Entity teleportToOtherDimension(Entity entity, Vector3 p, int dimension, boolean destBlocked)
-    {
-        if (entity instanceof EntityPlayerMP)
-        {
-            EntityPlayerMP player = (EntityPlayerMP) entity;
-            transferPlayerToDimension(player, dimension, p);
-            return player;
-        }
-        else return teleportEntityToDimension(entity, p, dimension, destBlocked);
-    }
-
-    static void sendDimensionRegister(EntityPlayerMP player, int dimensionID)
-    {
-        int providerID = DimensionManager.getProviderType(dimensionID);
-        ForgeMessage msg = new ForgeMessage.DimensionRegisterMessage(dimensionID, providerID);
-        FMLEmbeddedChannel channel = NetworkRegistry.INSTANCE.getChannel("FORGE", Side.SERVER);
-        channel.attr(FMLOutboundHandler.FML_MESSAGETARGET).set(FMLOutboundHandler.OutboundTarget.PLAYER);
-        channel.attr(FMLOutboundHandler.FML_MESSAGETARGETARGS).set(player);
-        channel.writeAndFlush(msg).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-    }
-
-    static void transferPlayerToDimension(EntityPlayerMP player, int newDimension, Vector3 p)
-    {
-        MinecraftServer server = MinecraftServer.getServer();
-        ServerConfigurationManager scm = server.getConfigurationManager();
-        int oldDimension = player.dimension;
-        player.dimension = newDimension;
-        WorldServer oldWorld = server.worldServerForDimension(oldDimension);
-        WorldServer newWorld = server.worldServerForDimension(newDimension);
-        sendDimensionRegister(player, newDimension);
-        player.closeScreen();
-        player.playerNetServerHandler.sendPacket(new S07PacketRespawn(player.dimension, player.worldObj.getDifficulty(),
-                newWorld.getWorldInfo().getTerrainType(), player.theItemInWorldManager.getGameType()));
-
-        oldWorld.removePlayerEntityDangerously(player); // Removes player right
-                                                        // now instead of
-                                                        // waiting for next tick
-        player.isDead = false;
-        player.setLocationAndAngles(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
-        newWorld.spawnEntityInWorld(player);
-        player.setWorld(newWorld);
-        scm.preparePlayer(player, oldWorld);
-        player.playerNetServerHandler.setPlayerLocation(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
-        player.theItemInWorldManager.setWorld(newWorld);
-        scm.updateTimeAndWeatherForPlayer(player, newWorld);
-        scm.syncPlayerInventory(player);
-        Iterator<?> var6 = player.getActivePotionEffects().iterator();
-        while (var6.hasNext())
-        {
-            PotionEffect effect = (PotionEffect) var6.next();
-            player.playerNetServerHandler.sendPacket(new S1DPacketEntityEffect(player.getEntityId(), effect));
-        }
-        player.playerNetServerHandler.sendPacket(
-                new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
-        FMLCommonHandler.instance().firePlayerChangedDimensionEvent(player, oldDimension, newDimension);
-
     }
 
     static Entity teleportEntityToDimension(Entity entity, Vector3 p, int dimension, boolean destBlocked)
@@ -378,57 +371,64 @@ public class Transporter
         return newEntity;
     }
 
-    static Entity instantiateEntityFromNBT(Class<? extends Entity> cls, NBTTagCompound nbt, WorldServer world)
+    static Entity teleportPlayerWithinDimension(EntityPlayerMP entity, Vector3 p)
     {
-        try
+        entity.setPositionAndUpdate(p.x, p.y, p.z);
+        entity.worldObj.updateEntityWithOptionalForce(entity, false);
+        return entity;
+    }
+
+    static Entity teleportToOtherDimension(Entity entity, Vector3 p, int dimension, boolean destBlocked)
+    {
+        if (entity instanceof EntityPlayerMP)
         {
-            Entity entity = (Entity) cls.getConstructor(World.class).newInstance(world);
-            entity.readFromNBT(nbt);
-            return entity;
+            EntityPlayerMP player = (EntityPlayerMP) entity;
+            transferPlayerToDimension(player, dimension, p);
+            return player;
         }
-        catch (Exception e)
+        else return teleportEntityToDimension(entity, p, dimension, destBlocked);
+    }
+
+    static Entity teleportWithinDimension(Entity entity, Vector3 p, boolean destBlocked)
+    {
+        if (entity instanceof EntityPlayerMP) return teleportPlayerWithinDimension((EntityPlayerMP) entity, p);
+        else return teleportEntityToWorld(entity, p, (WorldServer) entity.worldObj, destBlocked);
+    }
+
+    static void transferPlayerToDimension(EntityPlayerMP player, int newDimension, Vector3 p)
+    {
+        MinecraftServer server = MinecraftServer.getServer();
+        ServerConfigurationManager scm = server.getConfigurationManager();
+        int oldDimension = player.dimension;
+        player.dimension = newDimension;
+        WorldServer oldWorld = server.worldServerForDimension(oldDimension);
+        WorldServer newWorld = server.worldServerForDimension(newDimension);
+        sendDimensionRegister(player, newDimension);
+        player.closeScreen();
+        player.playerNetServerHandler.sendPacket(new S07PacketRespawn(player.dimension, player.worldObj.getDifficulty(),
+                newWorld.getWorldInfo().getTerrainType(), player.theItemInWorldManager.getGameType()));
+
+        oldWorld.removePlayerEntityDangerously(player); // Removes player right
+                                                        // now instead of
+                                                        // waiting for next tick
+        player.isDead = false;
+        player.setLocationAndAngles(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
+        newWorld.spawnEntityInWorld(player);
+        player.setWorld(newWorld);
+        scm.preparePlayer(player, oldWorld);
+        player.playerNetServerHandler.setPlayerLocation(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
+        player.theItemInWorldManager.setWorld(newWorld);
+        scm.updateTimeAndWeatherForPlayer(player, newWorld);
+        scm.syncPlayerInventory(player);
+        Iterator<?> var6 = player.getActivePotionEffects().iterator();
+        while (var6.hasNext())
         {
-            System.out.printf("Could not instantiate %s: %s\n", cls, e);
-            e.printStackTrace();
-            return null;
+            PotionEffect effect = (PotionEffect) var6.next();
+            player.playerNetServerHandler.sendPacket(new S1DPacketEntityEffect(player.getEntityId(), effect));
         }
-    }
+        player.playerNetServerHandler.sendPacket(
+                new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
+        FMLCommonHandler.instance().firePlayerChangedDimensionEvent(player, oldDimension, newDimension);
 
-    static void copyMoreEntityData(EntityLiving oldEntity, EntityLiving newEntity)
-    {
-        float s = oldEntity.getAIMoveSpeed();
-        if (s != 0) newEntity.setAIMoveSpeed(s);
-    }
-
-    static void setVelocity(Entity entity, Vector3 v)
-    {
-        entity.motionX = v.x;
-        entity.motionY = v.y;
-        entity.motionZ = v.z;
-    }
-
-    static void extractEntityFromWorld(World world, Entity entity)
-    {
-        // Immediately remove entity from world without calling setDead(), which
-        // has
-        // undesirable side effects on some entities.
-        if (entity instanceof EntityPlayer)
-        {
-            world.playerEntities.remove(entity);
-            world.updateAllPlayersSleepingFlag();
-        }
-        int i = entity.chunkCoordX;
-        int j = entity.chunkCoordZ;
-        if (entity.addedToChunk && world.getChunkProvider().chunkExists(i, j))
-            world.getChunkFromChunkCoords(i, j).removeEntity(entity);
-        world.loadedEntityList.remove(entity);
-        ((WorldServer) world).getEntityTracker().untrackEntity(entity);
-    }
-
-    static void checkChunk(World world, Entity entity)
-    {
-        int cx = MathHelper.floor_double(entity.posX / 16.0D);
-        int cy = MathHelper.floor_double(entity.posZ / 16.0D);
-        world.getChunkFromChunkCoords(cx, cy);
     }
 }

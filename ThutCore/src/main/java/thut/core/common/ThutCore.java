@@ -46,18 +46,6 @@ public class ThutCore
     }
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent e)
-    {
-        proxy.preinit(e);
-        config = new ConfigHandler(e.getSuggestedConfigurationFile());
-        proxy.loadSounds();
-        TerrainManager.getInstance();
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new TickHandler());
-        new Cruncher();
-    }
-
-    @EventHandler
     public void load(FMLInitializationEvent evt)
     {
         proxy.initClient();
@@ -68,5 +56,17 @@ public class ThutCore
     @EventHandler
     public void postInit(FMLPostInitializationEvent e)
     {
+    }
+
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent e)
+    {
+        proxy.preinit(e);
+        config = new ConfigHandler(e.getSuggestedConfigurationFile());
+        proxy.loadSounds();
+        TerrainManager.getInstance();
+        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new TickHandler());
+        new Cruncher();
     }
 }

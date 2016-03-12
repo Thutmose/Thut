@@ -35,15 +35,6 @@ public class ThutBlocks extends Blocks
 
     private static HashSet<Block> allBlocks = new HashSet<Block>();
 
-    public static void initAllBlocks()
-    {
-        allBlocks.clear();
-        for (int i = 0; i < 4096; i++)
-        {
-            if (Block.getBlockById(i) != null) allBlocks.add(Block.getBlockById(i));
-        }
-    }
-
     public static HashSet<Block> getAllBlocks()
     {
         if (allBlocks.size() == 0)
@@ -51,5 +42,14 @@ public class ThutBlocks extends Blocks
             initAllBlocks();
         }
         return allBlocks;
+    }
+
+    public static void initAllBlocks()
+    {
+        allBlocks.clear();
+        for (int i = 0; i < 4096; i++)
+        {
+            if (Block.getBlockById(i) != null) allBlocks.add(Block.getBlockById(i));
+        }
     }
 }

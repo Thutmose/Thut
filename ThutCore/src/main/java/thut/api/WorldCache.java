@@ -28,107 +28,6 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
  * @author Thutmose */
 public class WorldCache implements IBlockAccess
 {
-    public final World                    world;
-    private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
-    final Set<ChunkCache>                 cache = Sets.newConcurrentHashSet();
-
-    public WorldCache(World world_)
-    {
-        world = world_;
-    }
-
-    void addChunk(Chunk chunk)
-    {
-        long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
-        ChunkCache chunkcache = new ChunkCache(chunk);
-        map.add(key, chunkcache);
-        cache.add(chunkcache);
-    }
-
-    void removeChunk(Chunk chunk)
-    {
-        long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
-        ChunkCache chunkcache = map.remove(key);
-        if (chunkcache != null) cache.remove(chunkcache);
-    }
-
-    public Chunk getChunk(int chunkX, int chunkZ)
-    {
-        long key = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
-        ChunkCache chunkcache = map.getValueByKey(key);
-        if (chunkcache == null) return null;
-        return chunkcache.chunk;
-    }
-
-    @Override
-    public boolean extendedLevelsInChunkCache()
-    {
-        return false;
-    }
-
-    @Override
-    public TileEntity getTileEntity(BlockPos pos)
-    {
-        int l = (pos.getX() >> 4);
-        int i1 = (pos.getZ() >> 4);
-        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = map.getValueByKey(key);
-        if (chunk == null) return null;
-        return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
-    }
-
-    @Override
-    public int getCombinedLight(BlockPos pos, int p_175626_2_)
-    {
-        return 0;
-    }
-
-    @Override
-    public IBlockState getBlockState(BlockPos pos)
-    {
-        int l = (pos.getX() >> 4);
-        int i1 = (pos.getZ() >> 4);
-        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = map.getValueByKey(key);
-        if (chunk == null) return null;
-        return chunk.getBlockState(pos);
-    }
-
-    @Override
-    public boolean isAirBlock(BlockPos pos)
-    {
-        return getBlockState(pos) == null || getBlockState(pos).getBlock().isAir(this, pos);
-    }
-
-    @Override
-    public BiomeGenBase getBiomeGenForCoords(BlockPos pos)
-    {
-        return null;
-    }
-
-    @Override
-    public int getStrongPower(BlockPos pos, EnumFacing direction)
-    {
-        return 0;
-    }
-
-    @Override
-    public WorldType getWorldType()
-    {
-        return world.getWorldInfo().getTerrainType();
-    }
-
-    @Override
-    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
-    {
-        int l = (pos.getX() >> 4);
-        int i1 = (pos.getZ() >> 4);
-        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = map.getValueByKey(key);
-        if (chunk == null || chunk.isEmpty()) return _default;
-        return getBlockState(pos).getBlock().isSideSolid(this, pos, side);
-    }
-
     public static class ChunkCache
     {
         Chunk                          chunk;
@@ -138,11 +37,6 @@ public class WorldCache implements IBlockAccess
         {
             this.chunk = chunk;
             update();
-        }
-
-        public boolean isEmpty()
-        {
-            return false;
         }
 
         public IBlockState getBlockState(final BlockPos pos)
@@ -170,6 +64,7 @@ public class WorldCache implements IBlockAccess
                 CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being got");
                 crashreportcategory.addCrashSectionCallable("Location", new Callable<String>()
                 {
+                    @Override
                     public String call() throws Exception
                     {
                         return CrashReportCategory.getCoordinateInfo(pos);
@@ -182,6 +77,11 @@ public class WorldCache implements IBlockAccess
         public TileEntity getTileEntity(BlockPos pos, EnumCreateEntityType immediate)
         {
             return chunk.getTileEntity(pos, immediate);
+        }
+
+        public boolean isEmpty()
+        {
+            return false;
         }
 
         public synchronized void update()
@@ -208,5 +108,106 @@ public class WorldCache implements IBlockAccess
             }
         }
 
+    }
+    public final World                    world;
+    private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
+
+    final Set<ChunkCache>                 cache = Sets.newConcurrentHashSet();
+
+    public WorldCache(World world_)
+    {
+        world = world_;
+    }
+
+    void addChunk(Chunk chunk)
+    {
+        long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+        ChunkCache chunkcache = new ChunkCache(chunk);
+        map.add(key, chunkcache);
+        cache.add(chunkcache);
+    }
+
+    @Override
+    public boolean extendedLevelsInChunkCache()
+    {
+        return false;
+    }
+
+    @Override
+    public BiomeGenBase getBiomeGenForCoords(BlockPos pos)
+    {
+        return null;
+    }
+
+    @Override
+    public IBlockState getBlockState(BlockPos pos)
+    {
+        int l = (pos.getX() >> 4);
+        int i1 = (pos.getZ() >> 4);
+        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
+        ChunkCache chunk = map.getValueByKey(key);
+        if (chunk == null) return null;
+        return chunk.getBlockState(pos);
+    }
+
+    public Chunk getChunk(int chunkX, int chunkZ)
+    {
+        long key = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
+        ChunkCache chunkcache = map.getValueByKey(key);
+        if (chunkcache == null) return null;
+        return chunkcache.chunk;
+    }
+
+    @Override
+    public int getCombinedLight(BlockPos pos, int p_175626_2_)
+    {
+        return 0;
+    }
+
+    @Override
+    public int getStrongPower(BlockPos pos, EnumFacing direction)
+    {
+        return 0;
+    }
+
+    @Override
+    public TileEntity getTileEntity(BlockPos pos)
+    {
+        int l = (pos.getX() >> 4);
+        int i1 = (pos.getZ() >> 4);
+        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
+        ChunkCache chunk = map.getValueByKey(key);
+        if (chunk == null) return null;
+        return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
+    }
+
+    @Override
+    public WorldType getWorldType()
+    {
+        return world.getWorldInfo().getTerrainType();
+    }
+
+    @Override
+    public boolean isAirBlock(BlockPos pos)
+    {
+        return getBlockState(pos) == null || getBlockState(pos).getBlock().isAir(this, pos);
+    }
+
+    @Override
+    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+    {
+        int l = (pos.getX() >> 4);
+        int i1 = (pos.getZ() >> 4);
+        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
+        ChunkCache chunk = map.getValueByKey(key);
+        if (chunk == null || chunk.isEmpty()) return _default;
+        return getBlockState(pos).getBlock().isSideSolid(this, pos, side);
+    }
+
+    void removeChunk(Chunk chunk)
+    {
+        long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+        ChunkCache chunkcache = map.remove(key);
+        if (chunkcache != null) cache.remove(chunkcache);
     }
 }

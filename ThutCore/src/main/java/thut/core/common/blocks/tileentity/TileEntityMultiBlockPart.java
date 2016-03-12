@@ -24,65 +24,30 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     public IBlockState revertID = brick_block.getDefaultState();
     public int         type     = 0;
 
-    public void setCore(TileEntityMultiCore core)
+    @Override
+    public boolean canExtractItem(int index, ItemStack stack, EnumFacing direction)
     {
-        corePos = core.getPos();
-        this.core = core;
-    }
-
-    public TileEntityMultiCore getCore()
-    {
-        if (core == null && corePos!=null) core = (TileEntityMultiCore) worldObj.getTileEntity(corePos);
-
-        return core;
+        if (core != null) return core.canExtractItem(index, stack, direction);
+        return false;
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound compound)
+    public boolean canInsertItem(int index, ItemStack itemStackIn, EnumFacing direction)
     {
-        super.readFromNBT(compound);
-        this.corePos = new BlockPos(compound.getInteger("cx"), compound.getInteger("cy"), compound.getInteger("cz"));
-        int name = compound.getInteger("revert");
-        int revertMeta = compound.getInteger("revertMeta");
-        revertID = Block.getBlockById(name).getStateFromMeta(revertMeta);
-        type = compound.getInteger("type");
-        if (revertID == null) revertID = brick_block.getDefaultState();
+        if (core != null) return core.canInsertItem(index, itemStackIn, direction);
+        return false;
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound compound)
+    public void clear()
     {
-        super.writeToNBT(compound);
-        compound.setInteger("cx", this.corePos.getX());
-        compound.setInteger("cy", this.corePos.getY());
-        compound.setInteger("cz", this.corePos.getZ());
-        compound.setInteger("revert", Block.getIdFromBlock(revertID.getBlock()));
-        compound.setInteger("revertMeta", revertID.getBlock().getMetaFromState(revertID));
-        compound.setInteger("type", type);
-    }
-
-    public void revert()
-    {
-        worldObj.setBlockState(corePos, revertID);
+        if (core != null) core.clear();
     }
 
     @Override
-    public void invalidate()
+    public void closeInventory(EntityPlayer player)
     {
-        if (core != null) core.invalidateMultiblock();
-        super.invalidate();
-    }
-
-    @Override
-    public int getSizeInventory()
-    {
-        return core != null ? core.getSizeInventory() : 0;
-    }
-
-    @Override
-    public ItemStack getStackInSlot(int i)
-    {
-        return core != null ? core.getStackInSlot(i) : null;
+        if (core != null) core.closeInventory(player);
     }
 
     @Override
@@ -91,34 +56,11 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
         return core != null ? core.decrStackSize(i, j) : null;
     }
 
-    @Override
-    public ItemStack removeStackFromSlot(int i)
+    public TileEntityMultiCore getCore()
     {
-        return core != null ? core.removeStackFromSlot(i) : null;
-    }
+        if (core == null && corePos!=null) core = (TileEntityMultiCore) worldObj.getTileEntity(corePos);
 
-    @Override
-    public void setInventorySlotContents(int i, ItemStack itemstack)
-    {
-        if (core != null) core.setInventorySlotContents(i, itemstack);
-    }
-
-    @Override
-    public int getInventoryStackLimit()
-    {
-        return core != null ? core.getInventoryStackLimit() : 0;
-    }
-
-    @Override
-    public boolean isUseableByPlayer(EntityPlayer entityplayer)
-    {
-        return worldObj.getTileEntity(corePos) != this ? false : entityplayer.getDistanceSq(corePos) <= 64.0;
-    }
-
-    @Override
-    public boolean isItemValidForSlot(int i, ItemStack itemstack)
-    {
-        return core.isItemValidForSlot(i, itemstack);
+        return core;
     }
 
     /** Overriden in a sign to provide the text. */
@@ -129,6 +71,85 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         this.writeToNBT(nbttagcompound);
         return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
+    }
+
+    @Override
+    public IChatComponent getDisplayName()
+    {
+        if (core != null) return core.getDisplayName();
+        return null;
+    }
+
+    @Override
+    public int getField(int id)
+    {
+        if (core != null) return core.getField(id);
+        return 0;
+    }
+
+    @Override
+    public int getFieldCount()
+    {
+        if (core != null) return core.getFieldCount();
+        return 0;
+    }
+
+    @Override
+    public int getInventoryStackLimit()
+    {
+        return core != null ? core.getInventoryStackLimit() : 0;
+    }
+
+    @Override
+    public String getName()
+    {
+        if (core != null) return core.getName();
+        return null;
+    }
+
+    @Override
+    public int getSizeInventory()
+    {
+        return core != null ? core.getSizeInventory() : 0;
+    }
+
+    @Override
+    public int[] getSlotsForFace(EnumFacing side)
+    {
+        if (core != null) return core.getSlotsForFace(side);
+        return null;
+    }
+
+    @Override
+    public ItemStack getStackInSlot(int i)
+    {
+        return core != null ? core.getStackInSlot(i) : null;
+    }
+
+    @Override
+    public boolean hasCustomName()
+    {
+        if (core != null) return core.hasCustomName();
+        return false;
+    }
+
+    @Override
+    public void invalidate()
+    {
+        if (core != null) core.invalidateMultiblock();
+        super.invalidate();
+    }
+
+    @Override
+    public boolean isItemValidForSlot(int i, ItemStack itemstack)
+    {
+        return core.isItemValidForSlot(i, itemstack);
+    }
+
+    @Override
+    public boolean isUseableByPlayer(EntityPlayer entityplayer)
+    {
+        return worldObj.getTileEntity(corePos) != this ? false : entityplayer.getDistanceSq(corePos) <= 64.0;
     }
 
     @Override
@@ -145,16 +166,32 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     @Override
-    public void closeInventory(EntityPlayer player)
+    public void readFromNBT(NBTTagCompound compound)
     {
-        if (core != null) core.closeInventory(player);
+        super.readFromNBT(compound);
+        this.corePos = new BlockPos(compound.getInteger("cx"), compound.getInteger("cy"), compound.getInteger("cz"));
+        int name = compound.getInteger("revert");
+        int revertMeta = compound.getInteger("revertMeta");
+        revertID = Block.getBlockById(name).getStateFromMeta(revertMeta);
+        type = compound.getInteger("type");
+        if (revertID == null) revertID = brick_block.getDefaultState();
     }
 
     @Override
-    public int getField(int id)
+    public ItemStack removeStackFromSlot(int i)
     {
-        if (core != null) return core.getField(id);
-        return 0;
+        return core != null ? core.removeStackFromSlot(i) : null;
+    }
+
+    public void revert()
+    {
+        worldObj.setBlockState(corePos, revertID);
+    }
+
+    public void setCore(TileEntityMultiCore core)
+    {
+        corePos = core.getPos();
+        this.core = core;
     }
 
     @Override
@@ -164,57 +201,20 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     @Override
-    public int getFieldCount()
+    public void setInventorySlotContents(int i, ItemStack itemstack)
     {
-        if (core != null) return core.getFieldCount();
-        return 0;
+        if (core != null) core.setInventorySlotContents(i, itemstack);
     }
 
     @Override
-    public void clear()
+    public void writeToNBT(NBTTagCompound compound)
     {
-        if (core != null) core.clear();
-    }
-
-    @Override
-    public String getName()
-    {
-        if (core != null) return core.getName();
-        return null;
-    }
-
-    @Override
-    public boolean hasCustomName()
-    {
-        if (core != null) return core.hasCustomName();
-        return false;
-    }
-
-    @Override
-    public IChatComponent getDisplayName()
-    {
-        if (core != null) return core.getDisplayName();
-        return null;
-    }
-
-    @Override
-    public int[] getSlotsForFace(EnumFacing side)
-    {
-        if (core != null) return core.getSlotsForFace(side);
-        return null;
-    }
-
-    @Override
-    public boolean canInsertItem(int index, ItemStack itemStackIn, EnumFacing direction)
-    {
-        if (core != null) return core.canInsertItem(index, itemStackIn, direction);
-        return false;
-    }
-
-    @Override
-    public boolean canExtractItem(int index, ItemStack stack, EnumFacing direction)
-    {
-        if (core != null) return core.canExtractItem(index, stack, direction);
-        return false;
+        super.writeToNBT(compound);
+        compound.setInteger("cx", this.corePos.getX());
+        compound.setInteger("cy", this.corePos.getY());
+        compound.setInteger("cz", this.corePos.getZ());
+        compound.setInteger("revert", Block.getIdFromBlock(revertID.getBlock()));
+        compound.setInteger("revertMeta", revertID.getBlock().getMetaFromState(revertID));
+        compound.setInteger("type", type);
     }
 }

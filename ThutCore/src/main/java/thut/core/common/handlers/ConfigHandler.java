@@ -18,6 +18,8 @@ public class ConfigHandler
     public static boolean collisionDamage;
     public static boolean paneFix;
 
+    private static List<Item> items = new ArrayList<Item>();
+
     public ConfigHandler(File configFile)
     {
         // Loads The Configuration File into Forges Configuration
@@ -45,6 +47,4 @@ public class ConfigHandler
             GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
         }
     }
-
-    private static List<Item> items = new ArrayList<Item>();
 }

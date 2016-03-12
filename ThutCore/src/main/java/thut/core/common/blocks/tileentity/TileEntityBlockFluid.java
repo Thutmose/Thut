@@ -10,29 +10,39 @@ import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityBlockFluid extends TileEntity {
 
-    public int DEFAULTCOLOUR = EnumDyeColor.SILVER.getMapColor().colorValue + 0xFF000000;
+    public static int getColour(int dyeIndex)
+    {
+        int ret = ItemDye.dyeColors[dyeIndex];
+        int alpha = 0xFF000000;
+        ret += alpha;
+        return ret;
+    }
     
-	public int[] colourArray = { DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR };
+	public int DEFAULTCOLOUR = EnumDyeColor.SILVER.getMapColor().colorValue + 0xFF000000;
 	
+	public int[] colourArray = { DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR };
 	public float[][] corner;
-	public float flowDir;
 
+    public float flowDir;
+
+    /**
+     * Overriden in a sign to provide the text.
+     */
+	@SuppressWarnings("rawtypes")
     @Override
-	public void writeToNBT(NBTTagCompound par1) {
-		super.writeToNBT(par1);
-		par1.setIntArray("metaArray", colourArray);
-		par1.setFloat("flow", flowDir);
-		if(corner!=null)
-		{
-		    NBTTagCompound cornertag = new NBTTagCompound();
-            cornertag.setFloat("00", corner[0][0]);
-            cornertag.setFloat("01", corner[0][1]);
-            cornertag.setFloat("11", corner[1][1]);
-            cornertag.setFloat("10", corner[1][0]);
-            par1.setTag("corners", cornertag);
-		}
-	}
-
+    public Packet getDescriptionPacket()
+    {
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
+        this.writeToNBT(nbttagcompound);
+        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
+    }
+	
+    @Override
+    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
+    {
+    	NBTTagCompound nbttagcompound = pkt.getNbtCompound();
+    	this.readFromNBT(nbttagcompound);
+    }
     @Override
 	public void readFromNBT(NBTTagCompound par1) {
 		super.readFromNBT(par1);
@@ -53,30 +63,20 @@ public class TileEntityBlockFluid extends TileEntity {
 			colourArray = new int[]{ DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR, DEFAULTCOLOUR };
 		}
 	}
-	
-    /**
-     * Overriden in a sign to provide the text.
-     */
-	@SuppressWarnings("rawtypes")
-    @Override
-    public Packet getDescriptionPacket()
-    {
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        this.writeToNBT(nbttagcompound);
-        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
-    }
-    @Override
-    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
-    {
-    	NBTTagCompound nbttagcompound = pkt.getNbtCompound();
-    	this.readFromNBT(nbttagcompound);
-    }
     
-    public static int getColour(int dyeIndex)
-    {
-        int ret = ItemDye.dyeColors[dyeIndex];
-        int alpha = 0xFF000000;
-        ret += alpha;
-        return ret;
-    }
+    @Override
+	public void writeToNBT(NBTTagCompound par1) {
+		super.writeToNBT(par1);
+		par1.setIntArray("metaArray", colourArray);
+		par1.setFloat("flow", flowDir);
+		if(corner!=null)
+		{
+		    NBTTagCompound cornertag = new NBTTagCompound();
+            cornertag.setFloat("00", corner[0][0]);
+            cornertag.setFloat("01", corner[0][1]);
+            cornertag.setFloat("11", corner[1][1]);
+            cornertag.setFloat("10", corner[1][0]);
+            par1.setTag("corners", cornertag);
+		}
+	}
 }

@@ -11,46 +11,21 @@ public class TileEntityMultiBlockPartFluids extends TileEntityMultiBlockPart imp
 {
     TileEntityMultiCoreFluids fluidCore;
 
+    @Override
+    public boolean canDrain(EnumFacing from, Fluid fluid)
+    {
+        return fluidCore != null ? fluidCore.canDrain(from, fluid) : false;
+    }
+
+    @Override
+    public boolean canFill(EnumFacing from, Fluid fluid)
+    {
+        return fluidCore != null ? fluidCore.canFill(from, fluid) : false;
+    }
+
     public boolean canUpdate()
     {
         return false;
-    }
-
-    public void setCore(TileEntityMultiCoreFluids core)
-    {
-        fluidCore = core;
-        this.core = core;
-    }
-
-    public TileEntityMultiCoreFluids getCore()
-    {
-        if (fluidCore == null) fluidCore = (TileEntityMultiCoreFluids) worldObj.getTileEntity(corePos);
-
-        return fluidCore;
-    }
-
-    @Override
-    public void readFromNBT(NBTTagCompound tagCompound)
-    {
-        super.readFromNBT(tagCompound);
-    }
-
-    @Override
-    public void writeToNBT(NBTTagCompound tagCompound)
-    {
-        super.writeToNBT(tagCompound);
-    }
-
-    @Override
-    public int getSizeInventory()
-    {
-        return fluidCore != null ? fluidCore.getSizeInventory() : 0;
-    }
-
-    @Override
-    public int fill(EnumFacing from, FluidStack resource, boolean doFill)
-    {
-        return fluidCore != null ? fluidCore.fill(from, resource, doFill) : 0;
     }
 
     @Override
@@ -66,20 +41,46 @@ public class TileEntityMultiBlockPartFluids extends TileEntityMultiBlockPart imp
     }
 
     @Override
-    public boolean canFill(EnumFacing from, Fluid fluid)
+    public int fill(EnumFacing from, FluidStack resource, boolean doFill)
     {
-        return fluidCore != null ? fluidCore.canFill(from, fluid) : false;
+        return fluidCore != null ? fluidCore.fill(from, resource, doFill) : 0;
     }
 
     @Override
-    public boolean canDrain(EnumFacing from, Fluid fluid)
+    public TileEntityMultiCoreFluids getCore()
     {
-        return fluidCore != null ? fluidCore.canDrain(from, fluid) : false;
+        if (fluidCore == null) fluidCore = (TileEntityMultiCoreFluids) worldObj.getTileEntity(corePos);
+
+        return fluidCore;
+    }
+
+    @Override
+    public int getSizeInventory()
+    {
+        return fluidCore != null ? fluidCore.getSizeInventory() : 0;
     }
 
     @Override
     public FluidTankInfo[] getTankInfo(EnumFacing from)
     {
         return fluidCore != null ? fluidCore.getTankInfo(from) : null;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound tagCompound)
+    {
+        super.readFromNBT(tagCompound);
+    }
+
+    public void setCore(TileEntityMultiCoreFluids core)
+    {
+        fluidCore = core;
+        this.core = core;
+    }
+
+    @Override
+    public void writeToNBT(NBTTagCompound tagCompound)
+    {
+        super.writeToNBT(tagCompound);
     }
 }

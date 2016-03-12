@@ -23,6 +23,20 @@ public class Vector4
 		this.w = w;
 	}
 	
+	public Vector4(Entity e)
+	{
+		this(e.posX, e.posY, e.posZ, e.dimension);
+	}
+	
+	public Vector4(NBTTagCompound nbt)
+	{
+		this();
+		x = nbt.getFloat("x");
+		y = nbt.getFloat("y");
+		z = nbt.getFloat("z");
+		w = nbt.getFloat("w");
+	}
+	
 	public Vector4(String toParse)
 	{
 		String[] vals = toParse.split(" ");
@@ -35,13 +49,17 @@ public class Vector4
 		}
 	}
 	
-	public Vector4 set(float x, float y, float z, float w)
+	public Vector4 add(Vector4 b)
 	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = w;
-		return this;
+		Vector4 quat = new Vector4();
+		quat.w = w*b.w - x*b.x - y*b.y - z*b.z;
+		
+		quat.x	= b.w*x + b.x*w + b.y*z - b.z*y;
+		quat.y	= b.w*y + b.y*w + b.z*x - b.x*z;
+		quat.z	= b.w*z + b.z*w + b.x*y - b.y*x;
+		
+		
+		return quat;
 	}
 	
 	public Vector4 addAngles(Vector4 toAdd)
@@ -59,32 +77,6 @@ public class Vector4
 		return (ret.add(temp)).toAxisAngle();
 	}
 	
-	public Vector4 add(Vector4 b)
-	{
-		Vector4 quat = new Vector4();
-		quat.w = w*b.w - x*b.x - y*b.y - z*b.z;
-		
-		quat.x	= b.w*x + b.x*w + b.y*z - b.z*y;
-		quat.y	= b.w*y + b.y*w + b.z*x - b.x*z;
-		quat.z	= b.w*z + b.z*w + b.x*y - b.y*x;
-		
-		
-		return quat;
-	}
-	
-	public Vector4 subtractAngles(Vector4 toAdd)
-	{
-		Vector4 temp = new Vector4(toAdd.x, toAdd.y, toAdd.z, -toAdd.w);
-		return addAngles(temp);
-	}
-	
-	public Vector4 scalarMult(float scalar)
-	{
-		Vector4 ret = new Vector4(x,y,z,w);
-		ret.w = w*scalar;
-		return ret;
-	}
-	
 	public Vector4 copy()
 	{
 		return new Vector4(x,y,z,w);
@@ -95,20 +87,9 @@ public class Vector4
 		GL11.glRotatef(w, x, y, z);
 	}
 	
-	public Vector4 toQuaternion()
-	{//q = cos(angle/2) + i ( x * sin(angle/2)) + j (y * sin(angle/2)) + k ( z * sin(angle/2))
-		
-		double aw = Math.toRadians(w);
-		float ax = x;
-		float ay = y;
-		float az = z;
-		
-		this.w = (float) Math.cos(aw/2);
-		this.x = (float) (ax*Math.sin(aw/2));
-		this.y = (float) (ay*Math.sin(aw/2));
-		this.z = (float) (az*Math.sin(aw/2));
-		
-		return this;
+	public boolean isEmpty()
+	{
+		return x == 0 && z == 0 && y == 0;
 	}
 	
 	public Vector4 normalize()
@@ -121,6 +102,28 @@ public class Vector4
 		w /= s;
 		
 		return this;
+	}
+	
+	public Vector4 scalarMult(float scalar)
+	{
+		Vector4 ret = new Vector4(x,y,z,w);
+		ret.w = w*scalar;
+		return ret;
+	}
+	
+	public Vector4 set(float x, float y, float z, float w)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+		return this;
+	}
+	
+	public Vector4 subtractAngles(Vector4 toAdd)
+	{
+		Vector4 temp = new Vector4(toAdd.x, toAdd.y, toAdd.z, -toAdd.w);
+		return addAngles(temp);
 	}
 	
 	/**
@@ -158,26 +161,29 @@ public class Vector4
 		return this;
 	}
 	
-	public void writeToNBT(NBTTagCompound nbt)
-	{
-		nbt.setFloat("x", x);
-		nbt.setFloat("y", y);
-		nbt.setFloat("z", z);
-		nbt.setFloat("w", w);
+	public String toIntString() {
+		return "x:" + (int)x + " y:" + (int)y + " z:" + (int)z;
 	}
 	
-	public Vector4(Entity e)
-	{
-		this(e.posX, e.posY, e.posZ, e.dimension);
+	public Vector4 toQuaternion()
+	{//q = cos(angle/2) + i ( x * sin(angle/2)) + j (y * sin(angle/2)) + k ( z * sin(angle/2))
+		
+		double aw = Math.toRadians(w);
+		float ax = x;
+		float ay = y;
+		float az = z;
+		
+		this.w = (float) Math.cos(aw/2);
+		this.x = (float) (ax*Math.sin(aw/2));
+		this.y = (float) (ay*Math.sin(aw/2));
+		this.z = (float) (az*Math.sin(aw/2));
+		
+		return this;
 	}
 	
-	public Vector4(NBTTagCompound nbt)
-	{
-		this();
-		x = nbt.getFloat("x");
-		y = nbt.getFloat("y");
-		z = nbt.getFloat("z");
-		w = nbt.getFloat("w");
+	@Override
+	public String toString() {
+		return "x:" + x + " y:" + y + " z:" + z +" w:"+w;
 	}
 	
 	public boolean withinDistance(float distance, Vector4 toCheck)
@@ -197,17 +203,11 @@ public class Vector4
 		return false;
 	}
 	
-	public boolean isEmpty()
+	public void writeToNBT(NBTTagCompound nbt)
 	{
-		return x == 0 && z == 0 && y == 0;
-	}
-	
-	@Override
-	public String toString() {
-		return "x:" + x + " y:" + y + " z:" + z +" w:"+w;
-	}
-	
-	public String toIntString() {
-		return "x:" + (int)x + " y:" + (int)y + " z:" + (int)z;
+		nbt.setFloat("x", x);
+		nbt.setFloat("y", y);
+		nbt.setFloat("z", z);
+		nbt.setFloat("w", w);
 	}
 }

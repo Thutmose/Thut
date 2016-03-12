@@ -23,30 +23,6 @@ public class Paths {
 	}
 
 
-    public PathEntity getPathEntityToEntity(Entity entityA, Entity entityB, float distance)
-    {
-//    	System.out.println(Arrays.toString(cacheLock));
-    	while(cacheLock[0])
-    	{
-    		try
-			{
-				Thread.sleep(1);
-			}
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
-			}
-    	}
-    	if(chunks == null)
-    		return null;
-    	
-    	cacheLock[1] = true;
-        PathEntity pathentity = (new JPSPather(chunks, (IPathingMob)entityA)).createEntityPathTo(chunks, entityA, entityB, distance);
-        cacheLock[1] = false;
-        
-        return pathentity;
-    }
-
     public PathEntity getEntityPathToXYZ(Entity entity, int x, int y, int z, float distance)
     {
     	if(x==0&&z==0)
@@ -71,6 +47,30 @@ public class Paths {
     	cacheLock[1] = true;
         ThutPathFinder pather = new JPSPather(chunks, (IPathingMob)entity);
         PathEntity pathentity = pather.createEntityPathTo(entity, x, y, z, distance);
+        cacheLock[1] = false;
+        
+        return pathentity;
+    }
+
+    public PathEntity getPathEntityToEntity(Entity entityA, Entity entityB, float distance)
+    {
+//    	System.out.println(Arrays.toString(cacheLock));
+    	while(cacheLock[0])
+    	{
+    		try
+			{
+				Thread.sleep(1);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+    	}
+    	if(chunks == null)
+    		return null;
+    	
+    	cacheLock[1] = true;
+        PathEntity pathentity = (new JPSPather(chunks, (IPathingMob)entityA)).createEntityPathTo(chunks, entityA, entityB, distance);
         cacheLock[1] = false;
         
         return pathentity;

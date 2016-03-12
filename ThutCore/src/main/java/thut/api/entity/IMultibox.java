@@ -9,17 +9,17 @@ import thut.api.maths.Vector3;
 
 public interface IMultibox 
 {
-	public abstract void setBoxes();
-	public abstract void setOffsets();
+	public abstract void applyEntityCollision(Entity e);
+	public abstract Matrix3 bounds(Vector3 target);
 
+	public abstract void checkCollision();
+	
 	public abstract HashMap<String, Matrix3> getBoxes();
 	
 	public abstract HashMap<String, Vector3> getOffsets();
 	
-	public abstract void applyEntityCollision(Entity e);
+	public abstract void setBoxes();
 	
-	public abstract Matrix3 bounds(Vector3 target);
-	
-	public abstract void checkCollision();
+	public abstract void setOffsets();
 	
 }

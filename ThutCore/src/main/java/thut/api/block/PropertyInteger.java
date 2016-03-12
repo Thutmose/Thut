@@ -21,21 +21,25 @@ public class PropertyInteger implements IUnlistedProperty<Integer>
         this.validator = validator;
     }
 
+    @Override
     public String getName()
     {
         return name;
     }
 
-    public boolean isValid(Integer value)
-    {
-        return validator.apply(value);
-    }
-
+    @Override
     public Class<Integer> getType()
     {
         return Integer.class;
     }
 
+    @Override
+    public boolean isValid(Integer value)
+    {
+        return validator.apply(value);
+    }
+
+    @Override
     public String valueToString(Integer value)
     {
         return value.toString();

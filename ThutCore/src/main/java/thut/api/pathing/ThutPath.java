@@ -34,6 +34,24 @@ public class ThutPath extends Path {
     }
 
     /**
+     * Changes the provided point's distance to target
+     */
+    public void changeDistance(PathPoint point, float newDistance)
+    {
+        float f1 = point.distanceToTarget;
+        point.distanceToTarget = newDistance;
+
+        if (newDistance < f1)
+        {
+            this.sortBack(point.index);
+        }
+        else
+        {
+            this.sortForward(point.index);
+        }
+    }
+
+    /**
      * Clears the path
      */
     @Override
@@ -62,21 +80,12 @@ public class ThutPath extends Path {
     }
 
     /**
-     * Changes the provided point's distance to target
+     * Returns true if this path contains no points
      */
-    public void changeDistance(PathPoint point, float newDistance)
+    @Override
+	public boolean isPathEmpty()
     {
-        float f1 = point.distanceToTarget;
-        point.distanceToTarget = newDistance;
-
-        if (newDistance < f1)
-        {
-            this.sortBack(point.index);
-        }
-        else
-        {
-            this.sortForward(point.index);
-        }
+        return this.count == 0;
     }
 
     /**
@@ -165,14 +174,5 @@ public class ThutPath extends Path {
 
         this.pathPoints[index] = pathpoint;
         pathpoint.index = index;
-    }
-
-    /**
-     * Returns true if this path contains no points
-     */
-    @Override
-	public boolean isPathEmpty()
-    {
-        return this.count == 0;
     }
 }

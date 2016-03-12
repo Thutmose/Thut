@@ -3,6 +3,41 @@ package thut.api.pathing;
 import net.minecraft.util.MathHelper;
 
 public class PathPoint extends net.minecraft.pathfinding.PathPoint{
+    public static int makeHash(int x, int y, int z)
+    {
+    	int i = ((x + 511) + (y + 511) * 1024 + (z + 511) * 1024 * 1024);
+    	return i;
+      //  return y & 255 | (x & 32767) << 8 | (z & 32767) << 24 | (x < 0 ? Integer.MIN_VALUE : 0) | (z < 0 ? 32768 : 0);
+    }
+    public static PathPoint merge(PathPoint forward, PathPoint backward)
+    {
+    	PathPoint ret = null;
+    	
+        int i = 1;
+        PathPoint pathpoint2 = backward;
+        
+        for(pathpoint2 = backward; pathpoint2.previous != null; pathpoint2 = pathpoint2.previous)
+        {
+        	++i;
+        }
+
+        PathPoint[] arr = new PathPoint[i];
+        pathpoint2 = backward;
+        int j = i-1;
+        --i;
+        for (arr[j-i] = backward; pathpoint2.previous != null; arr[j-i] = pathpoint2)
+        {
+            pathpoint2 = pathpoint2.previous;
+            --i;
+        }
+        arr[0].previous = forward;
+        for(i = 1; i<j+1; i++)
+        {
+        	arr[i].previous = arr[i-1];
+        }
+    	ret = arr[j];
+    	return ret;
+    }
     /** The x coordinate of this point */
     public final int xCoord;
     /** The y coordinate of this point */
@@ -21,11 +56,13 @@ public class PathPoint extends net.minecraft.pathfinding.PathPoint{
     float distanceToTarget;
     /** The point preceding this in its assigned path */
     PathPoint previous;
+    
     /** Indicates this is the origin */
     public boolean isFirst;
+
     /** Indicates direction of path 1 is forwards, -1 is backwards*/
     public byte direction = 0;
-    
+
     public float blockWeight=10;
 
     public PathPoint(int x, int y, int z)
@@ -35,13 +72,6 @@ public class PathPoint extends net.minecraft.pathfinding.PathPoint{
         this.yCoord = y;
         this.zCoord = z;
         this.hash = makeHash(x, y, z);
-    }
-
-    public static int makeHash(int x, int y, int z)
-    {
-    	int i = ((x + 511) + (y + 511) * 1024 + (z + 511) * 1024 * 1024);
-    	return i;
-      //  return y & 255 | (x & 32767) << 8 | (z & 32767) << 24 | (x < 0 ? Integer.MIN_VALUE : 0) | (z < 0 ? 32768 : 0);
     }
 
     /**y & 1023 | (x & 524287) << 10 | (z & 524287) << 28 | (x < 0 ? Integer.MIN_VALUE : 0) | (z < 0 ? 524288 : 0);
@@ -94,40 +124,10 @@ public class PathPoint extends net.minecraft.pathfinding.PathPoint{
     {
         return this.index >= 0;
     }
-
+    
     @Override
 	public String toString()
     {
         return this.xCoord + ", " + this.yCoord + ", " + this.zCoord;
-    }
-    
-    public static PathPoint merge(PathPoint forward, PathPoint backward)
-    {
-    	PathPoint ret = null;
-    	
-        int i = 1;
-        PathPoint pathpoint2 = backward;
-        
-        for(pathpoint2 = backward; pathpoint2.previous != null; pathpoint2 = pathpoint2.previous)
-        {
-        	++i;
-        }
-
-        PathPoint[] arr = new PathPoint[i];
-        pathpoint2 = backward;
-        int j = i-1;
-        --i;
-        for (arr[j-i] = backward; pathpoint2.previous != null; arr[j-i] = pathpoint2)
-        {
-            pathpoint2 = pathpoint2.previous;
-            --i;
-        }
-        arr[0].previous = forward;
-        for(i = 1; i<j+1; i++)
-        {
-        	arr[i].previous = arr[i-1];
-        }
-    	ret = arr[j];
-    	return ret;
     }
 }

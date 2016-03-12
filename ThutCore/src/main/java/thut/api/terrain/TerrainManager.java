@@ -21,9 +21,23 @@ public class TerrainManager {
 
 	public static final String TERRAIN = "pokecubeTerrainData";
 	
-	public HashMap<Integer, WorldTerrain> map = new HashMap<Integer, WorldTerrain>();
+	private static TerrainManager terrain;
 	
-    private static TerrainManager terrain;
+    public static void clear()
+	{
+		terrain = null;
+	}
+	
+	public static TerrainManager getInstance()
+	{
+		if(terrain == null)
+		{
+			terrain = new TerrainManager();
+		}
+		return terrain;
+	}
+
+	public HashMap<Integer, WorldTerrain> map = new HashMap<Integer, WorldTerrain>();
 	
 	public TerrainManager()
 	{
@@ -31,17 +45,21 @@ public class TerrainManager {
 	}
 
 	@SubscribeEvent
-	public void WorldLoadEvent(Load evt)
+	public void ChunkLoadEvent(ChunkDataEvent.Load evt)
 	{
-		TerrainManager.getInstance().getTerrain(evt.world);
-	}
-	
-	@SubscribeEvent
-	public void WorldUnloadEvent(Unload evt)
-	{
-		if (evt.world.provider.getDimensionId() == 0 && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
+		if(FMLCommonHandler.instance().getEffectiveSide()==Side.CLIENT)
+			return;
+		try
 		{
-			TerrainManager.clear();
+			NBTTagCompound nbt = evt.getData();
+			NBTTagCompound terrainData = nbt.getCompoundTag(TERRAIN);
+
+			TerrainManager.getInstance().getTerrain(evt.world).loadTerrain(terrainData);
+			// evt.getChunk().setChunkModified();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
 		}
 	}
 
@@ -68,49 +86,38 @@ public class TerrainManager {
 			e.printStackTrace();
 		}
 	}
+	
+	public WorldTerrain getTerrain(int id)
+	{
+		if(map.get(id)==null)
+		{
+			map.put(id, new WorldTerrain(id));
+		}
+		
+		return map.get(id);
+	}
+	
+	public WorldTerrain getTerrain(World worldObj)
+	{
+		int id = worldObj.provider.getDimensionId();
+		return getTerrain(id);
+	}
+	
+	public TerrainSegment getTerrain(World world, BlockPos p) {
+		return getTerrain(world, p.getX(), p.getY(), p.getZ());
+	}
+	
+	
+	public TerrainSegment getTerrain(World worldObj, double x, double y, double z)
+	{
+        int i = MathHelper.floor_double(x / 16.0D);
+        int j = MathHelper.floor_double(y / 16.0D);
+        int k = MathHelper.floor_double(z / 16.0D);
 
-	@SubscribeEvent
-	public void ChunkLoadEvent(ChunkDataEvent.Load evt)
-	{
-		if(FMLCommonHandler.instance().getEffectiveSide()==Side.CLIENT)
-			return;
-		try
-		{
-			NBTTagCompound nbt = evt.getData();
-			NBTTagCompound terrainData = nbt.getCompoundTag(TERRAIN);
-
-			TerrainManager.getInstance().getTerrain(evt.world).loadTerrain(terrainData);
-			// evt.getChunk().setChunkModified();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+        TerrainSegment ret = getTerrain(worldObj).getTerrain(i, j, k);
+        ret.initBiomes(worldObj);
+		return ret;
 	}
-	
-	@SubscribeEvent
-	public void PlayerLoggout(PlayerLoggedOutEvent evt)
-	{
-		if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
-		{
-			TerrainManager.clear();
-		}
-	}
-	
-	public static TerrainManager getInstance()
-	{
-		if(terrain == null)
-		{
-			terrain = new TerrainManager();
-		}
-		return terrain;
-	}
-	
-	public static void clear()
-	{
-		terrain = null;
-	}
-	
 	
 	public TerrainSegment getTerrainForEntity(Entity e)
 	{
@@ -125,35 +132,28 @@ public class TerrainManager {
 		return getTerrain(worldObj, v.x, v.y, v.z);
 	}
 	
-	public TerrainSegment getTerrain(World worldObj, double x, double y, double z)
+	@SubscribeEvent
+	public void PlayerLoggout(PlayerLoggedOutEvent evt)
 	{
-        int i = MathHelper.floor_double(x / 16.0D);
-        int j = MathHelper.floor_double(y / 16.0D);
-        int k = MathHelper.floor_double(z / 16.0D);
-
-        TerrainSegment ret = getTerrain(worldObj).getTerrain(i, j, k);
-        ret.initBiomes(worldObj);
-		return ret;
-	}
-	
-	public WorldTerrain getTerrain(World worldObj)
-	{
-		int id = worldObj.provider.getDimensionId();
-		return getTerrain(id);
-	}
-	
-	public WorldTerrain getTerrain(int id)
-	{
-		if(map.get(id)==null)
+		if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
 		{
-			map.put(id, new WorldTerrain(id));
+			TerrainManager.clear();
 		}
-		
-		return map.get(id);
+	}
+	
+	@SubscribeEvent
+	public void WorldLoadEvent(Load evt)
+	{
+		TerrainManager.getInstance().getTerrain(evt.world);
 	}
 
-	public TerrainSegment getTerrain(World world, BlockPos p) {
-		return getTerrain(world, p.getX(), p.getY(), p.getZ());
+	@SubscribeEvent
+	public void WorldUnloadEvent(Unload evt)
+	{
+		if (evt.world.provider.getDimensionId() == 0 && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
+		{
+			TerrainManager.clear();
+		}
 	}
 
 }

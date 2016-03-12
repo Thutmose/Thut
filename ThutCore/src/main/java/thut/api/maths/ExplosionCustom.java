@@ -2,7 +2,6 @@ package thut.api.maths;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,25 +40,267 @@ import thut.api.network.PacketHandler.MessageClient;
 public class ExplosionCustom extends Explosion
 {
 
+    public static class ClientUpdateInfo
+    {
+        final int[] affectedBlocks;
+        final int   dim;
+        final int[] centre;
+
+        public ClientUpdateInfo(List<Integer> affected, Vector3 mid, int dim_)
+        {
+            affectedBlocks = new int[affected.size()];
+            for (int i = 0; i < affected.size(); i++)
+            {
+                affectedBlocks[i] = affected.get(i);
+            }
+            dim = dim_;
+            centre = new int[3];
+            centre[0] = mid.intX();
+            centre[1] = mid.intY();
+            centre[2] = mid.intZ();
+        }
+
+    }
+    public static class ExplosionStuff
+    {
+        final ExplosionCustom boom;
+        final double          radius;
+        final double          strength;
+        final IBlockAccess    worldObj;
+        final Vector3         centre;
+        final boolean[]       lock = { true, false };
+
+        public ExplosionStuff(ExplosionCustom boom, double radius, double strength, IBlockAccess worldObj,
+                Vector3 centre)
+        {
+            this.boom = boom;
+            this.radius = radius;
+            this.strength = strength;
+            this.worldObj = worldObj;
+            this.centre = centre;
+        }
+
+        public void doBoom()
+        {
+            if (lock[1]) return;
+            lock[1] = true;
+            Thread newBoom = new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    boom.getRemovedBlocks(radius, strength, worldObj, centre);
+                    lock[0] = false;
+                    lock[1] = false;
+                    TickHandler.cleanup();
+                }
+            });
+            newBoom.setPriority(Thread.MIN_PRIORITY);
+            newBoom.setName(newBoom.getName().replace("Thread", "ExplosionThread"));
+            newBoom.start();
+        }
+    }
+    public static class ExplosionVictimTicker
+    {
+        public static Vector<VictimStuff>      victims       = new Vector<ExplosionCustom.VictimStuff>();
+        public static Vector<ClientUpdateInfo> clientUpdates = new Vector<ExplosionCustom.ClientUpdateInfo>();
+        private static HashSet<Object>         toRemove      = new HashSet<Object>();
+
+        public static void addVictim(Entity victim, float damage, Explosion blast)
+        {
+            VictimStuff v = new VictimStuff(victim, damage, blast);
+            victims.add(v);
+        }
+
+        public static void applyDamage(VictimStuff v)
+        {
+            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(v.dimension);
+            Entity hit = world.getEntityByID(v.entity);
+            // System.out.println(v.entity+" "+v.damage);
+            if (hit != null && !hit.isDead)
+            {
+                hit.attackEntityFrom(DamageSource.setExplosionSource(v.explosion), v.damage);
+            }
+        }
+
+        @SubscribeEvent
+        public void tick(WorldTickEvent evt)
+        {
+
+            if (evt.phase == Phase.END)
+            {
+                if (clientUpdates.size() > 0)
+                {
+                    // System.out.println("There are "+clientUpdates.size());
+                    ArrayList<ClientUpdateInfo> temp = new ArrayList<ClientUpdateInfo>(clientUpdates);
+                    for (ClientUpdateInfo i : temp)
+                    {
+                        NBTTagCompound nbt = new NBTTagCompound();
+                        nbt.setIntArray("mid", i.centre);
+                        nbt.setIntArray("affected", i.affectedBlocks);
+                        MessageClient message = new MessageClient(MessageClient.BLASTAFFECTED, nbt);
+                        PacketHandler.packetPipeline.sendToDimension(message, i.dim);
+                        toRemove.add(i);
+                    }
+                    clientUpdates.removeAll(toRemove);
+                    toRemove.clear();
+                }
+                if (victims.size() > 0)
+                {
+                    ArrayList<VictimStuff> temp = new ArrayList<VictimStuff>(victims);
+                    for (VictimStuff v : temp)
+                    {
+                        applyDamage(v);
+                        toRemove.add(v);
+                    }
+                    victims.removeAll(toRemove);
+                    toRemove.clear();
+                }
+            }
+            else
+            {
+                Vector<Entity> entities = worldEntities.get(evt.world.provider.getDimensionId());
+                if (entities == null)
+                {
+                    entities = new Vector<Entity>();
+                }
+                entities.clear();
+                entities.addAll(evt.world.loadedEntityList);
+                worldEntities.put(evt.world.provider.getDimensionId(), entities);
+            }
+        }
+    }
+    public static class VictimStuff
+    {
+        final int       entity;
+        final int       dimension;
+        final float     damage;
+        final Explosion explosion;
+
+        public VictimStuff(Entity hit, float d, Explosion e)
+        {
+            entity = hit.getEntityId();
+            dimension = hit.dimension;
+            damage = d;
+            explosion = e;
+        }
+
+        public VictimStuff(int id, int dim, float d, Explosion e)
+        {
+            entity = id;
+            dimension = dim;
+            damage = d;
+            explosion = e;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o instanceof VictimStuff) { return ((VictimStuff) o).entity == entity; }
+            return super.equals(o);
+        }
+    }
     public static int   MAX_RADIUS = 127;
     public static Block melt;
     public static Block dust;
+    static final boolean[] toClear = { false, false };
+    static final ExplosionCustom                                   instance      = new ExplosionCustom(null, null,
+            Vector3.getNewVector(), 0);
+
+    public static final Vector<ExplosionStuff>                     explosions    = new Vector<ExplosionStuff>();
+    public static final ConcurrentHashMap<Integer, Vector<Entity>> worldEntities = new ConcurrentHashMap<Integer, Vector<Entity>>();
+    private static int                                             maxThreads    = -1;
+    private static final Thread                                    boomThread    = new Thread(new Runnable()
+    {
+
+        @Override
+        public void run()
+        {
+            while (true)
+            {
+                boolean boomed = false;
+                if (explosions.size() > 0)
+                {
+                    int num;
+                    if (maxThreads == -1)
+                    {
+                        maxThreads = Runtime.getRuntime().availableProcessors() / 2;
+                        maxThreads = Math.max(1, maxThreads);
+                    }
+                    num = maxThreads;
+                    ArrayList<ExplosionStuff> booms = new ArrayList<ExplosionStuff>(explosions);
+                    num = Math.min(num, booms.size());
+                    Set<ExplosionStuff> toRemove = new HashSet<ExplosionStuff>();
+                    for (int i = 0; i < num; i++)
+                    {
+                        ExplosionStuff boom = booms.get(i);
+                        if (boom.lock[0])
+                        {
+                            boom.doBoom();
+                        }
+                        else if (!boom.lock[1])
+                        {
+                            toRemove.add(boom);
+                        }
+                        boomed = true;
+                    }
+                    explosions.removeAll(toRemove);
+                }
+                if (toClear[0])
+                {
+                    explosions.clear();
+                    toClear[0] = false;
+                }
+                if (!boomed)
+                {
+                    try
+                    {
+                        Thread.sleep(100);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        // e.printStackTrace();
+                    }
+                }
+            }
+        }
+    });
+    static
+    {
+        boomThread.setName("explosionThread");
+        System.out.println("Starting explosion thread");
+        MinecraftForge.EVENT_BUS.register(new ExplosionVictimTicker());
+        boomThread.start();
+    }
     IBlockAccess        worldObj;
     int                 dimension;
     private World       world;
     Vector3             centre;
+
     float               strength;
+
     public boolean      meteor     = false;
 
     public EntityPlayer  owner                  = null;
+
     List<Entity>         targets                = new ArrayList<Entity>();
+
     private double       explosionX;
+
     private double       explosionY;
+
     private double       explosionZ;
     private float        explosionSize;
+
     private boolean      isSmoking              = false;
+
     Entity               exploder;
+
     public Set<BlockPos> affectedBlockPositions = new HashSet<BlockPos>();
+
+    Map<EntityLivingBase, Float> damages  = new HashMap<EntityLivingBase, Float>();
+
+    List<Chunk>                  affected = new ArrayList<Chunk>();
 
     public ExplosionCustom(World world, Entity par2Entity, double x, double y, double z, float power)
     {
@@ -99,6 +340,11 @@ public class ExplosionCustom extends Explosion
         worldObj = TickHandler.getInstance().getWorldCache(dimension);
     }
 
+    public void addChunkPosition(Vector3 v)
+    {
+        affectedBlockPositions.add(new BlockPos(v.intX(), v.intY(), v.intZ()));
+    }
+
     public boolean canBreak(Vector3 location)
     {
         boolean ret = true;
@@ -121,12 +367,6 @@ public class ExplosionCustom extends Explosion
         return ret;
     }
 
-    public ExplosionCustom setMeteor(boolean meteor)
-    {
-        this.meteor = meteor;
-        return this;
-    }
-
     public void doExplosion()
     {
         this.world.playSoundEffect(this.explosionX, this.explosionY, this.explosionZ, "random.explode", 4.0F,
@@ -144,6 +384,26 @@ public class ExplosionCustom extends Explosion
         }
 
         explosions.addElement(new ExplosionStuff(this, MAX_RADIUS, strength, worldObj, centre));
+    }
+
+    @Override
+    public void doExplosionA()
+    {
+        this.affectedBlockPositions.clear();
+
+        if (true)
+        {
+            System.err.println("This should not be run anymore");
+            new Exception().printStackTrace();
+            return;
+        }
+    }
+
+    /** Does the second part of the explosion (sound, particles, drop spawn) */
+    @Override
+    public void doExplosionB(boolean par1)
+    {
+
     }
 
     // TODO Revisit this to make blast energy more conserved
@@ -219,23 +479,6 @@ public class ExplosionCustom extends Explosion
             // explosions.add(boom);
         }
     }
-
-    Map<EntityLivingBase, Float> damages  = new HashMap<EntityLivingBase, Float>();
-    List<Chunk>                  affected = new ArrayList<Chunk>();
-
-    @Override
-    public void doExplosionA()
-    {
-        this.affectedBlockPositions.clear();
-
-        if (true)
-        {
-            System.err.println("This should not be run anymore");
-            new Exception().printStackTrace();
-            return;
-        }
-    }
-
     /** Handles the actual block removal, has a meteor argument to allow
      * converting to ash or dust on impact
      * 
@@ -270,19 +513,58 @@ public class ExplosionCustom extends Explosion
             TickHandler.addBlockChange(change, dimension);
         }
     }
-
-    public void addChunkPosition(Vector3 v)
+    HashMap<Integer, List<Entity>> getEntitiesInRange(int distance)
     {
-        affectedBlockPositions.add(new BlockPos(v.intX(), v.intY(), v.intZ()));
-    }
+        HashMap<Integer, List<Entity>> ret = new HashMap<Integer, List<Entity>>();
+        List<Object> ents = getEntitiesWithinDistance(centre, Entity.class, distance, dimension);
+        for (Object o : ents)
+        {
+            Entity e = (Entity) o;
 
-    /** Does the second part of the explosion (sound, particles, drop spawn) */
-    @Override
-    public void doExplosionB(boolean par1)
+            if (centre.distToEntity(e) > distance) continue;
+
+            int x = MathHelper.floor_double(e.posX - centre.x);
+            int y = MathHelper.floor_double(e.posY - centre.y);
+            int z = MathHelper.floor_double(e.posZ - centre.z);
+            int key = Cruncher.getVectorInt(x, y, z);
+            List<Entity> temp;
+            if (ret.containsKey(key))
+            {
+                temp = ret.get(key);
+            }
+            else
+            {
+                temp = new ArrayList<Entity>();
+                ret.put(key, temp);
+            }
+            temp.add(e);
+        }
+
+        return ret;
+    }
+    List<Object> getEntitiesWithinDistance(Vector3 centre, Class<Entity> targetClass, int distance, int dimension)
     {
-
+        Vector<?> entities = ExplosionCustom.worldEntities.get(dimension);
+        List<Object> list = new ArrayList<Object>();
+        double dsq = distance * distance;
+        Vector3 point = Vector3.getNewVector();
+        if (entities != null)
+        {
+            List<?> temp = new ArrayList<Object>(entities);
+            for (Object o : temp)
+            {
+                if (targetClass.isInstance(o))
+                {
+                    point.set(o);
+                    if (point.distToSq(centre) < dsq)
+                    {
+                        list.add(o);
+                    }
+                }
+            }
+        }
+        return list;
     }
-
     List<Integer> getRemovedBlocks(final double radius, final double strength, final IBlockAccess worldObj,
             final Vector3 centre)
     {
@@ -309,7 +591,7 @@ public class ExplosionCustom extends Explosion
         BitSet checked = new BitSet();
 
         int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));
-        int max = (int) MAX_RADIUS * 2;
+        int max = MAX_RADIUS * 2;
         num = Math.min(num, max);
         num = Math.min(num, 1000);
         radSq = num * num / 4;
@@ -460,292 +742,9 @@ public class ExplosionCustom extends Explosion
         return toRemove;
     }
 
-    List<Object> getEntitiesWithinDistance(Vector3 centre, Class<Entity> targetClass, int distance, int dimension)
+    public ExplosionCustom setMeteor(boolean meteor)
     {
-        Vector<?> entities = ExplosionCustom.worldEntities.get(dimension);
-        List<Object> list = new ArrayList<Object>();
-        double dsq = distance * distance;
-        Vector3 point = Vector3.getNewVector();
-        if (entities != null)
-        {
-            List<?> temp = new ArrayList<Object>(entities);
-            for (Object o : temp)
-            {
-                if (targetClass.isInstance(o))
-                {
-                    point.set(o);
-                    if (point.distToSq(centre) < dsq)
-                    {
-                        list.add(o);
-                    }
-                }
-            }
-        }
-        return list;
-    }
-
-    HashMap<Integer, List<Entity>> getEntitiesInRange(int distance)
-    {
-        HashMap<Integer, List<Entity>> ret = new HashMap<Integer, List<Entity>>();
-        List<Object> ents = getEntitiesWithinDistance(centre, Entity.class, distance, dimension);
-        for (Object o : ents)
-        {
-            Entity e = (Entity) o;
-
-            if (centre.distToEntity(e) > distance) continue;
-
-            int x = MathHelper.floor_double(e.posX - centre.x);
-            int y = MathHelper.floor_double(e.posY - centre.y);
-            int z = MathHelper.floor_double(e.posZ - centre.z);
-            int key = Cruncher.getVectorInt(x, y, z);
-            List<Entity> temp;
-            if (ret.containsKey(key))
-            {
-                temp = ret.get(key);
-            }
-            else
-            {
-                temp = new ArrayList<Entity>();
-                ret.put(key, temp);
-            }
-            temp.add(e);
-        }
-
-        return ret;
-    }
-
-    public static class ExplosionStuff
-    {
-        final ExplosionCustom boom;
-        final double          radius;
-        final double          strength;
-        final IBlockAccess    worldObj;
-        final Vector3         centre;
-        final boolean[]       lock = { true, false };
-
-        public ExplosionStuff(ExplosionCustom boom, double radius, double strength, IBlockAccess worldObj,
-                Vector3 centre)
-        {
-            this.boom = boom;
-            this.radius = radius;
-            this.strength = strength;
-            this.worldObj = worldObj;
-            this.centre = centre;
-        }
-
-        public void doBoom()
-        {
-            if (lock[1]) return;
-            lock[1] = true;
-            Thread newBoom = new Thread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    boom.getRemovedBlocks(radius, strength, worldObj, centre);
-                    lock[0] = false;
-                    lock[1] = false;
-                    TickHandler.cleanup();
-                }
-            });
-            newBoom.setPriority(Thread.MIN_PRIORITY);
-            newBoom.setName(newBoom.getName().replace("Thread", "ExplosionThread"));
-            newBoom.start();
-        }
-    }
-
-    public static class ClientUpdateInfo
-    {
-        final int[] affectedBlocks;
-        final int   dim;
-        final int[] centre;
-
-        public ClientUpdateInfo(List<Integer> affected, Vector3 mid, int dim_)
-        {
-            affectedBlocks = new int[affected.size()];
-            for (int i = 0; i < affected.size(); i++)
-            {
-                affectedBlocks[i] = affected.get(i);
-            }
-            dim = dim_;
-            centre = new int[3];
-            centre[0] = mid.intX();
-            centre[1] = mid.intY();
-            centre[2] = mid.intZ();
-        }
-
-    }
-
-    public static class VictimStuff
-    {
-        final int       entity;
-        final int       dimension;
-        final float     damage;
-        final Explosion explosion;
-
-        public VictimStuff(Entity hit, float d, Explosion e)
-        {
-            entity = hit.getEntityId();
-            dimension = hit.dimension;
-            damage = d;
-            explosion = e;
-        }
-
-        public VictimStuff(int id, int dim, float d, Explosion e)
-        {
-            entity = id;
-            dimension = dim;
-            damage = d;
-            explosion = e;
-        }
-
-        @Override
-        public boolean equals(Object o)
-        {
-            if (o instanceof VictimStuff) { return ((VictimStuff) o).entity == entity; }
-            return super.equals(o);
-        }
-    }
-
-    public static class ExplosionVictimTicker
-    {
-        public static Vector<VictimStuff>      victims       = new Vector<ExplosionCustom.VictimStuff>();
-        public static Vector<ClientUpdateInfo> clientUpdates = new Vector<ExplosionCustom.ClientUpdateInfo>();
-        private static HashSet<Object>         toRemove      = new HashSet<Object>();
-
-        @SubscribeEvent
-        public void tick(WorldTickEvent evt)
-        {
-
-            if (evt.phase == Phase.END)
-            {
-                if (clientUpdates.size() > 0)
-                {
-                    // System.out.println("There are "+clientUpdates.size());
-                    ArrayList<ClientUpdateInfo> temp = new ArrayList<ClientUpdateInfo>(clientUpdates);
-                    for (ClientUpdateInfo i : temp)
-                    {
-                        NBTTagCompound nbt = new NBTTagCompound();
-                        nbt.setIntArray("mid", i.centre);
-                        nbt.setIntArray("affected", i.affectedBlocks);
-                        MessageClient message = new MessageClient(MessageClient.BLASTAFFECTED, nbt);
-                        PacketHandler.packetPipeline.sendToDimension(message, i.dim);
-                        toRemove.add(i);
-                    }
-                    clientUpdates.removeAll(toRemove);
-                    toRemove.clear();
-                }
-                if (victims.size() > 0)
-                {
-                    ArrayList<VictimStuff> temp = new ArrayList<VictimStuff>(victims);
-                    for (VictimStuff v : temp)
-                    {
-                        applyDamage(v);
-                        toRemove.add(v);
-                    }
-                    victims.removeAll(toRemove);
-                    toRemove.clear();
-                }
-            }
-            else
-            {
-                Vector<Entity> entities = worldEntities.get(evt.world.provider.getDimensionId());
-                if (entities == null)
-                {
-                    entities = new Vector<Entity>();
-                }
-                entities.clear();
-                entities.addAll((Collection<Entity>) evt.world.loadedEntityList);
-                worldEntities.put(evt.world.provider.getDimensionId(), entities);
-            }
-        }
-
-        public static void applyDamage(VictimStuff v)
-        {
-            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(v.dimension);
-            Entity hit = world.getEntityByID(v.entity);
-            // System.out.println(v.entity+" "+v.damage);
-            if (hit != null && !hit.isDead)
-            {
-                hit.attackEntityFrom(DamageSource.setExplosionSource(v.explosion), v.damage);
-            }
-        }
-
-        public static void addVictim(Entity victim, float damage, Explosion blast)
-        {
-            VictimStuff v = new VictimStuff(victim, damage, blast);
-            victims.add(v);
-        }
-    }
-
-    static final boolean[] toClear = { false, false };
-
-    static final ExplosionCustom                                   instance      = new ExplosionCustom(null, null,
-            Vector3.getNewVector(), 0);
-    public static final Vector<ExplosionStuff>                     explosions    = new Vector<ExplosionStuff>();
-    public static final ConcurrentHashMap<Integer, Vector<Entity>> worldEntities = new ConcurrentHashMap<Integer, Vector<Entity>>();
-    private static int                                             maxThreads    = -1;
-    private static final Thread                                    boomThread    = new Thread(new Runnable()
-    {
-
-        @Override
-        public void run()
-        {
-            while (true)
-            {
-                boolean boomed = false;
-                if (explosions.size() > 0)
-                {
-                    int num;
-                    if (maxThreads == -1)
-                    {
-                        maxThreads = Runtime.getRuntime().availableProcessors() / 2;
-                        maxThreads = Math.max(1, maxThreads);
-                    }
-                    num = maxThreads;
-                    ArrayList<ExplosionStuff> booms = new ArrayList<ExplosionStuff>(explosions);
-                    num = Math.min(num, booms.size());
-                    Set<ExplosionStuff> toRemove = new HashSet<ExplosionStuff>();
-                    for (int i = 0; i < num; i++)
-                    {
-                        ExplosionStuff boom = booms.get(i);
-                        if (boom.lock[0])
-                        {
-                            boom.doBoom();
-                        }
-                        else if (!boom.lock[1])
-                        {
-                            toRemove.add(boom);
-                        }
-                        boomed = true;
-                    }
-                    explosions.removeAll(toRemove);
-                }
-                if (toClear[0])
-                {
-                    explosions.clear();
-                    toClear[0] = false;
-                }
-                if (!boomed)
-                {
-                    try
-                    {
-                        Thread.sleep(100);
-                    }
-                    catch (InterruptedException e)
-                    {
-                        // e.printStackTrace();
-                    }
-                }
-            }
-        }
-    });
-
-    static
-    {
-        boomThread.setName("explosionThread");
-        System.out.println("Starting explosion thread");
-        MinecraftForge.EVENT_BUS.register(new ExplosionVictimTicker());
-        boomThread.start();
+        this.meteor = meteor;
+        return this;
     }
 }

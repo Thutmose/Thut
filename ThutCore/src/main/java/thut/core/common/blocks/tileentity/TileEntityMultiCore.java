@@ -7,28 +7,29 @@ public abstract class TileEntityMultiCore extends TileEntity  implements ISidedI
 {
 	protected boolean isValidMultiblock = false;
 	
-	public boolean getIsValid()
+	public abstract boolean checkIfProperlyFormed();
+	 
+	public abstract void convertDummies();
+	
+    public boolean getIsValid()
 	{
 	    return isValidMultiblock;
 	}
-	 
-	public void invalidateMultiblock()
-	{
-	    isValidMultiblock = false;
-	    revertDummies();
-	}
 	
-    /**
+	/**
      * invalidates a tile entity
      */
+    @Override
     public void invalidate()
     {
         invalidateMultiblock();
     }
 	
-	public abstract boolean checkIfProperlyFormed();
-	
-	public abstract void convertDummies();
+	public void invalidateMultiblock()
+	{
+	    isValidMultiblock = false;
+	    revertDummies();
+	}
 	
 	protected abstract void revertDummies();
 }

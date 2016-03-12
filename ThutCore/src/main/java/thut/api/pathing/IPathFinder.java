@@ -8,7 +8,7 @@ import net.minecraft.world.IBlockAccess;
 public interface IPathFinder
 {
 
-    PathEntity createEntityPathTo(IBlockAccess blockaccess, Entity entityFrom, Entity entityTo, float dist);
-    
     PathEntity createEntityPathTo(IBlockAccess blockaccess, Entity entityIn, BlockPos targetPos, float dist);
+    
+    PathEntity createEntityPathTo(IBlockAccess blockaccess, Entity entityFrom, Entity entityTo, float dist);
 }

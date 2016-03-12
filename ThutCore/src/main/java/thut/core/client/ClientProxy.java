@@ -29,8 +29,86 @@ import thut.reference.ThutCoreReference;
 
 public class ClientProxy extends CommonProxy
 {
+    public static class UpdateNotifier
+    {
+        public UpdateNotifier()
+        {
+            MinecraftForge.EVENT_BUS.register(this);
+        }
+
+        @SubscribeEvent
+        public void onPlayerJoin(TickEvent.PlayerTickEvent event)
+        {
+            if (event.player.worldObj.isRemote && event.player == FMLClientHandler.instance().getClientPlayerEntity())
+            {
+                MinecraftForge.EVENT_BUS.unregister(this);
+                Object o = Loader.instance().getIndexedModList().get(ThutCoreReference.MOD_ID);
+                CheckResult result = ForgeVersion.getResult(((ModContainer) o));
+                if (result.status == Status.OUTDATED)
+                {
+                    IChatComponent mess = getOutdatedMessage(result, "Thut Core");
+                    (event.player).addChatMessage(mess);
+                }
+
+            }
+        }
+    }
     public static int       renderPass;
+
     public static Minecraft mc;
+
+    public static IChatComponent getOutdatedMessage(CheckResult result, String name)
+    {
+        String linkName = "[" + EnumChatFormatting.GREEN + name + " " + result.target + EnumChatFormatting.WHITE;
+        String link = "" + result.url;
+        String linkComponent = "{\"text\":\"" + linkName + "\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\""
+                + link + "\"}}";
+
+        String info = "\"" + EnumChatFormatting.RED + "New " + name
+                + " version available, please update before reporting bugs.\nClick the green link for the page to download.\n"
+                + "\"";
+        String mess = "[" + info + "," + linkComponent + ",\"]\"]";
+        return IChatComponent.Serializer.jsonToComponent(mess);
+    }
+
+    @Override
+    public EntityPlayer getPlayer()
+    {
+        return getPlayer(null);
+    }
+
+    @Override
+    public EntityPlayer getPlayer(String playerName)
+    {
+        if (isOnClientSide())
+        {
+            if (playerName != null)
+            {
+                return getWorld().getPlayerEntityByName(playerName);
+            }
+            else
+            {
+                return Minecraft.getMinecraft().thePlayer;
+            }
+        }
+        else
+        {
+            return super.getPlayer(playerName);
+        }
+    }
+
+    @Override
+    public World getWorld()
+    {
+        if (isOnClientSide())
+        {
+            return Minecraft.getMinecraft().theWorld;
+        }
+        else
+        {
+            return super.getWorld();
+        }
+    }
 
     @Override
     public void initClient()
@@ -61,48 +139,10 @@ public class ClientProxy extends CommonProxy
         new UpdateNotifier();
     }
 
-    public void preinit(FMLPreInitializationEvent e)
-    {
-//        ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
-    }
-
-    @Override
-    public EntityPlayer getPlayer(String playerName)
-    {
-        if (isOnClientSide())
-        {
-            if (playerName != null)
-            {
-                return getWorld().getPlayerEntityByName(playerName);
-            }
-            else
-            {
-                return Minecraft.getMinecraft().thePlayer;
-            }
-        }
-        else
-        {
-            return super.getPlayer(playerName);
-        }
-    }
-
     @Override
     public boolean isOnClientSide()
     {
         return FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT;
-    }
-
-    @Override
-    public World getWorld()
-    {
-        if (isOnClientSide())
-        {
-            return Minecraft.getMinecraft().theWorld;
-        }
-        else
-        {
-            return super.getWorld();
-        }
     }
 
     @Override
@@ -118,47 +158,9 @@ public class ClientProxy extends CommonProxy
         }
     }
 
-    public EntityPlayer getPlayer()
+    @Override
+    public void preinit(FMLPreInitializationEvent e)
     {
-        return getPlayer(null);
-    }
-
-    public static class UpdateNotifier
-    {
-        public UpdateNotifier()
-        {
-            MinecraftForge.EVENT_BUS.register(this);
-        }
-
-        @SubscribeEvent
-        public void onPlayerJoin(TickEvent.PlayerTickEvent event)
-        {
-            if (event.player.worldObj.isRemote && event.player == FMLClientHandler.instance().getClientPlayerEntity())
-            {
-                MinecraftForge.EVENT_BUS.unregister(this);
-                Object o = Loader.instance().getIndexedModList().get(ThutCoreReference.MOD_ID);
-                CheckResult result = ForgeVersion.getResult(((ModContainer) o));
-                if (result.status == Status.OUTDATED)
-                {
-                    IChatComponent mess = getOutdatedMessage(result, "Thut Core");
-                    (event.player).addChatMessage(mess);
-                }
-
-            }
-        }
-    }
-
-    public static IChatComponent getOutdatedMessage(CheckResult result, String name)
-    {
-        String linkName = "[" + EnumChatFormatting.GREEN + name + " " + result.target + EnumChatFormatting.WHITE;
-        String link = "" + result.url;
-        String linkComponent = "{\"text\":\"" + linkName + "\",\"clickEvent\":{\"action\":\"open_url\",\"value\":\""
-                + link + "\"}}";
-
-        String info = "\"" + EnumChatFormatting.RED + "New " + name
-                + " version available, please update before reporting bugs.\nClick the green link for the page to download.\n"
-                + "\"";
-        String mess = "[" + info + "," + linkComponent + ",\"]\"]";
-        return IChatComponent.Serializer.jsonToComponent(mess);
+//        ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
     }
 }

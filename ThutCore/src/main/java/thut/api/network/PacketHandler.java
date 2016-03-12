@@ -29,63 +29,8 @@ import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
 
 public class PacketHandler
 {
-    public static SimpleNetworkWrapper packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel("thut.api");
-    public static IPlayerProvider      provider;
-
-    static
-    {
-        packetPipeline.registerMessage(MessageHandlerClient.class, MessageClient.class, 1, Side.CLIENT);
-        packetPipeline.registerMessage(MessageHandlerServer.class, MessageServer.class, 2, Side.SERVER);
-    }
-
     public static class MessageClient implements IMessage
     {
-        PacketBuffer             buffer;
-        public static final byte BLASTAFFECTED = 1;
-        public static final byte TELEPORTID    = 2;
-
-        public MessageClient()
-        {
-        }
-
-        public MessageClient(byte[] data)
-        {
-            this.buffer = new PacketBuffer(Unpooled.buffer());
-            buffer.writeBytes(data);
-        }
-
-        public MessageClient(PacketBuffer buffer)
-        {
-            this.buffer = buffer;
-        }
-
-        public MessageClient(byte channel, NBTTagCompound nbt)
-        {
-            this.buffer = new PacketBuffer(Unpooled.buffer());
-            buffer.writeByte(channel);
-            buffer.writeNBTTagCompoundToBuffer(nbt);
-        }
-
-        @Override
-        public void fromBytes(ByteBuf buf)
-        {
-            if (buffer == null)
-            {
-                buffer = new PacketBuffer(Unpooled.buffer());
-            }
-            buffer.writeBytes(buf);
-        }
-
-        @Override
-        public void toBytes(ByteBuf buf)
-        {
-            if (buffer == null)
-            {
-                buffer = new PacketBuffer(Unpooled.buffer());
-            }
-            buf.writeBytes(buffer);
-        }
-
         public static class MessageHandlerClient implements IMessageHandler<MessageClient, MessageServer>
         {
             public void handleClientSide(EntityPlayer player, PacketBuffer buffer)
@@ -130,15 +75,84 @@ public class PacketHandler
                 return null;
             }
         }
-    }
+        public static final byte BLASTAFFECTED = 1;
+        public static final byte TELEPORTID    = 2;
 
+        PacketBuffer             buffer;
+
+        public MessageClient()
+        {
+        }
+
+        public MessageClient(byte channel, NBTTagCompound nbt)
+        {
+            this.buffer = new PacketBuffer(Unpooled.buffer());
+            buffer.writeByte(channel);
+            buffer.writeNBTTagCompoundToBuffer(nbt);
+        }
+
+        public MessageClient(byte[] data)
+        {
+            this.buffer = new PacketBuffer(Unpooled.buffer());
+            buffer.writeBytes(data);
+        }
+
+        public MessageClient(PacketBuffer buffer)
+        {
+            this.buffer = buffer;
+        }
+
+        @Override
+        public void fromBytes(ByteBuf buf)
+        {
+            if (buffer == null)
+            {
+                buffer = new PacketBuffer(Unpooled.buffer());
+            }
+            buffer.writeBytes(buf);
+        }
+
+        @Override
+        public void toBytes(ByteBuf buf)
+        {
+            if (buffer == null)
+            {
+                buffer = new PacketBuffer(Unpooled.buffer());
+            }
+            buf.writeBytes(buffer);
+        }
+    }
     public static class MessageServer implements IMessage
     {
-        PacketBuffer buffer;
+        public static class MessageHandlerServer implements IMessageHandler<MessageServer, IMessage>
+        {
+            public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
+            {
+
+            }
+
+            @Override
+            public IMessage onMessage(MessageServer message, MessageContext ctx)
+            {
+                EntityPlayer player = ctx.getServerHandler().playerEntity;
+                handleServerSide(player, message.buffer);
+                return null;
+            }
+
+        }
+
+        PacketBuffer buffer;;
 
         public MessageServer()
         {
-        };
+        }
+
+        public MessageServer(byte channel, NBTTagCompound nbt)
+        {
+            this.buffer = new PacketBuffer(Unpooled.buffer());
+            buffer.writeByte(channel);
+            buffer.writeNBTTagCompoundToBuffer(nbt);
+        }
 
         public MessageServer(byte[] data)
         {
@@ -149,13 +163,6 @@ public class PacketHandler
         public MessageServer(PacketBuffer buffer)
         {
             this.buffer = buffer;
-        }
-
-        public MessageServer(byte channel, NBTTagCompound nbt)
-        {
-            this.buffer = new PacketBuffer(Unpooled.buffer());
-            buffer.writeByte(channel);
-            buffer.writeNBTTagCompoundToBuffer(nbt);
         }
 
         @Override
@@ -178,52 +185,6 @@ public class PacketHandler
             buf.writeBytes(buffer);
         }
 
-        public static class MessageHandlerServer implements IMessageHandler<MessageServer, IMessage>
-        {
-            public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
-            {
-
-            }
-
-            @Override
-            public IMessage onMessage(MessageServer message, MessageContext ctx)
-            {
-                EntityPlayer player = ctx.getServerHandler().playerEntity;
-                handleServerSide(player, message.buffer);
-                return null;
-            }
-
-        }
-
-    }
-
-    public static MessageServer makeServerPacket(byte channel, byte[] data)
-    {
-        byte[] packetData = new byte[data.length + 1];
-        packetData[0] = channel;
-
-        for (int i = 1; i < packetData.length; i++)
-        {
-            packetData[i] = data[i - 1];
-        }
-        return new MessageServer(packetData);
-    }
-
-    public static MessageClient makeClientPacket(byte channel, byte[] data)
-    {
-        byte[] packetData = new byte[data.length + 1];
-        packetData[0] = channel;
-
-        for (int i = 1; i < packetData.length; i++)
-        {
-            packetData[i] = data[i - 1];
-        }
-        return new MessageClient(packetData);
-    }
-
-    public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)
-    {
-        packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
     }
 
     public static class ParticleTicker
@@ -262,5 +223,44 @@ public class PacketHandler
                 if (n > max) break;
             }
         }
+    }
+
+    public static SimpleNetworkWrapper packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel("thut.api");
+
+    public static IPlayerProvider      provider;
+
+    static
+    {
+        packetPipeline.registerMessage(MessageHandlerClient.class, MessageClient.class, 1, Side.CLIENT);
+        packetPipeline.registerMessage(MessageHandlerServer.class, MessageServer.class, 2, Side.SERVER);
+    }
+
+    public static MessageClient makeClientPacket(byte channel, byte[] data)
+    {
+        byte[] packetData = new byte[data.length + 1];
+        packetData[0] = channel;
+
+        for (int i = 1; i < packetData.length; i++)
+        {
+            packetData[i] = data[i - 1];
+        }
+        return new MessageClient(packetData);
+    }
+
+    public static MessageServer makeServerPacket(byte channel, byte[] data)
+    {
+        byte[] packetData = new byte[data.length + 1];
+        packetData[0] = channel;
+
+        for (int i = 1; i < packetData.length; i++)
+        {
+            packetData[i] = data[i - 1];
+        }
+        return new MessageServer(packetData);
+    }
+
+    public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)
+    {
+        packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
     }
 }

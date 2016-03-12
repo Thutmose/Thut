@@ -11,50 +11,53 @@ import thut.api.maths.Vector3;
  * @author Thutmose */
 public class JPSPather extends ThutPathFinder
 {
+    public static int Int(double x)
+    {
+        return MathHelper.floor_double(x);
+    }
+
     public JPSPather(IBlockAccess world, IPathingMob entity)
     {
         super(world, entity);
     }
 
-    @Override
-    /** Adds a path from start to end and returns the whole path (args: unused,
-     * start, end, unused, maxDistance) */
-    protected PathPoint getSubPath(Vector3 pokemob, PathPoint start, PathPoint end, ThutPath path, float distance)
+    /** Finds the closest location to the target where the pokemob can path the
+     * entire way.
+     * 
+     * @param worldObj
+     * @param e
+     * @param source
+     * @param direction
+     * @param range
+     * @return */
+    public Vector3 findNextLocation(IBlockAccess worldObj, Vector3 e, Vector3 source, Vector3 direction, double range)
     {
-        PathPoint pointf[] = { start, null, null };
-        int tries = 0;
-        PathPoint point = null;
-        long starttime = System.nanoTime();
-        while (true)
+        direction.norm();
+        double xprev = source.x, yprev = source.y, zprev = source.z;
+        double dx, dy, dz;
+        int x, y, z;
+        for (double i = 0; i < range; i += 0.5)
         {
-            if (!pathf.isPathEmpty())
+            dx = i * direction.x;
+            dy = i * direction.y;
+            dz = i * direction.z;
+
+            double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
+
+            if (ytest > 255) return null;
+            y = Int(ytest);
+            x = Int(xtest);
+            z = Int(ztest);
+            if (!(x == Int(xprev) && y == Int(yprev) && z == Int(zprev)))
             {
-                point = getPoint(pokemob, pointf, start, end, pathf, pathOptionsf, true);
+                boolean clear = isSafe(e, x, y, z, direction);
+                if (!clear) { return Vector3.getNewVector().set(Int(xtest), Int(ytest), Int(ztest)); }
             }
-            if (point == end) return point;
-
-            if (pointf[0].equals(end)) return pointf[0];
-            if (pointf[2] != null && pointf[2].equals(end)) return pointf[2];
-
-            if (pathf.isPathEmpty())
-            {
-                // TODO debug when this occurs
-                // System.out.println("no path " + point + " " + pointf[2] + " "
-                // + start + " " + end);
-            }
-            if (pathf.isPathEmpty()) { return pointf[2]; }
-
-            tries++;
-            long time = System.nanoTime() - starttime;
-
-            if (time > PATHTIME || tries > 1000)
-            {
-                // System.out.println(
-                // "Too long " + tries + " " + end + " " +time);
-                break;
-            }
+            yprev = ytest;
+            xprev = xtest;
+            zprev = ztest;
         }
-        return pointf[2];
+        return null;
     }
 
     @Override
@@ -114,47 +117,44 @@ public class JPSPather extends ThutPathFinder
         }
     }
 
-    /** Finds the closest location to the target where the pokemob can path the
-     * entire way.
-     * 
-     * @param worldObj
-     * @param e
-     * @param source
-     * @param direction
-     * @param range
-     * @return */
-    public Vector3 findNextLocation(IBlockAccess worldObj, Vector3 e, Vector3 source, Vector3 direction, double range)
+    @Override
+    /** Adds a path from start to end and returns the whole path (args: unused,
+     * start, end, unused, maxDistance) */
+    protected PathPoint getSubPath(Vector3 pokemob, PathPoint start, PathPoint end, ThutPath path, float distance)
     {
-        direction.norm();
-        double xprev = source.x, yprev = source.y, zprev = source.z;
-        double dx, dy, dz;
-        int x, y, z;
-        for (double i = 0; i < range; i += 0.5)
+        PathPoint pointf[] = { start, null, null };
+        int tries = 0;
+        PathPoint point = null;
+        long starttime = System.nanoTime();
+        while (true)
         {
-            dx = i * direction.x;
-            dy = i * direction.y;
-            dz = i * direction.z;
-
-            double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
-
-            if (ytest > 255) return null;
-            y = Int(ytest);
-            x = Int(xtest);
-            z = Int(ztest);
-            if (!(x == Int(xprev) && y == Int(yprev) && z == Int(zprev)))
+            if (!pathf.isPathEmpty())
             {
-                boolean clear = isSafe(e, x, y, z, direction);
-                if (!clear) { return Vector3.getNewVector().set(Int(xtest), Int(ytest), Int(ztest)); }
+                point = getPoint(pokemob, pointf, start, end, pathf, pathOptionsf, true);
             }
-            yprev = ytest;
-            xprev = xtest;
-            zprev = ztest;
-        }
-        return null;
-    }
+            if (point == end) return point;
 
-    public static int Int(double x)
-    {
-        return MathHelper.floor_double(x);
+            if (pointf[0].equals(end)) return pointf[0];
+            if (pointf[2] != null && pointf[2].equals(end)) return pointf[2];
+
+            if (pathf.isPathEmpty())
+            {
+                // TODO debug when this occurs
+                // System.out.println("no path " + point + " " + pointf[2] + " "
+                // + start + " " + end);
+            }
+            if (pathf.isPathEmpty()) { return pointf[2]; }
+
+            tries++;
+            long time = System.nanoTime() - starttime;
+
+            if (time > PATHTIME || tries > 1000)
+            {
+                // System.out.println(
+                // "Too long " + tries + " " + end + " " +time);
+                break;
+            }
+        }
+        return pointf[2];
     }
 }

@@ -17,15 +17,31 @@ import thut.core.common.ThutCore;
 
 public class ItemDusts extends Item
 {
+	public static class Dust
+    {
+    	public final String name;
+    	public final String modid;
+    	public Dust(String name, String modid)
+    	{
+    		this.name = name;
+    		this.modid = modid;
+    	}
+        public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
+        {
+    		return false;
+    	}
+    }
 	public static HashMap<Integer, Dust> dusts = new HashMap<Integer, Dust>();
-	private static int lastDust = 0;
 	
+	private static int lastDust = 0;
+
 	public static void addDust(Dust dust)
 	{
 		dusts.put(lastDust++, dust);
 	}
 
-	public ItemDusts() {
+    
+    public ItemDusts() {
 		super();
 		ThutItems.dusts = this;
 		
@@ -34,19 +50,6 @@ public class ItemDusts extends Item
         this.setMaxDamage(0);
         this.setCreativeTab(ThutCore.tabThut);
 	}
-
-    
-    /**
-     * Returns the unlocalized name of this item. This version accepts an ItemStack so different stacks can have
-     * different names based on their damage or NBT.
-     */
-    @Override
-    public String getUnlocalizedName(ItemStack stack)
-    {
-    	int i = stack.getItemDamage();
-    	Dust dust = dusts.get(i);
-    	return dust!=null?"item."+dust.name:super.getUnlocalizedName(stack);
-    }
 
     @SideOnly(Side.CLIENT)
     @Override
@@ -61,6 +64,19 @@ public class ItemDusts extends Item
         }
     }
     
+    /**
+     * Returns the unlocalized name of this item. This version accepts an ItemStack so different stacks can have
+     * different names based on their damage or NBT.
+     */
+    @Override
+    public String getUnlocalizedName(ItemStack stack)
+    {
+    	int i = stack.getItemDamage();
+    	Dust dust = dusts.get(i);
+    	return dust!=null?"item."+dust.name:super.getUnlocalizedName(stack);
+    }
+    
+    @Override
     public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
     {
     	if(!world.isRemote)
@@ -71,20 +87,5 @@ public class ItemDusts extends Item
     			return dust.onItemUseFirst(stack, player, world, pos, side, hitX, hitY, hitZ);
     	}
     	return false;
-    }
-    
-    public static class Dust
-    {
-    	public final String name;
-    	public final String modid;
-    	public Dust(String name, String modid)
-    	{
-    		this.name = name;
-    		this.modid = modid;
-    	}
-        public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
-        {
-    		return false;
-    	}
     }
 }

@@ -18,21 +18,10 @@ public enum BiomeType
 
     ALL("all", "All");
 
-    public final String name;
-    private final ResourceLocation key;
-    public final String readableName;
-    public final RegistryDelegate<BiomeType> delegate = PersistentRegistryManager.makeDelegate(this, BiomeType.class);
-
-    public int getType()
-    {
-        return BiomeDatabase.biomeTypeRegistry.getId(this);
-    }
-
     public static BiomeType getBiome(String name)
     {
         return getBiome(name, true);
     }
-
     public static BiomeType getBiome(String name, boolean generate)
     {
         for (BiomeType b : values())
@@ -49,6 +38,12 @@ public enum BiomeType
         }
         return NONE;
     }
+    public final String name;
+    private final ResourceLocation key;
+
+    public final String readableName;
+
+    public final RegistryDelegate<BiomeType> delegate = PersistentRegistryManager.makeDelegate(this, BiomeType.class);
 
     @SuppressWarnings("deprecation")
     private BiomeType(String name, String readableName)
@@ -57,5 +52,10 @@ public enum BiomeType
         this.readableName = readableName;
         key = new ResourceLocation("thutcore", name);
         BiomeDatabase.biomeTypeRegistry.register(-1, key, this);
+    }
+
+    public int getType()
+    {
+        return BiomeDatabase.biomeTypeRegistry.getId(this);
     }
 }

@@ -32,60 +32,35 @@ public class ItemTank extends Item implements IFluidContainerItem
 	}
 
     @Override
-    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
-    {
-    	int index = player.inventory.currentItem;
-    	if(index > 0)
-    	{
-    		int n = index - 1;
-    		ItemStack stack = player.inventory.getStackInSlot(n);
-    		if(stack!=null)
-    		if(Block.getBlockFromItem(stack.getItem()) instanceof BlockFluid)
-    		{
-    			BlockFluid fluid = (BlockFluid) Block.getBlockFromItem(stack.getItem());
-    			FluidStack fstack = new FluidStack(fluid.getFluid(), stack.stackSize * 1000);
-    			int added = fill(itemstack, fstack, false)/1000;
-    			
-    			fstack = new FluidStack(fluid.getFluid(), added * 1000);
-    			fill(itemstack, fstack, true);
-    			
-    			stack.splitStack(added);
-    			if(stack.stackSize == 0)
-    			{
-    			    player.inventory.setInventorySlotContents(n, null);
-    			}
-    		}
-    	}
-    	return itemstack;
-    }
-	
-	public int getAmount(ItemStack container)
-	{
-		if(getFluid(container)!=null) return getFluid(container).amount;
-		return 0;
-	}
-	
-	@Override
-	public FluidStack getFluid(ItemStack container) {
+	public FluidStack drain(ItemStack container, int maxDrain, boolean doDrain) {
+		int exist = getAmount(container);
+		int amount = Math.min(maxDrain, exist);
+		FluidStack fluid;
+		if((fluid = getFluid(container))==null) return null;
 		
-		if(!container.hasTagCompound()) return null;
 		String name = container.getTagCompound().getString("fluidName");
-		int amount = container.getTagCompound( ).getInteger("fluidAmount");
 		NBTTagCompound tag = container.getTagCompound().getCompoundTag("fluidTag");
 		if(tag.hasNoTags()) tag = null;
-		if(FluidRegistry.getFluid(name)==null) return null;
+		if(doDrain)
+		{
+		    name = fluid.getUnlocalizedName();
+            if(name.contains("tile."))
+            {
+                name = name.replace("fluid.", "");
+            }
+            name = StatCollector.translateToLocal(name+".name");
+			container.getTagCompound().setInteger("fluidAmount", exist - amount);
+			container.setStackDisplayName("Tank of "+name+" "+(exist - amount));
+			if((exist - amount)<=0)
+			{
+				container.setTagCompound(null);
+				container.setStackDisplayName("Empty Tank");
+			}
+		}
 		
-		FluidStack ret = new FluidStack(FluidRegistry.getFluid(name), amount, tag);//, container.getTagCompound());
-		return ret;
+		return new FluidStack(FluidRegistry.getFluid(name), amount, tag);//, container.getTagCompound());
 	}
-
-	@Override
-	public int getCapacity(ItemStack container) {
-		if(container.getItem() == this)
-			return 64000;
-		return 0;
-	}
-
+	
 	@Override
 	public int fill(ItemStack container, FluidStack resource, boolean doFill) {
 		int amount = resource.amount;
@@ -133,39 +108,35 @@ public class ItemTank extends Item implements IFluidContainerItem
 		
 		return ret;
 	}
+	
+	public int getAmount(ItemStack container)
+	{
+		if(getFluid(container)!=null) return getFluid(container).amount;
+		return 0;
+	}
 
 	@Override
-	public FluidStack drain(ItemStack container, int maxDrain, boolean doDrain) {
-		int exist = getAmount(container);
-		int amount = Math.min(maxDrain, exist);
-		FluidStack fluid;
-		if((fluid = getFluid(container))==null) return null;
+	public int getCapacity(ItemStack container) {
+		if(container.getItem() == this)
+			return 64000;
+		return 0;
+	}
+
+	@Override
+	public FluidStack getFluid(ItemStack container) {
 		
+		if(!container.hasTagCompound()) return null;
 		String name = container.getTagCompound().getString("fluidName");
+		int amount = container.getTagCompound( ).getInteger("fluidAmount");
 		NBTTagCompound tag = container.getTagCompound().getCompoundTag("fluidTag");
 		if(tag.hasNoTags()) tag = null;
-		if(doDrain)
-		{
-		    name = fluid.getUnlocalizedName();
-            if(name.contains("tile."))
-            {
-                name = name.replace("fluid.", "");
-            }
-            name = StatCollector.translateToLocal(name+".name");
-			container.getTagCompound().setInteger("fluidAmount", exist - amount);
-			container.setStackDisplayName("Tank of "+name+" "+(exist - amount));
-			if((exist - amount)<=0)
-			{
-				container.setTagCompound(null);
-				container.setStackDisplayName("Empty Tank");
-			}
-		}
+		if(FluidRegistry.getFluid(name)==null) return null;
 		
-		return new FluidStack(FluidRegistry.getFluid(name), amount, tag);//, container.getTagCompound());
+		FluidStack ret = new FluidStack(FluidRegistry.getFluid(name), amount, tag);//, container.getTagCompound());
+		return ret;
 	}
-	
 
-    @SideOnly(Side.CLIENT)
+	@SideOnly(Side.CLIENT)
     @Override
     /**
      * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
@@ -189,5 +160,34 @@ public class ItemTank extends Item implements IFluidContainerItem
         	
         }
         
+    }
+	
+
+    @Override
+    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
+    {
+    	int index = player.inventory.currentItem;
+    	if(index > 0)
+    	{
+    		int n = index - 1;
+    		ItemStack stack = player.inventory.getStackInSlot(n);
+    		if(stack!=null)
+    		if(Block.getBlockFromItem(stack.getItem()) instanceof BlockFluid)
+    		{
+    			BlockFluid fluid = (BlockFluid) Block.getBlockFromItem(stack.getItem());
+    			FluidStack fstack = new FluidStack(fluid.getFluid(), stack.stackSize * 1000);
+    			int added = fill(itemstack, fstack, false)/1000;
+    			
+    			fstack = new FluidStack(fluid.getFluid(), added * 1000);
+    			fill(itemstack, fstack, true);
+    			
+    			stack.splitStack(added);
+    			if(stack.stackSize == 0)
+    			{
+    			    player.inventory.setInventorySlotContents(n, null);
+    			}
+    		}
+    	}
+    	return itemstack;
     }
 }

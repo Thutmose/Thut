@@ -13,11 +13,13 @@ import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 public class CommonProxy implements IPlayerProvider
 {
 
-	public void initClient() {}
+	@Override
+    public EntityPlayer getPlayer()
+	{
+		return null;
+	}
 	
-	public void loadConfiguration() {}
-	
-    public EntityPlayer getPlayer(String playerName)
+	public EntityPlayer getPlayer(String playerName)
     {
         if (playerName != null)
         {
@@ -28,30 +30,30 @@ public class CommonProxy implements IPlayerProvider
             return null;
         }
     }
+	
+    public World getWorld()
+    {
+        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
+    }
     
-	public EntityPlayer getPlayer()
-	{
-		return null;
-	}
+	public void initClient() {}
     
     public boolean isOnClientSide()
     {
         return false;
     }
 
-    public World getWorld()
-    {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
-    }
+    public void loadConfiguration() {}
     
-    public void registerTEs()
-    {
-		GameRegistry.registerTileEntity(TileEntityMultiBlockPart.class, "multiblockpart");
-		GameRegistry.registerTileEntity(TileEntityMultiBlockPartFluids.class, "multiblockpartfluids");
-        GameRegistry.registerTileEntity(TileEntityBlockFluid.class, "thutfluidte");
-    }
+    public void loadSounds() {}
     
-    public void registerEntities()
+    public void preinit(FMLPreInitializationEvent e)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+	public void registerEntities()
     {
 
 		try {
@@ -69,11 +71,10 @@ public class CommonProxy implements IPlayerProvider
 		}
     }
 
-	public void loadSounds() {}
-
-    public void preinit(FMLPreInitializationEvent e)
+    public void registerTEs()
     {
-        // TODO Auto-generated method stub
-        
+		GameRegistry.registerTileEntity(TileEntityMultiBlockPart.class, "multiblockpart");
+		GameRegistry.registerTileEntity(TileEntityMultiBlockPartFluids.class, "multiblockpartfluids");
+        GameRegistry.registerTileEntity(TileEntityBlockFluid.class, "thutfluidte");
     }
 }

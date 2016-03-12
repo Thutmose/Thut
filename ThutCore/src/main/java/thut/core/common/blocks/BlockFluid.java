@@ -85,22 +85,17 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
         FLUID_RENDER_PROPS = builder.build().toArray(new IUnlistedProperty[0]);
     }
 
-    public boolean    solidifiable  = false;
-    public double     rate          = 0.9;
-    public boolean    wanderer      = false;
-    public boolean    hasFloatState = false;
-    public boolean    solid         = false;
-    public boolean    fluid         = true;
-    public int        placeamount   = 1;
-    public boolean    stampable     = false;
-    public int        maxMeta       = 15;
     public static int renderID;
-    protected int     tickrate      = 20;
-    protected Block   hardenTo      = null;
-
     private static boolean    init                = true;
     public static List<Block> defaultReplacements = new ArrayList<Block>();
-
+    public static double SOLIDIFY_CHANCE = 0.0004;
+    public static double getFlowDirection(IBlockAccess world, BlockPos pos)
+    {
+        Block block = world.getBlockState(pos).getBlock();
+        if (!(block instanceof IFluidBlock)) { return -1000.0; }
+        Vec3 vec = ((BlockFluidBase) block).getFlowVector(world, pos);
+        return vec.xCoord == 0.0D && vec.zCoord == 0.0D ? -1000.0D : Math.atan2(vec.zCoord, vec.xCoord) - Math.PI / 2D;
+    }
     static void init()
     {
         defaultReplacements.add(fire);
@@ -127,8 +122,21 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
                 defaultReplacements.add(b);
         }
     }
+    public boolean    solidifiable  = false;
+    public double     rate          = 0.9;
+    public boolean    wanderer      = false;
+    public boolean    hasFloatState = false;
+    public boolean    solid         = false;
+    public boolean    fluid         = true;
 
-    public static double SOLIDIFY_CHANCE = 0.0004;
+    public int        placeamount   = 1;
+    public boolean    stampable     = false;
+
+    public int        maxMeta       = 15;
+
+    protected int     tickrate      = 20;
+
+    protected Block   hardenTo      = null;
 
     public BlockFluid(Fluid fluid, Material par2)
     {
@@ -146,122 +154,43 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
         }
     }
 
+    /** Add all collision boxes of this Block to the list that intersect with
+     * the given mask.
+     * 
+     * @param collidingEntity
+     *            the Entity colliding with this Block */
     @Override
-    @SideOnly(Side.CLIENT)
-    public int colorMultiplier(IBlockAccess worldIn, BlockPos pos, int renderPass)
+    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask,
+            List<AxisAlignedBB> list, Entity collidingEntity)
     {
-        int red = 0x00010000;
-        int green = 0x00000100;
-        int blue = 0x00000001;
-        int alpha = 0xFF000000;
+        AxisAlignedBB[] boxes = getBoxes(worldIn, pos);
 
-        red *= 255;
-        green *= 255;
-        blue *= 255;
+        if (getFluid().getViscosity() < 6000) return;
 
-        return red + green + blue + alpha;
-    }
-
-    @Override
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
-            int meta, EntityLivingBase placer)
-    {
-        int placeamount = 1;
-        if (getFluid().getViscosity() < Integer.MAX_VALUE) placeamount = 16;
-        IBlockState state = this.getDefaultState().withProperty(LEVEL, placeamount - 1);
-        return state;
-    }
-
-    @Override
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
-            EnumFacing side, float hitX, float hitY, float hitZ)
-    {
-        System.out.println(state);
-        return false;
-    }
-
-    @Override
-    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state)
-    {
-        if (getFluid().getViscosity() < Integer.MAX_VALUE) super.onBlockAdded(worldIn, pos, state);
-
-        TileEntity te = worldIn.getTileEntity(pos);
-
-        if (!(te instanceof TileEntityBlockFluid)) return;
-
-        float flow = (float) getFlowDirection(worldIn, pos);
-        float[][] height = new float[3][3];
-        float[][] corner = new float[2][2];
-        height[1][1] = getFluidHeightForRender(worldIn, pos);
-        if (height[1][1] == 1)
+        if (boxes != null)
         {
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    corner[i][j] = 1;
-                }
-            }
+            for (AxisAlignedBB box : boxes)
+                if (box.intersectsWith(mask)) list.add(box);
         }
-        else
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    if (i != 1 || j != 1)
-                    {
-                        height[i][j] = getFluidHeightForRender(worldIn, pos.add(i - 1, 0, j - 1));
-                    }
-                }
-            }
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    corner[i][j] = getFluidHeightAverage(height[i][j], height[i][j + 1], height[i + 1][j],
-                            height[i + 1][j + 1]);
-                }
-            }
-        }
-
-        TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
-        tile.flowDir = flow;
-        tile.corner = corner;
-
     }
 
     @Override
     public boolean canCollideCheck(IBlockState state, boolean fullHit)
     {
         if (getFluid().getViscosity() == Integer.MAX_VALUE) return true;
-        return fullHit && ((Integer) state.getValue(LEVEL)) == quantaPerBlock - 1;
+        return fullHit && (state.getValue(LEVEL)) == quantaPerBlock - 1;
     }
 
     @Override
-    public int getMaxRenderHeightMeta()
+    public boolean canDrain(World world, BlockPos pos)
     {
-        return quantaPerBlock - 1;
-    }
-
-    @Override
-    public void updateTick(World world, BlockPos pos, IBlockState state, Random rand)
-    {
-        if (getFluid().getViscosity() == Integer.MAX_VALUE) return;
-
-        boolean changed = changed(world, pos, state, rand);
-
-        if (!changed && this instanceof IHardenableFluid)
-        {
-            Vector3 vec = Vector3.getNewVector().set(pos);
-            ((IHardenableFluid) this).tryHarden(world, vec);
-        }
+        return true;
     }
 
     public boolean changed(World world, BlockPos pos, IBlockState state, Random rand)
     {
         boolean changed = false;
-        int quantaRemaining = ((Integer) state.getValue(LEVEL)) + 1;
+        int quantaRemaining = (state.getValue(LEVEL)) + 1;
 
         // Flow vertically if possible
         int prevRemaining = quantaRemaining;
@@ -357,6 +286,415 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
         return changed;
     }
 
+    @Override
+    @SideOnly(Side.CLIENT)
+    public int colorMultiplier(IBlockAccess worldIn, BlockPos pos, int renderPass)
+    {
+        int red = 0x00010000;
+        int green = 0x00000100;
+        int blue = 0x00000001;
+        int alpha = 0xFF000000;
+
+        red *= 255;
+        green *= 255;
+        blue *= 255;
+
+        return red + green + blue + alpha;
+    }
+
+    @Override
+    protected BlockState createBlockState()
+    {
+        return new ExtendedBlockState(this, new IProperty[] { LEVEL }, FLUID_RENDER_PROPS);
+    }
+
+    /* IFluidBlock */
+    @Override
+    public FluidStack drain(World world, BlockPos pos, boolean doDrain)
+    {
+        if (doDrain)
+        {
+            world.setBlockToAir(pos);
+        }
+
+        return new FluidStack(getFluid(),
+                MathHelper.floor_float(getQuantaPercentage(world, pos) * FluidContainerRegistry.BUCKET_VOLUME));
+    }
+
+    public void flowInto(World world, Vector3 from, Vector3 to, int metaTo, int metaFrom)
+    {
+        flowInto(world, from, to, metaTo, metaFrom, false);
+    }
+
+    /** @param world
+     * @param from
+     * @param to
+     * @param metaTo
+     * @param metaFrom
+     * @param instant:
+     *            does this instantly call tick on the block below */
+    public void flowInto(World world, Vector3 from, Vector3 to, int metaTo, int metaFrom, boolean instant)
+    {
+        to.setBlock(world, this, metaTo, 2);
+
+        if (metaFrom >= 0)
+        {
+            world.setBlockState(from.getPos(), from.getBlockState(world).getBlock().getStateFromMeta(metaFrom), 2);
+        }
+        else
+        {
+            from.setAir(world);
+        }
+    }
+
+    public AxisAlignedBB[] getBoxes(World worldObj, BlockPos pos)
+    {
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+        double[] heights;
+
+        TileEntity te = worldObj.getTileEntity(pos);
+        if (te instanceof TileEntityBlockFluid)
+        {
+            TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
+            if (tile.corner == null)
+            {
+                heights = getCornerHeights(worldObj, x, y, z);
+            }
+            else
+            {
+                heights = new double[4];
+                heights[0] = tile.corner[0][0];
+                heights[1] = tile.corner[0][1];
+                heights[2] = tile.corner[1][1];
+                heights[3] = tile.corner[1][0];
+            }
+        }
+        else heights = getCornerHeights(worldObj, x, y, z);
+
+        double hN = (heights[0] + heights[3]) / 2;
+        double hS = (heights[1] + heights[2]) / 2;
+        double hE = (heights[2] + heights[3]) / 2;
+        double hW = (heights[0] + heights[1]) / 2;
+
+        double hM = (hN + hS + hE + hW) / 4;
+
+        AxisAlignedBB NW = new AxisAlignedBB(0.0, 0, 0.0, 0.25, heights[0], 0.25).offset(x, y, z);
+        AxisAlignedBB NW1 = new AxisAlignedBB(0.25, 0, 0.0, 0.5, hN, 0.25).offset(x, y, z);
+        AxisAlignedBB NW2 = new AxisAlignedBB(0.0, 0, 0.25, 0.25, hW, 0.5).offset(x, y, z);
+        AxisAlignedBB NW3 = new AxisAlignedBB(0.25, 0, 0.25, 0.5, hM, 0.5).offset(x, y, z);
+
+        AxisAlignedBB NE = new AxisAlignedBB(0.75, 0, 0.0, 1.0, heights[3], 0.25).offset(x, y, z);
+        AxisAlignedBB NE1 = new AxisAlignedBB(0.75, 0, 0.25, 1.0, hE, 0.5).offset(x, y, z);
+        AxisAlignedBB NE2 = new AxisAlignedBB(0.5, 0, 0.0, 0.75, hN, 0.25).offset(x, y, z);
+        AxisAlignedBB NE3 = new AxisAlignedBB(0.5, 0, 0.25, 0.75, hM, 0.5).offset(x, y, z);
+
+        AxisAlignedBB SW = new AxisAlignedBB(0.0, 0, 0.75, 0.25, heights[1], 1.0).offset(x, y, z);
+        AxisAlignedBB SW1 = new AxisAlignedBB(0.25, 0, 0.75, 0.5, hS, 1.0).offset(x, y, z);
+        AxisAlignedBB SW2 = new AxisAlignedBB(0.0, 0, 0.5, 0.25, hW, 0.75).offset(x, y, z);
+        AxisAlignedBB SW3 = new AxisAlignedBB(0.25, 0, 0.5, 0.5, hM, 0.75).offset(x, y, z);
+
+        AxisAlignedBB SE = new AxisAlignedBB(0.75, 0, 0.75, 1.0, heights[2], 1.0).offset(x, y, z);
+        AxisAlignedBB SE1 = new AxisAlignedBB(0.75, 0, 0.5, 1.0, hE, 0.75).offset(x, y, z);
+        AxisAlignedBB SE2 = new AxisAlignedBB(0.5, 0, 0.75, 0.75, hS, 1.0).offset(x, y, z);
+        AxisAlignedBB SE3 = new AxisAlignedBB(0.5, 0, 0.5, 0.75, hM, 0.75).offset(x, y, z);
+
+        // return new AxisAlignedBB[] {M, NW, NE, SW, SE};
+        return new AxisAlignedBB[] { NW, NW1, NW2, NW3, NE, NE1, NE2, NE3, SW, SW1, SW2, SW3, SE, SE1, SE2, SE3 };
+    }
+
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(World world, BlockPos pos, IBlockState state)
+    {
+        int meta = getQuantaValue(world, pos);
+        int l = meta;
+        float f = 0.0625F;
+
+        if (getFluid().getViscosity() >= 6000) { return new AxisAlignedBB(0 + pos.getX(), 0 + pos.getY(),
+                0 + pos.getZ(), 1 + pos.getX(), f * l + pos.getY(), 1 + pos.getZ()); }
+
+        return new AxisAlignedBB(pos, pos);
+
+    }
+
+    public double[] getCornerHeights(IBlockAccess world, int x, int y, int z)
+    {
+        double heightNW, heightSW, heightSE, heightNE;
+
+        float flow11 = getFluidHeightForCollision(world, x, y, z);
+
+        if (flow11 != 1)
+        {
+            float flow00 = getFluidHeightForCollision(world, x - 1, y, z - 1);
+            float flow01 = getFluidHeightForCollision(world, x - 1, y, z);
+            float flow02 = getFluidHeightForCollision(world, x - 1, y, z + 1);
+            float flow10 = getFluidHeightForCollision(world, x, y, z - 1);
+            float flow12 = getFluidHeightForCollision(world, x, y, z + 1);
+            float flow20 = getFluidHeightForCollision(world, x + 1, y, z - 1);
+            float flow21 = getFluidHeightForCollision(world, x + 1, y, z);
+            float flow22 = getFluidHeightForCollision(world, x + 1, y, z + 1);
+
+            heightNW = getFluidHeightAverage(new float[] { flow00, flow01, flow10, flow11 });
+            heightSW = getFluidHeightAverage(new float[] { flow01, flow02, flow12, flow11 });
+            heightSE = getFluidHeightAverage(new float[] { flow12, flow21, flow22, flow11 });
+            heightNE = getFluidHeightAverage(new float[] { flow10, flow20, flow21, flow11 });
+        }
+        else
+        {
+            heightNW = flow11;
+            heightSW = flow11;
+            heightSE = flow11;
+            heightNE = flow11;
+        }
+
+        return new double[] { heightNW, heightSW, heightSE, heightNE };
+    }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState oldState, IBlockAccess worldIn, BlockPos pos)
+    {
+        IExtendedBlockState state = (IExtendedBlockState) oldState;
+
+        TileEntity te = worldIn.getTileEntity(pos);
+        if (te != null && te instanceof TileEntityBlockFluid)
+        {
+            TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
+            if (tile.corner != null)
+            {
+                state = state.withProperty(FLOW_DIRECTION, tile.flowDir);
+                float[][] corner = tile.corner;
+                int colour = colorMultiplier(worldIn, pos);
+                state = state.withProperty(LEVEL_CORNERS[0], corner[0][0]);
+                state = state.withProperty(LEVEL_CORNERS[1], corner[0][1]);
+                state = state.withProperty(LEVEL_CORNERS[2], corner[1][1]);
+                state = state.withProperty(LEVEL_CORNERS[3], corner[1][0]);
+                state = state.withProperty(COLOUR, colour);
+                return state;
+            }
+        }
+        state = state.withProperty(FLOW_DIRECTION, (float) getFlowDirection(worldIn, pos));
+        float[][] height = new float[3][3];
+        float[][] corner = new float[2][2];
+        height[1][1] = getFluidHeightForRender(worldIn, pos);
+        if (height[1][1] == 1)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    corner[i][j] = 1;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (i != 1 || j != 1)
+                    {
+                        height[i][j] = getFluidHeightForRender(worldIn, pos.add(i - 1, 0, j - 1));
+                    }
+                }
+            }
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    corner[i][j] = getFluidHeightAverage(height[i][j], height[i][j + 1], height[i + 1][j],
+                            height[i + 1][j + 1]);
+                }
+            }
+        }
+        int colour = colorMultiplier(worldIn, pos);
+
+        state = state.withProperty(LEVEL_CORNERS[0], corner[0][0]);
+        state = state.withProperty(LEVEL_CORNERS[1], corner[0][1]);
+        state = state.withProperty(LEVEL_CORNERS[2], corner[1][1]);
+        state = state.withProperty(LEVEL_CORNERS[3], corner[1][0]);
+        state = state.withProperty(COLOUR, colour);
+
+        return state;
+    }
+
+    @Override
+    public int getFlowDifferential()
+    {
+        return 0;
+    }
+
+    @Override
+    public Vec3 getFlowVector(IBlockAccess world, BlockPos pos)
+    {
+        return super.getFlowVector(world, pos);
+    }
+
+    @Override
+    public float getFluidHeightAverage(float... flow)
+    {
+        float total = 0;
+        int count = 0;
+
+        float end = 0;
+
+        for (int i = 0; i < flow.length; i++)
+        {
+            if (flow[i] >= 0.999F && end != 1F)
+            {
+                end = flow[i];
+            }
+
+            if (flow[i] >= 0)
+            {
+                total += flow[i];
+                count++;
+            }
+        }
+
+        if (end == 0) end = total / count;
+
+        return end;
+    }
+
+    public float getFluidHeightForCollision(IBlockAccess world, int x, int y, int z)
+    {
+        Vector3 vec = Vector3.getNewVector().set(x, y, z);
+        int meta = vec.getBlockMetadata(world);
+        Block id = vec.getBlock(world);
+        if (id instanceof BlockFluid)
+        {
+            if (vec.getBlock(world, EnumFacing.UP) instanceof BlockFluid)
+            {
+                // if (world.getBlock(x, y, z) == block.blockID) {
+                // if (world.getBlock(x, y + 1, z) == block.blockID) {
+                return 1;
+            }
+            if (meta == getMaxRenderHeightMeta()) { return 1F; }
+            return ((float) (meta + 1)) / 16;
+        }
+        return 0;
+    }
+
+    @Override
+    public float getFluidHeightForRender(IBlockAccess world, BlockPos pos)
+    {
+        IBlockState here = world.getBlockState(pos);
+        IBlockState up = world.getBlockState(pos.down(densityDir));
+        float quantaPercentage;
+        if (here.getBlock() instanceof BlockFluid)
+        {
+            BlockFluid block = (BlockFluid) here.getBlock();
+            if (up.getBlock().getMaterial().isLiquid() || up.getBlock() instanceof IFluidBlock) { return 1; }
+
+            if (block.getMetaFromState(here) == block.getMaxRenderHeightMeta()) { return 0.999F; }
+            quantaPercentage = block.getQuantaPercentage(world, pos);
+        }
+        else
+        {
+            quantaPercentage = getQuantaPercentage(world, pos);
+        }
+
+        return up.getBlock() == this ? 1// !here.getBlock().getMaterial().isSolid()
+                                        // &&
+                : quantaPercentage * 0.999F;
+    }
+
+    @Override
+    public int getMaxRenderHeightMeta()
+    {
+        return quantaPerBlock - 1;
+    }
+
+    @Override
+    public int getQuantaValue(IBlockAccess world, BlockPos pos)
+    {
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock().isAir(world, pos)) { return 0; }
+        if (!(state.getBlock() instanceof BlockFluid)) { return -1; }
+        if (state.getBlock() != this && getTemperature(world, pos) > this.temperature) { return -1; }
+
+        return (state.getValue(LEVEL)) + 1;
+    }
+
+    @Override
+    /** Convert the given metadata into a BlockState for this Block */
+    public IBlockState getStateFromMeta(int meta)
+    {
+        return this.getDefaultState().withProperty(LEVEL, meta);
+    }
+
+    @Override
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
+            EnumFacing side, float hitX, float hitY, float hitZ)
+    {
+        System.out.println(state);
+        return false;
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state)
+    {
+        if (getFluid().getViscosity() < Integer.MAX_VALUE) super.onBlockAdded(worldIn, pos, state);
+
+        TileEntity te = worldIn.getTileEntity(pos);
+
+        if (!(te instanceof TileEntityBlockFluid)) return;
+
+        float flow = (float) getFlowDirection(worldIn, pos);
+        float[][] height = new float[3][3];
+        float[][] corner = new float[2][2];
+        height[1][1] = getFluidHeightForRender(worldIn, pos);
+        if (height[1][1] == 1)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    corner[i][j] = 1;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (i != 1 || j != 1)
+                    {
+                        height[i][j] = getFluidHeightForRender(worldIn, pos.add(i - 1, 0, j - 1));
+                    }
+                }
+            }
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    corner[i][j] = getFluidHeightAverage(height[i][j], height[i][j + 1], height[i + 1][j],
+                            height[i + 1][j + 1]);
+                }
+            }
+        }
+
+        TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
+        tile.flowDir = flow;
+        tile.corner = corner;
+
+    }
+
+    @Override
+    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
+            int meta, EntityLivingBase placer)
+    {
+        int placeamount = 1;
+        if (getFluid().getViscosity() < Integer.MAX_VALUE) placeamount = 16;
+        IBlockState state = this.getDefaultState().withProperty(LEVEL, placeamount - 1);
+        return state;
+    }
+
+    @Override
     public int tryToFlowVerticallyInto(World world, BlockPos pos, int amtToInput)
     {
         IBlockState myState = world.getBlockState(pos);
@@ -447,351 +785,17 @@ public class BlockFluid extends BlockFluidFinite implements IViscousFluid
         }
     }
 
-    public void flowInto(World world, Vector3 from, Vector3 to, int metaTo, int metaFrom)
-    {
-        flowInto(world, from, to, metaTo, metaFrom, false);
-    }
-
-    /** @param world
-     * @param from
-     * @param to
-     * @param metaTo
-     * @param metaFrom
-     * @param instant:
-     *            does this instantly call tick on the block below */
-    public void flowInto(World world, Vector3 from, Vector3 to, int metaTo, int metaFrom, boolean instant)
-    {
-        to.setBlock(world, this, metaTo, 2);
-
-        if (metaFrom >= 0)
-        {
-            world.setBlockState(from.getPos(), from.getBlockState(world).getBlock().getStateFromMeta(metaFrom), 2);
-        }
-        else
-        {
-            from.setAir(world);
-        }
-    }
-
-    /* IFluidBlock */
     @Override
-    public FluidStack drain(World world, BlockPos pos, boolean doDrain)
+    public void updateTick(World world, BlockPos pos, IBlockState state, Random rand)
     {
-        if (doDrain)
+        if (getFluid().getViscosity() == Integer.MAX_VALUE) return;
+
+        boolean changed = changed(world, pos, state, rand);
+
+        if (!changed && this instanceof IHardenableFluid)
         {
-            world.setBlockToAir(pos);
+            Vector3 vec = Vector3.getNewVector().set(pos);
+            ((IHardenableFluid) this).tryHarden(world, vec);
         }
-
-        return new FluidStack(getFluid(),
-                MathHelper.floor_float(getQuantaPercentage(world, pos) * FluidContainerRegistry.BUCKET_VOLUME));
-    }
-
-    @Override
-    public boolean canDrain(World world, BlockPos pos)
-    {
-        return true;
-    }
-
-    @Override
-    public int getQuantaValue(IBlockAccess world, BlockPos pos)
-    {
-        IBlockState state = world.getBlockState(pos);
-        if (state.getBlock().isAir(world, pos)) { return 0; }
-        if (!(state.getBlock() instanceof BlockFluid)) { return -1; }
-        if (state.getBlock() != this && getTemperature(world, pos) > this.temperature) { return -1; }
-
-        return ((Integer) state.getValue(LEVEL)) + 1;
-    }
-
-    @Override
-    public int getFlowDifferential()
-    {
-        return 0;
-    }
-
-    @Override
-    public float getFluidHeightForRender(IBlockAccess world, BlockPos pos)
-    {
-        IBlockState here = world.getBlockState(pos);
-        IBlockState up = world.getBlockState(pos.down(densityDir));
-        float quantaPercentage;
-        if (here.getBlock() instanceof BlockFluid)
-        {
-            BlockFluid block = (BlockFluid) here.getBlock();
-            if (up.getBlock().getMaterial().isLiquid() || up.getBlock() instanceof IFluidBlock) { return 1; }
-
-            if (block.getMetaFromState(here) == block.getMaxRenderHeightMeta()) { return 0.999F; }
-            quantaPercentage = block.getQuantaPercentage(world, pos);
-        }
-        else
-        {
-            quantaPercentage = getQuantaPercentage(world, pos);
-        }
-
-        return up.getBlock() == this ? 1// !here.getBlock().getMaterial().isSolid()
-                                        // &&
-                : quantaPercentage * 0.999F;
-    }
-
-    @Override
-    /** Convert the given metadata into a BlockState for this Block */
-    public IBlockState getStateFromMeta(int meta)
-    {
-        return this.getDefaultState().withProperty(LEVEL, meta);
-    }
-
-    @Override
-    protected BlockState createBlockState()
-    {
-        return new ExtendedBlockState(this, new IProperty[] { LEVEL }, FLUID_RENDER_PROPS);
-    }
-
-    @Override
-    public IBlockState getExtendedState(IBlockState oldState, IBlockAccess worldIn, BlockPos pos)
-    {
-        IExtendedBlockState state = (IExtendedBlockState) oldState;
-
-        TileEntity te = worldIn.getTileEntity(pos);
-        if (te != null && te instanceof TileEntityBlockFluid)
-        {
-            TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
-            if (tile.corner != null)
-            {
-                state = state.withProperty(FLOW_DIRECTION, tile.flowDir);
-                float[][] corner = tile.corner;
-                int colour = colorMultiplier(worldIn, pos);
-                state = state.withProperty(LEVEL_CORNERS[0], corner[0][0]);
-                state = state.withProperty(LEVEL_CORNERS[1], corner[0][1]);
-                state = state.withProperty(LEVEL_CORNERS[2], corner[1][1]);
-                state = state.withProperty(LEVEL_CORNERS[3], corner[1][0]);
-                state = state.withProperty(COLOUR, colour);
-                return state;
-            }
-        }
-        state = state.withProperty(FLOW_DIRECTION, (float) getFlowDirection(worldIn, pos));
-        float[][] height = new float[3][3];
-        float[][] corner = new float[2][2];
-        height[1][1] = getFluidHeightForRender(worldIn, pos);
-        if (height[1][1] == 1)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    corner[i][j] = 1;
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    if (i != 1 || j != 1)
-                    {
-                        height[i][j] = getFluidHeightForRender(worldIn, pos.add(i - 1, 0, j - 1));
-                    }
-                }
-            }
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    corner[i][j] = getFluidHeightAverage(height[i][j], height[i][j + 1], height[i + 1][j],
-                            height[i + 1][j + 1]);
-                }
-            }
-        }
-        int colour = colorMultiplier(worldIn, pos);
-
-        state = state.withProperty(LEVEL_CORNERS[0], corner[0][0]);
-        state = state.withProperty(LEVEL_CORNERS[1], corner[0][1]);
-        state = state.withProperty(LEVEL_CORNERS[2], corner[1][1]);
-        state = state.withProperty(LEVEL_CORNERS[3], corner[1][0]);
-        state = state.withProperty(COLOUR, colour);
-
-        return state;
-    }
-
-    public static double getFlowDirection(IBlockAccess world, BlockPos pos)
-    {
-        Block block = world.getBlockState(pos).getBlock();
-        if (!(block instanceof IFluidBlock)) { return -1000.0; }
-        Vec3 vec = ((BlockFluidBase) block).getFlowVector(world, pos);
-        return vec.xCoord == 0.0D && vec.zCoord == 0.0D ? -1000.0D : Math.atan2(vec.zCoord, vec.xCoord) - Math.PI / 2D;
-    }
-
-    public Vec3 getFlowVector(IBlockAccess world, BlockPos pos)
-    {
-        return super.getFlowVector(world, pos);
-    }
-
-    public float getFluidHeightAverage(float... flow)
-    {
-        float total = 0;
-        int count = 0;
-
-        float end = 0;
-
-        for (int i = 0; i < flow.length; i++)
-        {
-            if (flow[i] >= 0.999F && end != 1F)
-            {
-                end = flow[i];
-            }
-
-            if (flow[i] >= 0)
-            {
-                total += flow[i];
-                count++;
-            }
-        }
-
-        if (end == 0) end = total / count;
-
-        return end;
-    }
-
-    @Override
-    public AxisAlignedBB getCollisionBoundingBox(World world, BlockPos pos, IBlockState state)
-    {
-        int meta = getQuantaValue(world, pos);
-        int l = meta;
-        float f = 0.0625F;
-
-        if (getFluid().getViscosity() >= 6000) { return new AxisAlignedBB(0 + pos.getX(), 0 + pos.getY(),
-                0 + pos.getZ(), 1 + pos.getX(), f * l + pos.getY(), 1 + pos.getZ()); }
-
-        return new AxisAlignedBB(pos, pos);
-
-    }
-
-    /** Add all collision boxes of this Block to the list that intersect with
-     * the given mask.
-     * 
-     * @param collidingEntity
-     *            the Entity colliding with this Block */
-    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask,
-            List<AxisAlignedBB> list, Entity collidingEntity)
-    {
-        AxisAlignedBB[] boxes = getBoxes(worldIn, pos);
-
-        if (getFluid().getViscosity() < 6000) return;
-
-        if (boxes != null)
-        {
-            for (AxisAlignedBB box : boxes)
-                if (box.intersectsWith(mask)) list.add(box);
-        }
-    }
-
-    public AxisAlignedBB[] getBoxes(World worldObj, BlockPos pos)
-    {
-        int x = pos.getX();
-        int y = pos.getY();
-        int z = pos.getZ();
-        double[] heights;
-
-        TileEntity te = worldObj.getTileEntity(pos);
-        if (te instanceof TileEntityBlockFluid)
-        {
-            TileEntityBlockFluid tile = (TileEntityBlockFluid) te;
-            if (tile.corner == null)
-            {
-                heights = getCornerHeights(worldObj, x, y, z);
-            }
-            else
-            {
-                heights = new double[4];
-                heights[0] = tile.corner[0][0];
-                heights[1] = tile.corner[0][1];
-                heights[2] = tile.corner[1][1];
-                heights[3] = tile.corner[1][0];
-            }
-        }
-        else heights = getCornerHeights(worldObj, x, y, z);
-
-        double hN = (heights[0] + heights[3]) / 2;
-        double hS = (heights[1] + heights[2]) / 2;
-        double hE = (heights[2] + heights[3]) / 2;
-        double hW = (heights[0] + heights[1]) / 2;
-
-        double hM = (hN + hS + hE + hW) / 4;
-
-        AxisAlignedBB NW = new AxisAlignedBB(0.0, 0, 0.0, 0.25, heights[0], 0.25).offset(x, y, z);
-        AxisAlignedBB NW1 = new AxisAlignedBB(0.25, 0, 0.0, 0.5, hN, 0.25).offset(x, y, z);
-        AxisAlignedBB NW2 = new AxisAlignedBB(0.0, 0, 0.25, 0.25, hW, 0.5).offset(x, y, z);
-        AxisAlignedBB NW3 = new AxisAlignedBB(0.25, 0, 0.25, 0.5, hM, 0.5).offset(x, y, z);
-
-        AxisAlignedBB NE = new AxisAlignedBB(0.75, 0, 0.0, 1.0, heights[3], 0.25).offset(x, y, z);
-        AxisAlignedBB NE1 = new AxisAlignedBB(0.75, 0, 0.25, 1.0, hE, 0.5).offset(x, y, z);
-        AxisAlignedBB NE2 = new AxisAlignedBB(0.5, 0, 0.0, 0.75, hN, 0.25).offset(x, y, z);
-        AxisAlignedBB NE3 = new AxisAlignedBB(0.5, 0, 0.25, 0.75, hM, 0.5).offset(x, y, z);
-
-        AxisAlignedBB SW = new AxisAlignedBB(0.0, 0, 0.75, 0.25, heights[1], 1.0).offset(x, y, z);
-        AxisAlignedBB SW1 = new AxisAlignedBB(0.25, 0, 0.75, 0.5, hS, 1.0).offset(x, y, z);
-        AxisAlignedBB SW2 = new AxisAlignedBB(0.0, 0, 0.5, 0.25, hW, 0.75).offset(x, y, z);
-        AxisAlignedBB SW3 = new AxisAlignedBB(0.25, 0, 0.5, 0.5, hM, 0.75).offset(x, y, z);
-
-        AxisAlignedBB SE = new AxisAlignedBB(0.75, 0, 0.75, 1.0, heights[2], 1.0).offset(x, y, z);
-        AxisAlignedBB SE1 = new AxisAlignedBB(0.75, 0, 0.5, 1.0, hE, 0.75).offset(x, y, z);
-        AxisAlignedBB SE2 = new AxisAlignedBB(0.5, 0, 0.75, 0.75, hS, 1.0).offset(x, y, z);
-        AxisAlignedBB SE3 = new AxisAlignedBB(0.5, 0, 0.5, 0.75, hM, 0.75).offset(x, y, z);
-
-        // return new AxisAlignedBB[] {M, NW, NE, SW, SE};
-        return new AxisAlignedBB[] { NW, NW1, NW2, NW3, NE, NE1, NE2, NE3, SW, SW1, SW2, SW3, SE, SE1, SE2, SE3 };
-    }
-
-    public double[] getCornerHeights(IBlockAccess world, int x, int y, int z)
-    {
-        double heightNW, heightSW, heightSE, heightNE;
-
-        float flow11 = getFluidHeightForCollision(world, x, y, z);
-
-        if (flow11 != 1)
-        {
-            float flow00 = getFluidHeightForCollision(world, x - 1, y, z - 1);
-            float flow01 = getFluidHeightForCollision(world, x - 1, y, z);
-            float flow02 = getFluidHeightForCollision(world, x - 1, y, z + 1);
-            float flow10 = getFluidHeightForCollision(world, x, y, z - 1);
-            float flow12 = getFluidHeightForCollision(world, x, y, z + 1);
-            float flow20 = getFluidHeightForCollision(world, x + 1, y, z - 1);
-            float flow21 = getFluidHeightForCollision(world, x + 1, y, z);
-            float flow22 = getFluidHeightForCollision(world, x + 1, y, z + 1);
-
-            heightNW = getFluidHeightAverage(new float[] { flow00, flow01, flow10, flow11 });
-            heightSW = getFluidHeightAverage(new float[] { flow01, flow02, flow12, flow11 });
-            heightSE = getFluidHeightAverage(new float[] { flow12, flow21, flow22, flow11 });
-            heightNE = getFluidHeightAverage(new float[] { flow10, flow20, flow21, flow11 });
-        }
-        else
-        {
-            heightNW = flow11;
-            heightSW = flow11;
-            heightSE = flow11;
-            heightNE = flow11;
-        }
-
-        return new double[] { heightNW, heightSW, heightSE, heightNE };
-    }
-
-    public float getFluidHeightForCollision(IBlockAccess world, int x, int y, int z)
-    {
-        Vector3 vec = Vector3.getNewVector().set(x, y, z);
-        int meta = vec.getBlockMetadata(world);
-        Block id = vec.getBlock(world);
-        if (id instanceof BlockFluid)
-        {
-            if (vec.getBlock(world, EnumFacing.UP) instanceof BlockFluid)
-            {
-                // if (world.getBlock(x, y, z) == block.blockID) {
-                // if (world.getBlock(x, y + 1, z) == block.blockID) {
-                return 1;
-            }
-            if (meta == getMaxRenderHeightMeta()) { return 1F; }
-            return ((float) (meta + 1)) / 16;
-        }
-        return 0;
     }
 }
