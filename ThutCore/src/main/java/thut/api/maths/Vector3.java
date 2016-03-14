@@ -100,23 +100,24 @@ public class Vector3
             z = vector.intZ();
         }
     }
-    public static final Vector3 secondAxis    = Vector3.getNewVector().set(0, 1, 0);
-    public static final Vector3 secondAxisNeg = Vector3.getNewVector().set(0, -1, 0);
-    public static final Vector3 firstAxis     = Vector3.getNewVector().set(1, 0, 0);
-    public static final Vector3 firstAxisNeg  = Vector3.getNewVector().set(-1, 0, 0);
-    public static final Vector3 thirdAxis     = Vector3.getNewVector().set(0, 0, 1);
-    public static final Vector3 thirdAxisNeg  = Vector3.getNewVector().set(0, 0, -1);
 
-    public static final Vector3 empty         = Vector3.getNewVector();
-    public static final int     length        = 3;
-    public static Vector3 vecMult = Vector3.getNewVector();
-    public static double[][] rotBox = new double[3][3];
+    public static final Vector3      secondAxis    = Vector3.getNewVector().set(0, 1, 0);
+    public static final Vector3      secondAxisNeg = Vector3.getNewVector().set(0, -1, 0);
+    public static final Vector3      firstAxis     = Vector3.getNewVector().set(1, 0, 0);
+    public static final Vector3      firstAxisNeg  = Vector3.getNewVector().set(-1, 0, 0);
+    public static final Vector3      thirdAxis     = Vector3.getNewVector().set(0, 0, 1);
+    public static final Vector3      thirdAxisNeg  = Vector3.getNewVector().set(0, 0, -1);
+
+    public static final Vector3      empty         = Vector3.getNewVector();
+    public static final int          length        = 3;
+    public static Vector3            vecMult       = Vector3.getNewVector();
+    public static double[][]         rotBox        = new double[3][3];
 
     public static Map<String, Fluid> fluids;
 
-    static Vector3 move1 = Vector3.getNewVector();
+    static Vector3                   move1         = Vector3.getNewVector();
 
-    static Vector3 move2 = Vector3.getNewVector();
+    static Vector3                   move2         = Vector3.getNewVector();
 
     public static Vector3 entity(Entity e)
     {
@@ -305,11 +306,10 @@ public class Vector3
 
     public static boolean isVisibleEntityFromEntity(Entity looker, Entity target)
     {
-
         if (looker == null || target == null) return false;
-        Vector3 look = entity(looker);
-        Vector3 t = entity(target);
-        return isVisibleRange(looker.worldObj, t, look, look.distanceTo(t) + looker.width + target.width);
+        return looker.worldObj.rayTraceBlocks(
+                new Vec3(looker.posX, looker.posY + (double) looker.getEyeHeight(), looker.posZ),
+                new Vec3(target.posX, target.posY + (double) target.getEyeHeight(), target.posZ)) == null;
     }
 
     /** determines whether the source can see out as far as range in the given
@@ -323,6 +323,14 @@ public class Vector3
     public static boolean isVisibleRange(IBlockAccess worldObj, Vector3 source, Vector3 direction, double range)
     {
         direction = direction.normalize();
+
+        if (worldObj instanceof World)
+        {
+            direction.scalarMultBy(range).addTo(source);
+            return ((World) worldObj).rayTraceBlocks(new Vec3(source.x, source.y, source.z),
+                    new Vec3(direction.x, direction.y, direction.z)) == null;
+        }
+
         double dx, dy, dz;
         for (double i = 0; i < range; i += 0.0625)
         {
@@ -476,11 +484,11 @@ public class Vector3
         return dot;
     }
 
-    public double               x;
+    public double   x;
 
-    public double               y;
+    public double   y;
 
-    public double               z;
+    public double   z;
 
     MutableBlockPos pos;
 
@@ -1790,6 +1798,7 @@ public class Vector3
             return false;
         }
     }
+
     public void setBlock(World world, IBlockState defaultState)
     {
         world.setBlockState(getPos(), defaultState);
