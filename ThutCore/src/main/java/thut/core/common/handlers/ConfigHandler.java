@@ -5,42 +5,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.item.Item;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import thut.api.maths.ExplosionCustom;
+import thut.core.common.config.ConfigBase;
+import thut.core.common.config.Configure;
 import thut.core.common.items.ItemDusts;
 import thut.core.common.items.ItemSpout;
 import thut.core.common.items.ItemTank;
 
-public class ConfigHandler
+public class ConfigHandler extends ConfigBase
 {
+    @Configure(category = "items")
+    private boolean           spout           = false;
+    @Configure(category = "items")
+    private boolean           tank            = false;
+    @Configure(category = "misc")
+    private int               explosionRadius = 127;
+    private static List<Item> items           = new ArrayList<Item>();
 
-    public static boolean collisionDamage;
-    public static boolean paneFix;
-
-    private static List<Item> items = new ArrayList<Item>();
+    public ConfigHandler()
+    {
+        super(null);
+    }
 
     public ConfigHandler(File configFile)
     {
-        // Loads The Configuration File into Forges Configuration
-        Configuration conf = new Configuration(configFile);
-        try
-        {
-            conf.load();
-            ExplosionCustom.MAX_RADIUS = conf.getInt("Blast Radius", Configuration.CATEGORY_GENERAL, 127, 1, 127,
-                    "Maximum radius affected by blasts");
-        }
-        catch (RuntimeException e)
-        {
-        }
-        finally
-        {
-            conf.save();
-        }
+        super(configFile, new ConfigHandler());
+    }
 
-        items.add(new ItemSpout());
-        items.add(new ItemTank());
+    @Override
+    protected void applySettings()
+    {
+        if (spout) items.add(new ItemSpout());
+        if (tank) items.add(new ItemTank());
         items.add(new ItemDusts());
+
+        ExplosionCustom.MAX_RADIUS = explosionRadius;
 
         for (Item item : items)
         {

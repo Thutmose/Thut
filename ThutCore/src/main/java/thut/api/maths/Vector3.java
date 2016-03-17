@@ -308,8 +308,8 @@ public class Vector3
     {
         if (looker == null || target == null) return false;
         return looker.worldObj.rayTraceBlocks(
-                new Vec3(looker.posX, looker.posY + (double) looker.getEyeHeight(), looker.posZ),
-                new Vec3(target.posX, target.posY + (double) target.getEyeHeight(), target.posZ)) == null;
+                new Vec3(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
+                new Vec3(target.posX, target.posY + target.getEyeHeight(), target.posZ)) == null;
     }
 
     /** determines whether the source can see out as far as range in the given

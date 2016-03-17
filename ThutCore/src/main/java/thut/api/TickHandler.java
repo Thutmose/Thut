@@ -10,14 +10,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.WorldCache.ChunkCache;
+import thut.api.block.IOwnableTE;
 import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -75,11 +78,12 @@ public class TickHandler
 
     }
 
-    private static TickHandler instance;
+    private static TickHandler                 instance;
 
-    public static int                            maxChanges  = 200;
+    public static int                          maxChanges = 200;
 
-    static Map<Thread, ArrayList<BlockChange>> lists = Maps.newConcurrentMap();
+    static Map<Thread, ArrayList<BlockChange>> lists      = Maps.newConcurrentMap();
+
     public static void addBlockChange(BlockChange b1, int dimension)
     {
 
@@ -95,10 +99,12 @@ public class TickHandler
         getInstance();
         TickHandler.getListForDimension(dimension).add(b1);
     }
+
     public static void addBlockChange(Vector3 location, int dimension, Block blockTo)
     {
         addBlockChange(location, dimension, blockTo, 0);
     }
+
     public static void addBlockChange(Vector3 location, int dimension, Block blockTo, int meta)
     {
         addBlockChange(new BlockChange(location, dimension, blockTo, meta), dimension);
@@ -202,6 +208,17 @@ public class TickHandler
     public WorldCache getWorldCache(int dimension)
     {
         return worldCaches.get(dimension);
+    }
+
+    @SubscribeEvent
+    public void placeEvent(PlaceEvent event)
+    {
+        TileEntity te = event.world.getTileEntity(event.pos);
+        if (te != null && te instanceof IOwnableTE)
+        {
+            IOwnableTE ownable = (IOwnableTE) te;
+            ownable.setPlacer(event.player);
+        }
     }
 
     @SubscribeEvent
