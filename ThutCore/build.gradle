@@ -32,7 +32,6 @@ minecraft {
     replaceIn "ThutCoreReference.java"
     replace "@MCVERSION", "${version_mcsupport}"
     replaceIn "ThutCoreReference.java"
-
 }
 
 
@@ -56,6 +55,7 @@ processResources
     }
 }
 
+version = "${version_minecraft}-${version}"
 
 jar {
         manifest {
