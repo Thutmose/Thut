@@ -17,7 +17,7 @@ repositories {
     maven { url = "http://maven.cil.li/" }
 }
 dependencies {
-    compile "li.cil.oc:OpenComputers:MC1.8.9-1.5.+:api"
+  //  compile "li.cil.oc:OpenComputers:MC1.8.9-1.5.+:api"
 }
 
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html

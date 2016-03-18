@@ -10,6 +10,7 @@ import static net.minecraft.util.EnumFacing.WEST;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -32,6 +33,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     static double max   = 0;
     static int    count = 0;
     static double mean  = 0;
+
     public static Vector3 getOpposite(EnumFacing side, Vector3 ret)
     {
         switch (side)
@@ -52,6 +54,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             return ret.set(side);
         }
     }
+
     /** Used to find obstacles */
     protected final IBlockAccess          worldMap;
     /** The path being generated */
@@ -72,9 +75,9 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
     protected final Matrix3               box          = new Matrix3();
 
-    Vector3 v0 = Vector3.getNewVector();
+    Vector3                               v0           = Vector3.getNewVector();
 
-    Vector3 v1 = Vector3.getNewVector();
+    Vector3                               v1           = Vector3.getNewVector();
 
     public ThutPathFinder(IBlockAccess world, IPathingMob entity)
     {
@@ -126,14 +129,17 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         }
     }
 
-    private boolean canFit(Vector3 e, Block b)
+    private boolean canFit(Vector3 e, IBlockState b)
     {
-        double dz = b.getBlockBoundsMaxZ() - b.getBlockBoundsMinZ();
-        double dx = b.getBlockBoundsMaxX() - b.getBlockBoundsMinX();
-        double dy = b.getBlockBoundsMaxY() - b.getBlockBoundsMinY();
-        if (dz < e.z || dx < e.x || dy < e.y) return false;
-        return true;
+        // TODO get this done again.
+        // double dz = b.getBlockBoundsMaxZ() - b.getBlockBoundsMinZ();
+        // double dx = b.getBlockBoundsMaxX() - b.getBlockBoundsMinX();
+        // double dy = b.getBlockBoundsMaxY() - b.getBlockBoundsMinY();
+        // if (dz < e.z || dx < e.x || dy < e.y)
+        return false;
+        // return true;
     }
+
     /** Returns a new PathEntity for a given start and end point */
     private PathEntity createEntityPath(PathPoint end)
     {
@@ -155,6 +161,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         }
         return new PathEntity(apathpoint);
     }
+
     /** Internal implementation of creating a path from an entity to a point */
     private PathEntity createEntityPathTo(double x, double y, double z, float distance)
     {
@@ -275,7 +282,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                     PathPoint point1 = openPoint(x, y - 1, z);
                     if (!point.isFirst)
                     {
-                        Block down = v0.set(point1).getBlock(worldMap);
+                        IBlockState down = v0.set(point1).getBlockState(worldMap);
                         v1.set(point1);
                         float f1 = this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
 
@@ -306,7 +313,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                         PathPoint point1 = openPoint(x, y + 1, z);
                         if (!point.isFirst)
                         {
-                            Block down = v0.set(point1).getBlock(worldMap);
+                            IBlockState down = v0.set(point1).getBlockState(worldMap);
                             v1.set(point1);
                             float f1 = this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
                             if (down.getMaterial().isLiquid())
@@ -335,7 +342,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                         PathPoint point1 = openPoint(x, y - 2, z);
                         if (!point.isFirst)
                         {
-                            Block down = v0.set(point1).getBlock(worldMap);
+                            IBlockState down = v0.set(point1).getBlockState(worldMap);
                             v1.set(point1);
                             float f1 = this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
                             // check if this causes cmod exp
@@ -509,16 +516,16 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         Vector3 v = v0.set(x + 0.5, y, z + 0.5);
 
         boolean clear = false;
-
-        Block b = v.getBlock(worldMap);
+        IBlockState state = v.getBlockState(worldMap);
+        Block b = state.getBlock();
         if (mob.getBlockPathWeight(worldMap, e) < 0) { return false; }
         if (b instanceof BlockDoor)
         {
-            if (b.getMaterial() == Material.wood) { return canFit(e, b); }
+            if (state.getMaterial() == Material.wood) { return canFit(e, state); }
         }
-        if (b.getMaterial() == Material.lava) return false;
-        if (b.isNormalCube() || b.getMaterial().blocksMovement()) return false;
-        if (b.isLadder(worldMap, v.getPos(), (EntityLivingBase) mob)) return true;
+        if (state.getMaterial() == Material.lava) return false;
+        if (state.isNormalCube() || state.getMaterial().blocksMovement()) return false;
+        if (b.isLadder(state, worldMap, v.getPos(), (EntityLivingBase) mob)) return true;
 
         if (e.x > 1 || e.z > 1)
         {
@@ -541,14 +548,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
     protected boolean isSafe(Vector3 e, int x, int y, int z, Vector3 from)
     {
-        Block down = worldMap.getBlockState(new BlockPos(x, y - 1, z)).getBlock();
-        Material mDown = down.getMaterial();
+        IBlockState state = worldMap.getBlockState(new BlockPos(x, y - 1, z));
+        Material mDown = state.getMaterial();
 
         boolean water = mob.swims();
         boolean air = mob.flys() || mob.floats();
         BlockPos pos;
-        boolean ladder = worldMap.getBlockState(pos = new BlockPos(x, y, z)).getBlock().isLadder(worldMap, pos,
-                (EntityLivingBase) mob);
+        boolean ladder = (state = worldMap.getBlockState(pos = new BlockPos(x, y, z))).getBlock().isLadder(state,
+                worldMap, pos, (EntityLivingBase) mob);
         // System.out.println("test");
         if (air || ladder) { return isEmpty(e, x, y, z, from); }
         if (water)

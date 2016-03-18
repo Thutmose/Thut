@@ -627,7 +627,7 @@ public class Matrix3
             if (v.y < minY) minY = v.y;
             if (v.z < minZ) minZ = v.z;
         }
-        if (e.riddenByEntity != null) maxY += (e.riddenByEntity.height + e.getMountedYOffset());
+        if (e.getLowestRidingEntity() != null) maxY += (e.getLowestRidingEntity().height + e.getMountedYOffset());
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
 
         double yShift = 0;
@@ -903,7 +903,7 @@ public class Matrix3
                     Block block = iblockstate.getBlock();
                     if (block.isCollidable())
                     {
-                        block.addCollisionBoxesToList(world, blockpos, iblockstate, box, collidingBoundingBoxes, null);
+                        block.addCollisionBoxToList(iblockstate, world, blockpos, box, collidingBoundingBoxes, null);
                     }
                 }
             }
