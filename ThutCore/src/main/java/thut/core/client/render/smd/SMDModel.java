@@ -13,7 +13,7 @@ public class SMDModel
     public void animate()
     {
         if (skeleton.pose == null) return;
-//        skeleton.pose.nextFrame();
+        skeleton.pose.nextFrame();
         skeleton.applyPose();
     }
 

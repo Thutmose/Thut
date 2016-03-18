@@ -16,10 +16,10 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -159,14 +159,14 @@ public class ExplosionCustom extends Explosion
             }
             else
             {
-                Vector<Entity> entities = worldEntities.get(evt.world.provider.getDimensionId());
+                Vector<Entity> entities = worldEntities.get(evt.world.provider.getDimension());
                 if (entities == null)
                 {
                     entities = new Vector<Entity>();
                 }
                 entities.clear();
                 entities.addAll(evt.world.loadedEntityList);
-                worldEntities.put(evt.world.provider.getDimensionId(), entities);
+                worldEntities.put(evt.world.provider.getDimension(), entities);
             }
         }
     }
@@ -311,7 +311,7 @@ public class ExplosionCustom extends Explosion
         this.explosionZ = z;
         explosionSize = power;
         this.world = world;
-        dimension = world.provider.getDimensionId();
+        dimension = world.provider.getDimension();
         strength = power;
         centre = Vector3.getNewVector().set(x, y, z);
 
@@ -336,7 +336,7 @@ public class ExplosionCustom extends Explosion
         }
         if (world == null) return;
 
-        dimension = world.provider.getDimensionId();
+        dimension = world.provider.getDimension();
         worldObj = TickHandler.getInstance().getWorldCache(dimension);
     }
 
