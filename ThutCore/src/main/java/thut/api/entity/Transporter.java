@@ -327,7 +327,7 @@ public class Transporter
 
     static Entity teleportEntityToDimension(Entity entity, Vector3 p, int dimension, boolean destBlocked)
     {
-        MinecraftServer server = MinecraftServer.getServer();
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.worldServerForDimension(dimension);
         return teleportEntityToWorld(entity, p, world, destBlocked);
     }
@@ -397,7 +397,7 @@ public class Transporter
 
     static void transferPlayerToDimension(EntityPlayerMP player, int newDimension, Vector3 p)
     {
-        MinecraftServer server = MinecraftServer.getServer();
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         ServerConfigurationManager scm = server.getConfigurationManager();
         int oldDimension = player.dimension;
         player.dimension = newDimension;
