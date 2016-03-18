@@ -78,15 +78,20 @@ public class BiomeDatabase
         return BiomeGenBase.getIdForBiome(biome);
     }
 
+    public static BiomeGenBase getBiome(String name)
+    {
+        return BiomeGenBase.biomeRegistry.getObject(new ResourceLocation(name));
+    }
+
     public static int getBiomeType(String name)
     {
         for (BiomeType b : BiomeType.values())
         {
             if (b.name.equalsIgnoreCase(name)) return (byte) b.ordinal();
         }
-		for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys()) 
-		{
-			BiomeGenBase b = BiomeGenBase.biomeRegistry.getObject(key);
+        for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys())
+        {
+            BiomeGenBase b = BiomeGenBase.biomeRegistry.getObject(key);
             if (b != null) if (b.getBiomeName().equalsIgnoreCase(name)) return getBiomeType(b);
         }
         return BiomeType.NONE.getType();
