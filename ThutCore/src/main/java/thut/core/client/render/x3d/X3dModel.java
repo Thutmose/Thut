@@ -2,12 +2,23 @@ package thut.core.client.render.x3d;
 
 import static java.lang.Math.toDegrees;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import thut.api.maths.Vector3;
+import thut.api.maths.Vector4;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.model.IModel;
@@ -17,11 +28,15 @@ import thut.core.client.render.model.IRetexturableModel;
 import thut.core.client.render.model.Vertex;
 import thut.core.client.render.tabula.components.Animation;
 import thut.core.client.render.tabula.components.AnimationComponent;
+import thut.core.client.render.x3d.X3dXML.Appearance;
+import thut.core.client.render.x3d.X3dXML.IndexedTriangleSet;
+import thut.core.client.render.x3d.X3dXML.Transform;
 
 public class X3dModel implements IModelCustom, IModel, IRetexturableModel
 {
-    private HashMap<String, IExtendedModelPart> parts = new HashMap<String, IExtendedModelPart>();
-    public String                               name;
+    public HashMap<String, IExtendedModelPart> parts = new HashMap<String, IExtendedModelPart>();
+    Map<String, Material>                      mats  = Maps.newHashMap();
+    public String                              name;
 
     public X3dModel()
     {
@@ -32,7 +47,6 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         this();
         loadModel(l);
-
     }
 
     @Override
@@ -43,49 +57,127 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
 
     public void loadModel(ResourceLocation model)
     {
-        X3dXMLParser parser = new X3dXMLParser(model);
-        parser.parse();
-
         try
         {
-            makeObjects(parser);
+            IResource res = Minecraft.getMinecraft().getResourceManager().getResource(model);
+            InputStream stream = res.getInputStream();
+            X3dXML xml = new X3dXML(stream);
+            makeObjects(xml);
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
-    HashMap<String, IExtendedModelPart> makeObjects(X3dXMLParser parser) throws Exception
+    private void addChildren(Set<Transform> allTransforms, Transform transform)
     {
-        HashMap<String, HashMap<String, String>> partTranslations = parser.partTranslations;
-        HashMap<String, ArrayList<String>> childMap = parser.partChildren;
-
-        String name = parser.partName;
-        this.name = name;
-
-        for (String s : parser.shapeMap.keySet())
+        for (Transform f : transform.transforms)
         {
-            X3dObject o = new X3dObject(s);
-            o.shapes = parser.shapeMap.get(s);
-            String[] offset = partTranslations.get(s).get("translation").split(" ");
-            o.offset = Vector3.getNewVector().set(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
-                    Float.parseFloat(offset[2]));
-            offset = partTranslations.get(s).get("scale").split(" ");
-            o.scale = new Vertex(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]), Float.parseFloat(offset[2]));
-            offset = partTranslations.get(s).get("rotation").split(" ");
-            o.rotations.set(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]), Float.parseFloat(offset[2]),
-                    (float) toDegrees(Float.parseFloat(offset[3])));
-            parts.put(s, o);
-        }
-        for (String s : parts.keySet())
-        {
-            if (childMap.containsKey(s))
+            if (!f.DEF.contains("ifs_TRANSFORM"))
             {
-                for (String s1 : childMap.get(s))
+                allTransforms.add(f);
+                addChildren(allTransforms, f);
+            }
+        }
+    }
+
+    private Material getMaterial(X3dXML.Appearance appearance)
+    {
+        X3dXML.Material mat = appearance.material;
+        if (mat == null) return null;
+        String matName = mat.DEF;
+        if (matName == null)
+        {
+            matName = mat.USE.substring(3);
+        }
+        else
+        {
+            matName = matName.substring(3);
+        }
+        Material material = mats.get(matName);
+        if (material == null || material.emissiveColor == null)
+        {
+            String texName;
+            if (appearance.tex != null && appearance.tex.DEF != null)
+            {
+                texName = appearance.tex.DEF.substring(3);
+                texName = texName.substring(0, texName.lastIndexOf("_png"));
+            }
+            else
+            {
+                texName = null;
+            }
+            if (material == null) material = new Material(matName, texName, mat.getDiffuse(), mat.getSpecular(),
+                    mat.getEmissive(), mat.ambientIntensity, mat.shininess, mat.transparency);
+            else
+            {
+                if (material.texture == null) material.texture = texName;
+                material.ambientIntensity = mat.ambientIntensity;
+                material.shininess = mat.shininess;
+                material.transparency = mat.transparency;
+                material.emissiveColor = mat.getEmissive();
+                material.specularColor = mat.getSpecular();
+                material.diffuseColor = mat.getDiffuse();
+            }
+            mats.put(matName, material);
+        }
+        return material;
+    }
+
+    HashMap<String, IExtendedModelPart> makeObjects(X3dXML xml) throws Exception
+    {
+        Map<String, Set<String>> childMap = Maps.newHashMap();
+        Set<Transform> allTransforms = Sets.newHashSet();
+        for (Transform f : xml.model.scene.transforms)
+        {
+            allTransforms.add(f);
+            addChildren(allTransforms, f);
+        }
+        for (Transform t : allTransforms)
+        {
+            String[] offset = t.translation.split(" ");
+            Vector3 translation = Vector3.getNewVector().set(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
+                    Float.parseFloat(offset[2]));
+            offset = t.scale.split(" ");
+            Vertex scale = new Vertex(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
+                    Float.parseFloat(offset[2]));
+            offset = t.rotation.split(" ");
+            Vector4 rotations = new Vector4(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
+                    Float.parseFloat(offset[2]), (float) toDegrees(Float.parseFloat(offset[3])));
+            Set<String> children = t.getChildNames();
+            t = t.getIfsTransform();
+            X3dXML.Group group = t.group;
+            String name = t.getGroupName();
+            List<Shape> shapes = Lists.newArrayList();
+            for (X3dXML.Shape shape : group.shapes)
+            {
+                IndexedTriangleSet triangleSet = shape.triangleSet;
+                Shape renderShape = new Shape(triangleSet.getOrder(), triangleSet.getVertices(),
+                        triangleSet.getNormals(), triangleSet.getTexture());
+                shapes.add(renderShape);
+                Appearance appearance = shape.appearance;
+                Material material = getMaterial(appearance);
+                if (material != null) renderShape.setMaterial(material);
+            }
+            X3dObject o = new X3dObject(name);
+            o.shapes = shapes;
+            o.rotations.set(rotations.x, rotations.y, rotations.z, rotations.w);
+            o.offset.set(translation);
+            o.scale = scale;
+            parts.put(name, o);
+            childMap.put(name, children);
+        }
+        for (Map.Entry<String, Set<String>> entry : childMap.entrySet())
+        {
+            String key = entry.getKey();
+
+            if (parts.get(key) != null)
+            {
+                IExtendedModelPart part = parts.get(key);
+                for (String s : entry.getValue())
                 {
-                    if (parts.get(s1) != null) parts.get(s).addChild(parts.get(s1));
+                    if (parts.get(s) != null && parts.get(s) != part) part.addChild(parts.get(s));
                 }
             }
         }
@@ -97,17 +189,17 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         for (Animation animation : animations)
         {
-            for(String s: animation.sets.keySet())
+            for (String s : animation.sets.keySet())
             {
                 ArrayList<AnimationComponent> components = animation.sets.get(s);
-                for(AnimationComponent comp: components)
+                for (AnimationComponent comp : components)
                 {
-                    comp.posOffset[0]/=-16;
-                    comp.posOffset[1]/=-16;
-                    comp.posOffset[2]/=-16;
-                    comp.posChange[0]/=-16;
-                    comp.posChange[1]/=-16;
-                    comp.posChange[2]/=-16;
+                    comp.posOffset[0] /= -16;
+                    comp.posOffset[1] /= -16;
+                    comp.posOffset[2] /= -16;
+                    comp.posChange[0] /= -16;
+                    comp.posChange[1] /= -16;
+                    comp.posChange[2] /= -16;
                 }
             }
         }
@@ -160,7 +252,8 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         for (IExtendedModelPart part : parts.values())
         {
-            if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setAnimationChanger(changer);;
+            if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setAnimationChanger(changer);
+            ;
         }
     }
 

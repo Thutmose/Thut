@@ -11,21 +11,27 @@ import net.minecraft.client.renderer.OpenGlHelper;
 
 public class Material
 {
-    public final String   name;
-    public final String   texture;
-    public final Vector3f diffuseColor;
-    public final Vector3f specularColor;
-    public final Vector3f emissiveColor;
-    public final float    emissiveMagnitude;
-    public final float    ambientIntensity;
-    public final float    shininess;
-    public final float    transparency;
+    public final String name;
+    public String       texture;
+    public Vector3f     diffuseColor;
+    public Vector3f     specularColor;
+    public Vector3f     emissiveColor;
+    public float        emissiveMagnitude;
+    public float        ambientIntensity;
+    public float        shininess;
+    public float        transparency;
 
-    boolean depth;
+    boolean             depth;
 
-    boolean colour_mat;
-    boolean light;
-    float[] oldLight = { -1, -1 };
+    boolean             colour_mat;
+    boolean             light;
+    float[]             oldLight = { -1, -1 };
+
+    public Material(String name)
+    {
+        this.name = name;
+    }
+
     public Material(String name, String texture, Vector3f diffuse, Vector3f specular, Vector3f emissive, float ambient,
             float shiny, float transparent)
     {

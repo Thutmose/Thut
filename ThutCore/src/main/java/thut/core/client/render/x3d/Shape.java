@@ -1,7 +1,5 @@
 package thut.core.client.render.x3d;
 
-import java.util.ArrayList;
-
 import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
@@ -21,21 +19,12 @@ public class Shape
     public String              name;
     private double[]           uvShift = { 0, 0 };
 
-    public Shape(String index, String coordinate, String normal, String texture)
+    public Shape(Integer[] order, Vertex[] vert, Vertex[] norm, TextureCoordinate[] tex)
     {
-        String[] offset = index.split(" ");
-        vertices = parseVertices(coordinate).toArray(new Vertex[0]);
-        textureCoordinates = parseTextures(texture).toArray(new TextureCoordinate[0]);
-        if (normal != null)
-        {
-            normals = parseVertices(normal).toArray(new Vertex[0]);
-        }
-        order = new Integer[offset.length];
-        for (int i = 0; i < offset.length; i++)
-        {
-            String s1 = offset[i];
-            order[i] = (Integer.parseInt(s1));
-        }
+        this.order = order;
+        this.vertices = vert;
+        this.normals = norm;
+        this.textureCoordinates = tex;
     }
 
     void addTris(IPartTexturer texturer)
@@ -110,37 +99,6 @@ public class Shape
             addTris(texturer);
             GL11.glEndList();
         }
-    }
-
-    private ArrayList<TextureCoordinate> parseTextures(String line) throws ModelFormatException
-    {
-        ArrayList<TextureCoordinate> ret = new ArrayList<TextureCoordinate>();
-        String[] points = line.split(" ");
-        if (points.length % 2 != 0) { throw new ModelFormatException(
-                "Invalid number of elements in the points string " + points.length); }
-        for (int i = 0; i < points.length; i += 2)
-        {
-            TextureCoordinate toAdd = new TextureCoordinate(Float.parseFloat(points[i]),
-                    1 - Float.parseFloat(points[i + 1]));
-            ret.add(toAdd);
-        }
-        return ret;
-    }
-
-    private ArrayList<Vertex> parseVertices(String line) throws ModelFormatException
-    {
-        ArrayList<Vertex> ret = new ArrayList<Vertex>();
-
-        String[] points = line.split(" ");
-        if (points.length
-                % 3 != 0) { throw new ModelFormatException("Invalid number of elements in the points string"); }
-        for (int i = 0; i < points.length; i += 3)
-        {
-            Vertex toAdd = new Vertex(Float.parseFloat(points[i]), Float.parseFloat(points[i + 1]),
-                    Float.parseFloat(points[i + 2]));
-            ret.add(toAdd);
-        }
-        return ret;
     }
 
     public void renderShape(IPartTexturer texturer)
