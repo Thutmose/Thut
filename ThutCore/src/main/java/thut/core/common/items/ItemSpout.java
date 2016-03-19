@@ -6,11 +6,8 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
@@ -49,11 +46,10 @@ public class ItemSpout extends Item
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World world, EntityPlayer player,
-            EnumHand hand)
+    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
     {
-        if (itemstack.getItemDamage() != 15) return super.onItemRightClick(itemstack, world, player, hand);
-
+        if(itemstack.getItemDamage()!=15) return itemstack;
+        
         Vector3 v = Vector3.getNewVector();
         int range = 5;
         int num = 1;
@@ -62,26 +58,27 @@ public class ItemSpout extends Item
         {
             v.set(player).addTo(range * (Math.random() - 0.5), range * (Math.random() - 0.5),
                     range * (Math.random() - 0.5));
-            ExplosionCustom boom = new ExplosionCustom(world, player, v, power);
+            ExplosionCustom boom = new ExplosionCustom(worldObj, player, v, power);
             boom.doExplosion();
         }
-        return super.onItemRightClick(itemstack, world, player, hand);
+        return itemstack;
     }
 
     // TODO move this to real method
     @Override
-    public EnumActionResult onItemUse(ItemStack stackIn, EntityPlayer playerIn, World worldIn, BlockPos pos,
-            EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+    public boolean onItemUse(ItemStack itemstack, EntityPlayer player, World worldObj, BlockPos pos, EnumFacing side,
+            float hitX, float hitY, float hitZ)
     {
+        boolean ret = false;
         int toDrain = 0;
         Vector3 hit = Vector3.getNewVector().set(pos);
         Vector3 next = hit.offset(side);
 
-        boolean full = !playerIn.isSneaking();
-        ArrayList<ItemStack> tanks = getTanks(playerIn);
-        if (tanks.size() == 0) return EnumActionResult.FAIL;
+        boolean full = !player.isSneaking();
+        ArrayList<ItemStack> tanks = getTanks(player);
+        if (tanks.size() == 0) return ret;
 
-        if (next.getBlockMaterial(worldIn).isReplaceable())
+        if (next.getBlockMaterial(worldObj).isReplaceable())
         {
             for (ItemStack stack : tanks)
             {
@@ -100,18 +97,18 @@ public class ItemSpout extends Item
                     int metaDiff = full ? 16 : 1;
 
                     toDrain = maxMeta == 0 ? 1000 : (int) (metaDiff * 1000f / (maxMeta + 1));
-                    next.setBlock(worldIn, b, metaDiff - 1, 3);
-                    tank.drain(stack, toDrain, !playerIn.capabilities.isCreativeMode);
+                    next.setBlock(worldObj, b, metaDiff - 1, 3);
+                    tank.drain(stack, toDrain, !player.capabilities.isCreativeMode);
                     break;
                 }
                 else
                 {
-                    tank.drain(stack, 1000, !playerIn.capabilities.isCreativeMode);
-                    next.setBlock(worldIn, b, 0, 3);
+                    tank.drain(stack, 1000, !player.capabilities.isCreativeMode);
+                    next.setBlock(worldObj, b, 0, 3);
                 }
             }
         }
 
-        return EnumActionResult.FAIL;
+        return ret;
     }
 }

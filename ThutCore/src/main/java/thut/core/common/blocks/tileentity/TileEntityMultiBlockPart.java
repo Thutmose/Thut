@@ -10,11 +10,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.IChatComponent;
 
 public class TileEntityMultiBlockPart extends TileEntity implements ISidedInventory
 {
@@ -64,16 +64,17 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     /** Overriden in a sign to provide the text. */
+    @SuppressWarnings("rawtypes")
     @Override
-    public Packet<?> getDescriptionPacket()
+    public Packet getDescriptionPacket()
     {
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         this.writeToNBT(nbttagcompound);
-        return new SPacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
+        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
     }
 
     @Override
-    public ITextComponent getDisplayName()
+    public IChatComponent getDisplayName()
     {
         if (core != null) return core.getDisplayName();
         return null;
@@ -152,7 +153,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
+    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
     {
         NBTTagCompound nbttagcompound = pkt.getNbtCompound();
         this.readFromNBT(nbttagcompound);

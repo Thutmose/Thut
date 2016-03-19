@@ -24,18 +24,18 @@ import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
+import net.minecraft.util.Vec3i;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -259,8 +259,7 @@ public class Vector3
 
     public static boolean isNotSurfaceBlock(World world, Vector3 v)
     {
-        IBlockState state = v.getBlockState(world);
-        Block b = state.getBlock();
+        Block b = v.getBlock(world);
 
         if (b instanceof IFluidBlock)
         {
@@ -269,8 +268,7 @@ public class Vector3
         }
 
         boolean ret = (b == null || v.getBlockMaterial(world).isReplaceable() || v.isClearOfBlocks(world)
-                || !state.isNormalCube() || b.isLeaves(state, world, v.getPos()) || b.isWood(world, v.getPos()))
-                && v.y > 1;
+                || !b.isNormalCube() || b.isLeaves(world, v.getPos()) || b.isWood(world, v.getPos())) && v.y > 1;
 
         return ret;
     }
@@ -283,14 +281,14 @@ public class Vector3
         if (state == null) return true;
         Block block = state.getBlock();
 
-        if (state.isNormalCube()) return false;
+        if (block.isNormalCube()) return false;
 
         if (block == null || block == Blocks.air || !block.isCollidable()) return true;
 
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
         Vector3 v = getNewVector().set(x, y, z);
 
-        if (worldObj instanceof World) block.addCollisionBoxToList(state, (World) worldObj, pos,
+        if (worldObj instanceof World) block.addCollisionBoxesToList((World) worldObj, pos, state,
                 v.getAABB().expand(0.03, 0.03, 0.03), aabbs, null);
         if (aabbs.size() == 0) return true;
 
@@ -310,8 +308,9 @@ public class Vector3
     public static boolean isVisibleEntityFromEntity(Entity looker, Entity target)
     {
         if (looker == null || target == null) return false;
-        return looker.worldObj.rayTraceBlocks(new Vec3d(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
-                new Vec3d(target.posX, target.posY + target.getEyeHeight(), target.posZ)) == null;
+        return looker.worldObj.rayTraceBlocks(
+                new Vec3(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
+                new Vec3(target.posX, target.posY + target.getEyeHeight(), target.posZ)) == null;
     }
 
     /** determines whether the source can see out as far as range in the given
@@ -329,8 +328,8 @@ public class Vector3
         if (worldObj instanceof World)
         {
             direction.scalarMultBy(range).addTo(source);
-            return ((World) worldObj).rayTraceBlocks(new Vec3d(source.x, source.y, source.z),
-                    new Vec3d(direction.x, direction.y, direction.z)) == null;
+            return ((World) worldObj).rayTraceBlocks(new Vec3(source.x, source.y, source.z),
+                    new Vec3(direction.x, direction.y, direction.z)) == null;
         }
 
         double dx, dy, dz;
@@ -549,7 +548,7 @@ public class Vector3
         this.set(B.subtract(A));
     }
 
-    private Vector3(Vec3d vec)
+    private Vector3(Vec3 vec)
     {
         this.x = vec.xCoord;
         this.y = vec.yCoord;
@@ -649,7 +648,7 @@ public class Vector3
             {
                 for (Entity e : targets)
                 {
-                    if (e instanceof EntityLivingBase && !ret.contains(e) && !e.isRidingOrBeingRiddenBy(excluded))
+                    if (e instanceof EntityLivingBase && !ret.contains(e) && e != excluded.riddenByEntity)
                     {
                         ret.add(e);
                     }
@@ -698,7 +697,7 @@ public class Vector3
                     if (!(i1 == i2 && k1 == k2 && j1 == j2)) continue;
                     v.set(this);
                     Vector3 test = v.addTo(i, j, k);
-                    testBlock = chunk.getBlockState(test.intX(), test.intY(), test.intZ()).getBlock();
+                    testBlock = chunk.getBlock(test.intX() & 15, test.intY(), test.intZ() & 15);
                     if (testBlock == block)
                     {
                         ret++;
@@ -736,18 +735,28 @@ public class Vector3
 
     public boolean clearOfBlocks(IBlockAccess worldMap)
     {
+        int x0 = intX(), y0 = intY(), z0 = intZ();
 
-        IBlockState state = getBlockState(worldMap);
-        Block block = state.getBlock();
+        Block block = worldMap.getBlockState(getPos()).getBlock();
 
-        if (state.isNormalCube()) return false;
+        if (block.isNormalCube()) return false;
 
-        if (block == null || block == Blocks.air || !state.getMaterial().blocksMovement() || !block.isCollidable())
+        if (block == null || block == Blocks.air || !block.getMaterial().blocksMovement() || !block.isCollidable())
             return true;
 
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
 
-        aabbs.add(state.getBoundingBox(worldMap, getPos()));
+        // if (worldMap instanceof World)
+        // {
+        // block.addCollisionBoxesToList((World) worldMap, x0, y0, z0,
+        // new AxisAlignedBB(x, y, z, x, y, z), aabbs, null);
+        // }
+        // else
+        // {
+        aabbs.add(new AxisAlignedBB(x0 + block.getBlockBoundsMinX(), y0 + block.getBlockBoundsMinY(),
+                z0 + block.getBlockBoundsMinZ(), x0 + block.getBlockBoundsMaxX(), y0 + block.getBlockBoundsMaxY(),
+                z0 + block.getBlockBoundsMaxZ()));
+        // }
 
         if (aabbs.size() == 0) return true;
 
@@ -927,7 +936,7 @@ public class Vector3
                     {
                         continue loop;
                     }
-                    else if (!water && state.getMaterial() == Material.water)
+                    else if (!water && b.getMaterial() == Material.water)
                     {
                         continue loop;
                     }
@@ -948,7 +957,14 @@ public class Vector3
         if (excluded != null)
         {
             toExclude.add(excluded);
-            toExclude.addAll(excluded.getRecursivePassengers());
+            if (excluded.ridingEntity != null)
+            {
+                toExclude.add(excluded.ridingEntity);
+            }
+            if (excluded.riddenByEntity != null)
+            {
+                toExclude.add(excluded.riddenByEntity);
+            }
         }
         return firstEntityExcluding(range, direction, worldObj, effect, toExclude);
     }
@@ -1066,7 +1082,7 @@ public class Vector3
         return Matrix3.getAABB(x, y, z, x, y, z);
     }
 
-    public BiomeGenBase getBiome(Chunk chunk, BiomeProvider mngr)
+    public BiomeGenBase getBiome(Chunk chunk, WorldChunkManager mngr)
     {
         return chunk.getBiome(new BlockPos(intX() & 15, 0, intZ() & 15), mngr);// .getBiomeGenForWorldCoords();
     }
@@ -1078,7 +1094,7 @@ public class Vector3
 
     public int getBiomeID(World worldObj)
     {
-        return BiomeGenBase.getIdForBiome(getBiome(worldObj));
+        return getBiome(worldObj).biomeID;
     }
 
     public Block getBlock(IBlockAccess worldMap)
@@ -1092,6 +1108,7 @@ public class Vector3
     {
         Vector3 other = offset(side);
         Block ret = other.getBlock(worldObj);
+        other.freeVectorFromPool();
         return ret;
     }
 
@@ -1103,8 +1120,13 @@ public class Vector3
     public Material getBlockMaterial(IBlockAccess worldObj)
     {
         IBlockState state = worldObj.getBlockState((getPos()));
-        if (state == null || state.getBlock() == null) { return Material.air; }
-        return state.getMaterial();
+        if (state == null || state.getBlock() == null)
+        {
+            // System.out.println(this);
+            // new Exception().printStackTrace();
+            return Material.air;
+        }
+        return state.getBlock().getMaterial();
     }
 
     public int getBlockMetadata(IBlockAccess worldObj)
@@ -1121,10 +1143,10 @@ public class Vector3
 
     public float getExplosionResistance(Explosion boom, IBlockAccess world)
     {
-        IBlockState state = getBlockState(world);
-        Block block = state.getBlock();
-        if (block != null && !block.isAir(state, world, getPos())) { return block
-                .getExplosionResistance(boom.getExplosivePlacedBy()); }
+        Block block = getBlock(world);
+
+        if (block != null
+                && !block.isAir(world, getPos())) { return block.getExplosionResistance(boom.getExplosivePlacedBy()); }
         return 0;
 
     }
@@ -1212,7 +1234,7 @@ public class Vector3
             {
                 IBlockState state = world.getBlockState(new BlockPos(intX(), ret, intZ()));
                 if (state == null) continue;
-                if (state.getMaterial().isSolid()) { return ret; }
+                if (state.getBlock().getMaterial().isSolid()) { return ret; }
             }
         }
         return ret;
@@ -1265,13 +1287,11 @@ public class Vector3
     public boolean isAir(IBlockAccess worldObj)
     {
         Material m;
-        if (worldObj instanceof World)
-        {
-            IBlockState state = worldObj.getBlockState((getPos()));
-            return state.getBlock() == null || (m = getBlockMaterial(worldObj)) == null || m == Material.air
-                    || state.getBlock().isAir(state, worldObj, getPos());// ||worldObj.isAirBlock(intX(),
-            // intY(),
-            // intZ())
+        if (worldObj instanceof World) { return worldObj.getBlockState((getPos())).getBlock() == null
+                || (m = getBlockMaterial(worldObj)) == null || m == Material.air
+                || worldObj.getBlockState((getPos())).getBlock().isAir(worldObj, getPos());// ||worldObj.isAirBlock(intX(),
+        // intY(),
+        // intZ())
         }
         return (m = getBlockMaterial(worldObj)) == null || m == Material.air;// ||worldObj.isAirBlock(intX(),
                                                                              // intY(),
@@ -1356,7 +1376,7 @@ public class Vector3
         if (h <= y) return true;
         for (int i = h; i > y; i--)
         {
-            Material m = world.getBlockState(new BlockPos(intX(), i, intZ())).getMaterial();
+            Material m = world.getBlockState(new BlockPos(intX(), i, intZ())).getBlock().getMaterial();
             if (!(m == Material.water || m == Material.air)) return false;
         }
         return true;
@@ -1696,9 +1716,9 @@ public class Vector3
             PathPoint p = (PathPoint) o;
             this.set(p.xCoord, p.yCoord, p.zCoord);
         }
-        else if (o instanceof Vec3d)
+        else if (o instanceof Vec3)
         {
-            Vec3d p = (Vec3d) o;
+            Vec3 p = (Vec3) o;
             this.set(p.xCoord, p.yCoord, p.zCoord);
         }
         else if (o instanceof int[])
@@ -1740,8 +1760,8 @@ public class Vector3
 
         Chunk chunk = worldObj.getChunkFromBlockCoords(new BlockPos(x, 0, z));
         byte[] biomes = chunk.getBiomeArray();
-        // TODO confirm that this actually works, and doesn't need an offset.
-        byte newBiome = (byte) BiomeGenBase.getIdForBiome(biome);
+
+        byte newBiome = (byte) biome.biomeID;
 
         int chunkX = Math.abs(x & 15);
         int chunkZ = Math.abs(z & 15);

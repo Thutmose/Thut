@@ -10,10 +10,10 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.LongHashMap;
 import net.minecraft.util.ReportedException;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -91,19 +91,15 @@ public class WorldCache implements IBlockAccess
             {
                 if (chunk.getBlockStorageArray()[i] != null)
                 {
-                    // BlockStateContainer to;
-                    // BlockStateContainer from =
-                    // chunk.getBlockStorageArray()[i].getData();
+                    char[] to;
+                    char[] from = chunk.getBlockStorageArray()[i].getData();
                     if (storageArrays[i] == null)
                     {
-                        storageArrays[i] = chunk.getBlockStorageArray()[i];// TODO
-                                                                           // figure
-                                                                           // out
-                                                                           // copying
-                                                                           // this.
+                        storageArrays[i] = new ExtendedBlockStorage(i, false);
                     }
-                    // to = storageArrays[i].getData();
-                    // storageArrays[i]..setData(to);
+                    to = storageArrays[i].getData();
+                    System.arraycopy(from, 0, to, 0, to.length);
+                    storageArrays[i].setData(to);
                 }
                 else
                 {
@@ -113,7 +109,6 @@ public class WorldCache implements IBlockAccess
         }
 
     }
-
     public final World                    world;
     private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
 
@@ -195,8 +190,7 @@ public class WorldCache implements IBlockAccess
     @Override
     public boolean isAirBlock(BlockPos pos)
     {
-        IBlockState state;
-        return (state = getBlockState(pos)) == null || state.getBlock().isAir(state, this, pos);
+        return getBlockState(pos) == null || getBlockState(pos).getBlock().isAir(this, pos);
     }
 
     @Override
@@ -207,8 +201,7 @@ public class WorldCache implements IBlockAccess
         long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
         ChunkCache chunk = map.getValueByKey(key);
         if (chunk == null || chunk.isEmpty()) return _default;
-        IBlockState state;
-        return (state = getBlockState(pos)).getBlock().isSideSolid(state, this, pos, side);
+        return getBlockState(pos).getBlock().isSideSolid(this, pos, side);
     }
 
     void removeChunk(Chunk chunk)

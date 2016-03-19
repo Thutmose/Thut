@@ -2,9 +2,9 @@ package thut.api.terrain;
 
 import java.util.HashMap;
 
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -45,7 +45,7 @@ public class BiomeDatabase
     {
         if (b != null)
         {
-            if (b.getBiomeName().toLowerCase().contains("flower")) return BiomeType.FLOWER;
+            if (b.biomeName.toLowerCase().contains("flower")) return BiomeType.FLOWER;
         }
         return BiomeType.NONE;
     }
@@ -75,12 +75,7 @@ public class BiomeDatabase
 
     public static int getBiomeType(BiomeGenBase biome)
     {
-        return BiomeGenBase.getIdForBiome(biome);
-    }
-
-    public static BiomeGenBase getBiome(String name)
-    {
-        return BiomeGenBase.biomeRegistry.getObject(new ResourceLocation(name));
+        return biome.biomeID;
     }
 
     public static int getBiomeType(String name)
@@ -89,10 +84,9 @@ public class BiomeDatabase
         {
             if (b.name.equalsIgnoreCase(name)) return (byte) b.ordinal();
         }
-        for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys())
+        for (BiomeGenBase b : BiomeGenBase.getBiomeGenArray())
         {
-            BiomeGenBase b = BiomeGenBase.biomeRegistry.getObject(key);
-            if (b != null) if (b.getBiomeName().equalsIgnoreCase(name)) return getBiomeType(b);
+            if (b != null) if (b.biomeName.equalsIgnoreCase(name)) return b.biomeID;
         }
         return BiomeType.NONE.getType();
     }
@@ -100,14 +94,14 @@ public class BiomeDatabase
     public static String getNameFromType(int type)
     {
         if (type > 255) return biomeTypeRegistry.getObjectById(type).name;
-        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).getBiomeName();
+        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).biomeName;
         else return "none";
     }
 
     public static String getReadableNameFromType(int type)
     {
         if (type > 255) return biomeTypeRegistry.getObjectById(type).readableName;
-        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).getBiomeName();
+        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).biomeName;
         else return "None " + type;
     }
 

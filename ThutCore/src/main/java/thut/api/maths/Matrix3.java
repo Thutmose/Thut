@@ -14,9 +14,9 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import thut.api.entity.IMultibox;
@@ -627,7 +627,7 @@ public class Matrix3
             if (v.y < minY) minY = v.y;
             if (v.z < minZ) minZ = v.z;
         }
-        if (e.getLowestRidingEntity() != null) maxY += (e.getLowestRidingEntity().height + e.getMountedYOffset());
+        if (e.riddenByEntity != null) maxY += (e.riddenByEntity.height + e.getMountedYOffset());
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
 
         double yShift = 0;
@@ -903,7 +903,7 @@ public class Matrix3
                     Block block = iblockstate.getBlock();
                     if (block.isCollidable())
                     {
-                        block.addCollisionBoxToList(iblockstate, world, blockpos, box, collidingBoundingBoxes, null);
+                        block.addCollisionBoxesToList(world, blockpos, iblockstate, box, collidingBoundingBoxes, null);
                     }
                 }
             }

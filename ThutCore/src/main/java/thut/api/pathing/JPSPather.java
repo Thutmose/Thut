@@ -1,6 +1,6 @@
 package thut.api.pathing;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import thut.api.maths.Vector3;
 

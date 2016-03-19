@@ -20,9 +20,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -46,7 +45,6 @@ public class TerrainSegment
          * @return */
         int getSubBiome(World world, Vector3 v, TerrainSegment segment, Chunk chunk, boolean caveAdjusted);
     }
-
     public static interface ITerrainEffect
     {
         /** Called when the terrain effect is assigned to the terrain segment
@@ -67,7 +65,6 @@ public class TerrainSegment
         // Does not currently work TODO make this work
         void writeToNBT(NBTTagCompound nbt);
     }
-
     public static final int              GRIDSIZE       = 4;
     public static ISubBiomeChecker       defaultChecker = new ISubBiomeChecker()
                                                         {
@@ -105,7 +102,7 @@ public class TerrainSegment
                                                                     int biome = 0;
 
                                                                     BiomeGenBase b = v.getBiome(chunk,
-                                                                            world.getBiomeProvider());
+                                                                            world.getWorldChunkManager());
                                                                     biome = BiomeDatabase.getBiomeType(b);
 
                                                                     boolean notLake = BiomeDatabase.contains(b,
@@ -145,8 +142,7 @@ public class TerrainSegment
 
                                                         };
     public static List<ISubBiomeChecker> biomeCheckers  = Lists.newArrayList();
-    static Map<Integer, Integer>         idReplacements = Maps.newHashMap();
-
+    static Map<Integer, Integer> idReplacements = Maps.newHashMap();
     public static int count(World world, Block b, Vector3 v, int range)
     {
         Vector3 temp = Vector3.getNewVector();
@@ -175,14 +171,12 @@ public class TerrainSegment
                 }
         return ret;
     }
-
     static BiomeGenBase getBiome(Type not, Type... types)
     {
         BiomeGenBase ret = null;
         biomes:
-        for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys())
+        for (BiomeGenBase b : BiomeGenBase.getBiomeGenArray())
         {
-            BiomeGenBase b = BiomeGenBase.biomeRegistry.getObject(key);
             if (b == null) continue;
             if (not != null && contains(b, not)) continue;
             for (Type t : types)
@@ -193,7 +187,6 @@ public class TerrainSegment
         }
         return ret;
     }
-
     static boolean isIndustrial(Vector3 v, World world)
     {
         boolean ret = false;
@@ -204,7 +197,6 @@ public class TerrainSegment
 
         return ret;
     }
-
     public static boolean isInTerrainColumn(Vector3 t, Vector3 point)
     {
         boolean ret = true;
@@ -214,7 +206,6 @@ public class TerrainSegment
         ret = i == t.intX() && k == t.intZ();
         return ret;
     }
-
     public static TerrainSegment readFromNBT(NBTTagCompound nbt)
     {
         TerrainSegment t = null;
@@ -254,31 +245,31 @@ public class TerrainSegment
         return t;
     }
 
-    public final int                chunkX;
+    public final int                     chunkX;
 
-    public final int                chunkY;
+    public final int                     chunkY;
 
-    public final int                chunkZ;
+    public final int                     chunkZ;
 
-    public final BlockPos           pos;
+    public final BlockPos                pos;
 
-    private Chunk                   chunk;
+    private Chunk                        chunk;
 
-    public boolean                  toSave  = false;
+    public boolean                       toSave         = false;
 
-    public boolean                  isSky   = false;
+    public boolean                       isSky          = false;
 
-    public boolean                  init    = true;
+    public boolean                       init           = true;
 
-    Vector3                         temp    = Vector3.getNewVector();
+    Vector3                              temp           = Vector3.getNewVector();
 
-    Vector3                         temp1   = Vector3.getNewVector();
+    Vector3                              temp1          = Vector3.getNewVector();
 
-    Vector3                         mid     = Vector3.getNewVector();
+    Vector3                              mid            = Vector3.getNewVector();
 
-    int[]                           biomes  = new int[GRIDSIZE * GRIDSIZE * GRIDSIZE];
+    int[]                                biomes         = new int[GRIDSIZE * GRIDSIZE * GRIDSIZE];
 
-    HashMap<String, ITerrainEffect> effects = new HashMap<String, ITerrainEffect>();
+    HashMap<String, ITerrainEffect>      effects        = new HashMap<String, ITerrainEffect>();
 
     public TerrainSegment(int x, int y, int z)
     {
@@ -483,7 +474,8 @@ public class TerrainSegment
             for (int i = 0; i < 16; i++)
             {
                 IBlockState state = getCentre().add(0, -1 * i, 0).getBlockState(world);
-                sky = state.getBlock() == null || state.getMaterial() == Material.air;
+                sky = state.getBlock() == null
+                        || state.getBlock().getMaterial() == Material.air;
                 if (!sky) break;
             }
         }

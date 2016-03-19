@@ -155,11 +155,11 @@ public class TickHandler
 
     public static Vector<BlockChange> getListForWorld(World worldObj)
     {
-        Vector<BlockChange> ret = getInstance().blocks.get(worldObj.provider.getDimension());
+        Vector<BlockChange> ret = getInstance().blocks.get(worldObj.provider.getDimensionId());
         if (ret == null)
         {
             ret = new Vector<BlockChange>();
-            getInstance().blocks.put(worldObj.provider.getDimension(), ret);
+            getInstance().blocks.put(worldObj.provider.getDimensionId(), ret);
         }
         return ret;
     }
@@ -184,11 +184,11 @@ public class TickHandler
     {
         if (evt.world.isRemote) return;
         // Add the chunk to the corresponding world cache.
-        WorldCache world = worldCaches.get(evt.world.provider.getDimension());
+        WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
         if (world == null)
         {
             world = new WorldCache(evt.world);
-            worldCaches.put(evt.world.provider.getDimension(), world);
+            worldCaches.put(evt.world.provider.getDimensionId(), world);
         }
         world.addChunk(evt.getChunk());
     }
@@ -198,7 +198,7 @@ public class TickHandler
     {
         if (evt.world.isRemote) return;
         // Remove the chunk from the cache
-        WorldCache world = worldCaches.get(evt.world.provider.getDimension());
+        WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
         if (world != null)
         {
             world.removeChunk(evt.getChunk());
@@ -226,7 +226,7 @@ public class TickHandler
     {
         if (evt.world.isRemote) return;
         // Initialize a world cache for this dimension
-        worldCaches.put(evt.world.provider.getDimension(), new WorldCache(evt.world));
+        worldCaches.put(evt.world.provider.getDimensionId(), new WorldCache(evt.world));
     }
 
     @SubscribeEvent
@@ -240,7 +240,7 @@ public class TickHandler
             {
                 if (evt.world.getTotalWorldTime() % 40 == 0)
                 {
-                    WorldCache world = worldCaches.get(evt.world.provider.getDimension());
+                    WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
                     if (world != null)
                     {
                         for (ChunkCache chunk : world.cache)
@@ -251,13 +251,13 @@ public class TickHandler
                 }
             }
         }
-        if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimension())
-                || blocks.get(evt.world.provider.getDimension()).size() == 0 || evt.world.isRemote)
+        if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimensionId())
+                || blocks.get(evt.world.provider.getDimensionId()).size() == 0 || evt.world.isRemote)
             return;
 
         int num = 0;
         ArrayList<BlockChange> removed = Lists.newArrayList();
-        Vector<BlockChange> blocks = this.blocks.get(evt.world.provider.getDimension());
+        Vector<BlockChange> blocks = this.blocks.get(evt.world.provider.getDimensionId());
         ArrayList<BlockChange> toRemove = Lists.newArrayList(blocks);
 
         // remove the blocks needed for that world.
@@ -277,12 +277,12 @@ public class TickHandler
     @SubscribeEvent
     public void WorldUnloadEvent(Unload evt)
     {
-        if (evt.world.provider.getDimension() == 0)
+        if (evt.world.provider.getDimensionId() == 0)
         {
             blocks.clear();
             ExplosionCustom.explosions.clear();
         }
         // Remove world cache for dimension
-        worldCaches.remove(evt.world.provider.getDimension());
+        worldCaches.remove(evt.world.provider.getDimensionId());
     }
 }

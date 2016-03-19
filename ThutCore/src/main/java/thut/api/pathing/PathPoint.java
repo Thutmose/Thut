@@ -1,6 +1,6 @@
 package thut.api.pathing;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.MathHelper;
 
 public class PathPoint extends net.minecraft.pathfinding.PathPoint{
     public static int makeHash(int x, int y, int z)

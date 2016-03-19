@@ -95,7 +95,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         GL11.glNewList(displayList, GL11.GL_COMPILE);
         for (Object object : cubeList)
         {
-            ((ModelBox) object).render(Tessellator.getInstance().getBuffer(), scale);
+            ((ModelBox) object).render(Tessellator.getInstance().getWorldRenderer(), scale);
         }
         GL11.glEndList();
         compiled = true;

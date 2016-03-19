@@ -1,9 +1,6 @@
 package thut.api.entity;
 
-import java.util.Collection;
 import java.util.Iterator;
-
-import com.mojang.authlib.minecraft.MinecraftSessionService;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -16,14 +13,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.play.server.SPacketEntityEffect;
-import net.minecraft.network.play.server.SPacketRespawn;
-import net.minecraft.network.play.server.SPacketSetExperience;
+import net.minecraft.network.play.server.S07PacketRespawn;
+import net.minecraft.network.play.server.S1DPacketEntityEffect;
+import net.minecraft.network.play.server.S1FPacketSetExperience;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerInteractionManager;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.server.management.ServerConfigurationManager;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -83,25 +80,24 @@ public class Transporter
     public static class TelDestination
     {
 
-        final World   dim;
+        final World  dim;
 
-        final double  x;
+        final double x;
 
-        final double  y;
+        final double y;
 
-        final double  z;
+        final double z;
         final Vector3 loc;
-        final int     xOff;
-        final int     yOff;
+        final int xOff;
+        final int yOff;
 
-        final int     zOff;
+        final int zOff;
 
         public TelDestination(int dim, Vector3 loc)
         {
             this(FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dim), loc.getAABB(),
                     loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
         }
-
         public TelDestination(World _dim, AxisAlignedBB srcBox, double _x, double _y, double _z, int tileX, int tileY,
                 int tileZ)
         {
@@ -114,7 +110,6 @@ public class Transporter
             this.zOff = tileZ;
             this.loc = Vector3.getNewVector().set(x, y, z);
         }
-
         public TelDestination(World _dim, Vector3 loc)
         {
             this(_dim, loc.getAABB(), loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
@@ -146,9 +141,8 @@ public class Transporter
         }
         int i = entity.chunkCoordX;
         int j = entity.chunkCoordZ;
-        // if (entity.addedToChunk && world.getChunkProvider().chunkExists(i,
-        // j))
-        world.getChunkFromChunkCoords(i, j).removeEntity(entity);
+        if (entity.addedToChunk && world.getChunkProvider().chunkExists(i, j))
+            world.getChunkFromChunkCoords(i, j).removeEntity(entity);
         world.loadedEntityList.remove(entity);
         ((WorldServer) world).getEntityTracker().untrackEntity(entity);
     }
@@ -212,27 +206,15 @@ public class Transporter
         if (oldWorld == null) return entity;
         if (newWorld == null) return entity;
 
-        // Is something riding? Handle it first.//TODO handle recursive entitiy
-        // stacks
-        Collection<Entity> riders;
-        if (!(riders = entity.getRecursivePassengers()).isEmpty())
-        {
-            for (Entity e : riders)
-            {
-                teleportEntity(e, link);
-            }
-        } // TODO see if this works
-
-        // if (entity.riddenByEntity != null) { return
-        // teleportEntity(entity.riddenByEntity, link); }
+        // Is something riding? Handle it first.
+        if (entity.riddenByEntity != null) { return teleportEntity(entity.riddenByEntity, link); }
         // Are we riding something? Dismount and tell the mount to go first.
-        Entity cart = entity.getRidingEntity();
+        Entity cart = entity.ridingEntity;
         if (cart != null)
         {
-            entity.dismountRidingEntity();
+            entity.mountEntity(null);
             cart = teleportEntity(cart, link);
-            // We keep track of both so we can remount them on the other
-            // side.
+            // We keep track of both so we can remount them on the other side.
         }
 
         // load the chunk!
@@ -240,59 +222,58 @@ public class Transporter
                 MathHelper.floor_double(link.z) >> 4);
 
         boolean diffDestination = newWorld != oldWorld;
-
-        if (player != null) // && diffDestination)
+        // if ( diffDestination )
         {
-            // if (diffDestination)
-            // player.mcServer.getConfigurationManager().transferPlayerToDimension(player,
-            // link.dim.provider.getDimension(), new METeleporter(newWorld,
-            // link));//TODO find out where getConfigureationManager() went
-            // else
-            teleportWithinDimension(player, link.loc, false);
-        }
-        else
-        {
-            int entX = entity.chunkCoordX;
-            int entZ = entity.chunkCoordZ;
-
-            if ((entity.addedToChunk) && (oldWorld.getChunkProvider().chunkExists(entX, entZ)))
+            if (player != null) // && diffDestination)
             {
-                oldWorld.getChunkFromChunkCoords(entX, entZ).removeEntity(entity);
-                oldWorld.getChunkFromChunkCoords(entX, entZ).setChunkModified();// .isModified
-                                                                                // =
-                                                                                // true;
+                if (diffDestination) player.mcServer.getConfigurationManager().transferPlayerToDimension(player,
+                        link.dim.provider.getDimensionId(), new METeleporter(newWorld, link));
+                else teleportWithinDimension(player, link.loc, false);
             }
-
-            Entity newEntity = EntityList.createEntityByName(EntityList.getEntityString(entity), newWorld);
-            if (newEntity != null)
+            else
             {
-                entity.lastTickPosX = entity.prevPosX = entity.posX = link.x;
-                entity.lastTickPosY = entity.prevPosY = entity.posY = link.y;
-                entity.lastTickPosZ = entity.prevPosZ = entity.posZ = link.z;
+                int entX = entity.chunkCoordX;
+                int entZ = entity.chunkCoordZ;
 
-                if (entity instanceof EntityHanging)
+                if ((entity.addedToChunk) && (oldWorld.getChunkProvider().chunkExists(entX, entZ)))
                 {
-                    // EntityHanging h = (EntityHanging) entity;
-                    // h.field_146063_b += link.xOff;
-                    // h.field_146064_c += link.yOff;//TODO get frames
-                    // teleporting if needed
-                    // h.field_146062_d += link.zOff;
+                    oldWorld.getChunkFromChunkCoords(entX, entZ).removeEntity(entity);
+                    oldWorld.getChunkFromChunkCoords(entX, entZ).setChunkModified();// .isModified
+                                                                                    // =
+                                                                                    // true;
                 }
 
-                newEntity.copyDataFromOld(entity);
+                Entity newEntity = EntityList.createEntityByName(EntityList.getEntityString(entity), newWorld);
+                if (newEntity != null)
+                {
+                    entity.lastTickPosX = entity.prevPosX = entity.posX = link.x;
+                    entity.lastTickPosY = entity.prevPosY = entity.posY = link.y;
+                    entity.lastTickPosZ = entity.prevPosZ = entity.posZ = link.z;
 
-                newEntity.dimension = newWorld.provider.getDimension();
-                newEntity.forceSpawn = true;
+                    if (entity instanceof EntityHanging)
+                    {
+                        // EntityHanging h = (EntityHanging) entity;
+                        // h.field_146063_b += link.xOff;
+                        // h.field_146064_c += link.yOff;//TODO get frames
+                        // teleporting if needed
+                        // h.field_146062_d += link.zOff;
+                    }
 
-                entity.isDead = true;
-                entity = newEntity;
+                    newEntity.copyDataFromOld(entity);
+
+                    newEntity.dimension = newWorld.provider.getDimensionId();
+                    newEntity.forceSpawn = true;
+
+                    entity.isDead = true;
+                    entity = newEntity;
+                }
+                else return null;
+
+                // myChunk.addEntity( entity );
+                // newWorld.loadedEntityList.add( entity );
+                // newWorld.onEntityAdded( entity );
+                newWorld.spawnEntityInWorld(entity);
             }
-            else return null;
-
-            // myChunk.addEntity( entity );
-            // newWorld.loadedEntityList.add( entity );
-            // newWorld.onEntityAdded( entity );
-            newWorld.spawnEntityInWorld(entity);
         }
 
         entity.worldObj.updateEntityWithOptionalForce(entity, false);
@@ -300,7 +281,8 @@ public class Transporter
         if (cart != null)
         {
             if (player != null) entity.worldObj.updateEntityWithOptionalForce(entity, true);
-            entity.startRiding(cart);
+
+            entity.mountEntity(cart);
         }
 
         return entity;
@@ -329,24 +311,23 @@ public class Transporter
     public static Entity teleportEntityAndRider(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
     {
 
-        // Entity rider = entity.riddenByEntity;//TODO tp mounted player
-        // if (rider != null)
-        // {
-        // rider.mountEntity(null);
-        // rider = teleportEntityAndRider(rider, t2, dimension, destBlocked);
-        // }
-        // entity = teleportEntity(entity, t2, dimension, destBlocked);
-        // if (entity != null && !entity.isDead && rider != null &&
-        // !rider.isDead)
-        // {
-        // rider.mountEntity(entity);
-        // }
+        Entity rider = entity.riddenByEntity;
+        if (rider != null)
+        {
+            rider.mountEntity(null);
+            rider = teleportEntityAndRider(rider, t2, dimension, destBlocked);
+        }
+        entity = teleportEntity(entity, t2, dimension, destBlocked);
+        if (entity != null && !entity.isDead && rider != null && !rider.isDead)
+        {
+            rider.mountEntity(entity);
+        }
         return entity;
     }
 
     static Entity teleportEntityToDimension(Entity entity, Vector3 p, int dimension, boolean destBlocked)
     {
-        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        MinecraftServer server = MinecraftServer.getServer();
         WorldServer world = server.worldServerForDimension(dimension);
         return teleportEntityToWorld(entity, p, world, destBlocked);
     }
@@ -416,16 +397,16 @@ public class Transporter
 
     static void transferPlayerToDimension(EntityPlayerMP player, int newDimension, Vector3 p)
     {
-        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        // PlayerInteractionManager scm = server.//.getConfigurationManager();
+        MinecraftServer server = MinecraftServer.getServer();
+        ServerConfigurationManager scm = server.getConfigurationManager();
         int oldDimension = player.dimension;
         player.dimension = newDimension;
         WorldServer oldWorld = server.worldServerForDimension(oldDimension);
         WorldServer newWorld = server.worldServerForDimension(newDimension);
         sendDimensionRegister(player, newDimension);
         player.closeScreen();
-        player.playerNetServerHandler.sendPacket(new SPacketRespawn(player.dimension, player.worldObj.getDifficulty(),
-                newWorld.getWorldInfo().getTerrainType(), player.interactionManager.getGameType()));
+        player.playerNetServerHandler.sendPacket(new S07PacketRespawn(player.dimension, player.worldObj.getDifficulty(),
+                newWorld.getWorldInfo().getTerrainType(), player.theItemInWorldManager.getGameType()));
 
         oldWorld.removePlayerEntityDangerously(player); // Removes player right
                                                         // now instead of
@@ -434,21 +415,19 @@ public class Transporter
         player.setLocationAndAngles(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
         newWorld.spawnEntityInWorld(player);
         player.setWorld(newWorld);
-
-        // scm.preparePlayer(player, oldWorld);//TODO sync inventories and
-        // preparing player
+        scm.preparePlayer(player, oldWorld);
         player.playerNetServerHandler.setPlayerLocation(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
-        player.interactionManager.setWorld(newWorld);
-        // scm.updateTimeAndWeatherForPlayer(player, newWorld);
-        // scm.syncPlayerInventory(player);
+        player.theItemInWorldManager.setWorld(newWorld);
+        scm.updateTimeAndWeatherForPlayer(player, newWorld);
+        scm.syncPlayerInventory(player);
         Iterator<?> var6 = player.getActivePotionEffects().iterator();
         while (var6.hasNext())
         {
             PotionEffect effect = (PotionEffect) var6.next();
-            player.playerNetServerHandler.sendPacket(new SPacketEntityEffect(player.getEntityId(), effect));
+            player.playerNetServerHandler.sendPacket(new S1DPacketEntityEffect(player.getEntityId(), effect));
         }
         player.playerNetServerHandler.sendPacket(
-                new SPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
+                new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
         FMLCommonHandler.instance().firePlayerChangedDimensionEvent(player, oldDimension, newDimension);
 
     }
