@@ -77,6 +77,7 @@ public class SkeletonAnimation
             return time + "=" + positions;
         }
     }
+
     public final Skeleton           skeleton;
     public int                      currentIndex   = 0;
     public int                      lastIndex;
@@ -105,8 +106,6 @@ public class SkeletonAnimation
     {
         if (this.currentIndex >= this.frames.size() - 1)
         {
-            // if (getNumFrames() > 1) currentIndex = 1;
-            // else
             currentIndex = 0;
         }
         else
@@ -117,38 +116,22 @@ public class SkeletonAnimation
 
     public void precalculateAnimation()
     {
-        if (lastPoseChange == currentIndex || frames.isEmpty()) return;
-        SkeletonFrame prev = this.frames.get(0);
+        System.out.println("calc");
         for (int i = 0; i < this.frames.size(); i++)
         {
             SkeletonFrame frame = this.frames.get(i);
             for (Integer j : skeleton.boneMap.keySet())
             {
-                if (frame == prev)
-                {
-                    frame.diffs.put(j, new Matrix4f());
-                    frame.invDiffs.put(j, new Matrix4f());
-                }
-                else
-                {
-                    Matrix4f trans = frame.positions.get(j);
-                    Matrix4f original = prev.positions.get(j);
-                    Matrix4f temp = Matrix4f.invert(original, null);
-                    Matrix4f diff = Matrix4f.mul(trans, temp, null);
-                    frame.diffs.put(j, diff);
-                    frame.invDiffs.put(j, Matrix4f.invert(temp, null));
-                }
                 Bone bone = skeleton.boneMap.get(j);
                 Matrix4f transform = frame.positions.get(j);
                 bone.preloadAnimation(frame, transform);
             }
-            prev = frame;
         }
     }
 
     public void reform()
     {
-        System.out.println("reform");
+        System.out.println("reform " + animationName);
         for (int i = 0; i < this.frames.size(); i++)
         {
             SkeletonFrame frame = this.frames.get(i);
@@ -171,8 +154,6 @@ public class SkeletonAnimation
         }
         if (currentIndex >= getNumFrames())
         {
-            // if (getNumFrames() > 1) currentIndex = 1;
-            // else
             currentIndex = 0;
             lastIndex = getNumFrames() - 1;
         }

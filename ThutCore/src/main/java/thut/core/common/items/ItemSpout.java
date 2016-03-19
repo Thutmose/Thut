@@ -6,16 +6,18 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import thut.api.ThutItems;
 import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
+import thut.core.common.blocks.BlockFluid;
 
 public class ItemSpout extends Item
 {
@@ -78,7 +80,26 @@ public class ItemSpout extends Item
         ArrayList<ItemStack> tanks = getTanks(player);
         if (tanks.size() == 0) return ret;
 
-        if (next.getBlockMaterial(worldObj).isReplaceable())
+        if (hit.getBlock(worldObj) instanceof BlockFluid && hit.getBlockMetadata(worldObj) != 15)
+        {
+            Fluid f = ((BlockFluid) hit.getBlock(worldObj)).getFluid();
+            int meta = hit.getBlockMetadata(worldObj);
+            if (meta != 15) for (ItemStack stack : tanks)
+            {
+                IFluidContainerItem tank = (IFluidContainerItem) stack.getItem();
+                Fluid f1 = tank.getFluid(stack).getFluid();
+                if (f.getUnlocalizedName().equals(f1.getUnlocalizedName()))
+                {
+                    float factor = 62.5f;
+                    int metaDiff = full ? 15 - meta : 1;
+                    toDrain = (int) (factor * metaDiff);
+                    FluidStack s = tank.drain(stack, toDrain, !player.capabilities.isCreativeMode);
+                    hit.setBlock(worldObj, hit.getBlock(worldObj), (int) (s.amount / 62.5 + meta));
+                    break;
+                }
+            }
+        }
+        else if (next.getBlockMaterial(worldObj).isReplaceable())
         {
             for (ItemStack stack : tanks)
             {

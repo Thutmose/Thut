@@ -2,9 +2,9 @@ package thut.api.terrain;
 
 import java.util.HashMap;
 
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;

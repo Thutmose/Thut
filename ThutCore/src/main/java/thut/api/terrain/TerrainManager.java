@@ -4,8 +4,8 @@ import java.util.HashMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkDataEvent;
@@ -99,7 +99,7 @@ public class TerrainManager {
 	
 	public WorldTerrain getTerrain(World worldObj)
 	{
-		int id = worldObj.provider.getDimensionId();
+		int id = worldObj.provider.getDimension();
 		return getTerrain(id);
 	}
 	
@@ -150,7 +150,7 @@ public class TerrainManager {
 	@SubscribeEvent
 	public void WorldUnloadEvent(Unload evt)
 	{
-		if (evt.world.provider.getDimensionId() == 0 && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
+		if (evt.world.provider.getDimension() == 0 && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
 		{
 			TerrainManager.clear();
 		}

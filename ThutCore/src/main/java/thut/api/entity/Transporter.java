@@ -13,14 +13,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.play.server.S07PacketRespawn;
-import net.minecraft.network.play.server.S1DPacketEntityEffect;
-import net.minecraft.network.play.server.S1FPacketSetExperience;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.ServerConfigurationManager;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -227,7 +223,7 @@ public class Transporter
             if (player != null) // && diffDestination)
             {
                 if (diffDestination) player.mcServer.getConfigurationManager().transferPlayerToDimension(player,
-                        link.dim.provider.getDimensionId(), new METeleporter(newWorld, link));
+                        link.dim.provider.getDimension(), new METeleporter(newWorld, link));
                 else teleportWithinDimension(player, link.loc, false);
             }
             else
@@ -261,7 +257,7 @@ public class Transporter
 
                     newEntity.copyDataFromOld(entity);
 
-                    newEntity.dimension = newWorld.provider.getDimensionId();
+                    newEntity.dimension = newWorld.provider.getDimension();
                     newEntity.forceSpawn = true;
 
                     entity.isDead = true;
@@ -327,7 +323,7 @@ public class Transporter
 
     static Entity teleportEntityToDimension(Entity entity, Vector3 p, int dimension, boolean destBlocked)
     {
-        MinecraftServer server = MinecraftServer.getServer();
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.worldServerForDimension(dimension);
         return teleportEntityToWorld(entity, p, world, destBlocked);
     }
@@ -397,7 +393,7 @@ public class Transporter
 
     static void transferPlayerToDimension(EntityPlayerMP player, int newDimension, Vector3 p)
     {
-        MinecraftServer server = MinecraftServer.getServer();
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         ServerConfigurationManager scm = server.getConfigurationManager();
         int oldDimension = player.dimension;
         player.dimension = newDimension;
