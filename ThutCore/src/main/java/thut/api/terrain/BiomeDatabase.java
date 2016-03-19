@@ -45,7 +45,7 @@ public class BiomeDatabase
     {
         if (b != null)
         {
-            if (b.biomeName.toLowerCase().contains("flower")) return BiomeType.FLOWER;
+            if (b.getBiomeName().toLowerCase().contains("flower")) return BiomeType.FLOWER;
         }
         return BiomeType.NONE;
     }
@@ -75,7 +75,12 @@ public class BiomeDatabase
 
     public static int getBiomeType(BiomeGenBase biome)
     {
-        return biome.biomeID;
+        return BiomeGenBase.getIdForBiome(biome);
+    }
+
+    public static BiomeGenBase getBiome(String name)
+    {
+        return BiomeGenBase.biomeRegistry.getObject(new ResourceLocation(name));
     }
 
     public static int getBiomeType(String name)
@@ -84,9 +89,10 @@ public class BiomeDatabase
         {
             if (b.name.equalsIgnoreCase(name)) return (byte) b.ordinal();
         }
-        for (BiomeGenBase b : BiomeGenBase.getBiomeGenArray())
+        for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys())
         {
-            if (b != null) if (b.biomeName.equalsIgnoreCase(name)) return b.biomeID;
+            BiomeGenBase b = BiomeGenBase.biomeRegistry.getObject(key);
+            if (b != null) if (b.getBiomeName().equalsIgnoreCase(name)) return getBiomeType(b);
         }
         return BiomeType.NONE.getType();
     }
@@ -94,14 +100,14 @@ public class BiomeDatabase
     public static String getNameFromType(int type)
     {
         if (type > 255) return biomeTypeRegistry.getObjectById(type).name;
-        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).biomeName;
+        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).getBiomeName();
         else return "none";
     }
 
     public static String getReadableNameFromType(int type)
     {
         if (type > 255) return biomeTypeRegistry.getObjectById(type).readableName;
-        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).biomeName;
+        else if (BiomeGenBase.getBiome(type) != null) return BiomeGenBase.getBiome(type).getBiomeName();
         else return "None " + type;
     }
 
