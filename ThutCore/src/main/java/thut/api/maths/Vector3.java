@@ -9,7 +9,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+
+import com.google.common.base.Predicate;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
@@ -897,7 +898,7 @@ public class Vector3
                         }
                         list = tempList;
                     }
-                    if (matcher != null && matcher.test(state))
+                    if (matcher != null && matcher.apply(state))
                     {
                         ret.set(rTestAbs);
                         return ret;
