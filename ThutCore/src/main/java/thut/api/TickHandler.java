@@ -10,7 +10,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
@@ -236,20 +238,34 @@ public class TickHandler
         // the vectorpools should be removed.
         if (evt.phase == Phase.START)
         {
+            WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
+            boolean updated = false;
             if (evt.world.getTotalWorldTime() % 20 == 0)
             {
                 if (evt.world.getTotalWorldTime() % 40 == 0)
                 {
-                    WorldCache world = worldCaches.get(evt.world.provider.getDimensionId());
                     if (world != null)
                     {
                         for (ChunkCache chunk : world.cache)
                         {
                             chunk.update();
+                            updated = true;
                         }
                     }
                 }
             }
+            if (!updated) for (ChunkCache chunk : world.cache)
+            {
+                for (int i = 0; i < chunk.chunk.getEntityLists().length; i++)
+                {
+                    ClassInheritanceMultiMap<Entity> list = chunk.chunk.getEntityLists()[i];
+                    if (list != null && !list.isEmpty())
+                    {
+                        chunk.update(i);
+                    }
+                }
+            }
+
         }
         if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimensionId())
                 || blocks.get(evt.world.provider.getDimensionId()).size() == 0 || evt.world.isRemote)

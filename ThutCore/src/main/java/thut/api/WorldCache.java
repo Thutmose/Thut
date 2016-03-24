@@ -1,5 +1,6 @@
 package thut.api;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -31,6 +32,7 @@ public class WorldCache implements IBlockAccess
     public static class ChunkCache
     {
         Chunk                          chunk;
+        Map<BlockPos, TileEntity>      tiles;
         private ExtendedBlockStorage[] storageArrays;
 
         public ChunkCache(Chunk chunk)
@@ -74,7 +76,7 @@ public class WorldCache implements IBlockAccess
             }
         }
 
-        public TileEntity getTileEntity(BlockPos pos, EnumCreateEntityType immediate)
+        public synchronized TileEntity getTileEntity(BlockPos pos, EnumCreateEntityType immediate)
         {
             return chunk.getTileEntity(pos, immediate);
         }
@@ -87,28 +89,36 @@ public class WorldCache implements IBlockAccess
         public synchronized void update()
         {
             if (storageArrays == null) storageArrays = new ExtendedBlockStorage[chunk.getBlockStorageArray().length];
+            tiles = chunk.getTileEntityMap();
             for (int i = 0; i < storageArrays.length; i++)
             {
-                if (chunk.getBlockStorageArray()[i] != null)
+                update(i);
+            }
+        }
+
+        public synchronized void update(int level)
+        {
+            if (storageArrays == null) storageArrays = new ExtendedBlockStorage[chunk.getBlockStorageArray().length];
+            if (chunk.getBlockStorageArray()[level] != null)
+            {
+                char[] to;
+                char[] from = chunk.getBlockStorageArray()[level].getData();
+                if (storageArrays[level] == null)
                 {
-                    char[] to;
-                    char[] from = chunk.getBlockStorageArray()[i].getData();
-                    if (storageArrays[i] == null)
-                    {
-                        storageArrays[i] = new ExtendedBlockStorage(i, false);
-                    }
-                    to = storageArrays[i].getData();
-                    System.arraycopy(from, 0, to, 0, to.length);
-                    storageArrays[i].setData(to);
+                    storageArrays[level] = new ExtendedBlockStorage(level, false);
                 }
-                else
-                {
-                    storageArrays[i] = null;
-                }
+                to = storageArrays[level].getData();
+                System.arraycopy(from, 0, to, 0, to.length);
+                storageArrays[level].setData(to);
+            }
+            else
+            {
+                storageArrays[level] = null;
             }
         }
 
     }
+
     public final World                    world;
     private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
 
