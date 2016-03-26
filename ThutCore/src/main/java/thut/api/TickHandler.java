@@ -254,7 +254,7 @@ public class TickHandler
                     }
                 }
             }
-            if (!updated) for (ChunkCache chunk : world.cache)
+            if (!updated && world != null) for (ChunkCache chunk : world.cache)
             {
                 for (int i = 0; i < chunk.chunk.getEntityLists().length; i++)
                 {
