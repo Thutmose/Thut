@@ -308,9 +308,8 @@ public class Vector3
     public static boolean isVisibleEntityFromEntity(Entity looker, Entity target)
     {
         if (looker == null || target == null) return false;
-        return looker.worldObj.rayTraceBlocks(
-                new Vec3(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
-                new Vec3(target.posX, target.posY + target.getEyeHeight(), target.posZ)) == null;
+        return looker.worldObj.rayTraceBlocks(new Vec3(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
+                new Vec3(target.posX, target.posY + target.getEyeHeight(), target.posZ), false, true, false) == null;
     }
 
     /** determines whether the source can see out as far as range in the given
@@ -329,7 +328,7 @@ public class Vector3
         {
             direction.scalarMultBy(range).addTo(source);
             return ((World) worldObj).rayTraceBlocks(new Vec3(source.x, source.y, source.z),
-                    new Vec3(direction.x, direction.y, direction.z)) == null;
+                    new Vec3(direction.x, direction.y, direction.z), false, true, false) == null;
         }
 
         double dx, dy, dz;
