@@ -23,8 +23,6 @@ public class WorldTerrain {
 			y = Math.min(y, 15);
 			
 			Long key = getKey(x, y, z);
-			if(!terrain.containsKey(key))
-				terrain.put(key, new TerrainSegment(x, y, z));
 			return terrain.get(key);
 		}
 		
