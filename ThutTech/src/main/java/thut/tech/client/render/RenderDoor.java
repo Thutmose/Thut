@@ -37,7 +37,7 @@ public class RenderDoor extends TileEntitySpecialRenderer<TileEntityDoor>
             int i1 = state.getBlock().getMixedBrightnessForBlock(te.getWorld(), te.getPos());
             int j1 = i1 % 65536;
             int k1 = i1 / 65536;
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) j1 / 1.0F, (float) k1 / 1.0F);
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
             //TODO colour from block
             FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
             blockrendererdispatcher.renderBlockBrightness(state, 1.0F);

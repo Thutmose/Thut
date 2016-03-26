@@ -9,9 +9,16 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 public class CommonProxy  implements IGuiHandler
 {
 
-	public void initClient() {}
+	@Override
+	public Object getClientGuiElement(int guiID, EntityPlayer player, World world, int x, int y, int z)
+	{
+		return null;
+	}
 	
-	public void loadConfiguration() {}
+	public EntityPlayer getPlayer()
+	{
+		return null;
+	}
 	
     public EntityPlayer getPlayer(String playerName)
     {
@@ -25,22 +32,34 @@ public class CommonProxy  implements IGuiHandler
         }
     }
     
-	public EntityPlayer getPlayer()
+	@Override
+	public Object getServerGuiElement(int guiID, EntityPlayer player, World world, int x, int y, int z)
 	{
 		return null;
 	}
+    
+    public World getWorld()
+    {
+        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
+    }
+
+    public void initClient() {}
     
     public boolean isOnClientSide()
     {
         return false;
     }
-
-    public World getWorld()
-    {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
-    }
     
-    public void registerEntities()
+	public void loadConfiguration() {}
+	
+	public void loadSounds() {}
+
+	public void preinit(FMLPreInitializationEvent event)
+	{
+	    
+	}
+	
+	public void registerEntities()
     {
 
 		try {
@@ -57,24 +76,5 @@ public class CommonProxy  implements IGuiHandler
 		//	e.printStackTrace();
 		}
     }
-    
-	@Override
-	public Object getServerGuiElement(int guiID, EntityPlayer player, World world, int x, int y, int z)
-	{
-		return null;
-	}
-	
-	@Override
-	public Object getClientGuiElement(int guiID, EntityPlayer player, World world, int x, int y, int z)
-	{
-		return null;
-	}
-
-	public void loadSounds() {}
-	
-	public void preinit(FMLPreInitializationEvent event)
-	{
-	    
-	}
     
 }

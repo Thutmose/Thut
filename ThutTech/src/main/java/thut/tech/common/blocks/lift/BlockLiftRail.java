@@ -12,7 +12,12 @@ import thut.tech.common.TechCore;
 public class BlockLiftRail extends Block implements ITileEntityProvider//, IRebar
 {
 
-	public BlockLiftRail() 
+	public static boolean isRail(World world, BlockPos pos)
+    {
+        return world.getBlockState(pos).getBlock() == ThutBlocks.liftRail;
+    }
+
+    public BlockLiftRail() 
 	{
 		super(Material.iron);
 		ThutBlocks.liftRail = this;
@@ -22,14 +27,9 @@ public class BlockLiftRail extends Block implements ITileEntityProvider//, IReba
 		setHardness((float) 10.0);
 		setResistance(10.0f);
 	}
-
+    
     @Override
     public TileEntity createNewTileEntity(World var1, int var2) {
         return new TileEntityLiftAccess();
-    }
-    
-    public static boolean isRail(World world, BlockPos pos)
-    {
-        return world.getBlockState(pos).getBlock() == ThutBlocks.liftRail;
     }
 }

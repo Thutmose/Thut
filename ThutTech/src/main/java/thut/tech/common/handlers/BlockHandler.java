@@ -24,6 +24,42 @@ import thut.tech.common.entity.EntityProjectile;
 
 public class BlockHandler {
 
+	public static class ItemLiftBlock extends ItemBlock {
+		public ItemLiftBlock(Block par1) {
+			super(par1);
+			this.setHasSubtypes(true);
+			this.setUnlocalizedName("lift");
+		}
+
+		@Override
+		public int getMetadata(int damageValue) {
+			return damageValue;
+		}
+
+		@Override
+		@SideOnly(Side.CLIENT)
+		/**
+		 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
+		 */
+		public void getSubItems(Item par1, CreativeTabs par2CreativeTabs,
+				List<ItemStack> par3List) {
+			for (int j = 0; j < 2; ++j) {
+				par3List.add(new ItemStack(par1, 1, j));
+			}
+		}
+
+		/**
+		 * Returns the unlocalized name of this item. This version accepts an
+		 * ItemStack so different stacks can have different names based on their
+		 * damage or NBT.
+		 */
+		@Override
+		public String getUnlocalizedName(ItemStack stack) {
+			return stack.getItemDamage() == 1 ? "tile.liftcontroller" : "tile.lift";
+		}
+
+	}
+
 	public static void registerBlocks(FMLPreInitializationEvent e) {
 		Block lift = new BlockLift();
 		
@@ -47,41 +83,5 @@ public class BlockHandler {
 		GameRegistry.registerBlock(lift, ItemLiftBlock.class, "lift");
 		GameRegistry.registerBlock(door, "door");
 		
-	}
-
-	public static class ItemLiftBlock extends ItemBlock {
-		public ItemLiftBlock(Block par1) {
-			super(par1);
-			this.setHasSubtypes(true);
-			this.setUnlocalizedName("lift");
-		}
-
-		@Override
-		public int getMetadata(int damageValue) {
-			return damageValue;
-		}
-
-		/**
-		 * Returns the unlocalized name of this item. This version accepts an
-		 * ItemStack so different stacks can have different names based on their
-		 * damage or NBT.
-		 */
-		@Override
-		public String getUnlocalizedName(ItemStack stack) {
-			return stack.getItemDamage() == 1 ? "tile.liftcontroller" : "tile.lift";
-		}
-
-		@Override
-		@SideOnly(Side.CLIENT)
-		/**
-		 * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
-		 */
-		public void getSubItems(Item par1, CreativeTabs par2CreativeTabs,
-				List<ItemStack> par3List) {
-			for (int j = 0; j < 2; ++j) {
-				par3List.add(new ItemStack(par1, 1, j));
-			}
-		}
-
 	}
 }

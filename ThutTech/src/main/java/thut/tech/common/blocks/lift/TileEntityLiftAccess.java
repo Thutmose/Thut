@@ -79,6 +79,403 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         // distributing energy among components for the mod.
     }
 
+    public void buttonPress(int button)
+    {
+        if (button != 0 && button <= 64 && lift != null && lift.floors[button - 1] > 0)
+        {
+            if (button == floor)
+            {
+            }
+            else
+            {
+                if (lift.getCurrentFloor() == floor) lift.setCurrentFloor(-1);
+            }
+
+            lift.call(button);
+        }
+    }
+
+    /*
+     * Calls lift to specified Floor
+     */
+    @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callFloor(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.call(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Calls lift to specified Y value
+     */
+    @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.callYValue(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    public void callYValue(int yValue)
+    {
+        if (lift != null)
+        {
+            lift.callYValue(yValue);
+        }
+    }
+
+    public void checkPower()
+    {
+
+    }
+
+    public boolean checkSides()
+    {
+        List<EntityLift> check = worldObj.getEntitiesWithinAABB(EntityLift.class,
+                new AxisAlignedBB(getPos().getX() + 0.5 - 1, getPos().getY(), getPos().getZ() + 0.5 - 1,
+                        getPos().getX() + 0.5 + 1, getPos().getY() + 1, getPos().getZ() + 0.5 + 1));
+        if (check != null && check.size() > 0)
+        {
+            lift = check.get(0);
+            liftID = lift.id;
+        }
+        return !(check == null || check.isEmpty());
+    }
+
+    public void clearConnections()
+    {
+
+    }
+
+    public String connectionInfo()
+    {
+        String ret = "";
+        return ret;
+    }
+
+    public void doButtonClick(EnumFacing side, float hitX, float hitY, float hitZ)
+    {
+        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj.isRemote))
+        {
+            lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
+        }
+        int button = getButtonFromClick(side, hitX, hitY, hitZ);
+        if (metaData != 1 && blockID == ThutBlocks.lift)
+        {
+            if (button == 2)
+            {
+                corners[0][0] = Math.max(-2, corners[0][0] - 1);
+            }
+            if (button == 3)
+            {
+                corners[0][0] = Math.min(0, corners[0][0] + 1);
+            }
+            if (button == 6)
+            {
+                corners[0][1] = Math.max(-2, corners[0][1] - 1);
+            }
+            if (button == 7)
+            {
+                corners[0][1] = Math.min(0, corners[0][1] + 1);
+            }
+
+            if (button == 10)
+            {
+                corners[1][0] = Math.max(0, corners[1][0] - 1);
+            }
+            if (button == 11)
+            {
+                corners[1][0] = Math.min(2, corners[1][0] + 1);
+            }
+            if (button == 14)
+            {
+                corners[1][1] = Math.max(0, corners[1][1] - 1);
+            }
+            if (button == 15)
+            {
+                corners[1][1] = Math.min(2, corners[1][1] + 1);
+            }
+        }
+        worldObj.markBlockForUpdate(getPos());
+        if (!worldObj.isRemote && lift != null)
+        {
+            if (isSideOn(side))
+            {
+                buttonPress(button);
+                calledFloor = lift.getDestinationFloor();
+            }
+        }
+    }
+
+    public int getButtonFromClick(EnumFacing side, float hitX, float hitY, float hitZ)
+    {
+        int ret = 0;
+        int page = getSidePage(side);
+        switch (side.getIndex())
+        {
+        case 0:
+        {
+            return 0 + 16 * page;
+        }
+        case 1:
+        {
+            ret = 1 + (int) (((1 - hitX) * 4) % 4) + 4 * (int) (((1 - hitZ) * 4) % 4);
+            return ret + 16 * page;
+        }
+        case 2:
+        {
+            ret = 1 + (int) (((1 - hitX) * 4) % 4) + 4 * (int) (((1 - hitY) * 4) % 4);
+            return ret + 16 * page;
+        }
+        case 3:
+        {
+            ret = 1 + (int) (((hitX) * 4) % 4) + 4 * (int) (((1 - hitY) * 4) % 4);
+            return ret + 16 * page;
+        }
+        case 4:
+        {
+            ret = 1 + 4 * (int) (((1 - hitY) * 4) % 4) + (int) (((hitZ) * 4) % 4);
+            return ret + 16 * page;
+        }
+        case 5:
+        {
+            ret = 1 + 4 * (int) (((1 - hitY) * 4) % 4) + (int) (((1 - hitZ) * 4) % 4);
+            return ret + 16 * page;
+        }
+        default:
+        {
+            return 0 + 16 * page;
+        }
+
+        }
+
+    }
+
+    @Override
+    public String getComponentName()
+    {
+        return "lift";
+    }
+
+    /** Overriden in a sign to provide the text. */
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Packet getDescriptionPacket()
+    {
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
+        this.writeToNBT(nbttagcompound);
+        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
+    }
+
+    public double getEnergy()
+    {
+        return 0;
+    }
+
+    /*
+     * Returns floor associated with this block
+     */
+    @Callback(doc = "returns the Floor assigned to the Controller")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getFloor(Context context, Arguments args)
+    {
+        return new Object[] { floor };
+    }
+
+    /*
+     * Returns the Y value of the controller for the specified floor
+     */
+    @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getFloorYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            int floor = args.checkInteger(0);
+
+            if (floor > 0 && floor <= 64)
+            {
+                int value = lift.floors[floor - 1];
+                if (value == -1) throw new Exception("floor " + floor + " is not assigned");
+                return new Object[] { value };
+            }
+            throw new Exception("floor out of bounds");
+        }
+        throw new Exception("no connected lift");
+    }
+
+    public TileEntityLiftAccess getRoot()
+    {
+        if (here == null || here.isEmpty())
+        {
+            here = Vector3.getNewVector().set(this);
+        }
+
+        if (rootNode != null) return rootNode;
+
+        Block b = here.getBlock(worldObj, DOWN);
+        if (b == blockID)
+        {
+            TileEntityLiftAccess te = (TileEntityLiftAccess) here.getTileEntity(worldObj, DOWN);
+            if (te != null && te != this) { return rootNode = te.getRoot(); }
+        }
+        return rootNode = this;
+    }
+
+    public int getSidePage(EnumFacing side)
+    {
+        return sidePages[side.getIndex()];
+    }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current Y value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (int) lift.posY };
+
+        throw new Exception("no connected lift");
+    }
+
+    /** invalidates a tile entity */
+    @Override
+    public void invalidate()
+    {
+        super.invalidate();
+        clearConnections();
+    }
+
+    public boolean isSideOn(EnumFacing side)
+    {
+        int state = 1;
+        byte byte0 = sides[side.getIndex()];
+        return (byte0 & state) != 0;
+    }
+
+    @Override
+    public void onChunkUnload()
+    {
+        super.onChunkUnload();
+    }
+
+    @Override
+    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
+    {
+        NBTTagCompound nbttagcompound = pkt.getNbtCompound();
+        this.readFromNBT(nbttagcompound);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound par1)
+    {
+        super.readFromNBT(par1);
+        metaData = par1.getInteger("meta");
+        blockID = Block.getBlockFromName(par1.getString("block id"));
+        floor = par1.getInteger("floor");
+        liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
+        root = Vector3.getNewVector();
+        root = Vector3.readFromNBT(par1, "root");
+        sides = par1.getByteArray("sides");
+        if (sides.length != 6) sides = new byte[6];
+        sidePages = par1.getByteArray("sidePages");
+        if (sidePages.length != 6) sidePages = new byte[6];
+        if (par1.hasKey("corners"))
+        {
+            int[] read = par1.getIntArray("corners");
+            int xMin = read[0];
+            int zMin = read[1];
+            int xMax = read[2];
+            int zMax = read[3];
+            corners[0][0] = xMin;
+            corners[0][1] = zMin;
+            corners[1][0] = xMax;
+            corners[1][1] = zMax;
+        }
+    }
+
+    public void setCalled(boolean called)
+    {
+        // IBlockState state = worldObj.getBlockState(getPos());
+        boolean isCalled = this.called;// ((Boolean)state.getValue(BlockLift.CALLED))
+        if (called != isCalled)
+        {
+            this.called = called;
+            worldObj.notifyNeighborsOfStateChange(getPos(), getBlockType());
+        }
+    }
+
+    public void setEnergy(double energy)
+    {
+    }
+
+    /*
+     * Sets floor associated with this block
+     */
+    @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] setFloor(Context context, Arguments args)
+    {
+        floor = args.checkInteger(0);
+        return new Object[] { floor };
+    }
+
+    public void setFloor(int floor)
+    {
+        if (lift != null && floor <= 64 && floor > 0)
+        {
+            lift.setFoor(getRoot(), floor);
+            getRoot().floor = floor;
+            getRoot().markDirty();
+            // getRoot().updateBlock();
+        }
+    }
+
+    public void setLift(EntityLift lift)
+    {
+        this.lift = lift;
+    }
+
+    public void setRoot(TileEntityLiftAccess root)
+    {
+        this.rootNode = root;
+    }
+
+    public void setSide(EnumFacing side, boolean flag)
+    {
+        int state = 1;
+        byte byte0 = sides[side.getIndex()];
+
+        if (side.getIndex() < 2) return;
+
+        if (flag)
+        {
+            sides[side.getIndex()] = (byte) (byte0 | state);
+        }
+        else
+        {
+            sides[side.getIndex()] = (byte) (byte0 & -state - 1);
+        }
+        markDirty();
+        worldObj.markBlockForUpdate(pos);
+    }
+
+    public void setSidePage(EnumFacing side, int page)
+    {
+        sidePages[side.getIndex()] = (byte) page;
+    }
+
+    @Override
     public void update()
     {
         if (first)
@@ -181,79 +578,14 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         time++;
     }
 
-    public void checkPower()
-    {
-
-    }
-
-    public void clearConnections()
-    {
-
-    }
-
-    public double getEnergy()
-    {
-        return 0;
-    }
-
-    public void setEnergy(double energy)
-    {
-    }
-
-    public String connectionInfo()
-    {
-        String ret = "";
-        return ret;
-    }
-
-    /** invalidates a tile entity */
-    public void invalidate()
-    {
-        super.invalidate();
-        clearConnections();
-    }
-
-    @Override
-    public void onChunkUnload()
-    {
-        super.onChunkUnload();
-    }
-
     /** validates a tile entity */
+    @Override
     public void validate()
     {
         super.validate();
     }
 
-    public boolean checkSides()
-    {
-        List<EntityLift> check = worldObj.getEntitiesWithinAABB(EntityLift.class,
-                new AxisAlignedBB(getPos().getX() + 0.5 - 1, getPos().getY(), getPos().getZ() + 0.5 - 1,
-                        getPos().getX() + 0.5 + 1, getPos().getY() + 1, getPos().getZ() + 0.5 + 1));
-        if (check != null && check.size() > 0)
-        {
-            lift = (EntityLift) check.get(0);
-            liftID = lift.id;
-        }
-        return !(check == null || check.isEmpty());
-    }
-
-    public void setFloor(int floor)
-    {
-        if (lift != null && floor <= 64 && floor > 0)
-        {
-            lift.setFoor(getRoot(), floor);
-            getRoot().floor = floor;
-            getRoot().markDirty();
-            // getRoot().updateBlock();
-        }
-    }
-
-    public void setLift(EntityLift lift)
-    {
-        this.lift = lift;
-    }
-
+    @Override
     public void writeToNBT(NBTTagCompound par1)
     {
         super.writeToNBT(par1);
@@ -281,332 +613,5 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
         int[] toStore = { xMin, zMin, xMax, zMax };
         par1.setIntArray("corners", toStore);
-    }
-
-    public void readFromNBT(NBTTagCompound par1)
-    {
-        super.readFromNBT(par1);
-        metaData = par1.getInteger("meta");
-        blockID = Block.getBlockFromName(par1.getString("block id"));
-        floor = par1.getInteger("floor");
-        liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
-        root = Vector3.getNewVector();
-        root = Vector3.readFromNBT(par1, "root");
-        sides = par1.getByteArray("sides");
-        if (sides.length != 6) sides = new byte[6];
-        sidePages = par1.getByteArray("sidePages");
-        if (sidePages.length != 6) sidePages = new byte[6];
-        if (par1.hasKey("corners"))
-        {
-            int[] read = par1.getIntArray("corners");
-            int xMin = read[0];
-            int zMin = read[1];
-            int xMax = read[2];
-            int zMax = read[3];
-            corners[0][0] = xMin;
-            corners[0][1] = zMin;
-            corners[1][0] = xMax;
-            corners[1][1] = zMax;
-        }
-    }
-
-    public void doButtonClick(EnumFacing side, float hitX, float hitY, float hitZ)
-    {
-        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj.isRemote))
-        {
-            lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
-        }
-        int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        if (metaData != 1 && blockID == ThutBlocks.lift)
-        {
-            if (button == 2)
-            {
-                corners[0][0] = Math.max(-2, corners[0][0] - 1);
-            }
-            if (button == 3)
-            {
-                corners[0][0] = Math.min(0, corners[0][0] + 1);
-            }
-            if (button == 6)
-            {
-                corners[0][1] = Math.max(-2, corners[0][1] - 1);
-            }
-            if (button == 7)
-            {
-                corners[0][1] = Math.min(0, corners[0][1] + 1);
-            }
-
-            if (button == 10)
-            {
-                corners[1][0] = Math.max(0, corners[1][0] - 1);
-            }
-            if (button == 11)
-            {
-                corners[1][0] = Math.min(2, corners[1][0] + 1);
-            }
-            if (button == 14)
-            {
-                corners[1][1] = Math.max(0, corners[1][1] - 1);
-            }
-            if (button == 15)
-            {
-                corners[1][1] = Math.min(2, corners[1][1] + 1);
-            }
-        }
-        worldObj.markBlockForUpdate(getPos());
-        if (!worldObj.isRemote && lift != null)
-        {
-            if (isSideOn(side))
-            {
-                buttonPress(button);
-                calledFloor = lift.getDestinationFloor();
-            }
-        }
-    }
-
-    public void callYValue(int yValue)
-    {
-        if (lift != null)
-        {
-            lift.callYValue(yValue);
-        }
-    }
-
-    public void buttonPress(int button)
-    {
-        if (button != 0 && button <= 64 && lift != null && lift.floors[button - 1] > 0)
-        {
-            if (button == floor)
-            {
-            }
-            else
-            {
-                if (lift.getCurrentFloor() == floor) lift.setCurrentFloor(-1);
-            }
-
-            lift.call(button);
-        }
-    }
-
-    public void setCalled(boolean called)
-    {
-        // IBlockState state = worldObj.getBlockState(getPos());
-        boolean isCalled = this.called;// ((Boolean)state.getValue(BlockLift.CALLED))
-        if (called != isCalled)
-        {
-            this.called = called;
-            worldObj.notifyNeighborsOfStateChange(getPos(), getBlockType());
-        }
-    }
-
-    public void setSide(EnumFacing side, boolean flag)
-    {
-        int state = 1;
-        byte byte0 = sides[side.getIndex()];
-
-        if (side.getIndex() < 2) return;
-
-        if (flag)
-        {
-            sides[side.getIndex()] = (byte) (byte0 | state);
-        }
-        else
-        {
-            sides[side.getIndex()] = (byte) (byte0 & -state - 1);
-        }
-        markDirty();
-        worldObj.markBlockForUpdate(pos);
-    }
-
-    public boolean isSideOn(EnumFacing side)
-    {
-        int state = 1;
-        byte byte0 = sides[side.getIndex()];
-        return (byte0 & state) != 0;
-    }
-
-    public int getSidePage(EnumFacing side)
-    {
-        return sidePages[side.getIndex()];
-    }
-
-    public void setSidePage(EnumFacing side, int page)
-    {
-        sidePages[side.getIndex()] = (byte) page;
-    }
-
-    public int getButtonFromClick(EnumFacing side, float hitX, float hitY, float hitZ)
-    {
-        int ret = 0;
-        int page = getSidePage(side);
-        switch (side.getIndex())
-        {
-        case 0:
-        {
-            return 0 + 16 * page;
-        }
-        case 1:
-        {
-            ret = 1 + (int) (((1 - hitX) * 4) % 4) + 4 * (int) (((1 - hitZ) * 4) % 4);
-            return ret + 16 * page;
-        }
-        case 2:
-        {
-            ret = 1 + (int) (((1 - hitX) * 4) % 4) + 4 * (int) (((1 - hitY) * 4) % 4);
-            return ret + 16 * page;
-        }
-        case 3:
-        {
-            ret = 1 + (int) (((hitX) * 4) % 4) + 4 * (int) (((1 - hitY) * 4) % 4);
-            return ret + 16 * page;
-        }
-        case 4:
-        {
-            ret = 1 + 4 * (int) (((1 - hitY) * 4) % 4) + (int) (((hitZ) * 4) % 4);
-            return ret + 16 * page;
-        }
-        case 5:
-        {
-            ret = 1 + 4 * (int) (((1 - hitY) * 4) % 4) + (int) (((1 - hitZ) * 4) % 4);
-            return ret + 16 * page;
-        }
-        default:
-        {
-            return 0 + 16 * page;
-        }
-
-        }
-
-    }
-
-    /** Overriden in a sign to provide the text. */
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Packet getDescriptionPacket()
-    {
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        this.writeToNBT(nbttagcompound);
-        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
-    }
-
-    @Override
-    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
-    {
-        NBTTagCompound nbttagcompound = pkt.getNbtCompound();
-        this.readFromNBT(nbttagcompound);
-    }
-
-    public void setRoot(TileEntityLiftAccess root)
-    {
-        this.rootNode = root;
-    }
-
-    public TileEntityLiftAccess getRoot()
-    {
-        if (here == null || here.isEmpty())
-        {
-            here = Vector3.getNewVector().set(this);
-        }
-
-        if (rootNode != null) return rootNode;
-
-        Block b = here.getBlock(worldObj, DOWN);
-        if (b == blockID)
-        {
-            TileEntityLiftAccess te = (TileEntityLiftAccess) here.getTileEntity(worldObj, DOWN);
-            if (te != null && te != this) { return rootNode = te.getRoot(); }
-        }
-        return rootNode = this;
-    }
-
-    /*
-     * Sets floor associated with this block
-     */
-    @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] setFloor(Context context, Arguments args)
-    {
-        floor = args.checkInteger(0);
-        return new Object[] { floor };
-    }
-
-    /*
-     * Returns floor associated with this block
-     */
-    @Callback(doc = "returns the Floor assigned to the Controller")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getFloor(Context context, Arguments args)
-    {
-        return new Object[] { floor };
-    }
-
-    /*
-     * Calls lift to specified Floor
-     */
-    @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] callFloor(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            lift.call(args.checkInteger(0));
-            return new Object[] {};
-        }
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Calls lift to specified Y value
-     */
-    @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] callYValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            lift.callYValue(args.checkInteger(0));
-            return new Object[] {};
-        }
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Returns the Yvalue of the lift.
-     */
-    @Callback(doc = "returns the current Y value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getYValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null) return new Object[] { (int) lift.posY };
-
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Returns the Y value of the controller for the specified floor
-     */
-    @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getFloorYValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            int floor = args.checkInteger(0);
-
-            if (floor > 0 && floor <= 64)
-            {
-                int value = lift.floors[floor - 1];
-                if (value == -1) throw new Exception("floor " + floor + " is not assigned");
-                return new Object[] { value };
-            }
-            throw new Exception("floor out of bounds");
-        }
-        throw new Exception("no connected lift");
-    }
-
-    @Override
-    public String getComponentName()
-    {
-        return "lift";
     }
 }

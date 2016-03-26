@@ -28,19 +28,25 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
 	long time = 0;
 	boolean up = true;
 	
-	@Override
-	public void doRender(EntityLivingBase entity, double d0, double d1, double d2,
-			float f, float f1) {
-		render(entity, d0, d1, d2);
-	}
-	
 	ResourceLocation texture;
 	
 	public RenderLift(RenderManager manager)
 	{
 		super(manager, null, 0);
 	}
+	
+	@Override
+	public void doRender(EntityLivingBase entity, double d0, double d1, double d2,
+			float f, float f1) {
+		render(entity, d0, d1, d2);
+	}
 
+
+	@Override
+	protected ResourceLocation getEntityTexture(Entity var1) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	public void render(Entity te, double x,double y,double z)
 	{
@@ -50,6 +56,7 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
 		}
 
 	}
+
 
 	private void renderBase(Entity te, float scale, double x,double y,double z)
 	{
@@ -107,7 +114,7 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
         	            int i1 = lift.getBrightnessForRender(0);
         	            int j1 = i1 % 65536;
         	            int k1 = i1 / 65536;
-        	            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)j1 / 1.0F, (float)k1 / 1.0F);
+        	            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
         	            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         	            FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
         	            blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
@@ -125,12 +132,5 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
 			e.printStackTrace();
 		}
         
-	}
-
-
-	@Override
-	protected ResourceLocation getEntityTexture(Entity var1) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

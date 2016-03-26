@@ -40,29 +40,40 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     static final int DESTINATIONYDW     = 25;
     static final int CURRENTFLOORDW     = 26;
 
+    public static int                        ACCELERATIONTICKS = 20;
+
+    public static boolean                    AUGMENTG          = true;
+    private static HashMap<UUID, EntityLift> lifts             = new HashMap<UUID, EntityLift>();
+    private static HashMap<UUID, EntityLift> lifts2            = new HashMap<UUID, EntityLift>();
+    public static void clear()
+    {
+        lifts2.clear();
+        lifts.clear();
+    }
+    public static EntityLift getLiftFromUUID(UUID uuid, boolean client)
+    {
+        if (client) return lifts2.get(uuid);
+        return lifts.get(uuid);
+    }
     // @Deprecated
     // public double size = 1;
     // TODO swap over to using this, to allow not-odd-square lifts.
     public int[][] corners = new int[2][2];
-
     public double                            speedUp           = ConfigHandler.LiftSpeedUp;
     public double                            speedDown         = -ConfigHandler.LiftSpeedDown;
-    public static int                        ACCELERATIONTICKS = 20;
     public double                            acceleration      = 0.05;
     public boolean                           up                = true;
     public boolean                           toMoveY           = false;
     public boolean                           moved             = false;
     public boolean                           axis              = true;
     public boolean                           hasPassenger      = false;
-    public static boolean                    AUGMENTG          = true;
     int                                      n                 = 0;
     int                                      passengertime     = 10;
     boolean                                  first             = true;
     Random                                   r                 = new Random();
+
     public UUID                              id                = UUID.randomUUID();
     public UUID                              owner;
-    private static HashMap<UUID, EntityLift> lifts             = new HashMap<UUID, EntityLift>();
-    private static HashMap<UUID, EntityLift> lifts2            = new HashMap<UUID, EntityLift>();
 
     public double prevFloorY = 0;
     public double prevFloor  = 0;
@@ -74,15 +85,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     Matrix3 tempBox = new Matrix3();
 
     public HashMap<String, Matrix3> boxes   = new HashMap<String, Matrix3>();
+
     public HashMap<String, Vector3> offsets = new HashMap<String, Vector3>();
-
     public int[] floors = new int[64];
-
     Matrix3 base  = new Matrix3();
+
     Matrix3 top   = new Matrix3();
     Matrix3 wall1 = new Matrix3();
 
     public ItemStack[][] blocks    = null;
+
     private ItemStack[]  inventory = new ItemStack[1];
 
     public EntityLift(World par1World)
@@ -97,23 +109,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    public boolean canRenderOnFire()
-    {
-        return false;
-    }
-
-    /** Checks if the entity's current position is a valid location to spawn
-     * this entity. */
-    public boolean getCanSpawnHere()
-    {
-        return false;
-    }
-
-    public boolean isPotionApplicable(PotionEffect par1PotionEffect)
-    {
-        return false;
-    }
-
     public EntityLift(World world, double x, double y, double z)
     {
         this(world);
@@ -122,53 +117,99 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         lifts.put(id, this);
     }
 
-    @Override
-    public void onUpdate()
+    public void accelerate()
     {
-        this.prevPosY = posY;
-        // if ((int) size != (int) this.width)
-        // {
-        // this.setSize((float) size, 1f);
-        // }
-
-        clearLiquids();
-
-        if (motionY == 0)
-        {
-            this.setPosition(posX, Math.round(posY), posZ);
-        }
-
-        if (!checkBlocks(0)) toMoveY = false;
-
-        toMoveY = called = getDestY() > 0;
-        up = getDestY() > posY;
-
-        accelerate();
-        if (toMoveY)
-        {
-            doMotion();
-        }
-        else if (!worldObj.isRemote)
-        {
-            setPosition(posX, Math.round(posY), posZ);
-        }
-
-        checkCollision();
-        passengertime = hasPassenger ? 20 : passengertime - 1;
-        n++;
-    }
-
-    public void passengerCheck()
-    {
-        List<Entity> list = worldObj.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
-        if (list.size() > 0)
-        {
-            hasPassenger = true;
-        }
+        motionX = 0;
+        motionZ = 0;
+        if (!toMoveY) motionY *= 0.5;
         else
         {
-            hasPassenger = false;
+            if (up) motionY = Math.min(speedUp, motionY + acceleration * speedUp);
+            else motionY = Math.max(speedDown, motionY + acceleration * speedDown);
         }
+    }
+
+    /** Applies a velocity to each of the entities pushing them away from each
+     * other. Args: entity */
+    @Override
+    public void applyEntityCollision(Entity entity)
+    {
+        Vector3 v = Vector3.getNewVector();
+        Vector3 v1 = Vector3.getNewVector();
+
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+        AxisAlignedBB box = Matrix3.getAABB(posX + xMin - 0.5, posY, posZ + zMin - 0.5, posX + xMax + 0.5, posY + 1,
+                posZ + zMax + 0.5);
+
+        ArrayList<AxisAlignedBB> aabbs = Lists.newArrayList();
+        aabbs.add(box);
+
+        v.setToVelocity(entity).subtractFrom(v1.setToVelocity(this));
+        v1.clear();
+        Matrix3.doCollision(aabbs, entity.getEntityBoundingBox(), entity, 0, v, v1);
+        boolean collidedY = false;
+        if (!v1.isEmpty())
+        {
+            if (v1.y >= 0)
+            {
+                entity.onGround = true;
+                entity.fallDistance = 0;
+                entity.fall(entity.fallDistance, 0);
+            }
+            else if (v1.y < 0)
+            {
+                boolean below = entity.posY + entity.height - (entity.motionY + motionY) < posY;
+
+                if (below)
+                {
+                    v1.y = 0;
+                }
+            }
+            if (v1.x != 0) entity.motionX = 0;
+            if (v1.y != 0) entity.motionY = motionY;
+            if (v1.z != 0) entity.motionZ = 0;
+            if (v1.y != 0) collidedY = true;
+            v1.addTo(v.set(entity));
+            v1.moveEntity(entity);
+        }
+        if (entity instanceof EntityPlayer)
+        {
+            EntityPlayer player = (EntityPlayer) entity;
+            if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
+            {
+                entity.onGround = true;
+                entity.fallDistance = 0;
+            }
+            if (!player.capabilities.isCreativeMode && !player.worldObj.isRemote)
+            {
+                EntityPlayerMP entityplayer = (EntityPlayerMP) player;
+                if (collidedY) entityplayer.playerNetServerHandler.floatingTickCount = 0;
+            }
+        }
+    }
+
+    /** Called when the entity is attacked. */
+    public boolean attackEntityFrom(DamageSource source, int damage)
+    {
+        if (damage > 15) { return true; }
+
+        return false;
+    }
+
+    @Override
+    public Matrix3 bounds(Vector3 target)
+    {
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+        tempBox.boxMin().set(xMin, 0, zMin);
+        tempBox.boxMax().set(xMax, 1, zMax);
+
+        return tempBox;
     }
 
     public void call(int floor)
@@ -186,16 +227,117 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         setDestY(yValue);
     }
 
-    public void accelerate()
+    /** Returns true if other Entities should be prevented from moving through
+     * this Entity. */
+    @Override
+    public boolean canBeCollidedWith()
     {
-        motionX = 0;
-        motionZ = 0;
-        if (!toMoveY) motionY *= 0.5;
-        else
+        return !this.isDead;
+    }
+
+    /** Returns true if this entity should push and be pushed by other entities
+     * when colliding. */
+    @Override
+    public boolean canBePushed()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean canRenderOnFire()
+    {
+        return false;
+    }
+
+    public boolean checkBlocks(double dir)
+    {
+        boolean ret = true;
+        Vector3 thisloc = Vector3.getNewVector().set(this).addTo(0, dir, 0);
+
+        if (called)
         {
-            if (up) motionY = Math.min(speedUp, motionY + acceleration * speedUp);
-            else motionY = Math.max(speedDown, motionY + acceleration * speedDown);
+            if (dir > 0 && thisloc.y > getDestY()) { return false; }
+            if (dir < 0 && thisloc.y < getDestY()) { return false; }
         }
+
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+
+        Vector3 v = Vector3.getNewVector();
+        for (int i = xMin; i <= xMax; i++)
+            for (int j = zMin; j <= zMax; j++)
+            {
+                ret = ret && (v.set(thisloc).addTo(i, 0, j)).clearOfBlocks(worldObj);
+                ret = ret && (v.set(thisloc).addTo(i, 3, j)).clearOfBlocks(worldObj);
+            }
+        // TODO decide if I want to re-add rail checks
+        return ret;
+    }
+
+    @Override
+    public void checkCollision()
+    {
+
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+
+        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
+                posY, posZ + (zMin - 1), posX + xMax + 1, posY + 6, posZ + zMax + 1));
+
+        if (list != null && !list.isEmpty())
+        {
+            if (list.size() == 1 && this.riddenByEntity != null) { return; }
+
+            for (int i = 0; i < list.size(); ++i)
+            {
+                Entity entity = (Entity) list.get(i);
+                {
+                    applyEntityCollision(entity);
+                }
+            }
+        }
+    }
+
+    public void clearLiquids()
+    {
+        // int rad = (int) (Math.floor(size / 2));
+        //
+        // Vector3 thisloc = Vector3.getNewVector().set(this);
+        // Vector3 v = Vector3.getNewVector();
+        // for (int i = -rad; i <= rad; i++)
+        // for (int j = -rad; j <= rad; j++)
+        // {
+        // Vector3 check = (v.set(thisloc).addTo(i, 5, j));
+        // if (check.isFluid(worldObj))
+        // {
+        // System.out.println("Setting to air");
+        // check.setAir(worldObj);
+        // }
+        // check = (v.set(thisloc).addTo(i, 0, j));
+        // if (check.isFluid(worldObj))
+        // {
+        // System.out.println("Setting to air");
+        // check.setAir(worldObj);
+        // }
+        // }
+        // v.freeVectorFromPool();
+        // thisloc.freeVectorFromPool();
+    }
+
+    @SuppressWarnings("unused") // TODO make use of this
+    private boolean consumePower()
+    {
+        boolean power = false;
+        // int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
+        double energyCost = 0;// (destinationY - posY)*ENERGYCOST*sizeFactor;
+        if (energyCost <= 0) return true;
+        if (!power) toMoveY = false;
+        return power;
+
     }
 
     public void doMotion()
@@ -285,158 +427,86 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         moved = false;
     }
 
-    public boolean checkBlocks(double dir)
+    @Override
+    protected void entityInit()
     {
-        boolean ret = true;
-        Vector3 thisloc = Vector3.getNewVector().set(this).addTo(0, dir, 0);
-
-        if (called)
-        {
-            if (dir > 0 && thisloc.y > getDestY()) { return false; }
-            if (dir < 0 && thisloc.y < getDestY()) { return false; }
-        }
-
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-
-        Vector3 v = Vector3.getNewVector();
-        for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-            {
-                ret = ret && (v.set(thisloc).addTo(i, 0, j)).clearOfBlocks(worldObj);
-                ret = ret && (v.set(thisloc).addTo(i, 3, j)).clearOfBlocks(worldObj);
-            }
-        // TODO decide if I want to re-add rail checks
-        return ret;
+        super.entityInit();
+        this.dataWatcher.addObject(24, Integer.valueOf(0));
+        this.dataWatcher.addObject(25, Integer.valueOf(0));
+        this.dataWatcher.addObject(26, Integer.valueOf(-1));
     }
 
-    public void clearLiquids()
+    /** returns the bounding box for this entity */
+    public AxisAlignedBB getBoundingBox()
     {
-        // int rad = (int) (Math.floor(size / 2));
-        //
-        // Vector3 thisloc = Vector3.getNewVector().set(this);
-        // Vector3 v = Vector3.getNewVector();
-        // for (int i = -rad; i <= rad; i++)
-        // for (int j = -rad; j <= rad; j++)
-        // {
-        // Vector3 check = (v.set(thisloc).addTo(i, 5, j));
-        // if (check.isFluid(worldObj))
-        // {
-        // System.out.println("Setting to air");
-        // check.setAir(worldObj);
-        // }
-        // check = (v.set(thisloc).addTo(i, 0, j));
-        // if (check.isFluid(worldObj))
-        // {
-        // System.out.println("Setting to air");
-        // check.setAir(worldObj);
-        // }
-        // }
-        // v.freeVectorFromPool();
-        // thisloc.freeVectorFromPool();
+        return null;
     }
 
-    @SuppressWarnings("unused") // TODO make use of this
-    private boolean consumePower()
+    @Override
+    public HashMap<String, Matrix3> getBoxes()
     {
-        boolean power = false;
-        // int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
-        double energyCost = 0;// (destinationY - posY)*ENERGYCOST*sizeFactor;
-        if (energyCost <= 0) return true;
-        if (!power) toMoveY = false;
-        return power;
-
+        return boxes;
     }
 
-    public void checkCollision()
+    /** Checks if the entity's current position is a valid location to spawn
+     * this entity. */
+    public boolean getCanSpawnHere()
     {
-
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-
-        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
-                posY, posZ + (zMin - 1), posX + xMax + 1, posY + 6, posZ + zMax + 1));
-
-        if (list != null && !list.isEmpty())
-        {
-            if (list.size() == 1 && this.riddenByEntity != null) { return; }
-
-            for (int i = 0; i < list.size(); ++i)
-            {
-                Entity entity = (Entity) list.get(i);
-                {
-                    applyEntityCollision(entity);
-                }
-            }
-        }
+        return false;
     }
 
-    /** Applies a velocity to each of the entities pushing them away from each
-     * other. Args: entity */
-    public void applyEntityCollision(Entity entity)
+    @Override
+    public ItemStack getCurrentArmor(int slotIn)
     {
-        Vector3 v = Vector3.getNewVector();
-        Vector3 v1 = Vector3.getNewVector();
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-        AxisAlignedBB box = Matrix3.getAABB(posX + xMin - 0.5, posY, posZ + zMin - 0.5, posX + xMax + 0.5, posY + 1,
-                posZ + zMax + 0.5);
+    /** @return the destinationFloor */
+    public int getCurrentFloor()
+    {
+        return dataWatcher.getWatchableObjectInt(CURRENTFLOORDW);
+    }
 
-        ArrayList<AxisAlignedBB> aabbs = Lists.newArrayList();
-        aabbs.add(box);
+    /** @return the destinationFloor */
+    public int getDestinationFloor()
+    {
+        return dataWatcher.getWatchableObjectInt(DESTINATIONFLOORDW);
+    }
 
-        v.setToVelocity(entity).subtractFrom(v1.setToVelocity(this));
-        v1.clear();
-        Matrix3.doCollision(aabbs, entity.getEntityBoundingBox(), entity, 0, v, v1);
-        boolean collidedY = false;
-        if (!v1.isEmpty())
-        {
-            if (v1.y >= 0)
-            {
-                entity.onGround = true;
-                entity.fallDistance = 0;
-                entity.fall(entity.fallDistance, 0);
-            }
-            else if (v1.y < 0)
-            {
-                boolean below = entity.posY + entity.height - (entity.motionY + motionY) < posY;
+    /** @return the destinationFloor */
+    public int getDestY()
+    {
+        return dataWatcher.getWatchableObjectInt(DESTINATIONYDW);
+    }
 
-                if (below)
-                {
-                    v1.y = 0;
-                }
-            }
-            if (v1.x != 0) entity.motionX = 0;
-            if (v1.y != 0) entity.motionY = motionY;
-            if (v1.z != 0) entity.motionZ = 0;
-            if (v1.y != 0) collidedY = true;
-            v1.addTo(v.set(entity));
-            v1.moveEntity(entity);
-        }
-        if (entity instanceof EntityPlayer)
-        {
-            EntityPlayer player = (EntityPlayer) entity;
-            if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
-            {
-                entity.onGround = true;
-                entity.fallDistance = 0;
-            }
-            if (!player.capabilities.isCreativeMode && !player.worldObj.isRemote)
-            {
-                EntityPlayerMP entityplayer = (EntityPlayerMP) player;
-                if (collidedY) entityplayer.playerNetServerHandler.floatingTickCount = 0;
-            }
-        }
+    @Override
+    public ItemStack getEquipmentInSlot(int var1)
+    {
+        return getHeldItem();
+    }
+
+    @Override
+    public ItemStack getHeldItem()
+    {
+        return getInventory()[0];
+    }
+
+    @Override
+    public ItemStack[] getInventory()
+    {
+        // TODO Auto-generated method stub
+        return inventory;
+    }
+
+    @Override
+    public HashMap<String, Vector3> getOffsets()
+    {
+        return offsets;
     }
 
     /** First layer of player interaction */
+    @Override
     public boolean interactFirst(EntityPlayer player)
     {
         ItemStack item = player.getHeldItem();
@@ -508,122 +578,95 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return false;
     }
 
-    /** Will get destroyed next tick. */
-    public void setDead()
+    @Override
+    public boolean isPotionApplicable(PotionEffect par1PotionEffect)
     {
-        if (!worldObj.isRemote && !this.isDead)
+        return false;
+    }
+
+    @Override
+    public void onUpdate()
+    {
+        this.prevPosY = posY;
+        // if ((int) size != (int) this.width)
+        // {
+        // this.setSize((float) size, 1f);
+        // }
+
+        clearLiquids();
+
+        if (motionY == 0)
         {
-            if (blocks != null)
+            this.setPosition(posX, Math.round(posY), posZ);
+        }
+
+        if (!checkBlocks(0)) toMoveY = false;
+
+        toMoveY = called = getDestY() > 0;
+        up = getDestY() > posY;
+
+        accelerate();
+        if (toMoveY)
+        {
+            doMotion();
+        }
+        else if (!worldObj.isRemote)
+        {
+            setPosition(posX, Math.round(posY), posZ);
+        }
+
+        checkCollision();
+        passengertime = hasPassenger ? 20 : passengertime - 1;
+        n++;
+    }
+
+    public void passengerCheck()
+    {
+        List<Entity> list = worldObj.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
+        if (list.size() > 0)
+        {
+            hasPassenger = true;
+        }
+        else
+        {
+            hasPassenger = false;
+        }
+    }
+
+    public void readBlocks(NBTTagCompound nbt)
+    {
+        if (nbt.hasKey("BlocksLength") || nbt.hasKey("BlocksLengthX"))
+        {
+            int sizeX = nbt.getInteger("BlocksLengthX");
+            int sizeZ = nbt.getInteger("BlocksLengthZ");
+            if (sizeX == 0 || sizeZ == 0)
             {
-                for (ItemStack[] barr : blocks)
+                sizeX = sizeZ = nbt.getInteger("BlocksLength");
+            }
+
+            blocks = new ItemStack[sizeX][sizeZ];
+            for (int i = 0; i < sizeX; i++)
+                for (int j = 0; j < sizeZ; j++)
                 {
-                    for (ItemStack b : barr)
-                    {
-                        this.entityDropItem(b, 0.5f);
-                    }
+                    int n = nbt.getInteger("block" + i + "," + j);
+                    ItemStack b = new ItemStack(Item.getItemById(n), 1, nbt.getInteger("meta"));
+                    blocks[i][j] = b;
                 }
-                if (this.getHeldItem() != null) this.entityDropItem(getHeldItem(), 1);
-            }
-            else
-            {
-                // TODO make this take area.
-                // int iron = size == 1 ? 0 : size == 3 ? 8 : 24;
-                // if (iron > 0)
-                // this.dropItem(Item.getItemFromBlock(Blocks.iron_block),
-                // iron);
-                // this.dropItem(Item.getItemFromBlock(ThutBlocks.lift), 1);
-                // if (this.getHeldItem() != null)
-                // this.entityDropItem(getHeldItem(), 1);
-            }
         }
-        super.setDead();
-    }
-
-    @Override
-    public void writeSpawnData(ByteBuf data)
-    {
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-        data.writeInt(xMin);
-        data.writeInt(xMax);
-        data.writeInt(zMin);
-        data.writeInt(zMax);
-        int size = Math.max((xMax - xMin) + 1, Math.max((zMax - zMin) + 1, 1));
-        this.setSize((float) size, 1f);
-
-        data.writeLong(id.getMostSignificantBits());
-        data.writeLong(id.getLeastSignificantBits());
-        for (int i = 0; i < 64; i++)
+        else
         {
-            data.writeInt(floors[i]);
-        }
-        PacketBuffer buff = new PacketBuffer(data);
-        NBTTagCompound tag = new NBTTagCompound();
-        writeBlocks(tag);
-        buff.writeNBTTagCompoundToBuffer(tag);
-        lifts.put(id, this);
-        data.writeBoolean(owner != null);
-        if (owner != null)
-        {
-            data.writeLong(owner.getMostSignificantBits());
-            data.writeLong(owner.getLeastSignificantBits());
-        }
-
-    }
-
-    @Override
-    public void readSpawnData(ByteBuf data)
-    {
-        int xMin = data.readInt();
-        int xMax = data.readInt();
-        int zMin = data.readInt();
-        int zMax = data.readInt();
-        corners[0][0] = xMin;
-        corners[0][1] = zMin;
-        corners[1][0] = xMax;
-        corners[1][1] = zMax;
-        int size = Math.max((xMax - xMin) + 1, Math.max((zMax - zMin) + 1, 1));
-        System.out.println(size);
-
-        id = new UUID(data.readLong(), data.readLong());
-
-        for (int i = 0; i < 64; i++)
-        {
-            floors[i] = data.readInt();
-        }
-        lifts2.put(id, this);
-        this.setSize((float) size, 1f);
-
-        PacketBuffer buff = new PacketBuffer(data);
-        NBTTagCompound tag = new NBTTagCompound();
-        try
-        {
-            tag = buff.readNBTTagCompoundFromBuffer();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        if (data.readBoolean())
-        {
-            owner = new UUID(data.readLong(), data.readLong());
-        }
-
-        readBlocks(tag);
-    }
-
-    public void setFoor(TileEntityLiftAccess te, int floor)
-    {
-        if (te.floor == 0)
-        {
-            floors[floor - 1] = te.getPos().getY() - 2;
-        }
-        else if (te.floor != 0)
-        {
-            floors[te.floor - 1] = -1;
-            floors[floor - 1] = te.getPos().getY() - 2;
+            int xMin = corners[0][0];
+            int zMin = corners[0][1];
+            int xMax = corners[1][0];
+            int zMax = corners[1][1];
+            int sizeX = xMax - xMin;
+            int sizeZ = zMax - zMin;
+            blocks = new ItemStack[sizeX][sizeZ];
+            for (int i = 0; i < sizeX; i++)
+                for (int j = 0; j < sizeZ; j++)
+                {
+                    blocks[i][j] = new ItemStack(Blocks.iron_block);
+                }
         }
     }
 
@@ -666,6 +709,194 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
         readList(nbt);
         readBlocks(nbt);
+    }
+
+    public void readList(NBTTagCompound nbt)
+    {
+        for (int i = 0; i < 64; i++)
+        {
+            floors[i] = nbt.getInteger("floors " + i);
+            if (floors[i] == 0) floors[i] = -1;
+        }
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf data)
+    {
+        int xMin = data.readInt();
+        int xMax = data.readInt();
+        int zMin = data.readInt();
+        int zMax = data.readInt();
+        corners[0][0] = xMin;
+        corners[0][1] = zMin;
+        corners[1][0] = xMax;
+        corners[1][1] = zMax;
+        int size = Math.max((xMax - xMin) + 1, Math.max((zMax - zMin) + 1, 1));
+        System.out.println(size);
+
+        id = new UUID(data.readLong(), data.readLong());
+
+        for (int i = 0; i < 64; i++)
+        {
+            floors[i] = data.readInt();
+        }
+        lifts2.put(id, this);
+        this.setSize(size, 1f);
+
+        PacketBuffer buff = new PacketBuffer(data);
+        NBTTagCompound tag = new NBTTagCompound();
+        try
+        {
+            tag = buff.readNBTTagCompoundFromBuffer();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        if (data.readBoolean())
+        {
+            owner = new UUID(data.readLong(), data.readLong());
+        }
+
+        readBlocks(tag);
+    }
+
+    @Override
+    public void setBoxes()
+    {
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+        mainBox.boxMin().set(xMin, 0, zMin);
+        mainBox.boxMax().set(xMax, 1, zMax);
+
+        Matrix3 m2;
+        if (!boxes.containsKey("base"))
+        {
+            m2 = new Matrix3();
+            boxes.put("base", m2);
+        }
+        else
+        {
+            m2 = boxes.get("base");
+        }
+
+        m2.boxMin().clear();
+        m2.boxMax().set(xMax - xMin, 1, zMax - zMin);
+        m2.boxRotation().clear();
+        boxes.put("base", m2);
+    }
+
+    /** @param currentFloor
+     *            the destinationFloor to set */
+    public void setCurrentFloor(int currentFloor)
+    {
+        dataWatcher.updateObject(CURRENTFLOORDW, Integer.valueOf(currentFloor));
+    }
+
+    @Override
+    public void setCurrentItemOrArmor(int var1, ItemStack var2)
+    {
+        getInventory()[0] = var2;
+    }
+
+    /** Will get destroyed next tick. */
+    @Override
+    public void setDead()
+    {
+        if (!worldObj.isRemote && !this.isDead)
+        {
+            if (blocks != null)
+            {
+                for (ItemStack[] barr : blocks)
+                {
+                    for (ItemStack b : barr)
+                    {
+                        this.entityDropItem(b, 0.5f);
+                    }
+                }
+                if (this.getHeldItem() != null) this.entityDropItem(getHeldItem(), 1);
+            }
+            else
+            {
+                // TODO make this take area.
+                // int iron = size == 1 ? 0 : size == 3 ? 8 : 24;
+                // if (iron > 0)
+                // this.dropItem(Item.getItemFromBlock(Blocks.iron_block),
+                // iron);
+                // this.dropItem(Item.getItemFromBlock(ThutBlocks.lift), 1);
+                // if (this.getHeldItem() != null)
+                // this.entityDropItem(getHeldItem(), 1);
+            }
+        }
+        super.setDead();
+    }
+
+    /** @param destinationFloor
+     *            the destinationFloor to set */
+    public void setDestinationFloor(int destinationFloor)
+    {
+        dataWatcher.updateObject(DESTINATIONFLOORDW, Integer.valueOf(destinationFloor));
+    }
+
+    /** @param dest
+     *            the destinationFloor to set */
+    public void setDestY(int dest)
+    {
+        dataWatcher.updateObject(DESTINATIONYDW, Integer.valueOf(dest));
+    }
+
+    public void setFoor(TileEntityLiftAccess te, int floor)
+    {
+        if (te.floor == 0)
+        {
+            floors[floor - 1] = te.getPos().getY() - 2;
+        }
+        else if (te.floor != 0)
+        {
+            floors[te.floor - 1] = -1;
+            floors[floor - 1] = te.getPos().getY() - 2;
+        }
+    }
+
+    @Override
+    public void setOffsets()
+    {
+
+        Vector3 v2;
+        if (!offsets.containsKey("base"))
+        {
+            v2 = Vector3.getNewVector();
+            offsets.put("base", v2);
+        }
+        else
+        {
+            v2 = offsets.get("base");
+        }
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        v2.set(xMin, 0, zMin);
+    }
+
+    public void writeBlocks(NBTTagCompound nbt)
+    {
+        if (blocks != null)
+        {
+            nbt.setInteger("BlocksLengthX", blocks.length);
+            nbt.setInteger("BlocksLengthZ", blocks[0].length);
+            int sizeX = blocks.length;
+            int sizeZ = blocks[0].length;
+            for (int i = 0; i < sizeX; i++)
+                for (int j = 0; j < sizeZ; j++)
+                {
+                    ItemStack b = blocks[i][j];
+                    if (b == null || b.getItem() == null) b = new ItemStack(Blocks.iron_block);
+
+                    nbt.setInteger("block" + i + "," + j, Item.getIdFromItem(b.getItem()));
+                    nbt.setInteger("meta", b.getItemDamage());
+                }
+        }
     }
 
     @Override
@@ -715,261 +946,38 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    public void readList(NBTTagCompound nbt)
+    @Override
+    public void writeSpawnData(ByteBuf data)
     {
+        int xMin = corners[0][0];
+        int zMin = corners[0][1];
+        int xMax = corners[1][0];
+        int zMax = corners[1][1];
+        data.writeInt(xMin);
+        data.writeInt(xMax);
+        data.writeInt(zMin);
+        data.writeInt(zMax);
+        int size = Math.max((xMax - xMin) + 1, Math.max((zMax - zMin) + 1, 1));
+        this.setSize(size, 1f);
+
+        data.writeLong(id.getMostSignificantBits());
+        data.writeLong(id.getLeastSignificantBits());
         for (int i = 0; i < 64; i++)
         {
-            floors[i] = nbt.getInteger("floors " + i);
-            if (floors[i] == 0) floors[i] = -1;
+            data.writeInt(floors[i]);
         }
-    }
-
-    public void writeBlocks(NBTTagCompound nbt)
-    {
-        if (blocks != null)
+        PacketBuffer buff = new PacketBuffer(data);
+        NBTTagCompound tag = new NBTTagCompound();
+        writeBlocks(tag);
+        buff.writeNBTTagCompoundToBuffer(tag);
+        lifts.put(id, this);
+        data.writeBoolean(owner != null);
+        if (owner != null)
         {
-            nbt.setInteger("BlocksLengthX", blocks.length);
-            nbt.setInteger("BlocksLengthZ", blocks[0].length);
-            int sizeX = blocks.length;
-            int sizeZ = blocks[0].length;
-            for (int i = 0; i < sizeX; i++)
-                for (int j = 0; j < sizeZ; j++)
-                {
-                    ItemStack b = blocks[i][j];
-                    if (b == null || b.getItem() == null) b = new ItemStack(Blocks.iron_block);
-
-                    nbt.setInteger("block" + i + "," + j, Item.getIdFromItem(b.getItem()));
-                    nbt.setInteger("meta", b.getItemDamage());
-                }
-        }
-    }
-
-    public void readBlocks(NBTTagCompound nbt)
-    {
-        if (nbt.hasKey("BlocksLength") || nbt.hasKey("BlocksLengthX"))
-        {
-            int sizeX = nbt.getInteger("BlocksLengthX");
-            int sizeZ = nbt.getInteger("BlocksLengthZ");
-            if (sizeX == 0 || sizeZ == 0)
-            {
-                sizeX = sizeZ = nbt.getInteger("BlocksLength");
-            }
-
-            blocks = new ItemStack[sizeX][sizeZ];
-            for (int i = 0; i < sizeX; i++)
-                for (int j = 0; j < sizeZ; j++)
-                {
-                    int n = nbt.getInteger("block" + i + "," + j);
-                    ItemStack b = new ItemStack(Item.getItemById(n), 1, nbt.getInteger("meta"));
-                    blocks[i][j] = b;
-                }
-        }
-        else
-        {
-            int xMin = corners[0][0];
-            int zMin = corners[0][1];
-            int xMax = corners[1][0];
-            int zMax = corners[1][1];
-            int sizeX = xMax - xMin;
-            int sizeZ = zMax - zMin;
-            blocks = new ItemStack[sizeX][sizeZ];
-            for (int i = 0; i < sizeX; i++)
-                for (int j = 0; j < sizeZ; j++)
-                {
-                    blocks[i][j] = new ItemStack(Blocks.iron_block);
-                }
-        }
-    }
-
-    public static void clear()
-    {
-        lifts2.clear();
-        lifts.clear();
-    }
-
-    public static EntityLift getLiftFromUUID(UUID uuid, boolean client)
-    {
-        if (client) return lifts2.get(uuid);
-        return lifts.get(uuid);
-    }
-
-    @Override
-    public void setBoxes()
-    {
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-        mainBox.boxMin().set(xMin, 0, zMin);
-        mainBox.boxMax().set(xMax, 1, zMax);
-
-        Matrix3 m2;
-        if (!boxes.containsKey("base"))
-        {
-            m2 = new Matrix3();
-            boxes.put("base", m2);
-        }
-        else
-        {
-            m2 = boxes.get("base");
+            data.writeLong(owner.getMostSignificantBits());
+            data.writeLong(owner.getLeastSignificantBits());
         }
 
-        m2.boxMin().clear();
-        m2.boxMax().set(xMax - xMin, 1, zMax - zMin);
-        m2.boxRotation().clear();
-        boxes.put("base", m2);
-    }
-
-    @Override
-    public void setOffsets()
-    {
-
-        Vector3 v2;
-        if (!offsets.containsKey("base"))
-        {
-            v2 = Vector3.getNewVector();
-            offsets.put("base", v2);
-        }
-        else
-        {
-            v2 = offsets.get("base");
-        }
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        v2.set(xMin, 0, zMin);
-    }
-
-    @Override
-    public HashMap<String, Matrix3> getBoxes()
-    {
-        return boxes;
-    }
-
-    @Override
-    public HashMap<String, Vector3> getOffsets()
-    {
-        return offsets;
-    }
-
-    @Override
-    public Matrix3 bounds(Vector3 target)
-    {
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-        tempBox.boxMin().set(xMin, 0, zMin);
-        tempBox.boxMax().set(xMax, 1, zMax);
-
-        return tempBox;
-    }
-
-    /** Called when the entity is attacked. */
-    public boolean attackEntityFrom(DamageSource source, int damage)
-    {
-        if (damage > 15) { return true; }
-
-        return false;
-    }
-
-    @Override
-    protected void entityInit()
-    {
-        super.entityInit();
-        this.dataWatcher.addObject(24, Integer.valueOf(0));
-        this.dataWatcher.addObject(25, Integer.valueOf(0));
-        this.dataWatcher.addObject(26, Integer.valueOf(-1));
-    }
-
-    @Override
-    public ItemStack getHeldItem()
-    {
-        return getInventory()[0];
-    }
-
-    @Override
-    public ItemStack getEquipmentInSlot(int var1)
-    {
-        return getHeldItem();
-    }
-
-    @Override
-    public void setCurrentItemOrArmor(int var1, ItemStack var2)
-    {
-        getInventory()[0] = var2;
-    }
-
-    /** @return the destinationFloor */
-    public int getDestinationFloor()
-    {
-        return dataWatcher.getWatchableObjectInt(DESTINATIONFLOORDW);
-    }
-
-    /** @param destinationFloor
-     *            the destinationFloor to set */
-    public void setDestinationFloor(int destinationFloor)
-    {
-        dataWatcher.updateObject(DESTINATIONFLOORDW, Integer.valueOf(destinationFloor));
-    }
-
-    /** @return the destinationFloor */
-    public int getCurrentFloor()
-    {
-        return dataWatcher.getWatchableObjectInt(CURRENTFLOORDW);
-    }
-
-    /** @param currentFloor
-     *            the destinationFloor to set */
-    public void setCurrentFloor(int currentFloor)
-    {
-        dataWatcher.updateObject(CURRENTFLOORDW, Integer.valueOf(currentFloor));
-    }
-
-    /** @return the destinationFloor */
-    public int getDestY()
-    {
-        return dataWatcher.getWatchableObjectInt(DESTINATIONYDW);
-    }
-
-    /** @param dest
-     *            the destinationFloor to set */
-    public void setDestY(int dest)
-    {
-        dataWatcher.updateObject(DESTINATIONYDW, Integer.valueOf(dest));
-    }
-
-    /** returns the bounding box for this entity */
-    public AxisAlignedBB getBoundingBox()
-    {
-        return null;
-    }
-
-    /** Returns true if other Entities should be prevented from moving through
-     * this Entity. */
-    public boolean canBeCollidedWith()
-    {
-        return !this.isDead;
-    }
-
-    /** Returns true if this entity should push and be pushed by other entities
-     * when colliding. */
-    public boolean canBePushed()
-    {
-        return true;
-    }
-
-    @Override
-    public ItemStack getCurrentArmor(int slotIn)
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public ItemStack[] getInventory()
-    {
-        // TODO Auto-generated method stub
-        return inventory;
     }
 
 }

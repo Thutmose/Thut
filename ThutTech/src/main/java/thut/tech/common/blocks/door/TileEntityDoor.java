@@ -35,27 +35,12 @@ public class TileEntityDoor extends TileEntity implements ITickable
     private BlockPos      corePos  = null;
     Set<TileEntityDoor>   parts    = Sets.newHashSet();
 
-    @Override
-    public void update()
-    {
-        if (corePos != null && core == null)
-        {
-            if (worldObj.getTileEntity(corePos) instanceof TileEntityDoor)
-            {
-                core = (TileEntityDoor) worldObj.getTileEntity(corePos);
-                this.setCore(core);
-            }
-            corePos = null;
+    AxisAlignedBB box = null;
 
-        }
-    }
-
-    public void setCore(TileEntityDoor core)
+    private void addPart(TileEntityDoor part)
     {
-        if (core == this) core = null;
-        this.core = core;
-        isCore = core == null;
-        if (core != null) core.addPart(this);
+        part.madeDoor = true;
+        parts.add(part);
     }
 
     public void createDoor()
@@ -86,87 +71,6 @@ public class TileEntityDoor extends TileEntity implements ITickable
         }
         madeDoor = true;
     }
-
-    private void addPart(TileEntityDoor part)
-    {
-        part.madeDoor = true;
-        parts.add(part);
-    }
-
-    @Override
-    public void readFromNBT(NBTTagCompound compound)
-    {
-        super.readFromNBT(compound);
-        if (compound.hasKey("corex"))
-        {
-            corePos = new BlockPos(compound.getInteger("corex"), compound.getInteger("corey"),
-                    compound.getInteger("corez"));
-        }
-        if (compound.hasKey("state"))
-        {
-            NBTTagCompound tag = compound.getCompoundTag("state");
-            ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
-            Block block = Block.getBlockFromItem(stack.getItem());
-            state = block.getStateFromMeta(stack.getItemDamage());
-        }
-        madeDoor = compound.getBoolean("made");
-    }
-
-    @Override
-    public void writeToNBT(NBTTagCompound compound)
-    {
-        super.writeToNBT(compound);
-        if (core != null)
-        {
-            compound.setInteger("corex", core.pos.getX());
-            compound.setInteger("corey", core.pos.getY());
-            compound.setInteger("corez", core.pos.getZ());
-        }
-        if (state != null)
-        {
-            NBTTagCompound tag = new NBTTagCompound();
-            ItemStack stack = new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state));
-            stack.writeToNBT(tag);
-            compound.setTag("state", tag);
-        }
-        compound.setBoolean("made", madeDoor);
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Packet getDescriptionPacket()
-    {
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        this.writeToNBT(nbttagcompound);
-        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
-    }
-
-    @Override
-    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
-    {
-        NBTTagCompound nbttagcompound = pkt.getNbtCompound();
-        this.readFromNBT(nbttagcompound);
-    }
-
-    public double getWidth()
-    {
-        // TODO use this to detemine if the block is out of bounds to stop
-        // rendering.
-        return width;
-    }
-
-    public Vector3f getShiftForPart(TileEntityDoor part, float partialTick)
-    {
-        if (core != null && core != this) return core.getShiftForPart(part, partialTick);
-        if (madeDoor)
-        {
-            float num = 3 * MathHelper.cos((worldObj.getTotalWorldTime() + partialTick) / 30f);
-            shift.x = num;
-        }
-        return shift;
-    }
-
-    AxisAlignedBB box = null;
 
     private AxisAlignedBB getBounds()
     {
@@ -212,11 +116,107 @@ public class TileEntityDoor extends TileEntity implements ITickable
         return ret;
     }
 
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Packet getDescriptionPacket()
+    {
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
+        this.writeToNBT(nbttagcompound);
+        return new S35PacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
+    }
+
     @Override
     @SideOnly(Side.CLIENT)
     public net.minecraft.util.AxisAlignedBB getRenderBoundingBox()
     {
         net.minecraft.util.AxisAlignedBB bb = INFINITE_EXTENT_AABB;
         return bb;
+    }
+
+    public Vector3f getShiftForPart(TileEntityDoor part, float partialTick)
+    {
+        if (core != null && core != this) return core.getShiftForPart(part, partialTick);
+        if (madeDoor)
+        {
+            float num = 3 * MathHelper.cos((worldObj.getTotalWorldTime() + partialTick) / 30f);
+            shift.x = num;
+        }
+        return shift;
+    }
+
+    public double getWidth()
+    {
+        // TODO use this to detemine if the block is out of bounds to stop
+        // rendering.
+        return width;
+    }
+
+    @Override
+    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
+    {
+        NBTTagCompound nbttagcompound = pkt.getNbtCompound();
+        this.readFromNBT(nbttagcompound);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound compound)
+    {
+        super.readFromNBT(compound);
+        if (compound.hasKey("corex"))
+        {
+            corePos = new BlockPos(compound.getInteger("corex"), compound.getInteger("corey"),
+                    compound.getInteger("corez"));
+        }
+        if (compound.hasKey("state"))
+        {
+            NBTTagCompound tag = compound.getCompoundTag("state");
+            ItemStack stack = ItemStack.loadItemStackFromNBT(tag);
+            Block block = Block.getBlockFromItem(stack.getItem());
+            state = block.getStateFromMeta(stack.getItemDamage());
+        }
+        madeDoor = compound.getBoolean("made");
+    }
+
+    public void setCore(TileEntityDoor core)
+    {
+        if (core == this) core = null;
+        this.core = core;
+        isCore = core == null;
+        if (core != null) core.addPart(this);
+    }
+
+    @Override
+    public void update()
+    {
+        if (corePos != null && core == null)
+        {
+            if (worldObj.getTileEntity(corePos) instanceof TileEntityDoor)
+            {
+                core = (TileEntityDoor) worldObj.getTileEntity(corePos);
+                this.setCore(core);
+            }
+            corePos = null;
+
+        }
+    }
+
+    @Override
+    public void writeToNBT(NBTTagCompound compound)
+    {
+        super.writeToNBT(compound);
+        if (core != null)
+        {
+            compound.setInteger("corex", core.pos.getX());
+            compound.setInteger("corey", core.pos.getY());
+            compound.setInteger("corez", core.pos.getZ());
+        }
+        if (state != null)
+        {
+            NBTTagCompound tag = new NBTTagCompound();
+            ItemStack stack = new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state));
+            stack.writeToNBT(tag);
+            compound.setTag("state", tag);
+        }
+        compound.setBoolean("made", madeDoor);
     }
 }

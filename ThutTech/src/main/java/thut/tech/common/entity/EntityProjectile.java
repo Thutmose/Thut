@@ -37,7 +37,47 @@ public class EntityProjectile extends EntityFallingBlock
         // TODO Auto-generated constructor stub
     }
 
+    public Vector3 getAccelerationFromRails(Vector3 here)
+    {
+        Vector3 ret = Vector3.getNewVector();
+        EnumFacing dir = null;
+
+        for (EnumFacing side : EnumFacing.values())
+        {
+            if (side.getFrontOffsetY() == 0)
+            {
+                Block b = here.getBlock(worldObj, side);
+                if (b == Blocks.golden_rail)
+                {
+                    dir = side;
+                    break;
+                }
+            }
+        }
+        if (dir != null) ret.set(dir);
+        else return ret;
+        int n = 1;
+        boolean end = false;
+        Vector3 temp = Vector3.getNewVector();
+        Vector3 temp1 = Vector3.getNewVector();
+        while (!end)
+        {
+            temp1.set(ret).scalarMultBy(n++);
+            temp.set(temp1.addTo(here));
+            end = temp.getBlock(worldObj) != Blocks.golden_rail;
+        }
+        ret.scalarMultBy(n);
+
+        return ret;
+    }
+
+    boolean isOnRails(Vector3 here)
+    {
+        return here.getBlock(worldObj) == Blocks.golden_rail;
+    }
+
     /** Called to update the entity's position/logic. */
+    @Override
     public void onUpdate()
     {
         if (block == null || block.getBlock().getMaterial() == Material.air)
@@ -103,44 +143,5 @@ public class EntityProjectile extends EntityFallingBlock
                 // int k = MathHelper.floor_double(this.posZ);
             }
         }
-    }
-
-    boolean isOnRails(Vector3 here)
-    {
-        return here.getBlock(worldObj) == Blocks.golden_rail;
-    }
-
-    public Vector3 getAccelerationFromRails(Vector3 here)
-    {
-        Vector3 ret = Vector3.getNewVector();
-        EnumFacing dir = null;
-
-        for (EnumFacing side : EnumFacing.values())
-        {
-            if (side.getFrontOffsetY() == 0)
-            {
-                Block b = here.getBlock(worldObj, side);
-                if (b == Blocks.golden_rail)
-                {
-                    dir = side;
-                    break;
-                }
-            }
-        }
-        if (dir != null) ret.set(dir);
-        else return ret;
-        int n = 1;
-        boolean end = false;
-        Vector3 temp = Vector3.getNewVector();
-        Vector3 temp1 = Vector3.getNewVector();
-        while (!end)
-        {
-            temp1.set(ret).scalarMultBy(n++);
-            temp.set(temp1.addTo(here));
-            end = temp.getBlock(worldObj) != Blocks.golden_rail;
-        }
-        ret.scalarMultBy(n);
-
-        return ret;
     }
 }

@@ -31,14 +31,15 @@ public class ItemLinker extends Item
         instance = this;
     }
 
-    /** Called whenever this item is equipped and the right mouse button is
-     * pressed. Args: itemStack, world, entityPlayer */
-    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
+    @Override
+    /** If this function returns true (or the item is damageable), the
+     * ItemStack's NBT tag will be sent to the client. */
+    public boolean getShareTag()
     {
-        if (player.isSneaking()) player.inventory.addItemStackToInventory(TechCore.getInfoBook());
-        return itemstack;
+        return true;
     }
 
+    @Override
     public boolean onItemUse(ItemStack itemstack, EntityPlayer player, World worldObj, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ)
     {
@@ -94,13 +95,5 @@ public class ItemLinker extends Item
             stack.setTagCompound(new NBTTagCompound());
         }
         stack.getTagCompound().setString("lift", lift.id.toString());
-    }
-
-    @Override
-    /** If this function returns true (or the item is damageable), the
-     * ItemStack's NBT tag will be sent to the client. */
-    public boolean getShareTag()
-    {
-        return true;
     }
 }

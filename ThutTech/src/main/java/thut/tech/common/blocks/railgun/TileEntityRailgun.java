@@ -64,13 +64,17 @@ public class TileEntityRailgun extends TileEntity
 
     }
 
-    public void writeToNBT(NBTTagCompound par1)
+    public Vector3 getDir()
     {
-        super.writeToNBT(par1);
-        dir.writeToNBT(par1, "dir");
-        par1.setDouble("length", length);
+        return dir;
     }
 
+    public double getLength()
+    {
+        return length;
+    }
+
+    @Override
     public void readFromNBT(NBTTagCompound par1)
     {
         super.readFromNBT(par1);
@@ -83,18 +87,16 @@ public class TileEntityRailgun extends TileEntity
         this.dir.set(dir);
     }
 
-    public Vector3 getDir()
-    {
-        return dir;
-    }
-
     public void setLength(double l)
     {
         length = l;
     }
 
-    public double getLength()
+    @Override
+    public void writeToNBT(NBTTagCompound par1)
     {
-        return length;
+        super.writeToNBT(par1);
+        dir.writeToNBT(par1, "dir");
+        par1.setDouble("length", length);
     }
 }

@@ -26,6 +26,12 @@ public class BlockRailgun extends Block implements ITileEntityProvider{
 	}
 
     @Override
+	public TileEntity createNewTileEntity(World p_149915_1_, int p_149915_2_) {
+		// TODO Auto-generated method stub
+		return new TileEntityRailgun();
+	}
+	
+	@Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumFacing side, float hitX, float hitY, float hitZ)
     {
 		TileEntityRailgun railgun = (TileEntityRailgun) worldIn.getTileEntity(pos);
@@ -49,11 +55,5 @@ public class BlockRailgun extends Block implements ITileEntityProvider{
     		railgun.fire();
         }
     }
-	
-	@Override
-	public TileEntity createNewTileEntity(World p_149915_1_, int p_149915_2_) {
-		// TODO Auto-generated method stub
-		return new TileEntityRailgun();
-	}
 
 }

@@ -20,32 +20,152 @@ import thut.core.common.ThutCore;
 public class PacketPipeline
 {
 
+	public static class ClientPacket implements IMessage
+    {
+    	public static class MessageHandlerClient implements IMessageHandler<ClientPacket, ServerPacket>
+		{
+			@Override
+			public ServerPacket onMessage(ClientPacket message,
+					MessageContext ctx) {
+				ByteBuf buffer = message.buffer;
+				byte mess = buffer.readByte();
+				if(mess == 0)
+				{
+					double y = buffer.readDouble();
+					double dy = buffer.readDouble();
+					EntityPlayer player = ThutCore.proxy.getPlayer();
+					y += player.getYOffset();
+					player.motionY = Math.max(dy, player.motionY);
+					ThutCore.proxy.getPlayer().setPosition(player.posX, y, player.posZ);
+				}
+				return null;
+			}
+		}
+    	
+    	PacketBuffer buffer;;
+    	
+	    public ClientPacket(){}
+	    
+	    public ClientPacket(byte channel, NBTTagCompound nbt)
+	    {
+	    	this.buffer = new PacketBuffer(Unpooled.buffer());
+	    	buffer.writeByte(channel);
+	    	buffer.writeNBTTagCompoundToBuffer(nbt);
+	    }
+	    
+	    public ClientPacket(byte[] data) {
+	    	this.buffer = new PacketBuffer(Unpooled.buffer());
+	    	buffer.writeBytes(data);
+	    }
+	    
+		public ClientPacket(ByteBuf buffer)
+	    {
+	    	this.buffer = new PacketBuffer(buffer);
+	    }
+
+		@Override
+		public void fromBytes(ByteBuf buf) {
+			if(buffer == null)
+			{
+				buffer = new PacketBuffer(Unpooled.buffer());
+			}
+			buffer.writeBytes(buf);
+		}
+    	
+		@Override
+		public void toBytes(ByteBuf buf) {
+			if(buffer == null)
+			{
+				buffer = new PacketBuffer(Unpooled.buffer());
+			}
+			buf.writeBytes(buffer);
+		}
+    }
+	
+	public static class ServerPacket implements IMessage
+    {
+    	public static class MessageHandlerServer implements IMessageHandler<ServerPacket, IMessage>
+		{
+			
+			public void handleServerSide(EntityPlayer player, PacketBuffer buffer) {
+		        
+		        
+			}
+			
+			@Override
+			public ServerPacket onMessage(ServerPacket message,
+					MessageContext ctx) {
+				EntityPlayer player = ctx.getServerHandler().playerEntity;
+				handleServerSide(player, message.buffer);
+			
+				return null;
+			}
+		}
+    	
+    	PacketBuffer buffer;;
+    	
+	    public ServerPacket(){}
+	    
+	    public ServerPacket(byte channel, NBTTagCompound nbt)
+	    {
+	    	this.buffer = new PacketBuffer(Unpooled.buffer());
+	    	buffer.writeByte(channel);
+	    	buffer.writeNBTTagCompoundToBuffer(nbt);
+	    }
+	    
+	    public ServerPacket(byte[] data) {
+	    	this.buffer = new PacketBuffer(Unpooled.buffer());
+	    	buffer.writeBytes(data);
+	    }
+	    
+		public ServerPacket(ByteBuf buffer)
+	    {
+	    	this.buffer = (PacketBuffer) buffer;
+	    }
+
+		@Override
+		public void fromBytes(ByteBuf buf) {
+			if(buffer == null)
+			{
+				buffer = new PacketBuffer(Unpooled.buffer());
+			}
+			buffer.writeBytes(buf);
+		}
+		@Override
+		public void toBytes(ByteBuf buf) {
+			if(buffer == null)
+			{
+				buffer = new PacketBuffer(Unpooled.buffer());
+			}
+			buf.writeBytes(buffer);
+		}
+    }
+	
 	public static SimpleNetworkWrapper packetPipeline;
 	
-	public static void sendToServer(IMessage toSend)
-	{
-		packetPipeline.sendToServer(toSend);
-	}
+	public static int ByteArrayAsInt(byte[] stats)
+    {
+        if (stats.length != 4)
+            return 0;
+        int value = 0;
+        for (int i = 3; i >= 0; i--)
+        {
+           value = (value << 8) + (stats[i] & 0xff);
+        }
+        return value;
+    }
 	
-	public static void sendToClient(IMessage toSend, EntityPlayer player)
-	{
-		if(player==null)
-		{
-			System.out.println("null player");
-			return;
-		}
-		packetPipeline.sendTo(toSend, (EntityPlayerMP) player);
-	}
-	
-	public static void sendToAll(IMessage toSend)
-	{
-		packetPipeline.sendToAll(toSend);
-	}
-	
-	public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)
-	{
-		packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
-	}
+	public static byte[] intAsByteArray(int ints)
+    {
+        byte[] stats = new byte[]
+        {
+            (byte)((ints      & 0xFF)),
+            (byte)((ints >> 8  & 0xFF)),
+            (byte)((ints >> 16 & 0xFF)),
+            (byte)((ints >> 24 & 0xFF)),
+        };
+        return stats;
+    }
 	
 	public static ClientPacket makeClientPacket(byte channel, byte[] data)
 	{
@@ -68,6 +188,15 @@ public class PacketPipeline
 		return new ClientPacket(packetData);
 	}
 	
+	public static ServerPacket makePacket(byte channel, NBTTagCompound nbt)
+	{
+		PacketBuffer packetData = new PacketBuffer(Unpooled.buffer());
+		packetData.writeByte(channel);
+		packetData.writeNBTTagCompoundToBuffer(nbt);
+		
+		return new ServerPacket(packetData);
+	}
+	
 	public static ServerPacket makeServerPacket(byte channel, byte[] data)
 	{
 		byte[] packetData = new byte[data.length+1];
@@ -80,157 +209,28 @@ public class PacketPipeline
 		return new ServerPacket(packetData);
 	}
 	
-	public static ServerPacket makePacket(byte channel, NBTTagCompound nbt)
+    public static void sendToAll(IMessage toSend)
 	{
-		PacketBuffer packetData = new PacketBuffer(Unpooled.buffer());
-		packetData.writeByte(channel);
-		packetData.writeNBTTagCompoundToBuffer(nbt);
-		
-		return new ServerPacket(packetData);
+		packetPipeline.sendToAll(toSend);
 	}
-	
-    public static int ByteArrayAsInt(byte[] stats)
-    {
-        if (stats.length != 4)
-            return 0;
-        int value = 0;
-        for (int i = 3; i >= 0; i--)
-        {
-           value = (value << 8) + (stats[i] & 0xff);
-        }
-        return value;
-    }
 
-    public static byte[] intAsByteArray(int ints)
-    {
-        byte[] stats = new byte[]
-        {
-            (byte)((ints      & 0xFF)),
-            (byte)((ints >> 8  & 0xFF)),
-            (byte)((ints >> 16 & 0xFF)),
-            (byte)((ints >> 24 & 0xFF)),
-        };
-        return stats;
-    }
+    public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)
+	{
+		packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
+	}
     
-    public static class ClientPacket implements IMessage
-    {
-    	PacketBuffer buffer;
-    	
-    	public ClientPacket(){};
-    	
-	    public ClientPacket(byte[] data) {
-	    	this.buffer = new PacketBuffer(Unpooled.buffer());
-	    	buffer.writeBytes(data);
-	    }
-	    
-	    public ClientPacket(ByteBuf buffer)
-	    {
-	    	this.buffer = new PacketBuffer(buffer);
-	    }
-	    
-	    public ClientPacket(byte channel, NBTTagCompound nbt)
-	    {
-	    	this.buffer = new PacketBuffer(Unpooled.buffer());
-	    	buffer.writeByte(channel);
-	    	buffer.writeNBTTagCompoundToBuffer(nbt);
-	    }
-	    
-		@Override
-		public void fromBytes(ByteBuf buf) {
-			if(buffer == null)
-			{
-				buffer = new PacketBuffer(Unpooled.buffer());
-			}
-			buffer.writeBytes(buf);
-		}
-
-		@Override
-		public void toBytes(ByteBuf buf) {
-			if(buffer == null)
-			{
-				buffer = new PacketBuffer(Unpooled.buffer());
-			}
-			buf.writeBytes(buffer);
-		}
-    	
-		public static class MessageHandlerClient implements IMessageHandler<ClientPacket, ServerPacket>
+    public static void sendToClient(IMessage toSend, EntityPlayer player)
+	{
+		if(player==null)
 		{
-			@Override
-			public ServerPacket onMessage(ClientPacket message,
-					MessageContext ctx) {
-				ByteBuf buffer = message.buffer;
-				byte mess = buffer.readByte();
-				if(mess == 0)
-				{
-					double y = buffer.readDouble();
-					double dy = buffer.readDouble();
-					EntityPlayer player = ThutCore.proxy.getPlayer();
-					y += player.getYOffset();
-					player.motionY = Math.max(dy, player.motionY);
-					ThutCore.proxy.getPlayer().setPosition(player.posX, y, player.posZ);
-				}
-				return null;
-			}
+			System.out.println("null player");
+			return;
 		}
-    }
-    public static class ServerPacket implements IMessage
-    {
-    	PacketBuffer buffer;
-    	
-    	public ServerPacket(){};
-    	
-	    public ServerPacket(byte[] data) {
-	    	this.buffer = new PacketBuffer(Unpooled.buffer());
-	    	buffer.writeBytes(data);
-	    }
-	    
-	    public ServerPacket(ByteBuf buffer)
-	    {
-	    	this.buffer = (PacketBuffer) buffer;
-	    }
-	    
-	    public ServerPacket(byte channel, NBTTagCompound nbt)
-	    {
-	    	this.buffer = new PacketBuffer(Unpooled.buffer());
-	    	buffer.writeByte(channel);
-	    	buffer.writeNBTTagCompoundToBuffer(nbt);
-	    }
-	    
-		@Override
-		public void fromBytes(ByteBuf buf) {
-			if(buffer == null)
-			{
-				buffer = new PacketBuffer(Unpooled.buffer());
-			}
-			buffer.writeBytes(buf);
-		}
-
-		@Override
-		public void toBytes(ByteBuf buf) {
-			if(buffer == null)
-			{
-				buffer = new PacketBuffer(Unpooled.buffer());
-			}
-			buf.writeBytes(buffer);
-		}
-		public static class MessageHandlerServer implements IMessageHandler<ServerPacket, IMessage>
-		{
-			
-			public void handleServerSide(EntityPlayer player, PacketBuffer buffer) {
-		        
-		        
-			}
-			
-			@Override
-			public ServerPacket onMessage(ServerPacket message,
-					MessageContext ctx) {
-				EntityPlayer player = ctx.getServerHandler().playerEntity;
-				handleServerSide(player, message.buffer);
-			
-				return null;
-			}
-		}
-    }
+		packetPipeline.sendTo(toSend, (EntityPlayerMP) player);
+	}
+    public static void sendToServer(IMessage toSend)
+	{
+		packetPipeline.sendToServer(toSend);
+	}
     
 }

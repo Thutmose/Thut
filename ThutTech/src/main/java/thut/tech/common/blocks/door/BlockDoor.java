@@ -28,6 +28,28 @@ public class BlockDoor extends Block implements ITileEntityProvider
     }
 
     @Override
+    public TileEntity createNewTileEntity(World worldIn, int meta)
+    {
+        return new TileEntityDoor();
+    }
+
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state)
+    {
+        TileEntityDoor door = (TileEntityDoor) worldIn.getTileEntity(pos);
+        if (door == null) return new AxisAlignedBB(pos, pos.add(1, 1, 1));
+        return door.getBounds(0);
+    }
+
+    @Override
+    /** The type of render function called. 3 for standard block models, 2 for
+     * TESR's, 1 for liquids, -1 is no render */
+    public int getRenderType()
+    {
+        return 2;
+    }
+
+    @Override
     public boolean isFullCube()
     {
         return false;
@@ -40,11 +62,9 @@ public class BlockDoor extends Block implements ITileEntityProvider
     }
 
     @Override
-    /** The type of render function called. 3 for standard block models, 2 for
-     * TESR's, 1 for liquids, -1 is no render */
-    public int getRenderType()
+    public boolean isSideSolid(IBlockAccess world, BlockPos pos, EnumFacing side)
     {
-        return 2;
+        return true;
     }
 
     @Override
@@ -64,25 +84,6 @@ public class BlockDoor extends Block implements ITileEntityProvider
         }
 
         return true;
-    }
-
-    @Override
-    public TileEntity createNewTileEntity(World worldIn, int meta)
-    {
-        return new TileEntityDoor();
-    }
-
-    public boolean isSideSolid(IBlockAccess world, BlockPos pos, EnumFacing side)
-    {
-        return true;
-    }
-
-    @Override
-    public AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state)
-    {
-        TileEntityDoor door = (TileEntityDoor) worldIn.getTileEntity(pos);
-        if (door == null) return new AxisAlignedBB(pos, pos.add(1, 1, 1));
-        return door.getBounds(0);
     }
 
 }
