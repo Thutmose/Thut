@@ -16,23 +16,32 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 
 repositories {
     maven { url = "http://maven.cil.li/" }
+    ivy {
+        name = "thutcore"
+        url = "https://github.com/Thutmose/Thut/raw/master/ThutCore/deobf/"
+        layout "pattern", {
+            artifact "[module]-${version_minecraft}-[revision]-dev.[ext]"
+        }
+    }
 }
 dependencies {
     compile "li.cil.oc:OpenComputers:MC1.8.9-1.5.+:api"
+    deobfCompile name: 'thutcore', version: "${version_thutcore}", ext: 'jar'
 }
 
-version = "2.3.0"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
 
 minecraft {
-    version = "1.8.9-11.15.1.1722"
+    version = "${version_minecraft}-${version_forge}"
+    mappings = "${version_mappings}"
     runDir = "run"
+    
+    useDepAts = true
     
     replace "@VERSION@", project.version
     replaceIn "ThutTechReference.java"
     
-    mappings = "stable_20"
     makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
@@ -57,12 +66,5 @@ processResources
     }
 }
 
-
-jar {
-        manifest {
-        attributes 'FMLAT': 'thut_at.cfg'
-                        
-    }
-}
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
