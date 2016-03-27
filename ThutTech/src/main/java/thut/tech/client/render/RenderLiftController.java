@@ -153,10 +153,10 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
     private void drawLiftGui(TileEntityLiftAccess monitor)
     {
-        int xMin = -monitor.corners[0][0];
-        int zMin = -monitor.corners[0][1];
-        int xMax = monitor.corners[1][0];
-        int zMax = monitor.corners[1][1];
+        int xMin = -monitor.boundMin.intX();
+        int zMin = -monitor.boundMin.intZ();
+        int xMax = monitor.boundMax.intX();
+        int zMax = monitor.boundMax.intZ();
         drawOnTop(xMin, 0);
         drawOnTop(12, 1);
         drawOnTop(14, 2);

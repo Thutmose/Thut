@@ -68,10 +68,11 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
         	GL11.glTranslated(x, y, z);
         	GL11.glScaled(0.999, 0.999, 0.999);
 
-            int xMin = lift.corners[0][0];
-            int zMin = lift.corners[0][1];
-            int xMax = lift.corners[1][0];
-            int zMax = lift.corners[1][1];
+            int xMin = lift.boundMin.intX();
+            int zMin = lift.boundMin.intZ();
+            int xMax = lift.boundMax.intX();
+            int zMax = lift.boundMax.intZ();
+
         	for(int i = xMin; i<=xMax; i++)
         		for(int j = zMin; j<=zMax;j ++)
         		{
@@ -87,18 +88,11 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
                         b = Block.getBlockFromItem(lift.getHeldItem().getItem());
                         meta = lift.getHeldItem().getItemDamage();
         			}
-        			//Render top platform
-        			GL11.glPushMatrix();
-        	        GL11.glTranslated(0 + i, 0+5, 0 + j);
-//        			RenderBlocks.getInstance().renderBlockAsItem(b, meta, 1.0f);
-        			GL11.glPopMatrix();
         			//Render bottom platform
         			GL11.glPushMatrix();
         	        GL11.glTranslated(0 + i, 0+0.5, 0 + j);
 
-        	        
         	        IBlockState iblockstate = b.getStateFromMeta(meta);
-//        	        System.out.println(iblockstate+" "+i+" "+j+" "+xMax+" "+xMin+" "+zMax+" "+zMin);
         	        if (iblockstate.getBlock().getMaterial() != Material.air)
         	        {
         	            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
@@ -107,8 +101,6 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
                         GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
                         GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
         	            GlStateManager.translate(0.5F, 0.5F, 0.5F);
-//        	            GlStateManager.rotate(20.0F, 1.0F, 0.0F, 0.0F);
-//        	            GlStateManager.translate(0.25F, 0.1875F, 0.25F);
         	            float f7 = 1.0F;
         	            GlStateManager.scale(-f7, -f7, f7);
         	            int i1 = lift.getBrightnessForRender(0);
@@ -121,8 +113,6 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
         	            GlStateManager.popMatrix();
         	            GlStateManager.disableRescaleNormal();
         	        }
-        	        
-        	        
         			GL11.glPopMatrix();
         		}
         	

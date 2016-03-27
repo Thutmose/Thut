@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,11 +23,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import thut.api.ThutBlocks;
 import thut.api.entity.IMultibox;
 import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
@@ -36,64 +39,118 @@ import thut.tech.common.items.ItemLinker;
 
 public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IMultibox
 {
-    static final int DESTINATIONFLOORDW = 24;
-    static final int DESTINATIONYDW     = 25;
-    static final int CURRENTFLOORDW     = 26;
+    static final int                         DESTINATIONFLOORDW = 24;
+    static final int                         DESTINATIONYDW     = 25;
+    static final int                         CURRENTFLOORDW     = 26;
 
-    public static int                        ACCELERATIONTICKS = 20;
+    public static int                        ACCELERATIONTICKS  = 20;
 
-    public static boolean                    AUGMENTG          = true;
-    private static HashMap<UUID, EntityLift> lifts             = new HashMap<UUID, EntityLift>();
-    private static HashMap<UUID, EntityLift> lifts2            = new HashMap<UUID, EntityLift>();
+    public static boolean                    AUGMENTG           = true;
+    private static HashMap<UUID, EntityLift> lifts              = new HashMap<UUID, EntityLift>();
+    private static HashMap<UUID, EntityLift> lifts2             = new HashMap<UUID, EntityLift>();
+
     public static void clear()
     {
         lifts2.clear();
         lifts.clear();
     }
+
     public static EntityLift getLiftFromUUID(UUID uuid, boolean client)
     {
         if (client) return lifts2.get(uuid);
         return lifts.get(uuid);
     }
+
+    public static void removeBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
+    {
+        int xMin = te.boundMin.intX();
+        int zMin = te.boundMin.intZ();
+        int xMax = te.boundMax.intX();
+        int zMax = te.boundMax.intZ();
+        Vector3 loc = Vector3.getNewVector();
+        for (int i = xMin; i <= xMax; i++)
+            for (int j = zMin; j <= zMax; j++)
+                for (int k = 0; k < 1; k++)
+                {
+                    worldObj.setBlockToAir(loc.set(pos).add(i, k, j).getPos());
+                }
+    }
+
+    public static ItemStack[][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
+    {
+        int xMin = te.boundMin.intX();
+        int zMin = te.boundMin.intZ();
+        int xMax = te.boundMax.intX();
+        int zMax = te.boundMax.intZ();
+
+        ItemStack[][] ret = new ItemStack[(xMax - xMin) + 1][(zMax - zMin) + 1];
+
+        Vector3 loc = Vector3.getNewVector().set(pos);
+        for (int i = xMin; i <= xMax; i++)
+            for (int j = zMin; j <= zMax; j++)
+            {
+                if (!(i == 0 && j == 0))
+                {
+                    IBlockState state = loc.set(pos).addTo(i, 0, j).getBlockState(worldObj);
+                    Block b;
+                    if ((b = state.getBlock()).isNormalCube())
+                    {
+                        ret[i - xMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    ret[i - xMin][j - zMin] = new ItemStack(ThutBlocks.lift);
+                }
+            }
+        return ret;
+    }
+
     // TODO Change this to 3-vector to allow height.
-    public int[][] corners = new int[2][2];
-    public double                            speedUp           = ConfigHandler.LiftSpeedUp;
-    public double                            speedDown         = -ConfigHandler.LiftSpeedDown;
-    public double                            acceleration      = 0.05;
-    public boolean                           up                = true;
-    public boolean                           toMoveY           = false;
-    public boolean                           moved             = false;
-    public boolean                           axis              = true;
-    public boolean                           hasPassenger      = false;
-    int                                      n                 = 0;
-    int                                      passengertime     = 10;
-    boolean                                  first             = true;
-    Random                                   r                 = new Random();
+    public Vector3                  boundMin      = Vector3.getNewVector();
+    public Vector3                  boundMax      = Vector3.getNewVector();
 
-    public UUID                              id                = UUID.randomUUID();
-    public UUID                              owner;
+    public double                   speedUp       = ConfigHandler.LiftSpeedUp;
+    public double                   speedDown     = -ConfigHandler.LiftSpeedDown;
+    public double                   acceleration  = 0.05;
+    public boolean                  up            = true;
+    public boolean                  toMoveY       = false;
+    public boolean                  moved         = false;
+    public boolean                  axis          = true;
+    public boolean                  hasPassenger  = false;
+    int                             n             = 0;
+    int                             passengertime = 10;
+    boolean                         first         = true;
+    Random                          r             = new Random();
 
-    public double prevFloorY = 0;
-    public double prevFloor  = 0;
+    public UUID                     id            = UUID.randomUUID();
+    public UUID                     owner;
 
-    public boolean       called = false;
-    TileEntityLiftAccess current;
+    public double                   prevFloorY    = 0;
+    public double                   prevFloor     = 0;
 
-    Matrix3 mainBox = new Matrix3();
-    Matrix3 tempBox = new Matrix3();
+    public boolean                  called        = false;
+    TileEntityLiftAccess            current;
 
-    public HashMap<String, Matrix3> boxes   = new HashMap<String, Matrix3>();
+    Matrix3                         mainBox       = new Matrix3();
+    Matrix3                         tempBox       = new Matrix3();
 
-    public HashMap<String, Vector3> offsets = new HashMap<String, Vector3>();
-    public int[] floors = new int[64];
-    Matrix3 base  = new Matrix3();
+    public HashMap<String, Matrix3> boxes         = new HashMap<String, Matrix3>();
 
-    Matrix3 top   = new Matrix3();
-    Matrix3 wall1 = new Matrix3();
+    public HashMap<String, Vector3> offsets       = new HashMap<String, Vector3>();
+    public int[]                    floors        = new int[64];
+    Matrix3                         base          = new Matrix3();
 
-    public ItemStack[][] blocks    = null;
+    Matrix3                         top           = new Matrix3();
+    Matrix3                         wall1         = new Matrix3();
 
-    private ItemStack[]  inventory = new ItemStack[1];
+    public ItemStack[][]            blocks        = null;
+
+    private ItemStack[]             inventory     = new ItemStack[1];
 
     public EntityLift(World par1World)
     {
@@ -135,10 +192,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         Vector3 v = Vector3.getNewVector();
         Vector3 v1 = Vector3.getNewVector();
 
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
+        int xMin = boundMin.intX();
+        int zMin = boundMin.intZ();
+        int xMax = boundMax.intX();
+        int zMax = boundMax.intZ();
+
         AxisAlignedBB box = Matrix3.getAABB(posX + xMin - 0.5, posY, posZ + zMin - 0.5, posX + xMax + 0.5, posY + 1,
                 posZ + zMax + 0.5);
 
@@ -200,10 +258,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public Matrix3 bounds(Vector3 target)
     {
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
+        int xMin = boundMin.intX();
+        int zMin = boundMin.intZ();
+        int xMax = boundMax.intX();
+        int zMax = boundMax.intZ();
+
         tempBox.boxMin().set(xMin, 0, zMin);
         tempBox.boxMax().set(xMax, 1, zMax);
 
@@ -258,10 +317,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             if (dir < 0 && thisloc.y < getDestY()) { return false; }
         }
 
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
+        int xMin = boundMin.intX();
+        int zMin = boundMin.intZ();
+        int xMax = boundMax.intX();
+        int zMax = boundMax.intZ();
 
         Vector3 v = Vector3.getNewVector();
         for (int i = xMin; i <= xMax; i++)
@@ -278,10 +337,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void checkCollision()
     {
 
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
+        int xMin = boundMin.intX();
+        int zMin = boundMin.intZ();
+        int xMax = boundMax.intX();
+        int zMax = boundMax.intZ();
 
         List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
                 posY, posZ + (zMin - 1), posX + xMax + 1, posY + 6, posZ + zMax + 1));
@@ -652,10 +711,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
         else
         {
-            int xMin = corners[0][0];
-            int zMin = corners[0][1];
-            int xMax = corners[1][0];
-            int zMax = corners[1][1];
+            int xMin = boundMin.intX();
+            int zMin = boundMin.intZ();
+            int xMax = boundMax.intX();
+            int zMax = boundMax.intZ();
             int sizeX = xMax - xMin;
             int sizeZ = zMax - zMin;
             blocks = new ItemStack[sizeX][sizeZ];
@@ -679,10 +738,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             int zMin = (int) (-size / 2);
             int xMax = (int) (size / 2);
             int zMax = (int) (size / 2);
-            corners[0][0] = xMin;
-            corners[0][1] = zMin;
-            corners[1][0] = xMax;
-            corners[1][1] = zMax;
+            boundMin.x = xMin;
+            boundMin.z = zMin;
+            boundMax.x = xMax;
+            boundMax.z = zMax;
         }
         else if (nbt.hasKey("corners"))
         {
@@ -691,11 +750,17 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             int zMin = read[1];
             int xMax = read[2];
             int zMax = read[3];
-            corners[0][0] = xMin;
-            corners[0][1] = zMin;
-            corners[1][0] = xMax;
-            corners[1][1] = zMax;
+            boundMin.x = xMin;
+            boundMin.z = zMin;
+            boundMax.x = xMax;
+            boundMax.z = zMax;
         }
+        if (nbt.hasKey("bounds"))
+        {
+            boundMin = Vector3.readFromNBT(nbt.getCompoundTag("bounds"), "min");
+            boundMin = Vector3.readFromNBT(nbt.getCompoundTag("bounds"), "max");
+        }
+
         id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
         if (nbt.hasKey("ownerhigher")) owner = new UUID(nbt.getLong("ownerhigher"), nbt.getLong("ownerlower"));
 
@@ -720,16 +785,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void readSpawnData(ByteBuf data)
     {
-        int xMin = data.readInt();
-        int xMax = data.readInt();
-        int zMin = data.readInt();
-        int zMax = data.readInt();
-        corners[0][0] = xMin;
-        corners[0][1] = zMin;
-        corners[1][0] = xMax;
-        corners[1][1] = zMax;
-        int size = Math.max((xMax - xMin) + 1, Math.max((zMax - zMin) + 1, 1));
-        System.out.println(size);
+        boundMin = Vector3.readFromBuff(data);
+        boundMax = Vector3.readFromBuff(data);
+        int size = (int) Math.max((boundMax.x - boundMin.x) + 1, Math.max((boundMax.z - boundMin.z) + 1, 1));
 
         id = new UUID(data.readLong(), data.readLong());
 
@@ -761,12 +819,14 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setBoxes()
     {
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
+        int xMin = boundMin.intX();
+        int zMin = boundMin.intZ();
+        int xMax = boundMax.intX();
+        int zMax = boundMax.intZ();
         mainBox.boxMin().set(xMin, 0, zMin);
         mainBox.boxMax().set(xMax, 1, zMax);
+        
+        //TODO add additional boxes for other blocks.
 
         Matrix3 m2;
         if (!boxes.containsKey("base"))
@@ -871,8 +931,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             v2 = offsets.get("base");
         }
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
+        int xMin = boundMin.intX();
+        int zMin = boundMax.intZ();
         v2.set(xMin, 0, zMin);
     }
 
@@ -902,13 +962,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         super.writeEntityToNBT(nbt);
         nbt.setBoolean("axis", axis);
 
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-
-        int[] toStore = { xMin, zMin, xMax, zMax };
-        nbt.setIntArray("corners", toStore);
+        NBTTagCompound vector = new NBTTagCompound();
+        boundMin.writeToNBT(vector, "min");
+        boundMax.writeToNBT(vector, "max");
+        nbt.setTag("bounds", vector);
 
         nbt.setLong("lower", id.getLeastSignificantBits());
         nbt.setLong("higher", id.getMostSignificantBits());
@@ -946,15 +1003,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void writeSpawnData(ByteBuf data)
     {
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-        data.writeInt(xMin);
-        data.writeInt(xMax);
-        data.writeInt(zMin);
-        data.writeInt(zMax);
-        int size = Math.max((xMax - xMin) + 1, Math.max((zMax - zMin) + 1, 1));
+        boundMin.writeToBuff(data);
+        boundMax.writeToBuff(data);
+        int size = (int) Math.max((boundMax.x - boundMin.x) + 1, Math.max((boundMax.z - boundMin.z) + 1, 1));
         this.setSize(size, 1f);
 
         data.writeLong(id.getMostSignificantBits());

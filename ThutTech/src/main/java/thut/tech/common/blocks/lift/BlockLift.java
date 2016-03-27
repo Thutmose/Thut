@@ -30,7 +30,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
-import thut.api.maths.Vector3;
 import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
@@ -135,41 +134,6 @@ public class BlockLift extends Block implements ITileEntityProvider
     public boolean canProvidePower()
     {
         return true;
-    }
-
-    public ItemStack[][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
-    {
-
-        int xMin = te.corners[0][0];
-        int zMin = te.corners[0][1];
-        int xMax = te.corners[1][0];
-        int zMax = te.corners[1][1];
-
-        ItemStack[][] ret = new ItemStack[(xMax - xMin) + 1][(zMax - zMin) + 1];
-
-        Vector3 loc = Vector3.getNewVector().set(pos);
-        for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-            {
-                if (!(i == 0 && j == 0))
-                {
-                    IBlockState state = loc.set(pos).addTo(i, 0, j).getBlockState(worldObj);
-                    Block b;
-                    if ((b = state.getBlock()).isNormalCube())
-                    {
-                        ret[i - xMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    ret[i - xMin][j - zMin] = new ItemStack(this);
-                }
-            }
-        return ret;
     }
 
     @Override
@@ -298,14 +262,15 @@ public class BlockLift extends Block implements ITileEntityProvider
         {
             ItemStack[][] stacks;
             TileEntityLiftAccess te = (TileEntityLiftAccess) worldObj.getTileEntity(pos);
-            stacks = checkBlocks(worldObj, te, pos);
+            stacks = EntityLift.checkBlocks(worldObj, te, pos);
             if (stacks != null && !worldObj.isRemote && player.getHeldItem() != null
                     && player.getHeldItem().getItem() instanceof ItemLinker)
             {
-                removeBlocks(worldObj, te, pos);
+                EntityLift.removeBlocks(worldObj, te, pos);
                 EntityLift lift = new EntityLift(worldObj, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
                 lift.blocks = stacks;
-                lift.corners = te.corners.clone();
+                lift.boundMax = te.boundMax.copy();
+                lift.boundMin = te.boundMin.copy();
                 lift.owner = player.getUniqueID();
                 worldObj.spawnEntityInWorld(lift);
                 player.addChatMessage(new ChatComponentText("Sucessfully Made Lift"));
@@ -372,21 +337,6 @@ public class BlockLift extends Block implements ITileEntityProvider
             int meta, EntityLivingBase placer)
     {
         return getStateFromMeta(meta);
-    }
-
-    public void removeBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
-    {
-        int xMin = te.corners[0][0];
-        int zMin = te.corners[0][1];
-        int xMax = te.corners[1][0];
-        int zMax = te.corners[1][1];
-        Vector3 loc = Vector3.getNewVector();
-        for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-                for (int k = 0; k < 1; k++)
-                {
-                    worldObj.setBlockToAir(loc.set(pos).add(i, k, j).getPos());
-                }
     }
 
     /** Rotate the block. For vanilla blocks this rotates around the axis passed

@@ -12,6 +12,7 @@ import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.SimpleComponent;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
@@ -20,8 +21,10 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Optional;
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
@@ -48,7 +51,9 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public int   metaData = 0;
     public Block blockID  = Blocks.air;
 
-    public int[][] corners = new int[2][2];
+//    public int[][] corners = new int[2][2];
+    public Vector3 boundMin = Vector3.getNewVector();
+    public Vector3 boundMax = Vector3.getNewVector();
 
     boolean loaded = false;
 
@@ -173,36 +178,36 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             if (button == 2)
             {
-                corners[0][0] = Math.max(-2, corners[0][0] - 1);
+                boundMin.x = Math.max(-2, boundMin.x - 1);
             }
             if (button == 3)
             {
-                corners[0][0] = Math.min(0, corners[0][0] + 1);
+                boundMin.x = Math.min(0, boundMin.x + 1);
             }
             if (button == 6)
             {
-                corners[0][1] = Math.max(-2, corners[0][1] - 1);
+                boundMin.z = Math.max(-2, boundMin.z - 1);
             }
             if (button == 7)
             {
-                corners[0][1] = Math.min(0, corners[0][1] + 1);
+                boundMin.z = Math.min(0, boundMin.z + 1);
             }
 
             if (button == 10)
             {
-                corners[1][0] = Math.max(0, corners[1][0] - 1);
+                boundMax.x = Math.max(0, boundMax.x - 1);
             }
             if (button == 11)
             {
-                corners[1][0] = Math.min(2, corners[1][0] + 1);
+                boundMax.x = Math.min(2, boundMax.x + 1);
             }
             if (button == 14)
             {
-                corners[1][1] = Math.max(0, corners[1][1] - 1);
+                boundMax.z = Math.max(0, boundMax.z - 1);
             }
             if (button == 15)
             {
-                corners[1][1] = Math.min(2, corners[1][1] + 1);
+                boundMax.z = Math.min(2, boundMax.z + 1);
             }
         }
         worldObj.markBlockForUpdate(getPos());
@@ -348,6 +353,27 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         throw new Exception("no connected lift");
     }
 
+    /** Called from Chunk.setBlockIDWithMetadata and Chunk.fillChunk, determines
+     * if this tile entity should be re-created when the ID, or Metadata
+     * changes. Use with caution as this will leave straggler TileEntities, or
+     * create conflicts with other TileEntities if not used properly.
+     *
+     * @param world
+     *            Current world
+     * @param pos
+     *            Tile's world position
+     * @param oldState
+     *            The old ID of the block
+     * @param newState
+     *            The new ID of the block (May be the same)
+     * @return true forcing the invalidation of the existing TE, false not to
+     *         invalidate the existing TE */
+    @Override
+    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newSate)
+    {
+        return oldState.getBlock() != newSate.getBlock();
+    }
+
     /** invalidates a tile entity */
     @Override
     public void invalidate()
@@ -397,10 +423,15 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             int zMin = read[1];
             int xMax = read[2];
             int zMax = read[3];
-            corners[0][0] = xMin;
-            corners[0][1] = zMin;
-            corners[1][0] = xMax;
-            corners[1][1] = zMax;
+            boundMin.x = xMin;
+            boundMin.z = zMin;
+            boundMax.x = xMax;
+            boundMax.z = zMax;
+        }
+        if(par1.hasKey("bounds"))
+        {
+            boundMin = Vector3.readFromNBT(par1.getCompoundTag("bounds"), "min");
+            boundMax = Vector3.readFromNBT(par1.getCompoundTag("bounds"), "max");
         }
     }
 
@@ -437,7 +468,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             lift.setFoor(getRoot(), floor);
             getRoot().floor = floor;
             getRoot().markDirty();
-            // getRoot().updateBlock();
         }
     }
 
@@ -504,8 +534,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
         if (lift != null && floor > 0)
         {
-            int calledFloorOld = calledFloor;
-
             if ((int) lift.posY == getPos().getY() - 2)
             {
                 lift.setCurrentFloor(floor);
@@ -518,27 +546,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             {
                 lift.setFoor(this, floor);
             }
-
             calledFloor = lift.getDestinationFloor();
-
-            // if (calledFloor == floor)
-            // {
-            // setCalled(true);
-            // }
-            // else
-            // {
-            // setCalled(false);
-            // }
-
-            if (calledFloor != calledFloorOld)
-            {
-                // worldObj.scheduledUpdatesAreImmediate = true;
-                // getBlockType().updateTick(worldObj, xCoord, getPos().getY(),
-                // zCoord, worldObj.rand);
-                // worldObj.scheduledUpdatesAreImmediate = false;
-            }
             currentFloor = lift.getCurrentFloor();
-
         }
         if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead))
         {
@@ -606,12 +615,9 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             par1.setLong("idLess", liftID.getLeastSignificantBits());
             par1.setLong("idMost", liftID.getMostSignificantBits());
         }
-        int xMin = corners[0][0];
-        int zMin = corners[0][1];
-        int xMax = corners[1][0];
-        int zMax = corners[1][1];
-
-        int[] toStore = { xMin, zMin, xMax, zMax };
-        par1.setIntArray("corners", toStore);
+        NBTTagCompound vector = new NBTTagCompound();
+        boundMin.writeToNBT(vector, "min");
+        boundMax.writeToNBT(vector, "max");
+        par1.setTag("bounds", vector);
     }
 }
