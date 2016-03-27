@@ -55,9 +55,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (client) return lifts2.get(uuid);
         return lifts.get(uuid);
     }
-    // @Deprecated
-    // public double size = 1;
-    // TODO swap over to using this, to allow not-odd-square lifts.
+    // TODO Change this to 3-vector to allow height.
     public int[][] corners = new int[2][2];
     public double                            speedUp           = ConfigHandler.LiftSpeedUp;
     public double                            speedDown         = -ConfigHandler.LiftSpeedDown;
@@ -495,7 +493,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public ItemStack[] getInventory()
     {
-        // TODO Auto-generated method stub
         return inventory;
     }
 
