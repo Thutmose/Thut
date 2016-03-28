@@ -360,28 +360,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void clearLiquids()
     {
-        // int rad = (int) (Math.floor(size / 2));
-        //
-        // Vector3 thisloc = Vector3.getNewVector().set(this);
-        // Vector3 v = Vector3.getNewVector();
-        // for (int i = -rad; i <= rad; i++)
-        // for (int j = -rad; j <= rad; j++)
-        // {
-        // Vector3 check = (v.set(thisloc).addTo(i, 5, j));
-        // if (check.isFluid(worldObj))
-        // {
-        // System.out.println("Setting to air");
-        // check.setAir(worldObj);
-        // }
-        // check = (v.set(thisloc).addTo(i, 0, j));
-        // if (check.isFluid(worldObj))
-        // {
-        // System.out.println("Setting to air");
-        // check.setAir(worldObj);
-        // }
-        // }
-        // v.freeVectorFromPool();
-        // thisloc.freeVectorFromPool();
+
     }
 
     @SuppressWarnings("unused") // TODO make use of this
@@ -487,9 +466,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     protected void entityInit()
     {
         super.entityInit();
-        this.dataWatcher.addObject(24, Integer.valueOf(0));
+        this.dataWatcher.addObject(DESTINATIONFLOORDW, Integer.valueOf(0));
         this.dataWatcher.addObject(25, Integer.valueOf(0));
-        this.dataWatcher.addObject(26, Integer.valueOf(-1));
+        this.dataWatcher.addObject(CURRENTFLOORDW, Integer.valueOf(-1));
     }
 
     /** returns the bounding box for this entity */
@@ -565,8 +544,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean interactFirst(EntityPlayer player)
     {
         ItemStack item = player.getHeldItem();
-
-        if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker)
+        if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker
+                && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
         {
             if (item.getTagCompound() == null)
             {
@@ -579,7 +558,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             if (worldObj.isRemote) player.addChatMessage(new ChatComponentText(message));
             return true;
         }
-        else if (item != null && item.getItem() instanceof ItemLinker)
+        else if (item != null && item.getItem() instanceof ItemLinker
+                && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
         {
             if (!worldObj.isRemote && owner != null)
             {
@@ -594,7 +574,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         || player.getHeldItem().getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                         || player.getHeldItem().getItem().getUnlocalizedName()
                                 .equals(Items.stick.getUnlocalizedName())))
-                && ((owner != null && player.getUniqueID() == owner) || player.capabilities.isCreativeMode))
+                && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
         {
             if (!worldObj.isRemote)
             {
@@ -748,8 +728,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
         if (nbt.hasKey("bounds"))
         {
-            boundMin = Vector3.readFromNBT(nbt.getCompoundTag("bounds"), "min");
-            boundMin = Vector3.readFromNBT(nbt.getCompoundTag("bounds"), "max");
+            NBTTagCompound bounds = nbt.getCompoundTag("bounds");
+            System.out.println(bounds);
+            boundMin = Vector3.readFromNBT(bounds, "min");
+            boundMax = Vector3.readFromNBT(bounds, "max");
         }
 
         id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
@@ -776,35 +758,18 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void readSpawnData(ByteBuf data)
     {
-        boundMin = Vector3.readFromBuff(data);
-        boundMax = Vector3.readFromBuff(data);
-        int size = (int) Math.max((boundMax.x - boundMin.x) + 1, Math.max((boundMax.z - boundMin.z) + 1, 1));
-
-        id = new UUID(data.readLong(), data.readLong());
-
-        for (int i = 0; i < 64; i++)
-        {
-            floors[i] = data.readInt();
-        }
-        lifts2.put(id, this);
-        this.setSize(size, 1f);
-
         PacketBuffer buff = new PacketBuffer(data);
         NBTTagCompound tag = new NBTTagCompound();
         try
         {
             tag = buff.readNBTTagCompoundFromBuffer();
+            readEntityFromNBT(tag);
+            lifts2.put(id, this);
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-        if (data.readBoolean())
-        {
-            owner = new UUID(data.readLong(), data.readLong());
-        }
-
-        readBlocks(tag);
     }
 
     @Override
@@ -983,29 +948,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void writeSpawnData(ByteBuf data)
     {
-        boundMin.writeToBuff(data);
-        boundMax.writeToBuff(data);
-        int size = (int) Math.max((boundMax.x - boundMin.x) + 1, Math.max((boundMax.z - boundMin.z) + 1, 1));
-        this.setSize(size, 1f);
-
-        data.writeLong(id.getMostSignificantBits());
-        data.writeLong(id.getLeastSignificantBits());
-        for (int i = 0; i < 64; i++)
-        {
-            data.writeInt(floors[i]);
-        }
         PacketBuffer buff = new PacketBuffer(data);
         NBTTagCompound tag = new NBTTagCompound();
-        writeBlocks(tag);
+        writeEntityToNBT(tag);
         buff.writeNBTTagCompoundToBuffer(tag);
         lifts.put(id, this);
-        data.writeBoolean(owner != null);
-        if (owner != null)
-        {
-            data.writeLong(owner.getMostSignificantBits());
-            data.writeLong(owner.getLeastSignificantBits());
-        }
-
     }
 
 }
