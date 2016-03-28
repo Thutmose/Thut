@@ -110,7 +110,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
-    // TODO Change this to 3-vector to allow height.
     public Vector3                  boundMin      = Vector3.getNewVector();
     public Vector3                  boundMax      = Vector3.getNewVector();
 
@@ -606,8 +605,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             return true;
         }
         else if (player.isSneaking() && item != null && Block.getBlockFromItem(item.getItem()) != null
-                && (owner == null || owner.equals(player.getUniqueID()))) // &&
-        // !worldObj.isRemote)
+                && (owner == null || owner.equals(player.getUniqueID())))
         {
             Block block = Block.getBlockFromItem(item.getItem());
             if (block.isNormalCube())
@@ -620,17 +618,14 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 this.setCurrentItemOrArmor(0, item2);
             }
         }
-        else if (player.isSneaking() && item == null && (owner == null || owner.equals(player.getUniqueID()))) // &&
-        // !worldObj.isRemote)
+        else if (player.isSneaking() && item == null && (owner == null || owner.equals(player.getUniqueID())))
         {
             if (this.getHeldItem() != null && !worldObj.isRemote)
             {
                 this.entityDropItem(getHeldItem(), 1);
             }
             this.setCurrentItemOrArmor(0, null);
-
         }
-
         return false;
     }
 
@@ -644,10 +639,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void onUpdate()
     {
         this.prevPosY = posY;
-        // if ((int) size != (int) this.width)
-        // {
-        // this.setSize((float) size, 1f);
-        // }
 
         clearLiquids();
 
@@ -825,8 +816,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int zMax = boundMax.intZ();
         mainBox.boxMin().set(xMin, 0, zMin);
         mainBox.boxMax().set(xMax, 1, zMax);
-        
-        //TODO add additional boxes for other blocks.
+
+        // TODO add additional boxes for other blocks.
 
         Matrix3 m2;
         if (!boxes.containsKey("base"))
@@ -874,17 +865,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     }
                 }
                 if (this.getHeldItem() != null) this.entityDropItem(getHeldItem(), 1);
-            }
-            else
-            {
-                // TODO make this take area.
-                // int iron = size == 1 ? 0 : size == 3 ? 8 : 24;
-                // if (iron > 0)
-                // this.dropItem(Item.getItemFromBlock(Blocks.iron_block),
-                // iron);
-                // this.dropItem(Item.getItemFromBlock(ThutBlocks.lift), 1);
-                // if (this.getHeldItem() != null)
-                // this.entityDropItem(getHeldItem(), 1);
             }
         }
         super.setDead();
