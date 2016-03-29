@@ -232,12 +232,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     @Override
     public int getWeakPower(IBlockAccess worldIn, BlockPos pos, IBlockState state, EnumFacing side)
     {
-        if (state.getValue(VARIANT) == EnumType.CONTROLLER)
-        {
-            TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-            if (te.lift != null && (int) te.lift.posY == te.getPos().getY() - 2 && te.lift.motionY == 0) return 15;
-        }
-        return 0;
+        return state.getValue(CURRENT)?15:0;
     }
 
     /** Called throughout the code as a replacement for block instanceof
@@ -279,6 +274,7 @@ public class BlockLift extends Block implements ITileEntityProvider
             else if (te != null && side == EnumFacing.UP)
             {
                 te.doButtonClick(side, hitX, hitY, hitZ);
+                worldObj.markBlockForUpdate(pos);
                 return true;
             }
             return false;
@@ -315,8 +311,8 @@ public class BlockLift extends Block implements ITileEntityProvider
                     if (!worldObj.isRemote)
                     {
                         te.setSidePage(side, (te.getSidePage(side) + 1) % 4);
-                        te.markDirty();
                     }
+                    worldObj.markBlockForUpdate(pos);
                     return true;
                 }
                 else

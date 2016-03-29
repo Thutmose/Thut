@@ -15,6 +15,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import thut.api.ThutBlocks;
+import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 
 @SuppressWarnings("rawtypes")
@@ -133,17 +134,16 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         Tessellator t = Tessellator.getInstance();
         t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.5F);
-//        int i, j;
-//        i = j = 1;
-         for(int i = -minX; i<=maxX; i++)
-         for(int j = -minZ; j<=maxZ; j++)
-        {
-            t.getWorldRenderer().pos(0.25 + i, 0, 0.25 + j).tex(0, 0).endVertex();
-            t.getWorldRenderer().pos(0.25 + i, 0, 0 + j).tex(0, 1).endVertex();
 
-            t.getWorldRenderer().pos(0 + i, 0, 0 + j).tex(1, 1).endVertex();
-            t.getWorldRenderer().pos(0 + i, 0, 0.25 + j).tex(1, 0).endVertex();
-        }
+        for (int i = -minX; i <= maxX; i++)
+            for (int j = -minZ; j <= maxZ; j++)
+            {
+                t.getWorldRenderer().pos(0.25 + i, 0, 0.25 + j).tex(0, 0).endVertex();
+                t.getWorldRenderer().pos(0.25 + i, 0, 0 + j).tex(0, 1).endVertex();
+
+                t.getWorldRenderer().pos(0 + i, 0, 0 + j).tex(1, 1).endVertex();
+                t.getWorldRenderer().pos(0 + i, 0, 0.25 + j).tex(1, 0).endVertex();
+            }
 
         t.draw();
 
@@ -210,9 +210,10 @@ public class RenderLiftController extends TileEntitySpecialRenderer
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, int colour, EnumFacing side)
     {
         floor = floor - monitor.getSidePage(side) * 16;
-        if (monitor.getBlockMetadata() == 1 && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
+        boolean isMonitor = monitor.getWorld().getBlockState(monitor.getPos())
+                .getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER;
+        if (isMonitor && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
         {
-
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
             String col = colour == 0 ? "green" : colour == 1 ? "orange" : colour == 2 ? "blue" : "gray";
 
@@ -373,12 +374,12 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
             if (monitor.lift != null)
                 for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
-            {
+                {
                 if ((monitor.lift.floors[j] < 0))
                 {
-                    drawOverLay(monitor, j + 1, 3, dir);
+                drawOverLay(monitor, j + 1, 3, dir);
                 }
-            }
+                }
             GlStateManager.enableLighting();
             GL11.glPopMatrix();
         }

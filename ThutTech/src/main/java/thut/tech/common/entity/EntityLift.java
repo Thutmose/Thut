@@ -406,11 +406,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     prevFloorY = getDestY();
                     setDestY(-1);
                     setDestinationFloor(0);
-                    if (current != null)
-                    {
-                        current.setCalled(false);
-                        current = null;
-                    }
+                    current = null;
                     motionY = 0;
                     toMoveY = false;
                     moved = false;
@@ -447,11 +443,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     prevFloorY = getDestY();
                     setDestY(-1);
                     setDestinationFloor(0);
-                    if (current != null)
-                    {
-                        current.setCalled(false);
-                        current = null;
-                    }
+                    current = null;
                     motionY = 0;
                     toMoveY = false;
                     moved = false;
@@ -729,7 +721,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (nbt.hasKey("bounds"))
         {
             NBTTagCompound bounds = nbt.getCompoundTag("bounds");
-            System.out.println(bounds);
             boundMin = Vector3.readFromNBT(bounds, "min");
             boundMax = Vector3.readFromNBT(bounds, "max");
         }

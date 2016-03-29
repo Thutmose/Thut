@@ -33,55 +33,49 @@ import thut.tech.common.entity.EntityLift;
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
 {
-    public int        power     = 0;
-    public int        prevPower = 1;
-    public EntityLift lift;
+    public int                          power        = 0;
+    public int                          prevPower    = 1;
+    public EntityLift                   lift;
 
-    boolean      listNull = false;
-    List<Entity> list     = new ArrayList<Entity>();
-    Vector3      here;
+    boolean                             listNull     = false;
+    List<Entity>                        list         = new ArrayList<Entity>();
+    Vector3                             here;
 
-    public Vector3                      root      = Vector3.getNewVector();
+    public Vector3                      root         = Vector3.getNewVector();
     public TileEntityLiftAccess         rootNode;
-    public Vector<TileEntityLiftAccess> connected = new Vector<TileEntityLiftAccess>();
+    public Vector<TileEntityLiftAccess> connected    = new Vector<TileEntityLiftAccess>();
     EnumFacing                          sourceSide;
     public double                       energy;
 
-    public long  time     = 0;
-    public int   metaData = 0;
-    public Block blockID  = Blocks.air;
+    boolean                             isLift       = false;
+    public Block                        blockID      = Blocks.air;
 
-//    public int[][] corners = new int[2][2];
-    public Vector3 boundMin = Vector3.getNewVector();
-    public Vector3 boundMax = Vector3.getNewVector();
+    // public int[][] corners = new int[2][2];
+    public Vector3                      boundMin     = Vector3.getNewVector();
+    public Vector3                      boundMax     = Vector3.getNewVector();
 
-    boolean loaded = false;
+    boolean                             loaded       = false;
 
-    public int     floor        = 0;
-    public int     calledYValue = -1;
-    public int     calledFloor  = 0;
-    public int     currentFloor = 0;
-    UUID           liftID       = null;
-    UUID           empty        = new UUID(0, 0);
-    private byte[] sides        = new byte[6];
-    private byte[] sidePages    = new byte[6];
+    public int                          floor        = 0;
+    public int                          calledYValue = -1;
+    public int                          calledFloor  = 0;
+    public int                          currentFloor = 0;
+    UUID                                liftID       = null;
+    UUID                                empty        = new UUID(0, 0);
+    private byte[]                      sides        = new byte[6];
+    private byte[]                      sidePages    = new byte[6];
 
-    int tries = 0;
+    int                                 tries        = 0;
 
-    public boolean toClear = false;
+    public boolean                      toClear      = false;
 
-    public boolean first    = true;
-    public boolean read     = false;
-    public boolean redstone = true;
-    public boolean powered  = false;
-    boolean        called   = false;
+    public boolean                      first        = true;
+    public boolean                      read         = false;
+    public boolean                      redstone     = true;
+    public boolean                      powered      = false;
 
     public TileEntityLiftAccess()
     {
-        // The 'node' of a tile entity is used to connect it to other components
-        // including computers. They are connected to nodes of neighboring
-        // blocks, forming a network that way. That network is also used for
-        // distributing energy among components for the mod.
     }
 
     public void buttonPress(int button)
@@ -174,7 +168,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        if (metaData != 1 && blockID == ThutBlocks.lift)
+        if (isLift && blockID == ThutBlocks.lift)
         {
             if (button == 2)
             {
@@ -210,7 +204,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 boundMax.z = Math.min(2, boundMax.z + 1);
             }
         }
-        worldObj.markBlockForUpdate(getPos());
         if (!worldObj.isRemote && lift != null)
         {
             if (isSideOn(side))
@@ -406,7 +399,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public void readFromNBT(NBTTagCompound par1)
     {
         super.readFromNBT(par1);
-        metaData = par1.getInteger("meta");
         blockID = Block.getBlockFromName(par1.getString("block id"));
         floor = par1.getInteger("floor");
         liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
@@ -428,21 +420,10 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             boundMax.x = xMax;
             boundMax.z = zMax;
         }
-        if(par1.hasKey("bounds"))
+        if (par1.hasKey("bounds"))
         {
             boundMin = Vector3.readFromNBT(par1.getCompoundTag("bounds"), "min");
             boundMax = Vector3.readFromNBT(par1.getCompoundTag("bounds"), "max");
-        }
-    }
-
-    public void setCalled(boolean called)
-    {
-        // IBlockState state = worldObj.getBlockState(getPos());
-        boolean isCalled = this.called;// ((Boolean)state.getValue(BlockLift.CALLED))
-        if (called != isCalled)
-        {
-            this.called = called;
-            worldObj.notifyNeighborsOfStateChange(getPos(), getBlockType());
         }
     }
 
@@ -511,25 +492,40 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (first)
         {
             blockID = worldObj.getBlockState(getPos()).getBlock();
-            metaData = blockID.getMetaFromState(worldObj.getBlockState(getPos()));
+            isLift = worldObj.getBlockState(getPos()).getValue(BlockLift.VARIANT) == BlockLift.EnumType.LIFT;
             here = Vector3.getNewVector().set(this);
             first = false;
         }
 
-        if (metaData != 1 && blockID == ThutBlocks.lift) { return; }
+        if (isLift) { return; }
 
-        if ((lift == null || lift.isDead)) // &&floor!=0)
+        if ((lift == null || lift.isDead))
         {
             calledYValue = -1;
             calledFloor = 0;
             currentFloor = 0;
         }
 
-        if (lift != null)
+        if (lift != null && !worldObj.isRemote)
         {
             boolean check = (int) lift.posY + 2 == getPos().getY() && lift.motionY == 0;
-            setCalled(check);
-            time++;
+            IBlockState state = worldObj.getBlockState(getPos());
+            boolean old = state.getValue(BlockLift.CURRENT);
+            if (check != old)
+            {
+                state = state.withProperty(BlockLift.CURRENT, check);
+                worldObj.setBlockState(getPos(), state);
+            }
+            if (lift.motionY == 0 || lift.getDestinationFloor() == floor)
+            {
+                old = state.getValue(BlockLift.CALLED);
+                check = lift.getDestinationFloor() == floor;
+                if (check != old)
+                {
+                    state = state.withProperty(BlockLift.CALLED, check);
+                    worldObj.setBlockState(getPos(), state);
+                }
+            }
         }
 
         if (lift != null && floor > 0)
@@ -584,7 +580,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 }
             }
         }
-        time++;
     }
 
     /** validates a tile entity */
@@ -598,7 +593,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public void writeToNBT(NBTTagCompound par1)
     {
         super.writeToNBT(par1);
-        par1.setInteger("meta", metaData);
         if (blockID == null) blockID = ThutBlocks.liftRail;
         if (blockID == null) blockID = worldObj.getBlockState(getPos()).getBlock();
         par1.setString("block id", blockID.getLocalizedName());
