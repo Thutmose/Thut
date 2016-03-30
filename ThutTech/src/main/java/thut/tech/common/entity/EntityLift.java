@@ -205,6 +205,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         v.setToVelocity(entity).subtractFrom(v1.setToVelocity(this));
         v1.clear();
         Matrix3.doCollision(aabbs, entity.getEntityBoundingBox(), entity, 0, v, v1);
+        if (entity.posY >= posY + 1 && entity.posY + entity.motionY <= posY + 1 && motionY <= 0)
+        {
+            double diff = (entity.posY + entity.motionY) - (posY + 1 + motionY);
+            double check = Math.max(0.5, Math.abs(entity.motionY + motionY));
+            if (diff > 0 || diff < -0.5 || Math.abs(diff) > check)
+            {
+                entity.motionY = 0;
+            }
+        }
+
         boolean collidedY = false;
         if (!v1.isEmpty())
         {
@@ -217,7 +227,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             else if (v1.y < 0)
             {
                 boolean below = entity.posY + entity.height - (entity.motionY + motionY) < posY;
-
                 if (below)
                 {
                     v1.y = 0;
@@ -326,9 +335,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             for (int j = zMin; j <= zMax; j++)
             {
                 ret = ret && (v.set(thisloc).addTo(i, 0, j)).clearOfBlocks(worldObj);
-                ret = ret && (v.set(thisloc).addTo(i, 3, j)).clearOfBlocks(worldObj);
             }
-        // TODO decide if I want to re-add rail checks
         return ret;
     }
 
@@ -342,7 +349,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int zMax = boundMax.intZ();
 
         List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
-                posY, posZ + (zMin - 1), posX + xMax + 1, posY + 6, posZ + zMax + 1));
+                posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
 
         if (list != null && !list.isEmpty())
         {

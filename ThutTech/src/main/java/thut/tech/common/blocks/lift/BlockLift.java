@@ -170,7 +170,7 @@ public class BlockLift extends Block implements ITileEntityProvider
      * item based on the old metadata of the block. */
     public int damageDropped(IBlockState state)
     {
-        return this.getMetaFromState(state);
+        return state.getValue(VARIANT)==EnumType.LIFT?0:1;
     }
 
     public EnumFacing getFacingfromEntity(EntityLiving e)
