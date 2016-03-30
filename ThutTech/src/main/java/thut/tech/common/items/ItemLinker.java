@@ -1,8 +1,10 @@
 package thut.tech.common.items;
 
+import java.util.List;
 import java.util.UUID;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -12,6 +14,8 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
@@ -95,5 +99,15 @@ public class ItemLinker extends Item
             stack.setTagCompound(new NBTTagCompound());
         }
         stack.getTagCompound().setString("lift", lift.id.toString());
+    }
+    
+    /**
+     * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
+     */
+    @SideOnly(Side.CLIENT)
+    public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems)
+    {
+        subItems.add(new ItemStack(itemIn, 1, 0));
+        subItems.add(TechCore.getInfoBook());
     }
 }

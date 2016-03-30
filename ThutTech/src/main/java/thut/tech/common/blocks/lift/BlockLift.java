@@ -25,6 +25,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -268,7 +269,8 @@ public class BlockLift extends Block implements ITileEntityProvider
                 lift.boundMin = te.boundMin.copy();
                 lift.owner = player.getUniqueID();
                 worldObj.spawnEntityInWorld(lift);
-                player.addChatMessage(new ChatComponentText("Sucessfully Made Lift"));
+                String message = StatCollector.translateToLocal("msg.lift.create");
+                player.addChatMessage(new ChatComponentText(message));
                 return true;
             }
             else if (te != null && side == EnumFacing.UP)

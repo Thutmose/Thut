@@ -15,6 +15,7 @@ msg.liftSet.name=Elevator set
 msg.floorSet.name=Set this Floor to %s
 msg.lift.killed=Killed Elevator
 msg.lift.owner=This Elevator is owned by %s
+msg.lift.create=Successfully Made Elevator
 
 #InfoBook json
 
