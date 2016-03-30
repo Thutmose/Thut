@@ -311,7 +311,7 @@ public class Vector3
     {
         if (looker == null || target == null) return false;
         return looker.worldObj.rayTraceBlocks(new Vec3d(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
-                new Vec3d(target.posX, target.posY + target.getEyeHeight(), target.posZ)) == null;
+                new Vec3d(target.posX, target.posY + target.getEyeHeight(), target.posZ), false, true, false) == null;
     }
 
     /** determines whether the source can see out as far as range in the given
@@ -330,7 +330,7 @@ public class Vector3
         {
             direction.scalarMultBy(range).addTo(source);
             return ((World) worldObj).rayTraceBlocks(new Vec3d(source.x, source.y, source.z),
-                    new Vec3d(direction.x, direction.y, direction.z)) == null;
+                    new Vec3d(direction.x, direction.y, direction.z), false, true, false) == null;
         }
 
         double dx, dy, dz;

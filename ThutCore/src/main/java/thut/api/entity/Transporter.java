@@ -3,8 +3,6 @@ package thut.api.entity;
 import java.util.Collection;
 import java.util.Iterator;
 
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.Entity;
@@ -21,9 +19,9 @@ import net.minecraft.network.play.server.SPacketRespawn;
 import net.minecraft.network.play.server.SPacketSetExperience;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerInteractionManager;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -171,8 +169,8 @@ public class Transporter
 
     static void sendDimensionRegister(EntityPlayerMP player, int dimensionID)
     {
-        int providerID = DimensionManager.getProviderType(dimensionID);
-        ForgeMessage msg = new ForgeMessage.DimensionRegisterMessage(dimensionID, providerID);
+        DimensionType providerID = DimensionManager.getProviderType(dimensionID);
+        ForgeMessage msg = new ForgeMessage.DimensionRegisterMessage(dimensionID, providerID.getName());
         FMLEmbeddedChannel channel = NetworkRegistry.INSTANCE.getChannel("FORGE", Side.SERVER);
         channel.attr(FMLOutboundHandler.FML_MESSAGETARGET).set(FMLOutboundHandler.OutboundTarget.PLAYER);
         channel.attr(FMLOutboundHandler.FML_MESSAGETARGETARGS).set(player);

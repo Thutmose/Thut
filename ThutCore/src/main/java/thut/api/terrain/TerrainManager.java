@@ -54,7 +54,7 @@ public class TerrainManager {
 			NBTTagCompound nbt = evt.getData();
 			NBTTagCompound terrainData = nbt.getCompoundTag(TERRAIN);
 
-			TerrainManager.getInstance().getTerrain(evt.world).loadTerrain(terrainData);
+			TerrainManager.getInstance().getTerrain(evt.getWorld()).loadTerrain(terrainData);
 			// evt.getChunk().setChunkModified();
 		}
 		catch (Exception e)
@@ -72,12 +72,12 @@ public class TerrainManager {
 		{
 			NBTTagCompound nbt = evt.getData();
 			NBTTagCompound terrainData = new NBTTagCompound();
-			TerrainManager.getInstance().getTerrain(evt.world).saveTerrain(terrainData, evt.getChunk().xPosition,
+			TerrainManager.getInstance().getTerrain(evt.getWorld()).saveTerrain(terrainData, evt.getChunk().xPosition,
 					evt.getChunk().zPosition);
 			nbt.setTag(TERRAIN, terrainData);
 			if (!evt.getChunk().isLoaded())
 			{
-				TerrainManager.getInstance().getTerrain(evt.world).removeTerrain(evt.getChunk().xPosition,
+				TerrainManager.getInstance().getTerrain(evt.getWorld()).removeTerrain(evt.getChunk().xPosition,
 						evt.getChunk().zPosition);
 			}
 		}
@@ -144,13 +144,13 @@ public class TerrainManager {
 	@SubscribeEvent
 	public void WorldLoadEvent(Load evt)
 	{
-		TerrainManager.getInstance().getTerrain(evt.world);
+		TerrainManager.getInstance().getTerrain(evt.getWorld());
 	}
 
 	@SubscribeEvent
 	public void WorldUnloadEvent(Unload evt)
 	{
-		if (evt.world.provider.getDimension() == 0 && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
+		if (evt.getWorld().provider.getDimension() == 0 && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
 		{
 			TerrainManager.clear();
 		}

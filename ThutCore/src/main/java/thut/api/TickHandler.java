@@ -182,13 +182,13 @@ public class TickHandler
     @SubscribeEvent
     public void ChunkLoadEvent(net.minecraftforge.event.world.ChunkEvent.Load evt)
     {
-        if (evt.world.isRemote) return;
+        if (evt.getWorld().isRemote) return;
         // Add the chunk to the corresponding world cache.
-        WorldCache world = worldCaches.get(evt.world.provider.getDimension());
+        WorldCache world = worldCaches.get(evt.getWorld().provider.getDimension());
         if (world == null)
         {
-            world = new WorldCache(evt.world);
-            worldCaches.put(evt.world.provider.getDimension(), world);
+            world = new WorldCache(evt.getWorld());
+            worldCaches.put(evt.getWorld().provider.getDimension(), world);
         }
         world.addChunk(evt.getChunk());
     }
@@ -196,9 +196,9 @@ public class TickHandler
     @SubscribeEvent
     public void ChunkUnLoadEvent(net.minecraftforge.event.world.ChunkEvent.Unload evt)
     {
-        if (evt.world.isRemote) return;
+        if (evt.getWorld().isRemote) return;
         // Remove the chunk from the cache
-        WorldCache world = worldCaches.get(evt.world.provider.getDimension());
+        WorldCache world = worldCaches.get(evt.getWorld().provider.getDimension());
         if (world != null)
         {
             world.removeChunk(evt.getChunk());
@@ -213,20 +213,20 @@ public class TickHandler
     @SubscribeEvent
     public void placeEvent(PlaceEvent event)
     {
-        TileEntity te = event.world.getTileEntity(event.pos);
+        TileEntity te = event.getWorld().getTileEntity(event.getPos());
         if (te != null && te instanceof IOwnableTE)
         {
             IOwnableTE ownable = (IOwnableTE) te;
-            ownable.setPlacer(event.player);
+            ownable.setPlacer(event.getPlayer());
         }
     }
 
     @SubscribeEvent
     public void WorldLoadEvent(Load evt)
     {
-        if (evt.world.isRemote) return;
+        if (evt.getWorld().isRemote) return;
         // Initialize a world cache for this dimension
-        worldCaches.put(evt.world.provider.getDimension(), new WorldCache(evt.world));
+        worldCaches.put(evt.getWorld().provider.getDimension(), new WorldCache(evt.getWorld()));
     }
 
     @SubscribeEvent
@@ -277,12 +277,12 @@ public class TickHandler
     @SubscribeEvent
     public void WorldUnloadEvent(Unload evt)
     {
-        if (evt.world.provider.getDimension() == 0)
+        if (evt.getWorld().provider.getDimension() == 0)
         {
             blocks.clear();
             ExplosionCustom.explosions.clear();
         }
         // Remove world cache for dimension
-        worldCaches.remove(evt.world.provider.getDimension());
+        worldCaches.remove(evt.getWorld().provider.getDimension());
     }
 }

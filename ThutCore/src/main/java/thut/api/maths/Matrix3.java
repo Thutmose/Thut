@@ -148,7 +148,7 @@ public class Matrix3
             {
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
-                factor = 16;
+                factor = 15;
                 if (MathHelper.floor_double(b2.maxX * factor) == MathHelper.floor_double(b1.maxX * factor)
                         && MathHelper.floor_double(b2.minX * factor) == MathHelper.floor_double(b1.minX * factor)
                         && MathHelper.floor_double(b2.maxZ * factor) == MathHelper.floor_double(b1.maxZ * factor)
