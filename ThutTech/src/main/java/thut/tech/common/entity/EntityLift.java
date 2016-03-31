@@ -45,7 +45,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public static int                        ACCELERATIONTICKS  = 20;
 
-    public static boolean                    AUGMENTG           = true;
     private static HashMap<UUID, EntityLift> lifts              = new HashMap<UUID, EntityLift>();
     private static HashMap<UUID, EntityLift> lifts2             = new HashMap<UUID, EntityLift>();
 
