@@ -28,9 +28,11 @@ minecraft {
     mappings = "${version_mappings}"
     runDir = "run"
     
-    replace "@VERSION@", project.version
+    replace "@VERSION", project.version
     replaceIn "ThutCoreReference.java"
     replace "@MCVERSION", "${version_mcsupport}"
+    replaceIn "ThutCoreReference.java"
+    replace "@SUPVERSION", "${version_support}"
     replaceIn "ThutCoreReference.java"
 }
 

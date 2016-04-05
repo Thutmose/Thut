@@ -18,7 +18,14 @@ import thut.api.terrain.TerrainManager;
 import thut.core.common.handlers.ConfigHandler;
 import thut.reference.ThutCoreReference;
 
-@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
+@Mod(// @formatter:off
+        modid = ThutCoreReference.MOD_ID, 
+        name = ThutCoreReference.MOD_NAME, 
+        version = ThutCoreReference.VERSION, 
+        updateJSON = ThutCoreReference.UPDATEURL, 
+        acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS,
+        acceptableRemoteVersions = ThutCoreReference.SUPPORTVERSION
+)// @formatter:on
 public class ThutCore
 {
 
