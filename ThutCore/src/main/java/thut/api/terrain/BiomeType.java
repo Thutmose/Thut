@@ -1,27 +1,29 @@
 package thut.api.terrain;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+
+import com.google.common.collect.Lists;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.util.EnumHelper;
+import net.minecraftforge.fml.common.registry.IForgeRegistryEntry;
 import net.minecraftforge.fml.common.registry.PersistentRegistryManager;
 import net.minecraftforge.fml.common.registry.RegistryDelegate;
 
-public enum BiomeType
+public class BiomeType extends IForgeRegistryEntry.Impl<BiomeType>
 {
-    NONE("none", "none"), SKY("sky", "Sky"),
-
-    FLOWER("flower", "Flowers"), LAKE("lake", "Lake"), INDUSTRIAL("industrial", "Industrial Area"), METEOR("meteor",
-            "Meteor Area"), RUIN("ruin", "Ruins"),
-
-    CAVE("cave", "Cave"), CAVE_WATER("cavewater", "Cave Lake"), VILLAGE("village", "Village"),
-
-    ALL("all", "All");
+    public static final BiomeType             NONE   = new BiomeType("none", "none"), SKY = new BiomeType("sky", "Sky"),
+            FLOWER = new BiomeType("flower", "Flowers"), LAKE = new BiomeType("lake", "Lake"),
+            INDUSTRIAL = new BiomeType("industrial", "Industrial Area"),
+            METEOR = new BiomeType("meteor", "Meteor Area"), RUIN = new BiomeType("ruin", "Ruins"),
+            CAVE = new BiomeType("cave", "Cave"), CAVE_WATER = new BiomeType("cavewater", "Cave Lake"),
+            VILLAGE = new BiomeType("village", "Village"), ALL = new BiomeType("all", "All");
+    private static final ArrayList<BiomeType> values = Lists.newArrayList();
 
     public static BiomeType getBiome(String name)
     {
         return getBiome(name, true);
     }
+
     public static BiomeType getBiome(String name, boolean generate)
     {
         for (BiomeType b : values())
@@ -30,18 +32,21 @@ public enum BiomeType
         }
         if (generate)
         {
-            BiomeType ret = EnumHelper.addEnum(BiomeType.class, name.toUpperCase(),
-                    new Class[] { String.class, String.class }, new Object[] { name.toLowerCase(), name });
-            System.out.println(ret + " " + ret.name + " " + ret.readableName + " " + Arrays.toString(values()) + " "
-                    + ret.getType());
+            BiomeType ret = new BiomeType(name.toLowerCase(), name);
             return ret;
         }
         return NONE;
     }
-    public final String name;
-    private final ResourceLocation key;
 
-    public final String readableName;
+    public static ArrayList<BiomeType> values()
+    {
+        return values;
+    }
+
+    public final String                      name;
+    private final ResourceLocation           key;
+
+    public final String                      readableName;
 
     public final RegistryDelegate<BiomeType> delegate = PersistentRegistryManager.makeDelegate(this, BiomeType.class);
 
@@ -51,6 +56,7 @@ public enum BiomeType
         this.name = name;
         this.readableName = readableName;
         key = new ResourceLocation("thutcore", name);
+        values.add(this);
         BiomeDatabase.biomeTypeRegistry.register(-1, key, this);
     }
 

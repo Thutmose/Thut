@@ -117,13 +117,13 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         isHidden = set.isPartHidden(identifier, entity, isHidden);
         if (!isHidden && showModel)
         {
+            translate = rotationPointX != 0 || rotationPointY != 0 || rotationPointZ != 0;
+            rotate = rotateAngleX != 0 || rotateAngleY != 0 || rotateAngleZ != 0;
+            offset = offsetX != 0 || offsetY != 0 || offsetZ != 0;
+            shouldScale = scaleX != 1 || scaleY != 1 || scaleZ != 1;
+            shouldScale = shouldScale && scaleX != 0 && scaleY != 0 && scaleZ != 0;
             if (!compiled)
             {
-                translate = rotationPointX != 0 || rotationPointY != 0 || rotationPointZ != 0;
-                rotate = rotateAngleX != 0 || rotateAngleY != 0 || rotateAngleZ != 0;
-                offset = offsetX != 0 || offsetY != 0 || offsetZ != 0;
-                shouldScale = scaleX != 1 || scaleY != 1 || scaleZ != 1;
-                shouldScale = shouldScale && scaleX != 0 && scaleY != 0 && scaleZ != 0;
                 compileDisplayList(scale);
             }
             float f5 = 0.0625F;

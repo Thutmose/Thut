@@ -19,7 +19,7 @@ public class BiomeDatabase
     public static HashMap<BiomeGenBase, Type[]>                    biomeTypes        = new HashMap<BiomeGenBase, Type[]>();
 
     public static final FMLControlledNamespacedRegistry<BiomeType> biomeTypeRegistry = PersistentRegistryManager
-            .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 1024, 256, true, null);
+            .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 256, 1024, true, null, null, null);
 
     public static boolean contains(BiomeGenBase b, Type type)
     {
@@ -87,7 +87,7 @@ public class BiomeDatabase
     {
         for (BiomeType b : BiomeType.values())
         {
-            if (b.name.equalsIgnoreCase(name)) return (byte) b.ordinal();
+            if (b.name.equalsIgnoreCase(name)) return (byte) b.getType();
         }
         for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys())
         {
