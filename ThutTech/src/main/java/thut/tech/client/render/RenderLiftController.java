@@ -2,6 +2,7 @@ package thut.tech.client.render;
 
 import org.lwjgl.opengl.GL11;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -210,8 +211,8 @@ public class RenderLiftController extends TileEntitySpecialRenderer
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, int colour, EnumFacing side)
     {
         floor = floor - monitor.getSidePage(side) * 16;
-        boolean isMonitor = monitor.getWorld().getBlockState(monitor.getPos())
-                .getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER;
+        IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
+        boolean isMonitor = state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER;
         if (isMonitor && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
         {
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
@@ -271,7 +272,8 @@ public class RenderLiftController extends TileEntitySpecialRenderer
     public void renderTileEntityAt(TileEntity tileentity, double x, double y, double z, float f, int i1)
     {
         TileEntityLiftAccess monitor = (TileEntityLiftAccess) tileentity;
-        if (monitor.getBlockType() == ThutBlocks.liftRail) return;
+        IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
+        if (state.getBlock() != ThutBlocks.lift) return;
 
         if (monitor.getBlockMetadata() == 0 && monitor.getBlockType() == ThutBlocks.lift)
         {
