@@ -11,13 +11,13 @@ import net.minecraftforge.fml.common.registry.RegistryDelegate;
 
 public class BiomeType extends IForgeRegistryEntry.Impl<BiomeType>
 {
+    private static final ArrayList<BiomeType> values = Lists.newArrayList();
     public static final BiomeType             NONE   = new BiomeType("none", "none"), SKY = new BiomeType("sky", "Sky"),
             FLOWER = new BiomeType("flower", "Flowers"), LAKE = new BiomeType("lake", "Lake"),
             INDUSTRIAL = new BiomeType("industrial", "Industrial Area"),
             METEOR = new BiomeType("meteor", "Meteor Area"), RUIN = new BiomeType("ruin", "Ruins"),
             CAVE = new BiomeType("cave", "Cave"), CAVE_WATER = new BiomeType("cavewater", "Cave Lake"),
             VILLAGE = new BiomeType("village", "Village"), ALL = new BiomeType("all", "All");
-    private static final ArrayList<BiomeType> values = Lists.newArrayList();
 
     public static BiomeType getBiome(String name)
     {
