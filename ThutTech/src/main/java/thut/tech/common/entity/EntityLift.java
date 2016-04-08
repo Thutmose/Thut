@@ -75,37 +75,40 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 }
     }
 
-    public static ItemStack[][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
+    public static ItemStack[][][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
     {
         int xMin = te.boundMin.intX();
         int zMin = te.boundMin.intZ();
         int xMax = te.boundMax.intX();
         int zMax = te.boundMax.intZ();
+        int yMin = te.boundMin.intY();
+        int yMax = te.boundMax.intY();
 
-        ItemStack[][] ret = new ItemStack[(xMax - xMin) + 1][(zMax - zMin) + 1];
+        ItemStack[][][] ret = new ItemStack[(xMax - xMin) + 1][(yMax - yMin) + 1][(zMax - zMin) + 1];
 
         Vector3 loc = Vector3.getNewVector().set(pos);
         for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-            {
-                if (!(i == 0 && j == 0))
+            for (int k = yMin; k <= yMax; k++)
+                for (int j = zMin; j <= zMax; j++)
                 {
-                    IBlockState state = loc.set(pos).addTo(i, 0, j).getBlockState(worldObj);
-                    Block b;
-                    if ((b = state.getBlock()).isNormalCube())
+                    if (!(i == 0 && j == 0 && k == 0))
                     {
-                        ret[i - xMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
+                        IBlockState state = loc.set(pos).addTo(i, k, j).getBlockState(worldObj);
+                        Block b;
+                        if ((b = state.getBlock()).isNormalCube())
+                        {
+                            ret[i - xMin][k - yMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                     else
                     {
-                        return null;
+                        ret[i - xMin][k - yMin][j - zMin] = new ItemStack(ThutBlocks.lift);
                     }
                 }
-                else
-                {
-                    ret[i - xMin][j - zMin] = new ItemStack(ThutBlocks.lift);
-                }
-            }
         return ret;
     }
 
@@ -146,7 +149,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     Matrix3                         top           = new Matrix3();
     Matrix3                         wall1         = new Matrix3();
 
-    public ItemStack[][]            blocks        = null;
+    public ItemStack[][][]          blocks        = null;
 
     private ItemStack[]             inventory     = new ItemStack[1];
 
@@ -664,34 +667,31 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             int sizeX = nbt.getInteger("BlocksLengthX");
             int sizeZ = nbt.getInteger("BlocksLengthZ");
+            int sizeY = nbt.getInteger("BlocksLengthY");
             if (sizeX == 0 || sizeZ == 0)
             {
                 sizeX = sizeZ = nbt.getInteger("BlocksLength");
             }
+            if (sizeY == 0) sizeY = 1;
 
-            blocks = new ItemStack[sizeX][sizeZ];
+            blocks = new ItemStack[sizeX][sizeY][sizeZ];
             for (int i = 0; i < sizeX; i++)
-                for (int j = 0; j < sizeZ; j++)
-                {
-                    int n = nbt.getInteger("block" + i + "," + j);
-                    ItemStack b = new ItemStack(Item.getItemById(n), 1, nbt.getInteger("meta"));
-                    blocks[i][j] = b;
-                }
-        }
-        else
-        {
-            int xMin = boundMin.intX();
-            int zMin = boundMin.intZ();
-            int xMax = boundMax.intX();
-            int zMax = boundMax.intZ();
-            int sizeX = xMax - xMin;
-            int sizeZ = zMax - zMin;
-            blocks = new ItemStack[sizeX][sizeZ];
-            for (int i = 0; i < sizeX; i++)
-                for (int j = 0; j < sizeZ; j++)
-                {
-                    blocks[i][j] = new ItemStack(Blocks.iron_block);
-                }
+                for (int k = 0; k < sizeY; k++)
+                    for (int j = 0; j < sizeZ; j++)
+                    {
+                        int n = -1;
+                        if (nbt.hasKey("block" + i + "," + j))
+                        {
+                            n = nbt.getInteger("block" + i + "," + j);
+                        }
+                        else
+                        {
+                            n = nbt.getInteger("block" + i + "," + k + "," + j);
+                        }
+                        ItemStack b = new ItemStack(Item.getItemById(n), 1,
+                                nbt.getInteger("meta" + i + "," + k + "," + j));
+                        blocks[i][k][j] = b;
+                    }
         }
     }
 
@@ -819,12 +819,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             if (blocks != null)
             {
-                for (ItemStack[] barr : blocks)
+                for (ItemStack[][] barrarr : blocks)
                 {
-                    for (ItemStack b : barr)
-                    {
-                        this.entityDropItem(b, 0.5f);
-                    }
+                    for (ItemStack[] barr : barrarr)
+                        for (ItemStack b : barr)
+                        {
+                            this.entityDropItem(b, 0.5f);
+                        }
                 }
                 if (this.getHeldItem() != null) this.entityDropItem(getHeldItem(), 1);
             }
@@ -885,16 +886,17 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             nbt.setInteger("BlocksLengthX", blocks.length);
             nbt.setInteger("BlocksLengthZ", blocks[0].length);
             int sizeX = blocks.length;
-            int sizeZ = blocks[0].length;
+            int sizeY = blocks[0].length;
+            int sizeZ = blocks[0][0].length;
             for (int i = 0; i < sizeX; i++)
-                for (int j = 0; j < sizeZ; j++)
-                {
-                    ItemStack b = blocks[i][j];
-                    if (b == null || b.getItem() == null) b = new ItemStack(Blocks.iron_block);
-
-                    nbt.setInteger("block" + i + "," + j, Item.getIdFromItem(b.getItem()));
-                    nbt.setInteger("meta", b.getItemDamage());
-                }
+                for (int k = 0; k < sizeY; k++)
+                    for (int j = 0; j < sizeZ; j++)
+                    {
+                        ItemStack b = blocks[i][k][j];
+                        if (b == null || b.getItem() == null) b = new ItemStack(Blocks.iron_block);
+                        nbt.setInteger("block" + i + "," + k + "," + j, Item.getIdFromItem(b.getItem()));
+                        nbt.setInteger("meta" + i + "," + k + "," + j, b.getItemDamage());
+                    }
         }
     }
 
