@@ -75,25 +75,26 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
             int zMax = lift.boundMax.intZ();
             int yMin = lift.boundMin.intY();
             int yMax = lift.boundMax.intY();
-            // System.out.println(lift.blocks[0].length);
             for (int i = xMin; i <= xMax; i++)
                 for (int k = yMin; k <= yMax; k++)
                     for (int j = zMin; j <= zMax; j++)
                     {
-                        if (i - xMin >= lift.blocks.length || k - yMin >= lift.blocks[0].length
-                                || j - zMin >= lift.blocks[0][0].length)
-                            continue;
-
-                        ItemStack stack = lift.blocks[i - xMin][k - yMin][j - zMin];
-                        if (stack == null) continue;
                         Block b = Blocks.iron_block;
                         int meta = 0;
-                        if (lift.blocks != null && lift.blocks.length > (i - xMin) && lift.blocks[0].length > j - zMin)
+                        if (i - xMin >= lift.blocks.length || k - yMin >= lift.blocks[0].length
+                                || j - zMin >= lift.blocks[0][0].length)
                         {
+                            
+                        }
+                        else
+                        {
+                            ItemStack stack = lift.blocks[i - xMin][k - yMin][j - zMin];
+                            if (stack == null) continue;
                             b = Block.getBlockFromItem(stack.getItem());
                             meta = lift.blocks[i - xMin][k - yMin][j - zMin].getItemDamage();
                         }
-                        if (i == 0 && j == 0 && lift.getHeldItem() != null)
+
+                        if (i == 0 && j == 0 && k == 0 && lift.getHeldItem() != null)
                         {
                             b = Block.getBlockFromItem(lift.getHeldItem().getItem());
                             meta = lift.getHeldItem().getItemDamage();
@@ -127,7 +128,6 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
                         }
                         GL11.glPopMatrix();
                     }
-
             GL11.glPopMatrix();
 
         }
