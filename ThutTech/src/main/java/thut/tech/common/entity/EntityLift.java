@@ -1,12 +1,13 @@
 package thut.tech.common.entity;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
@@ -15,7 +16,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -66,10 +66,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int zMin = te.boundMin.intZ();
         int xMax = te.boundMax.intX();
         int zMax = te.boundMax.intZ();
+        int yMin = te.boundMin.intY();
+        int yMax = te.boundMax.intY();
         Vector3 loc = Vector3.getNewVector();
         for (int i = xMin; i <= xMax; i++)
             for (int j = zMin; j <= zMax; j++)
-                for (int k = 0; k < 1; k++)
+                for (int k = yMin; k <= yMax; k++)
                 {
                     worldObj.setBlockToAir(loc.set(pos).add(i, k, j).getPos());
                 }
@@ -99,10 +101,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         {
                             ret[i - xMin][k - yMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
                         }
-                        else
-                        {
-                            return null;
-                        }
+                        else if (k == 0 || !state.getBlock().isAir(worldObj, pos)) { return null; }
                     }
                     else
                     {
@@ -141,7 +140,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     Matrix3                         tempBox       = new Matrix3();
 
     public HashMap<String, Matrix3> boxes         = new HashMap<String, Matrix3>();
-
+    public List<AxisAlignedBB>      blockBoxes    = Lists.newArrayList();
     public HashMap<String, Vector3> offsets       = new HashMap<String, Vector3>();
     public int[]                    floors        = new int[64];
     Matrix3                         base          = new Matrix3();
@@ -193,23 +192,37 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         Vector3 v = Vector3.getNewVector();
         Vector3 v1 = Vector3.getNewVector();
 
-        int xMin = boundMin.intX();
-        int zMin = boundMin.intZ();
-        int xMax = boundMax.intX();
-        int zMax = boundMax.intZ();
+        blockBoxes.clear();
 
-        AxisAlignedBB box = Matrix3.getAABB(posX + xMin - 0.5, posY, posZ + zMin - 0.5, posX + xMax + 0.5, posY + 1,
-                posZ + zMax + 0.5);
+        int sizeX = blocks.length;
+        int sizeY = blocks[0].length;
+        int sizeZ = blocks[0][0].length;
+        Set<Double> topY = Sets.newHashSet();
+        for (int i = 0; i < sizeX; i++)
+            for (int k = 0; k < sizeY; k++)
+                for (int j = 0; j < sizeZ; j++)
+                {
+                    ItemStack stack = blocks[i][k][j];
+                    if (stack == null || stack.getItem() == null) continue;
 
-        ArrayList<AxisAlignedBB> aabbs = Lists.newArrayList();
-        aabbs.add(box);
+                    Block block = Block.getBlockFromItem(stack.getItem());
+                    AxisAlignedBB box = Matrix3.getAABB(posX + block.getBlockBoundsMinX() - 0.5 + boundMin.x + i,
+                            posY + block.getBlockBoundsMinY() + k,
+                            posZ + block.getBlockBoundsMinZ() - 0.5 + boundMin.z + j,
+                            posX + block.getBlockBoundsMaxX() + 0.5 + boundMin.x + i,
+                            posY + block.getBlockBoundsMaxY() + k,
+                            posZ + block.getBlockBoundsMaxZ() + 0.5 + boundMin.z + j);
+                    blockBoxes.add(box);
+                    topY.add(box.maxY);
+                }
 
         v.setToVelocity(entity).subtractFrom(v1.setToVelocity(this));
         v1.clear();
-        Matrix3.doCollision(aabbs, entity.getEntityBoundingBox(), entity, 0, v, v1);
-        if (entity.posY >= posY + 1 && entity.posY + entity.motionY <= posY + 1 && motionY <= 0)
+        Matrix3.doCollision(blockBoxes, entity.getEntityBoundingBox(), entity, 0, v, v1);
+        for(Double d: topY)
+        if (entity.posY >= d && entity.posY + entity.motionY <= d && motionY <= 0)
         {
-            double diff = (entity.posY + entity.motionY) - (posY + 1 + motionY);
+            double diff = (entity.posY + entity.motionY) - (d + motionY);
             double check = Math.max(0.5, Math.abs(entity.motionY + motionY));
             if (diff > 0 || diff < -0.5 || Math.abs(diff) > check)
             {
@@ -684,10 +697,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         {
                             n = nbt.getInteger("block" + i + "," + j);
                         }
-                        else
+                        else if (nbt.hasKey("block" + i + "," + k + "," + j))
                         {
                             n = nbt.getInteger("block" + i + "," + k + "," + j);
                         }
+                        if (n == -1) continue;
                         ItemStack b = new ItemStack(Item.getItemById(n), 1,
                                 nbt.getInteger("meta" + i + "," + k + "," + j));
                         blocks[i][k][j] = b;
@@ -824,7 +838,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     for (ItemStack[] barr : barrarr)
                         for (ItemStack b : barr)
                         {
-                            this.entityDropItem(b, 0.5f);
+                            if (b != null) this.entityDropItem(b, 0.5f);
                         }
                 }
                 if (this.getHeldItem() != null) this.entityDropItem(getHeldItem(), 1);
@@ -884,7 +898,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (blocks != null)
         {
             nbt.setInteger("BlocksLengthX", blocks.length);
-            nbt.setInteger("BlocksLengthZ", blocks[0].length);
+            nbt.setInteger("BlocksLengthY", blocks[0].length);
+            nbt.setInteger("BlocksLengthZ", blocks[0][0].length);
             int sizeX = blocks.length;
             int sizeY = blocks[0].length;
             int sizeZ = blocks[0][0].length;
@@ -893,7 +908,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     for (int j = 0; j < sizeZ; j++)
                     {
                         ItemStack b = blocks[i][k][j];
-                        if (b == null || b.getItem() == null) b = new ItemStack(Blocks.iron_block);
+                        if (b == null || b.getItem() == null) continue;
                         nbt.setInteger("block" + i + "," + k + "," + j, Item.getIdFromItem(b.getItem()));
                         nbt.setInteger("meta" + i + "," + k + "," + j, b.getItemDamage());
                     }

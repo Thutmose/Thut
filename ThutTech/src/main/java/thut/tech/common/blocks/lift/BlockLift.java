@@ -275,7 +275,7 @@ public class BlockLift extends Block implements ITileEntityProvider
             }
             else if (te != null && side == EnumFacing.UP)
             {
-                te.doButtonClick(side, hitX, hitY, hitZ);
+                te.doButtonClick(player, side, hitX, hitY, hitZ);
                 worldObj.markBlockForUpdate(pos);
                 return true;
             }
@@ -319,7 +319,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                 }
                 else
                 {
-                    if (te != null) te.doButtonClick(side, hitX, hitY, hitZ);
+                    if (te != null) te.doButtonClick(player, side, hitX, hitY, hitZ);
                     return true;
                 }
             }

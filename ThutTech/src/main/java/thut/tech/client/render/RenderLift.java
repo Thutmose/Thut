@@ -79,7 +79,7 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
                 for (int k = yMin; k <= yMax; k++)
                     for (int j = zMin; j <= zMax; j++)
                     {
-                        Block b = Blocks.iron_block;
+                        Block b = Blocks.air;
                         int meta = 0;
                         if (i - xMin >= lift.blocks.length || k - yMin >= lift.blocks[0].length
                                 || j - zMin >= lift.blocks[0][0].length)
@@ -91,7 +91,7 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
                             ItemStack stack = lift.blocks[i - xMin][k - yMin][j - zMin];
                             if (stack == null) continue;
                             b = Block.getBlockFromItem(stack.getItem());
-                            meta = lift.blocks[i - xMin][k - yMin][j - zMin].getItemDamage();
+                            meta = stack.getItemDamage();
                         }
 
                         if (i == 0 && j == 0 && k == 0 && lift.getHeldItem() != null)
@@ -101,7 +101,7 @@ public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
                         }
                         // Render bottom platform
                         GL11.glPushMatrix();
-                        GL11.glTranslated(0 + i, 0 + 0.5, 0 + j);
+                        GL11.glTranslated(0 + i, k + 0.5, 0 + j);
 
                         IBlockState iblockstate = b.getStateFromMeta(meta);
                         if (iblockstate.getBlock().getMaterial() != Material.air)

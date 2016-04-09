@@ -6,7 +6,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -76,38 +75,36 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             }
 
             Tessellator t = Tessellator.getInstance();
-            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
+            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);// .startDrawing(GL11.GL_QUADS);
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
             int actFloor = floor + page * 16;
             double[] uvs = locationFromNumber((actFloor + 1) % 10);
             double[] uvs1 = locationFromNumber((actFloor + 1) / 10);
-            GL11.glColor4f(0.0F, 0.0F, 0.0F, 1F);
 
             if (actFloor > 8)
             {
                 GL11.glTranslated(x + 0.01, y + 0.06, -0.001 * (5 + 1));
-                t.getWorldRenderer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).endVertex();
-                t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).endVertex();
+                t.getWorldRenderer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+                t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
 
-                t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).endVertex();
-                t.getWorldRenderer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).endVertex();
+                t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+                t.getWorldRenderer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
 
-                t.getWorldRenderer().pos(0.15 + 0.1, 0.15, 0).tex(uvs1[0], uvs1[2]).endVertex();
-                t.getWorldRenderer().pos(0.15 + 0.1, 0, 0).tex(uvs1[0], uvs1[3]).endVertex();
+                t.getWorldRenderer().pos(0.15 + 0.1, 0.15, 0).tex(uvs1[0], uvs1[2]).color(0, 0, 0, 255).endVertex();
+                t.getWorldRenderer().pos(0.15 + 0.1, 0, 0).tex(uvs1[0], uvs1[3]).color(0, 0, 0, 255).endVertex();
 
-                t.getWorldRenderer().pos(0 + 0.1, 0, 0).tex(uvs1[1], uvs1[3]).endVertex();
-                t.getWorldRenderer().pos(0 + 0.1, 0.15, 0).tex(uvs1[1], uvs1[2]).endVertex();
+                t.getWorldRenderer().pos(0 + 0.1, 0, 0).tex(uvs1[1], uvs1[3]).color(0, 0, 0, 255).endVertex();
+                t.getWorldRenderer().pos(0 + 0.1, 0.15, 0).tex(uvs1[1], uvs1[2]).color(0, 0, 0, 255).endVertex();
             }
             else
             {
                 GL11.glTranslated(x + 0.05, y + 0.06, -0.001 * (5 + 1));
-                t.getWorldRenderer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).endVertex();
-                t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).endVertex();
+                t.getWorldRenderer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+                t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
 
-                t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).endVertex();
-                t.getWorldRenderer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).endVertex();
+                t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+                t.getWorldRenderer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
             }
-
             t.draw();
 
             GL11.glPopMatrix();
@@ -115,7 +112,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
     }
 
-    private void drawLiftBounds(int minX, int maxX, int minZ, int maxZ)
+    private void drawLiftBounds(int minX, int maxX, int minZ, int maxZ, int minY, int maxY)
     {
         TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
 
@@ -125,30 +122,28 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             texture = new ResourceLocation("thuttech:textures/blocks/greenOverlay.png");
             renderengine.bindTexture(texture);
         }
-
-        GlStateManager.enableBlend();
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
         int floor = 5;
         double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
         GL11.glTranslated(x - 0.125, 1 + 0.001 * (1), y - 0.125);
         Tessellator t = Tessellator.getInstance();
-        t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.5F);
-
+        t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
         for (int i = -minX; i <= maxX; i++)
-            for (int j = -minZ; j <= maxZ; j++)
-            {
-                t.getWorldRenderer().pos(0.25 + i, 0, 0.25 + j).tex(0, 0).endVertex();
-                t.getWorldRenderer().pos(0.25 + i, 0, 0 + j).tex(0, 1).endVertex();
+            for (int k = -minY; k <= maxY; k++)
+                for (int j = -minZ; j <= maxZ; j++)
+                {
+                    t.getWorldRenderer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(255, 255, 255, 128).endVertex();
+                    t.getWorldRenderer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(255, 255, 255, 128).endVertex();
 
-                t.getWorldRenderer().pos(0 + i, 0, 0 + j).tex(1, 1).endVertex();
-                t.getWorldRenderer().pos(0 + i, 0, 0.25 + j).tex(1, 0).endVertex();
-            }
+                    t.getWorldRenderer().pos(0 + i, k, 0 + j).tex(1, 1).color(255, 255, 255, 128).endVertex();
+                    t.getWorldRenderer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(255, 255, 255, 128).endVertex();
+
+                    t.getWorldRenderer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(255, 255, 255, 128).endVertex();
+                    t.getWorldRenderer().pos(0 + i, k, 0 + j).tex(1, 1).color(255, 255, 255, 128).endVertex();
+                    t.getWorldRenderer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(255, 255, 255, 128).endVertex();
+                    t.getWorldRenderer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(255, 255, 255, 128).endVertex();
+                }
 
         t.draw();
-
-        GlStateManager.disableBlend();
         GL11.glPopMatrix();
     }
 
@@ -156,8 +151,10 @@ public class RenderLiftController extends TileEntitySpecialRenderer
     {
         int xMin = -monitor.boundMin.intX();
         int zMin = -monitor.boundMin.intZ();
+        int yMin = -monitor.boundMin.intY();
         int xMax = monitor.boundMax.intX();
         int zMax = monitor.boundMax.intZ();
+        int yMax = monitor.boundMax.intY();
         drawOnTop(xMin, 0);
         drawOnTop(12, 1);
         drawOnTop(14, 2);
@@ -175,7 +172,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         drawOnTop(12, 13);
         drawOnTop(14, 14);
         drawOnTop(zMax, 15);
-        drawLiftBounds(xMin, xMax, zMin, zMax);
+        drawLiftBounds(xMin, xMax, zMin, zMax, yMin, yMax);
     }
 
     private void drawOnTop(int fontIndex, int positionIndex)
@@ -190,18 +187,17 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
         int floor = positionIndex;
         Tessellator t = Tessellator.getInstance();
-        t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
+        t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);// .startDrawing(GL11.GL_QUADS);
         double x1 = ((double) (3 - floor & 3)) / (double) 4, y1 = ((double) 3 - (floor >> 2)) / 4;
         double[] uvs = locationFromNumber(fontIndex);
 
-        GL11.glColor4f(0.0F, 0.0F, 0.0F, 1F);
         GL11.glTranslated(x1 + 0.05, 1 + 0.002 * (0 + 0.5), y1 + 0.06);
 
-        t.getWorldRenderer().pos(0.15, 0.0, 0.15).tex(uvs[0], uvs[2]).endVertex();
-        t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).endVertex();
+        t.getWorldRenderer().pos(0.15, 0.0, 0.15).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+        t.getWorldRenderer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
 
-        t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).endVertex();
-        t.getWorldRenderer().pos(0, 0.0, 0.15).tex(uvs[1], uvs[2]).endVertex();
+        t.getWorldRenderer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+        t.getWorldRenderer().pos(0, 0.0, 0.15).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
 
         t.draw();
 
@@ -225,24 +221,19 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                 renderengine.bindTexture(texture);
             }
 
-            GlStateManager.enableBlend();
-            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
             floor -= 1;
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
             GL11.glTranslated(x, y, -0.001 * (colour + 1));
             Tessellator t = Tessellator.getInstance();
-            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.5F);
+            t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-            t.getWorldRenderer().pos(0.25, 0.25, 0).tex(0, 0).endVertex();
-            t.getWorldRenderer().pos(0.25, 0, 0).tex(0, 1).endVertex();
+            t.getWorldRenderer().pos(0.25, 0.25, 0).tex(0, 0).color(255, 255, 255, 128).endVertex();
+            t.getWorldRenderer().pos(0.25, 0, 0).tex(0, 1).color(255, 255, 255, 128).endVertex();
 
-            t.getWorldRenderer().pos(0, 0, 0).tex(1, 1).endVertex();
-            t.getWorldRenderer().pos(0, 0.25, 0).tex(1, 0).endVertex();
+            t.getWorldRenderer().pos(0, 0, 0).tex(1, 1).color(255, 255, 255, 128).endVertex();
+            t.getWorldRenderer().pos(0, 0.25, 0).tex(1, 0).color(255, 255, 255, 128).endVertex();
 
             t.draw();
-            GlStateManager.disableBlend();
             GL11.glPopMatrix();
         }
 
@@ -275,6 +266,27 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
         if (state.getBlock() != ThutBlocks.lift) return;
 
+        boolean blend;
+
+        boolean light;
+
+        int src;
+
+        int dst;
+        float[] oldLight = { -1, -1 };
+
+        oldLight[0] = OpenGlHelper.lastBrightnessX;
+        oldLight[1] = OpenGlHelper.lastBrightnessY;
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+
+        blend = GL11.glGetBoolean(GL11.GL_BLEND);
+        light = GL11.glGetBoolean(GL11.GL_LIGHTING);
+        src = GL11.glGetInteger(GL11.GL_BLEND_SRC);
+        dst = GL11.glGetInteger(GL11.GL_BLEND_DST);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
         if (monitor.getBlockMetadata() == 0 && monitor.getBlockType() == ThutBlocks.lift)
         {
             GL11.glPushMatrix();
@@ -282,14 +294,12 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             GL11.glTranslatef((float) x, (float) y, (float) z);
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
 
-            GlStateManager.disableLighting();
             GL11.glPushMatrix();
             if (renderengine != null)
             {
                 texture = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
                 renderengine.bindTexture(texture);
             }
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 
             Tessellator t = Tessellator.getInstance();
             t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
@@ -310,6 +320,14 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             drawLiftGui(monitor);
 
             GL11.glPopMatrix();
+
+            if (light) GL11.glEnable(GL11.GL_LIGHTING);
+            if (!blend) GL11.glDisable(GL11.GL_BLEND);
+            GL11.glBlendFunc(src, dst);
+            if (oldLight[0] != -1 && oldLight[1] != -1)
+            {
+                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldLight[0], oldLight[1]);
+            }
             return;
         }
 
@@ -341,27 +359,22 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
 
-            GlStateManager.disableLighting();
             GL11.glPushMatrix();
             if (renderengine != null)
             {
                 texture = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
                 renderengine.bindTexture(texture);
             }
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
 
             Tessellator t = Tessellator.getInstance();
             t.getWorldRenderer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
 
             GL11.glTranslated(0, 0, -0.001 * (0 + 0.5));
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1F);
-            {
-                t.getWorldRenderer().pos(1, 1, 0).tex(0, 0).endVertex();
-                t.getWorldRenderer().pos(1, 0, 0).tex(0, 1).endVertex();
+            t.getWorldRenderer().pos(1, 1, 0).tex(0, 0).endVertex();
+            t.getWorldRenderer().pos(1, 0, 0).tex(0, 1).endVertex();
 
-                t.getWorldRenderer().pos(0, 0, 0).tex(1, 1).endVertex();
-                t.getWorldRenderer().pos(0, 1, 0).tex(1, 0).endVertex();
-            }
+            t.getWorldRenderer().pos(0, 0, 0).tex(1, 1).endVertex();
+            t.getWorldRenderer().pos(0, 1, 0).tex(1, 0).endVertex();
 
             t.draw();
             GL11.glPopMatrix();
@@ -382,8 +395,15 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                 drawOverLay(monitor, j + 1, 3, dir);
                 }
                 }
-            GlStateManager.enableLighting();
             GL11.glPopMatrix();
+        }
+
+        if (light) GL11.glEnable(GL11.GL_LIGHTING);
+        if (!blend) GL11.glDisable(GL11.GL_BLEND);
+        GL11.glBlendFunc(src, dst);
+        if (oldLight[0] != -1 || oldLight[1] != -1)
+        {
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldLight[0], oldLight[1]);
         }
     }
 }

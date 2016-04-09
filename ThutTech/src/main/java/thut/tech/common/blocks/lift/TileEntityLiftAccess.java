@@ -14,6 +14,7 @@ import li.cil.oc.api.network.SimpleComponent;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
@@ -26,6 +27,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Optional;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
@@ -161,7 +164,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return ret;
     }
 
-    public void doButtonClick(EnumFacing side, float hitX, float hitY, float hitZ)
+    public void doButtonClick(EntityLivingBase clicker, EnumFacing side, float hitX, float hitY, float hitZ)
     {
         if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj.isRemote))
         {
@@ -174,34 +177,44 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             {
                 boundMin.x = Math.max(-2, boundMin.x - 1);
             }
-            if (button == 3)
+            else if (button == 3)
             {
                 boundMin.x = Math.min(0, boundMin.x + 1);
             }
-            if (button == 6)
+            else if (button == 6)
             {
                 boundMin.z = Math.max(-2, boundMin.z - 1);
             }
-            if (button == 7)
+            else if (button == 7)
             {
                 boundMin.z = Math.min(0, boundMin.z + 1);
             }
-
-            if (button == 10)
+            else if (button == 10)
             {
                 boundMax.x = Math.max(0, boundMax.x - 1);
             }
-            if (button == 11)
+            else if (button == 11)
             {
                 boundMax.x = Math.min(2, boundMax.x + 1);
             }
-            if (button == 14)
+            else if (button == 14)
             {
                 boundMax.z = Math.max(0, boundMax.z - 1);
             }
-            if (button == 15)
+            else if (button == 15)
             {
                 boundMax.z = Math.min(2, boundMax.z + 1);
+            }
+            else
+            {
+                if (clicker.isSneaking())
+                {
+                    boundMin.y = Math.max(0, boundMin.y - 1);
+                }
+                else
+                {
+                    boundMax.y = Math.min(5, boundMax.y + 1);
+                }
             }
         }
         if (!worldObj.isRemote && lift != null)
@@ -613,5 +626,12 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         boundMin.writeToNBT(vector, "min");
         boundMax.writeToNBT(vector, "max");
         par1.setTag("bounds", vector);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public net.minecraft.util.AxisAlignedBB getRenderBoundingBox()
+    {
+        net.minecraft.util.AxisAlignedBB bb = INFINITE_EXTENT_AABB;
+        return bb;
     }
 }
