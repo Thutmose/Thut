@@ -3,9 +3,8 @@ package thut.api;
 import java.util.HashSet;
 
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
 
-public class ThutBlocks extends Blocks
+public class ThutBlocks
 {
     // Thut WorldGen Blocks
     public static Block dust;

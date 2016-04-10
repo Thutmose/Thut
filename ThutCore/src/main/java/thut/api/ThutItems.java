@@ -3,11 +3,10 @@ package thut.api;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class ThutItems extends Items {
+public class ThutItems {
 	
 	//WorldGen Items
 	public static ItemStack dust;
