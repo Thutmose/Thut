@@ -207,11 +207,11 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             }
             else
             {
-                if (clicker.isSneaking())
+                if (button == 4 || button == 8 || button == 12 || button == 16)
                 {
-                    boundMin.y = Math.max(0, boundMin.y - 1);
+                    boundMax.y = Math.max(0, boundMax.y - 1);
                 }
-                else
+                else if (button == 1 || button == 5 || button == 9 || button == 13)
                 {
                     boundMax.y = Math.min(5, boundMax.y + 1);
                 }

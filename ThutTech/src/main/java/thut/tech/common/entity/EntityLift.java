@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -97,7 +98,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     {
                         IBlockState state = loc.set(pos).addTo(i, k, j).getBlockState(worldObj);
                         Block b;
-                        if ((b = state.getBlock()).isNormalCube())
+                        if (!((b = state.getBlock()) instanceof ITileEntityProvider))
                         {
                             ret[i - xMin][k - yMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
                         }
