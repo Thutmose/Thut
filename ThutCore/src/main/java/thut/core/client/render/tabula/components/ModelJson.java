@@ -1,7 +1,9 @@
 package thut.core.client.render.tabula.components;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,30 +28,30 @@ import thut.core.client.render.tabula.model.modelbase.TabulaRenderer;
 @SideOnly(Side.CLIENT)
 public class ModelJson extends TabulaModelBase
 {
-    private JsonTabulaModel                      tabulaModel;
+    private JsonTabulaModel                        tabulaModel;
 
-    public Map<String, TabulaRenderer>      nameMap       = Maps.newHashMap();
-    public Map<String, TabulaRenderer>      identifierMap = Maps.newHashMap();
+    public Map<String, TabulaRenderer>             nameMap       = Maps.newHashMap();
+    public Map<String, TabulaRenderer>             identifierMap = Maps.newHashMap();
 
     /** This is an ordered list of CubeGroup Identifiers. It is used to ensure
      * that translucent parts render in the correct order. */
-    ArrayList<String>                            groupIdents   = Lists.newArrayList();
+    ArrayList<String>                              groupIdents   = Lists.newArrayList();
     /** Map of CubeGroup Identifiers to Sets of Root parts on the group. Uses
      * the above list to get keys */
-    public Map<String, Set<TabulaRenderer>> groupMap      = Maps.newHashMap();
+    public Map<String, Collection<TabulaRenderer>> groupMap      = Maps.newHashMap();
 
-    public ArrayList<Animation>                  animations    = Lists.newArrayList();
+    public ArrayList<Animation>                    animations    = Lists.newArrayList();
     /** Map of names to animations, used to get animations for rendering more
      * easily */
-    public HashMap<String, Animation>            animationMap  = Maps.newHashMap();
+    public HashMap<String, Animation>              animationMap  = Maps.newHashMap();
 
-    public Set<Animation>                        playing       = Sets.newHashSet();
+    public Set<Animation>                          playing       = Sets.newHashSet();
 
-    public IPartTexturer                         texturer;
-    public IAnimationChanger                     changer;
-    public Animation                             playingAnimation;
-    private float                                animationTimer;
-    private int                                  animationLength;
+    public IPartTexturer                           texturer;
+    public IAnimationChanger                       changer;
+    public Animation                               playingAnimation;
+    private float                                  animationTimer;
+    private int                                    animationLength;
 
     public ModelJson(JsonTabulaModel model)
     {
@@ -111,6 +113,18 @@ public class ModelJson extends TabulaModelBase
         cube.mirror = cubeInfo.txMirror;
         // Allows hidden textures
         cube.isHidden = cubeInfo.hidden;
+
+        if (cubeInfo.metadata != null)
+        {
+            for (String s : cubeInfo.metadata)
+            {
+                if (s.equalsIgnoreCase("trans"))
+                {
+                    cube.transluscent = true;
+                }
+            }
+        }
+
         return cube;
     }
 
@@ -129,18 +143,31 @@ public class ModelJson extends TabulaModelBase
         // Only add root parts to the group set.
         if (parent == null)
         {
-            Set<TabulaRenderer> cubes;
+            ArrayList<TabulaRenderer> cubes;
             if (groupMap.containsKey(group))
             {
-                cubes = groupMap.get(group);
+                cubes = (ArrayList<TabulaRenderer>) groupMap.get(group);
             }
             else
             {
-                cubes = Sets.newHashSet();
+                cubes = Lists.newArrayList();
                 groupMap.put(group, cubes);
                 groupIdents.add(group);
             }
             cubes.add(modelRenderer);
+
+            Collections.sort(cubes, new Comparator<TabulaRenderer>()
+            {
+                @Override
+                public int compare(TabulaRenderer o1, TabulaRenderer o2)
+                {
+                    String name1 = o1.name;
+                    String name2 = o2.name;
+                    if (o1.transluscent && !o2.transluscent) return 1;
+                    if (o2.transluscent && !o1.transluscent) return -1;
+                    return name1.compareTo(name2);
+                }
+            });
         }
         for (CubeInfo c : cube.children)
         {
@@ -193,7 +220,7 @@ public class ModelJson extends TabulaModelBase
         // Render based on the group, this ensures they are correctly rendered.
         for (String s : groupIdents)
         {
-            Set<TabulaRenderer> cubes = groupMap.get(s);
+            Collection<TabulaRenderer> cubes = groupMap.get(s);
             for (TabulaRenderer cube : cubes)
             {
                 if (cube != null)
