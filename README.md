@@ -12,4 +12,7 @@ These are small, usually server-side only, mods.
 
 ##TODO
 Update things to latest forge.
+
 Update ThutTech for 1.9
+
+Update Dorfgen to use 43.xx+ xml stuff for DF
