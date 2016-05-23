@@ -422,10 +422,10 @@ public class Transporter
         WorldServer newWorld = server.worldServerForDimension(newDimension);
         sendDimensionRegister(player, newDimension);
         player.closeScreen();
-        player.playerNetServerHandler.sendPacket(new SPacketRespawn(player.dimension, player.worldObj.getDifficulty(),
+        player.connection.sendPacket(new SPacketRespawn(player.dimension, player.worldObj.getDifficulty(),
                 newWorld.getWorldInfo().getTerrainType(), player.interactionManager.getGameType()));
 
-        oldWorld.removePlayerEntityDangerously(player); // Removes player right
+        oldWorld.removeEntityDangerously(player); // Removes player right
                                                         // now instead of
                                                         // waiting for next tick
         player.isDead = false;
@@ -435,7 +435,7 @@ public class Transporter
 
         // scm.preparePlayer(player, oldWorld);//TODO sync inventories and
         // preparing player
-        player.playerNetServerHandler.setPlayerLocation(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
+        player.connection.setPlayerLocation(p.x, p.y, p.z, player.rotationYaw, player.rotationPitch);
         player.interactionManager.setWorld(newWorld);
         // scm.updateTimeAndWeatherForPlayer(player, newWorld);
         // scm.syncPlayerInventory(player);
@@ -443,9 +443,9 @@ public class Transporter
         while (var6.hasNext())
         {
             PotionEffect effect = (PotionEffect) var6.next();
-            player.playerNetServerHandler.sendPacket(new SPacketEntityEffect(player.getEntityId(), effect));
+            player.connection.sendPacket(new SPacketEntityEffect(player.getEntityId(), effect));
         }
-        player.playerNetServerHandler.sendPacket(
+        player.connection.sendPacket(
                 new SPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
         FMLCommonHandler.instance().firePlayerChangedDimensionEvent(player, oldDimension, newDimension);
 

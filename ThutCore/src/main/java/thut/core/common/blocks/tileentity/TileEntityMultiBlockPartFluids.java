@@ -79,8 +79,8 @@ public class TileEntityMultiBlockPartFluids extends TileEntityMultiBlockPart imp
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tagCompound)
+    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound)
     {
-        super.writeToNBT(tagCompound);
+        return super.writeToNBT(tagCompound);
     }
 }

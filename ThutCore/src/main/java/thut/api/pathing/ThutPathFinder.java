@@ -15,7 +15,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
-import net.minecraft.pathfinding.PathEntity;
+import net.minecraft.pathfinding.PathHeap;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IntHashMap;
@@ -90,7 +90,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
     /** Adds a path from start to end and returns the whole path (args: unused,
      * start, end, unused, maxDistance) */
-    protected PathEntity addToPath(Entity entity, PathPoint start, PathPoint end, float distance)
+    protected PathHeap addToPath(Entity entity, PathPoint start, PathPoint end, float distance)
     {
 
         if (end.equals(start)) { return null; }
@@ -140,12 +140,12 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         // return true;
     }
 
-    /** Returns a new PathEntity for a given start and end point */
-    private PathEntity createEntityPath(PathPoint end)
+    /** Returns a new PathHeap for a given start and end point */
+    private PathHeap createEntityPath(PathPoint end)
     {
         int i = 1;
         PathPoint pathpoint2 = end;
-
+        PathHeap ret = new PathHeap();
         for (pathpoint2 = end; pathpoint2.previous != null; pathpoint2 = pathpoint2.previous)
         {
             ++i;
@@ -159,11 +159,15 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             pathpoint2 = pathpoint2.previous;
             --i;
         }
-        return new PathEntity(apathpoint);
+        for (PathPoint point : apathpoint)
+        {
+            ret.addPoint(point);
+        }
+        return ret;
     }
 
     /** Internal implementation of creating a path from an entity to a point */
-    private PathEntity createEntityPathTo(double x, double y, double z, float distance)
+    private PathHeap createEntityPathTo(double x, double y, double z, float distance)
     {
         Entity entity = (Entity) mob;
         this.pathb.clearPath();
@@ -179,8 +183,8 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             for (Block block = this.worldMap
                     .getBlockState(
                             new BlockPos(MathHelper.floor_double(entity.posX), i, MathHelper.floor_double(entity.posZ)))
-                    .getBlock(); block == Blocks.flowing_water
-                            || block == Blocks.water; block = this.worldMap
+                    .getBlock(); block == Blocks.FLOWING_WATER
+                            || block == Blocks.WATER; block = this.worldMap
                                     .getBlockState(new BlockPos(MathHelper.floor_double(entity.posX), i,
                                             MathHelper.floor_double(entity.posZ)))
                                     .getBlock())
@@ -206,14 +210,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 MathHelper.floor_double(entity.getEntityBoundingBox().minZ));
         PathPoint end = this.openPoint(MathHelper.floor_double(x - entity.width / 2.0F), MathHelper.floor_double(y),
                 MathHelper.floor_double(z - entity.width / 2.0F));
-        PathEntity pathentity = this.addToPath(entity, start, end, distance);
+        PathHeap PathHeap = this.addToPath(entity, start, end, distance);
 
-        return pathentity;
+        return PathHeap;
     }
 
     /** Creates a path from an entity to a specified location within a minimum
      * distance */
-    public PathEntity createEntityPathTo(Entity entity, int x, int y, int z, float distance)
+    public PathHeap createEntityPathTo(Entity entity, int x, int y, int z, float distance)
     {
         return this.createEntityPathTo(x + 0.5F, y + 0.5F, z + 0.5F, distance);
     }
@@ -221,14 +225,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     @Override
     /** Creates a path from an entity to a specified location within a minimum
      * distance */
-    public PathEntity createEntityPathTo(IBlockAccess blockaccess, Entity entityIn, BlockPos targetPos, float dist)
+    public PathHeap createEntityPathTo(IBlockAccess blockaccess, Entity entityIn, BlockPos targetPos, float dist)
     {
         return createEntityPathTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), dist);
     }
 
     @Override
     /** Creates a path from one entity to another within a minimum distance */
-    public PathEntity createEntityPathTo(IBlockAccess world, Entity entity, Entity target, float distance)
+    public PathHeap createEntityPathTo(IBlockAccess world, Entity entity, Entity target, float distance)
     {
         return this.createEntityPathTo(target.posX, target.getEntityBoundingBox().minY + 0.5f, target.posZ, distance);
     }
@@ -521,9 +525,9 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         if (mob.getBlockPathWeight(worldMap, e) < 0) { return false; }
         if (b instanceof BlockDoor)
         {
-            if (state.getMaterial() == Material.wood) { return canFit(e, state); }
+            if (state.getMaterial() == Material.WOOD) { return canFit(e, state); }
         }
-        if (state.getMaterial() == Material.lava) return false;
+        if (state.getMaterial() == Material.LAVA) return false;
         if (state.isNormalCube() || state.getMaterial().blocksMovement()) return false;
         if (b.isLadder(state, worldMap, v.getPos(), (EntityLivingBase) mob)) return true;
 
@@ -562,16 +566,16 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         {
             if (!mDown.isSolid())
             {
-                if (mDown != Material.water) return false;
+                if (mDown != Material.WATER) return false;
             }
             boolean empty = isEmpty(e, x, y, z, from);
             return empty;
         }
         if (mDown.isLiquid())
         {
-            if (mDown != Material.water) return false;
+            if (mDown != Material.WATER) return false;
         }
-        return isEmpty(e, x, y, z, from) && (mDown == Material.water || !isEmpty(e, x, y - 1, z, from));
+        return isEmpty(e, x, y, z, from) && (mDown == Material.WATER || !isEmpty(e, x, y - 1, z, from));
 
     }
 

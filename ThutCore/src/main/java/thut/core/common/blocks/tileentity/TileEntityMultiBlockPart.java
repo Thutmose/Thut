@@ -1,15 +1,13 @@
 package thut.core.common.blocks.tileentity;
 
-import static net.minecraft.init.Blocks.brick_block;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -21,7 +19,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     TileEntityMultiCore core;
     BlockPos            corePos;
 
-    public IBlockState revertID = brick_block.getDefaultState();
+    public IBlockState revertID = Blocks.BRICK_BLOCK.getDefaultState();
     public int         type     = 0;
 
     @Override
@@ -65,7 +63,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
 
     /** Overriden in a sign to provide the text. */
     @Override
-    public Packet<?> getDescriptionPacket()
+    public SPacketUpdateTileEntity getUpdatePacket()
     {
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         this.writeToNBT(nbttagcompound);
@@ -173,7 +171,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
         int revertMeta = compound.getInteger("revertMeta");
         revertID = Block.getBlockById(name).getStateFromMeta(revertMeta);
         type = compound.getInteger("type");
-        if (revertID == null) revertID = brick_block.getDefaultState();
+        if (revertID == null) revertID = Blocks.BRICK_BLOCK.getDefaultState();
     }
 
     @Override
@@ -206,7 +204,7 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound compound)
+    public NBTTagCompound writeToNBT(NBTTagCompound compound)
     {
         super.writeToNBT(compound);
         compound.setInteger("cx", this.corePos.getX());
@@ -215,5 +213,6 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
         compound.setInteger("revert", Block.getIdFromBlock(revertID.getBlock()));
         compound.setInteger("revertMeta", revertID.getBlock().getMetaFromState(revertID));
         compound.setInteger("type", type);
+        return compound;
     }
 }

@@ -4,7 +4,6 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemDye;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
@@ -13,7 +12,7 @@ public class TileEntityBlockFluid extends TileEntity
 
     public static int getColour(int dyeIndex)
     {
-        int ret = ItemDye.dyeColors[dyeIndex];
+        int ret = ItemDye.DYE_COLORS[dyeIndex];
         int alpha = 0xFF000000;
         ret += alpha;
         return ret;
@@ -29,7 +28,7 @@ public class TileEntityBlockFluid extends TileEntity
 
     /** Overriden in a sign to provide the text. */
     @Override
-    public Packet<?> getDescriptionPacket()
+    public SPacketUpdateTileEntity getUpdatePacket()
     {
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         this.writeToNBT(nbttagcompound);
@@ -67,7 +66,7 @@ public class TileEntityBlockFluid extends TileEntity
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound par1)
+    public NBTTagCompound writeToNBT(NBTTagCompound par1)
     {
         super.writeToNBT(par1);
         par1.setIntArray("metaArray", colourArray);
@@ -81,5 +80,6 @@ public class TileEntityBlockFluid extends TileEntity
             cornertag.setFloat("10", corner[1][0]);
             par1.setTag("corners", cornertag);
         }
+        return par1;
     }
 }

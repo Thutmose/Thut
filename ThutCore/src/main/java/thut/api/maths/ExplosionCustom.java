@@ -385,7 +385,7 @@ public class ExplosionCustom extends Explosion
     public void doExplosion()
     {
         this.world.playSound((EntityPlayer) null, this.explosionX, this.explosionY, this.explosionZ,
-                SoundEvents.entity_generic_explode, SoundCategory.BLOCKS, 4.0F,
+                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F,
                 (1.0F + (this.world.rand.nextFloat() - this.world.rand.nextFloat()) * 0.2F) * 0.7F);
 
         if (this.explosionSize >= 2.0F && this.isSmoking)
@@ -506,15 +506,15 @@ public class ExplosionCustom extends Explosion
         BlockChange change;
         if (!meteor)
         {
-            change = new BlockChange(location, dimension, Blocks.air);
+            change = new BlockChange(location, dimension, Blocks.AIR);
             change.flag = 2;
             TickHandler.addBlockChange(change, dimension);
             return;
         }
         float resistance = location.getExplosionResistance(this, worldObj);
 
-        if (melt == null) melt = Blocks.air;
-        if (dust == null) dust = Blocks.air;
+        if (melt == null) melt = Blocks.AIR;
+        if (dust == null) dust = Blocks.AIR;
 
         if (resistance > 2 && !location.getBlockMaterial(worldObj).isLiquid())
         {

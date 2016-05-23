@@ -44,7 +44,7 @@ public class ConfigHandler extends ConfigBase
 
         for (Item item : items)
         {
-            GameRegistry.registerItem(item, item.getUnlocalizedName().substring(5));
+            GameRegistry.register(item);
         }
     }
 }

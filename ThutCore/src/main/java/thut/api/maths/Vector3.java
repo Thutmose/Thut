@@ -34,7 +34,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.Fluid;
@@ -285,7 +285,7 @@ public class Vector3
 
         if (state.isNormalCube()) return false;
 
-        if (block == null || block == Blocks.air || !block.isCollidable()) return true;
+        if (block == null || block == Blocks.AIR || !block.isCollidable()) return true;
 
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
         Vector3 v = getNewVector().set(x, y, z);
@@ -742,7 +742,7 @@ public class Vector3
 
         if (state.isNormalCube()) return false;
 
-        if (block == null || block == Blocks.air || !state.getMaterial().blocksMovement() || !block.isCollidable())
+        if (block == null || block == Blocks.AIR || !state.getMaterial().blocksMovement() || !block.isCollidable())
             return true;
 
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
@@ -927,7 +927,7 @@ public class Vector3
                     {
                         continue loop;
                     }
-                    else if (!water && state.getMaterial() == Material.water)
+                    else if (!water && state.getMaterial() == Material.WATER)
                     {
                         continue loop;
                     }
@@ -1066,25 +1066,25 @@ public class Vector3
         return Matrix3.getAABB(x, y, z, x, y, z);
     }
 
-    public BiomeGenBase getBiome(Chunk chunk, BiomeProvider mngr)
+    public Biome getBiome(Chunk chunk, BiomeProvider mngr)
     {
         return chunk.getBiome(new BlockPos(intX() & 15, 0, intZ() & 15), mngr);// .getBiomeGenForWorldCoords();
     }
 
-    public BiomeGenBase getBiome(World worldObj)
+    public Biome getBiome(World worldObj)
     {
         return worldObj.getBiomeGenForCoords(new BlockPos(intX(), 0, intZ()));
     }
 
     public int getBiomeID(World worldObj)
     {
-        return BiomeGenBase.getIdForBiome(getBiome(worldObj));
+        return Biome.getIdForBiome(getBiome(worldObj));
     }
 
     public Block getBlock(IBlockAccess worldMap)
     {
         IBlockState state = worldMap.getBlockState((getPos()));
-        if (state == null) return Blocks.air;
+        if (state == null) return Blocks.AIR;
         return state.getBlock();
     }
 
@@ -1103,7 +1103,7 @@ public class Vector3
     public Material getBlockMaterial(IBlockAccess worldObj)
     {
         IBlockState state = worldObj.getBlockState((getPos()));
-        if (state == null || state.getBlock() == null) { return Material.air; }
+        if (state == null || state.getBlock() == null) { return Material.AIR; }
         return state.getMaterial();
     }
 
@@ -1268,12 +1268,12 @@ public class Vector3
         if (worldObj instanceof World)
         {
             IBlockState state = worldObj.getBlockState((getPos()));
-            return state.getBlock() == null || (m = getBlockMaterial(worldObj)) == null || m == Material.air
+            return state.getBlock() == null || (m = getBlockMaterial(worldObj)) == null || m == Material.AIR
                     || state.getBlock().isAir(state, worldObj, getPos());// ||worldObj.isAirBlock(intX(),
             // intY(),
             // intZ())
         }
-        return (m = getBlockMaterial(worldObj)) == null || m == Material.air;// ||worldObj.isAirBlock(intX(),
+        return (m = getBlockMaterial(worldObj)) == null || m == Material.AIR;// ||worldObj.isAirBlock(intX(),
                                                                              // intY(),
                                                                              // intZ())
     }
@@ -1357,7 +1357,7 @@ public class Vector3
         for (int i = h; i > y; i--)
         {
             Material m = world.getBlockState(new BlockPos(intX(), i, intZ())).getMaterial();
-            if (!(m == Material.water || m == Material.air)) return false;
+            if (!(m == Material.WATER || m == Material.AIR)) return false;
         }
         return true;
     }
@@ -1733,7 +1733,7 @@ public class Vector3
         worldObj.setBlockToAir(getPos());
     }
 
-    public void setBiome(BiomeGenBase biome, World worldObj)
+    public void setBiome(Biome biome, World worldObj)
     {
         int x = intX();
         int z = intZ();
@@ -1741,7 +1741,7 @@ public class Vector3
         Chunk chunk = worldObj.getChunkFromBlockCoords(new BlockPos(x, 0, z));
         byte[] biomes = chunk.getBiomeArray();
         // TODO confirm that this actually works, and doesn't need an offset.
-        byte newBiome = (byte) BiomeGenBase.getIdForBiome(biome);
+        byte newBiome = (byte) Biome.getIdForBiome(biome);
 
         int chunkX = Math.abs(x & 15);
         int chunkZ = Math.abs(z & 15);

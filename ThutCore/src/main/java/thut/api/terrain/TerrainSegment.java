@@ -25,7 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import thut.api.maths.Vector3;
@@ -96,7 +96,7 @@ public class TerrainSegment
                                                                             }
                                                                     if (sky) return -1;
 
-                                                                    if (!sky && count(world, Blocks.water, v, 1) > 2)
+                                                                    if (!sky && count(world, Blocks.WATER, v, 1) > 2)
                                                                         return BiomeType.CAVE_WATER.getType();
                                                                     else if (!sky) return BiomeType.CAVE.getType();
                                                                 }
@@ -104,7 +104,7 @@ public class TerrainSegment
                                                                 {
                                                                     int biome = 0;
 
-                                                                    BiomeGenBase b = v.getBiome(chunk,
+                                                                    Biome b = v.getBiome(chunk,
                                                                             world.getBiomeProvider());
                                                                     biome = BiomeDatabase.getBiomeType(b);
 
@@ -115,7 +115,7 @@ public class TerrainSegment
                                                                             || BiomeDatabase.contains(b, Type.WATER)
                                                                             || BiomeDatabase.contains(b, Type.BEACH);
 
-                                                                    int water = v.blockCount2(world, Blocks.water, 3);
+                                                                    int water = v.blockCount2(world, Blocks.WATER, 3);
                                                                     if (water > 4)
                                                                     {
                                                                         if (!notLake)
@@ -176,13 +176,13 @@ public class TerrainSegment
         return ret;
     }
 
-    static BiomeGenBase getBiome(Type not, Type... types)
+    static Biome getBiome(Type not, Type... types)
     {
-        BiomeGenBase ret = null;
+        Biome ret = null;
         biomes:
-        for (ResourceLocation key : BiomeGenBase.biomeRegistry.getKeys())
+        for (ResourceLocation key : Biome.REGISTRY.getKeys())
         {
-            BiomeGenBase b = BiomeGenBase.biomeRegistry.getObject(key);
+            Biome b = Biome.REGISTRY.getObject(key);
             if (b == null) continue;
             if (not != null && contains(b, not)) continue;
             for (Type t : types)
@@ -198,7 +198,7 @@ public class TerrainSegment
     {
         boolean ret = false;
 
-        int count = v.blockCount2(world, Blocks.redstone_block, 16);
+        int count = v.blockCount2(world, Blocks.REDSTONE_BLOCK, 16);
 
         ret = count >= 2;
 
@@ -483,7 +483,7 @@ public class TerrainSegment
             for (int i = 0; i < 16; i++)
             {
                 IBlockState state = getCentre().add(0, -1 * i, 0).getBlockState(world);
-                sky = state.getBlock() == null || state.getMaterial() == Material.air;
+                sky = state.getBlock() == null || state.getMaterial() == Material.AIR;
                 if (!sky) break;
             }
         }

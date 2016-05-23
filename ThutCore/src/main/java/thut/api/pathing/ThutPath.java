@@ -1,8 +1,7 @@
 package thut.api.pathing;
 
-import net.minecraft.pathfinding.Path;
+public class ThutPath {
 
-public class ThutPath extends Path {
     /** Contains the points in this path */
     private PathPoint[] pathPoints = new PathPoint[1024];
     /** The number of points in this path */
@@ -54,7 +53,6 @@ public class ThutPath extends Path {
     /**
      * Clears the path
      */
-    @Override
 	public void clearPath()
     {
         this.count = 0;
@@ -63,7 +61,6 @@ public class ThutPath extends Path {
     /**
      * Returns and removes the first point in the path
      */
-    @Override
 	public PathPoint dequeue()
     {
         PathPoint pathpoint = this.pathPoints[0];
@@ -82,7 +79,6 @@ public class ThutPath extends Path {
     /**
      * Returns true if this path contains no points
      */
-    @Override
 	public boolean isPathEmpty()
     {
         return this.count == 0;

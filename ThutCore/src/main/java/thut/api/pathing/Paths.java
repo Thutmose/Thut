@@ -1,7 +1,7 @@
 package thut.api.pathing;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.pathfinding.PathEntity;
+import net.minecraft.pathfinding.PathHeap;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
 import thut.api.maths.Vector3;
@@ -23,7 +23,7 @@ public class Paths {
 	}
 
 
-    public PathEntity getEntityPathToXYZ(Entity entity, int x, int y, int z, float distance)
+    public PathHeap getEntityPathToXYZ(Entity entity, int x, int y, int z, float distance)
     {
     	if(x==0&&z==0)
     	{
@@ -46,13 +46,13 @@ public class Paths {
     	
     	cacheLock[1] = true;
         ThutPathFinder pather = new JPSPather(chunks, (IPathingMob)entity);
-        PathEntity pathentity = pather.createEntityPathTo(entity, x, y, z, distance);
+        PathHeap PathHeap = pather.createEntityPathTo(entity, x, y, z, distance);
         cacheLock[1] = false;
         
-        return pathentity;
+        return PathHeap;
     }
 
-    public PathEntity getPathEntityToEntity(Entity entityA, Entity entityB, float distance)
+    public PathHeap getPathHeapToEntity(Entity entityA, Entity entityB, float distance)
     {
 //    	System.out.println(Arrays.toString(cacheLock));
     	while(cacheLock[0])
@@ -70,9 +70,9 @@ public class Paths {
     		return null;
     	
     	cacheLock[1] = true;
-        PathEntity pathentity = (new JPSPather(chunks, (IPathingMob)entityA)).createEntityPathTo(chunks, entityA, entityB, distance);
+        PathHeap PathHeap = (new JPSPather(chunks, (IPathingMob)entityA)).createEntityPathTo(chunks, entityA, entityB, distance);
         cacheLock[1] = false;
         
-        return pathentity;
+        return PathHeap;
     }
 }

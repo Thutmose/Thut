@@ -17,7 +17,7 @@ public class CreativeTabThut extends CreativeTabs{
 	public Item getTabIconItem() {
 
 		if(ThutBlocks.solidLavas[0]==null)
-			return Item.getItemFromBlock(Blocks.stone);
+			return Item.getItemFromBlock(Blocks.STONE);
 		
 		if(ThutBlocks.rebar!=null)
 			return Item.getItemFromBlock(ThutBlocks.rebar);

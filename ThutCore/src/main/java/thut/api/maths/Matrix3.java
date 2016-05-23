@@ -899,7 +899,7 @@ public class Matrix3
                     BlockPos blockpos = new BlockPos(k1, i2, l1);
 
                     IBlockState iblockstate = access.getBlockState(blockpos);
-                    if (iblockstate == null) iblockstate = Blocks.air.getDefaultState();
+                    if (iblockstate == null) iblockstate = Blocks.AIR.getDefaultState();
                     Block block = iblockstate.getBlock();
                     if (block.isCollidable())
                     {

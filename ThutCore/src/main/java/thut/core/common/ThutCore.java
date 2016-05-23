@@ -2,7 +2,7 @@ package thut.core.common;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -34,8 +34,8 @@ public class ThutCore
     public static Block[]         blocks;
     public static Item[]          items;
 
-    public static BiomeGenBase    volcano;
-    public static BiomeGenBase    chalk;
+    public static Biome    volcano;
+    public static Biome    chalk;
 
     // Configuration Handler that handles the config file
     public ConfigHandler          config;

@@ -1,24 +1,23 @@
 package thut.api;
 
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import com.google.common.collect.Sets;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
-import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.LongHashMap;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.Chunk.EnumCreateEntityType;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -56,20 +55,11 @@ public class WorldCache implements IBlockAccess
                     }
                 }
 
-                return Blocks.air.getDefaultState();
+                return Blocks.AIR.getDefaultState();
             }
             catch (Throwable throwable)
             {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Getting block state");
-                CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being got");
-                crashreportcategory.addCrashSectionCallable("Location", new Callable<String>()
-                {
-                    @Override
-                    public String call() throws Exception
-                    {
-                        return CrashReportCategory.getCoordinateInfo(pos);
-                    }
-                });
                 throw new ReportedException(crashreport);
             }
         }
@@ -115,7 +105,7 @@ public class WorldCache implements IBlockAccess
     }
 
     public final World                    world;
-    private final LongHashMap<ChunkCache> map   = new LongHashMap<>();
+    private final Long2ObjectMap<ChunkCache> map   = new Long2ObjectOpenHashMap<>();
 
     final Set<ChunkCache>                 cache = Sets.newConcurrentHashSet();
 
@@ -126,9 +116,9 @@ public class WorldCache implements IBlockAccess
 
     void addChunk(Chunk chunk)
     {
-        long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+        long key = ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
         ChunkCache chunkcache = new ChunkCache(chunk);
-        map.add(key, chunkcache);
+        map.put(key, chunkcache);
         cache.add(chunkcache);
     }
 
@@ -139,7 +129,7 @@ public class WorldCache implements IBlockAccess
     }
 
     @Override
-    public BiomeGenBase getBiomeGenForCoords(BlockPos pos)
+    public Biome getBiomeGenForCoords(BlockPos pos)
     {
         return null;
     }
@@ -149,16 +139,16 @@ public class WorldCache implements IBlockAccess
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
-        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = map.getValueByKey(key);
+        long key = ChunkPos.chunkXZ2Int(l, i1);
+        ChunkCache chunk = map.get(key);
         if (chunk == null) return null;
         return chunk.getBlockState(pos);
     }
 
     public Chunk getChunk(int chunkX, int chunkZ)
     {
-        long key = ChunkCoordIntPair.chunkXZ2Int(chunkX, chunkZ);
-        ChunkCache chunkcache = map.getValueByKey(key);
+        long key = ChunkPos.chunkXZ2Int(chunkX, chunkZ);
+        ChunkCache chunkcache = map.get(key);
         if (chunkcache == null) return null;
         return chunkcache.chunk;
     }
@@ -180,8 +170,8 @@ public class WorldCache implements IBlockAccess
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
-        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = map.getValueByKey(key);
+        long key = ChunkPos.chunkXZ2Int(l, i1);
+        ChunkCache chunk = map.get(key);
         if (chunk == null) return null;
         return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
     }
@@ -204,8 +194,8 @@ public class WorldCache implements IBlockAccess
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
-        long key = ChunkCoordIntPair.chunkXZ2Int(l, i1);
-        ChunkCache chunk = map.getValueByKey(key);
+        long key = ChunkPos.chunkXZ2Int(l, i1);
+        ChunkCache chunk = map.get(key);
         if (chunk == null || chunk.isEmpty()) return _default;
         IBlockState state;
         return (state = getBlockState(pos)).getBlock().isSideSolid(state, this, pos, side);
@@ -213,7 +203,7 @@ public class WorldCache implements IBlockAccess
 
     void removeChunk(Chunk chunk)
     {
-        long key = ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+        long key = ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
         ChunkCache chunkcache = map.remove(key);
         if (chunkcache != null) cache.remove(chunkcache);
     }
