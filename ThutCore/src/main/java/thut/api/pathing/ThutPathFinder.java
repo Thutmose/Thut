@@ -15,7 +15,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
-import net.minecraft.pathfinding.PathHeap;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IntHashMap;
@@ -90,7 +90,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
     /** Adds a path from start to end and returns the whole path (args: unused,
      * start, end, unused, maxDistance) */
-    protected PathHeap addToPath(Entity entity, PathPoint start, PathPoint end, float distance)
+    protected Path addToPath(Entity entity, PathPoint start, PathPoint end, float distance)
     {
 
         if (end.equals(start)) { return null; }
@@ -141,11 +141,10 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     }
 
     /** Returns a new PathHeap for a given start and end point */
-    private PathHeap createEntityPath(PathPoint end)
+    private Path createEntityPath(PathPoint end)
     {
         int i = 1;
         PathPoint pathpoint2 = end;
-        PathHeap ret = new PathHeap();
         for (pathpoint2 = end; pathpoint2.previous != null; pathpoint2 = pathpoint2.previous)
         {
             ++i;
@@ -159,15 +158,11 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             pathpoint2 = pathpoint2.previous;
             --i;
         }
-        for (PathPoint point : apathpoint)
-        {
-            ret.addPoint(point);
-        }
-        return ret;
+        return new Path(apathpoint);
     }
 
     /** Internal implementation of creating a path from an entity to a point */
-    private PathHeap createEntityPathTo(double x, double y, double z, float distance)
+    private Path createEntityPathTo(double x, double y, double z, float distance)
     {
         Entity entity = (Entity) mob;
         this.pathb.clearPath();
@@ -210,14 +205,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 MathHelper.floor_double(entity.getEntityBoundingBox().minZ));
         PathPoint end = this.openPoint(MathHelper.floor_double(x - entity.width / 2.0F), MathHelper.floor_double(y),
                 MathHelper.floor_double(z - entity.width / 2.0F));
-        PathHeap PathHeap = this.addToPath(entity, start, end, distance);
+        Path path = this.addToPath(entity, start, end, distance);
 
-        return PathHeap;
+        return path;
     }
 
     /** Creates a path from an entity to a specified location within a minimum
      * distance */
-    public PathHeap createEntityPathTo(Entity entity, int x, int y, int z, float distance)
+    public Path createEntityPathTo(Entity entity, int x, int y, int z, float distance)
     {
         return this.createEntityPathTo(x + 0.5F, y + 0.5F, z + 0.5F, distance);
     }
@@ -225,14 +220,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     @Override
     /** Creates a path from an entity to a specified location within a minimum
      * distance */
-    public PathHeap createEntityPathTo(IBlockAccess blockaccess, Entity entityIn, BlockPos targetPos, float dist)
+    public Path createEntityPathTo(IBlockAccess blockaccess, Entity entityIn, BlockPos targetPos, float dist)
     {
         return createEntityPathTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), dist);
     }
 
     @Override
     /** Creates a path from one entity to another within a minimum distance */
-    public PathHeap createEntityPathTo(IBlockAccess world, Entity entity, Entity target, float distance)
+    public Path createEntityPathTo(IBlockAccess world, Entity entity, Entity target, float distance)
     {
         return this.createEntityPathTo(target.posX, target.getEntityBoundingBox().minY + 0.5f, target.posZ, distance);
     }
