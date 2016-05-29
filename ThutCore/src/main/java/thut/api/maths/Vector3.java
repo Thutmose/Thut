@@ -720,7 +720,8 @@ public class Vector3
     {
         if (getBlock(worldObj) != null)
         {
-            worldObj.destroyBlock(getPos(), drop);
+            if (drop) getBlock(worldObj).dropBlockAsItem(worldObj, getPos(), getBlockState(worldObj), fortune);
+            worldObj.destroyBlock(getPos(), false);
         }
     }
 

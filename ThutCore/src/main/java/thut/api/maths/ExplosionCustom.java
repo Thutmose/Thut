@@ -208,6 +208,7 @@ public class ExplosionCustom extends Explosion
 
     public static int                                              MAX_RADIUS    = 127;
     public static Block                                            melt;
+    public static Block                                            solidmelt;
     public static Block                                            dust;
     static final boolean[]                                         toClear       = { false, false };
     static final ExplosionCustom                                   instance      = new ExplosionCustom(null, null,
