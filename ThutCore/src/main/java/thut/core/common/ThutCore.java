@@ -68,8 +68,9 @@ public class ThutCore
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
-        proxy.preinit(e);
         config = new ConfigHandler(e.getSuggestedConfigurationFile());
+        config.preinit();
+        proxy.preinit(e);
         proxy.loadSounds();
         TerrainManager.getInstance();
         MinecraftForge.EVENT_BUS.register(this);

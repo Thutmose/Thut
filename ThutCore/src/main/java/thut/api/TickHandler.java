@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -36,6 +37,7 @@ public class TickHandler
         public Vector3 location;
         public Block   blockTo;
         public Block   blockFrom;
+        public boolean drop   = false;
         public int     metaTo = 0;
         public int     flag   = 3;
 
@@ -56,6 +58,11 @@ public class TickHandler
 
         public boolean changeBlock(World worldObj)
         {
+            if(drop)
+            {
+                IBlockState blockstate = location.getBlockState(worldObj);
+                blockstate.getBlock().dropBlockAsItem(worldObj, location.getPos(), blockstate, 0);
+            }
             boolean ret = location.setBlock(worldObj, blockTo, metaTo, flag);
             return ret;
         }

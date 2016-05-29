@@ -1,0 +1,20 @@
+{
+    "variants": {
+        "level=15":  { "model": "thutcore:solidmelt16" },
+        "level=14":  { "model": "thutcore:solidmelt16" },
+        "level=13":  { "model": "thutcore:solidmelt16" },
+        "level=12":  { "model": "thutcore:solidmelt16" },
+        "level=11":  { "model": "thutcore:solidmelt16" },
+        "level=10":  { "model": "thutcore:solidmelt16" },
+        "level=9":  { "model": "thutcore:solidmelt16" },
+        "level=8":  { "model": "thutcore:solidmelt16" },
+        "level=7":  { "model": "thutcore:solidmelt16" },
+        "level=6":  { "model": "thutcore:solidmelt16" },
+        "level=5":  { "model": "thutcore:solidmelt16" },
+        "level=4":  { "model": "thutcore:solidmelt16" },
+        "level=3":  { "model": "thutcore:solidmelt16" },
+        "level=2":  { "model": "thutcore:solidmelt16" },
+        "level=1":  { "model": "thutcore:solidmelt16" },
+        "level=0":  { "model": "thutcore:solidmelt16" }
+    }
+}

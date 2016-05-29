@@ -1,13 +1,19 @@
 package thut.core.client;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemMeshDefinition;
+import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.common.ForgeVersion.CheckResult;
 import net.minecraftforge.common.ForgeVersion.Status;
@@ -23,6 +29,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutItems;
 import thut.api.network.PacketHandler;
 import thut.core.common.CommonProxy;
+import thut.core.common.ThutCore;
+import thut.core.common.blocks.fluids.BlockDust;
+import thut.core.common.blocks.fluids.BlockMelt;
+import thut.core.common.blocks.fluids.BlockSolidMelt;
 import thut.core.common.items.ItemDusts;
 import thut.core.common.items.ItemDusts.Dust;
 import thut.reference.ThutCoreReference;
@@ -53,6 +63,7 @@ public class ClientProxy extends CommonProxy
             }
         }
     }
+
     public static int       renderPass;
 
     public static Minecraft mc;
@@ -161,6 +172,48 @@ public class ClientProxy extends CommonProxy
     @Override
     public void preinit(FMLPreInitializationEvent e)
     {
-//        ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
+        super.preinit(e);
+        ModelBakery.registerItemVariants(Item.getItemFromBlock(BlockSolidMelt.INSTANCE));
+        ModelLoader.setCustomMeshDefinition(Item.getItemFromBlock(BlockSolidMelt.INSTANCE), new ItemMeshDefinition()
+        {
+            public ModelResourceLocation getModelLocation(ItemStack stack)
+            {
+                return new ModelResourceLocation(ThutCore.modid.toLowerCase() + ":" + "solidmelt", "level=0");
+            }
+        });
+
+        ModelBakery.registerItemVariants(Item.getItemFromBlock(BlockMelt.INSTANCE));
+        ModelLoader.setCustomMeshDefinition(Item.getItemFromBlock(BlockMelt.INSTANCE), new ItemMeshDefinition()
+        {
+            public ModelResourceLocation getModelLocation(ItemStack stack)
+            {
+                return new ModelResourceLocation(ThutCore.modid.toLowerCase() + ":" + "melt", "fluid");
+            }
+        });
+
+        ModelBakery.registerItemVariants(Item.getItemFromBlock(BlockDust.INSTANCE));
+        ModelLoader.setCustomMeshDefinition(Item.getItemFromBlock(BlockDust.INSTANCE), new ItemMeshDefinition()
+        {
+            public ModelResourceLocation getModelLocation(ItemStack stack)
+            {
+                return new ModelResourceLocation(ThutCore.modid.toLowerCase() + ":" + "dust", "fluid");
+            }
+        });
+
+        ModelLoader.setCustomStateMapper(BlockMelt.INSTANCE, new StateMapperBase()
+        {
+            protected ModelResourceLocation getModelResourceLocation(IBlockState state)
+            {
+                return new ModelResourceLocation(ThutCore.modid.toLowerCase() + ":" + "melt", "fluid");
+            }
+        });
+
+        ModelLoader.setCustomStateMapper(BlockDust.INSTANCE, new StateMapperBase()
+        {
+            protected ModelResourceLocation getModelResourceLocation(IBlockState state)
+            {
+                return new ModelResourceLocation(ThutCore.modid.toLowerCase() + ":" + "dust", "fluid");
+            }
+        });
     }
 }

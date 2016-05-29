@@ -61,6 +61,7 @@ public class ExplosionCustom extends Explosion
         }
 
     }
+
     public static class ExplosionStuff
     {
         final ExplosionCustom boom;
@@ -100,6 +101,7 @@ public class ExplosionCustom extends Explosion
             newBoom.start();
         }
     }
+
     public static class ExplosionVictimTicker
     {
         public static Vector<VictimStuff>      victims       = new Vector<ExplosionCustom.VictimStuff>();
@@ -170,6 +172,7 @@ public class ExplosionCustom extends Explosion
             }
         }
     }
+
     public static class VictimStuff
     {
         final int       entity;
@@ -200,10 +203,12 @@ public class ExplosionCustom extends Explosion
             return super.equals(o);
         }
     }
-    public static int   MAX_RADIUS = 127;
-    public static Block melt;
-    public static Block dust;
-    static final boolean[] toClear = { false, false };
+
+    public static int                                              MAX_RADIUS    = 127;
+    public static Block                                            melt;
+    public static Block                                            solidmelt;
+    public static Block                                            dust;
+    static final boolean[]                                         toClear       = { false, false };
     static final ExplosionCustom                                   instance      = new ExplosionCustom(null, null,
             Vector3.getNewVector(), 0);
 
@@ -211,60 +216,69 @@ public class ExplosionCustom extends Explosion
     public static final ConcurrentHashMap<Integer, Vector<Entity>> worldEntities = new ConcurrentHashMap<Integer, Vector<Entity>>();
     private static int                                             maxThreads    = -1;
     private static final Thread                                    boomThread    = new Thread(new Runnable()
-    {
+                                                                                 {
 
-        @Override
-        public void run()
-        {
-            while (true)
-            {
-                boolean boomed = false;
-                if (explosions.size() > 0)
-                {
-                    int num;
-                    if (maxThreads == -1)
-                    {
-                        maxThreads = Runtime.getRuntime().availableProcessors() / 2;
-                        maxThreads = Math.max(1, maxThreads);
-                    }
-                    num = maxThreads;
-                    ArrayList<ExplosionStuff> booms = new ArrayList<ExplosionStuff>(explosions);
-                    num = Math.min(num, booms.size());
-                    Set<ExplosionStuff> toRemove = new HashSet<ExplosionStuff>();
-                    for (int i = 0; i < num; i++)
-                    {
-                        ExplosionStuff boom = booms.get(i);
-                        if (boom.lock[0])
-                        {
-                            boom.doBoom();
-                        }
-                        else if (!boom.lock[1])
-                        {
-                            toRemove.add(boom);
-                        }
-                        boomed = true;
-                    }
-                    explosions.removeAll(toRemove);
-                }
-                if (toClear[0])
-                {
-                    explosions.clear();
-                    toClear[0] = false;
-                }
-                if (!boomed)
-                {
-                    try
-                    {
-                        Thread.sleep(100);
-                    }
-                    catch (InterruptedException e)
-                    {
-                        // e.printStackTrace();
-                    }
-                }
-            }
-        }
-    });
+                                                                                     @Override
+                                                                                     public void run()
+                                                                                     {
+                                                                                         while (true)
+                                                                                         {
+                                                                                             boolean boomed = false;
+                                                                                             if (explosions.size() > 0)
+                                                                                             {
+                                                                                                 int num;
+                                                                                                 if (maxThreads == -1)
+                                                                                                 {
+                                                                                                     maxThreads = Runtime
+                                                                                                             .getRuntime()
+                                                                                                             .availableProcessors()
+                                                                                                             / 2;
+                                                                                                     maxThreads = Math
+                                                                                                             .max(1, maxThreads);
+                                                                                                 }
+                                                                                                 num = maxThreads;
+                                                                                                 ArrayList<ExplosionStuff> booms = new ArrayList<ExplosionStuff>(
+                                                                                                         explosions);
+                                                                                                 num = Math.min(num,
+                                                                                                         booms.size());
+                                                                                                 Set<ExplosionStuff> toRemove = new HashSet<ExplosionStuff>();
+                                                                                                 for (int i = 0; i < num; i++)
+                                                                                                 {
+                                                                                                     ExplosionStuff boom = booms
+                                                                                                             .get(i);
+                                                                                                     if (boom.lock[0])
+                                                                                                     {
+                                                                                                         boom.doBoom();
+                                                                                                     }
+                                                                                                     else if (!boom.lock[1])
+                                                                                                     {
+                                                                                                         toRemove.add(
+                                                                                                                 boom);
+                                                                                                     }
+                                                                                                     boomed = true;
+                                                                                                 }
+                                                                                                 explosions.removeAll(
+                                                                                                         toRemove);
+                                                                                             }
+                                                                                             if (toClear[0])
+                                                                                             {
+                                                                                                 explosions.clear();
+                                                                                                 toClear[0] = false;
+                                                                                             }
+                                                                                             if (!boomed)
+                                                                                             {
+                                                                                                 try
+                                                                                                 {
+                                                                                                     Thread.sleep(100);
+                                                                                                 }
+                                                                                                 catch (InterruptedException e)
+                                                                                                 {
+                                                                                                     // e.printStackTrace();
+                                                                                                 }
+                                                                                             }
+                                                                                         }
+                                                                                     }
+                                                                                 });
     static
     {
         boomThread.setName("explosionThread");
@@ -272,35 +286,37 @@ public class ExplosionCustom extends Explosion
         MinecraftForge.EVENT_BUS.register(new ExplosionVictimTicker());
         boomThread.start();
     }
-    IBlockAccess        worldObj;
-    int                 dimension;
-    private World       world;
-    Vector3             centre;
+    IBlockAccess                 worldObj;
+    int                          dimension;
+    private World                world;
+    Vector3                      centre;
 
-    float               strength;
+    float                        strength;
 
-    public boolean      meteor     = false;
+    public boolean               meteor                 = false;
 
-    public EntityPlayer  owner                  = null;
+    public EntityPlayer          owner                  = null;
 
-    List<Entity>         targets                = new ArrayList<Entity>();
+    List<Entity>                 targets                = new ArrayList<Entity>();
 
-    private double       explosionX;
+    private double               explosionX;
 
-    private double       explosionY;
+    private double               explosionY;
 
-    private double       explosionZ;
-    private float        explosionSize;
+    private double               explosionZ;
+    private float                explosionSize;
 
-    private boolean      isSmoking              = false;
+    private boolean              isSmoking              = false;
 
-    Entity               exploder;
+    boolean                      doesDrop               = false;
 
-    public Set<BlockPos> affectedBlockPositions = new HashSet<BlockPos>();
+    Entity                       exploder;
 
-    Map<EntityLivingBase, Float> damages  = new HashMap<EntityLivingBase, Float>();
+    public Set<BlockPos>         affectedBlockPositions = new HashSet<BlockPos>();
 
-    List<Chunk>                  affected = new ArrayList<Chunk>();
+    Map<EntityLivingBase, Float> damages                = new HashMap<EntityLivingBase, Float>();
+
+    List<Chunk>                  affected               = new ArrayList<Chunk>();
 
     public ExplosionCustom(World world, Entity par2Entity, double x, double y, double z, float power)
     {
@@ -454,20 +470,20 @@ public class ExplosionCustom extends Explosion
         n = locations.size();
         if (n != 0)
 
-        for (int i = 0; i < n; i++)
-        {
+            for (int i = 0; i < n; i++)
+            {
             Vector3 source = locations.get(i);
             float strength = Math.min(blasts.get(i), 256);
             if (worldObj.isAreaLoaded(source.getPos(), max))
             {
-                if (strength != 0)
-                {
-                    ExplosionCustom boo = new ExplosionCustom(worldObj, exploder, source, strength * factor);
-                    boo.doExplosion();
+            if (strength != 0)
+            {
+            ExplosionCustom boo = new ExplosionCustom(worldObj, exploder, source, strength * factor);
+            boo.doExplosion();
 
-                }
             }
-        }
+            }
+            }
         if (remainingEnergy > 10)
         {
             absorbedLoc = absorbedLoc.subtract(velocity.normalize());
@@ -479,6 +495,7 @@ public class ExplosionCustom extends Explosion
             // explosions.add(boom);
         }
     }
+
     /** Handles the actual block removal, has a meteor argument to allow
      * converting to ash or dust on impact
      * 
@@ -487,14 +504,15 @@ public class ExplosionCustom extends Explosion
     public void doMeteorStuff(Block destroyed, Vector3 location)
     {
         BlockChange change;
+        float resistance = location.getExplosionResistance(this, worldObj);
         if (!meteor)
         {
             change = new BlockChange(location, dimension, Blocks.air);
             change.flag = 2;
+            change.drop = resistance > 2 && doesDrop;
             TickHandler.addBlockChange(change, dimension);
             return;
         }
-        float resistance = location.getExplosionResistance(this, worldObj);
 
         if (melt == null) melt = Blocks.air;
         if (dust == null) dust = Blocks.air;
@@ -513,6 +531,7 @@ public class ExplosionCustom extends Explosion
             TickHandler.addBlockChange(change, dimension);
         }
     }
+
     HashMap<Integer, List<Entity>> getEntitiesInRange(int distance)
     {
         HashMap<Integer, List<Entity>> ret = new HashMap<Integer, List<Entity>>();
@@ -542,6 +561,7 @@ public class ExplosionCustom extends Explosion
 
         return ret;
     }
+
     List<Object> getEntitiesWithinDistance(Vector3 centre, Class<Entity> targetClass, int distance, int dimension)
     {
         Vector<?> entities = ExplosionCustom.worldEntities.get(dimension);
@@ -565,6 +585,7 @@ public class ExplosionCustom extends Explosion
         }
         return list;
     }
+
     List<Integer> getRemovedBlocks(final double radius, final double strength, final IBlockAccess worldObj,
             final Vector3 centre)
     {
@@ -585,7 +606,7 @@ public class ExplosionCustom extends Explosion
         double str;
 
         HashMap<Integer, Float> resists = new HashMap<Integer, Float>();
-        
+
         HashSet<Integer> blockedSet = new HashSet<>();
         // used to speed up the checking of if a resist exists in the map
         BitSet checked = new BitSet();
@@ -716,7 +737,7 @@ public class ExplosionCustom extends Explosion
 
             if (chunk == null)
             {
-                System.out.println("No chunk at "+rAbs);
+                System.out.println("No chunk at " + rAbs);
                 Thread.dumpStack();
             }
             if (!affected.contains(chunk)) affected.add(chunk);
