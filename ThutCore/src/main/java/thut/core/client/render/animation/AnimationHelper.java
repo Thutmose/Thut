@@ -36,7 +36,7 @@ public class AnimationHelper
         Vector3 temp = Vector3.getNewVector();
         float x = 0, y = 0, z = 0;
 
-        float time = entity.worldObj.getTotalWorldTime() + partialTick;
+        float time = entity.ticksExisted + partialTick;
         time = time % animationLength;
         if (components != null) for (AnimationComponent component : components)
         {

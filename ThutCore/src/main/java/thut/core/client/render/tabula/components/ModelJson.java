@@ -347,7 +347,7 @@ public class ModelJson extends TabulaModelBase
 
     public void updateAnimation(Entity entity, float partialTick)
     {
-        float time = entity.worldObj.getTotalWorldTime() + partialTick;
+        float time = entity.ticksExisted + partialTick;
         time = time % animationLength;
         for (Entry<String, ArrayList<AnimationComponent>> entry : playingAnimation.sets.entrySet())
         {
@@ -363,7 +363,6 @@ public class ModelJson extends TabulaModelBase
                     {
                         componentTimer = component.length;
                     }
-                    //// TODO See that this works.
                     animating.scaleX += (float) (component.scaleChange[0] / component.length * componentTimer);
                     animating.scaleY += (float) (component.scaleChange[1] / component.length * componentTimer);
                     animating.scaleZ += (float) (component.scaleChange[2] / component.length * componentTimer);
