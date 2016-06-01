@@ -40,7 +40,13 @@ public class BlockMelt extends BlockFluid
     public void tryHarden(World worldObj, BlockPos vec)
     {
         IBlockState original = worldObj.getBlockState(vec);
-        if (original.getBlock() != this) return;
+        IBlockState down = worldObj.getBlockState(vec.down());
+        if (down.getBlock() == BlockDust.INSTANCE)
+        {
+            worldObj.setBlockToAir(vec.down());
+        }
+
+        if (original.getBlock() != this || !down.getBlock().getMaterial().isSolid()) return;
         worldObj.setBlockState(vec, getSolidState(worldObj, vec));
     }
 
