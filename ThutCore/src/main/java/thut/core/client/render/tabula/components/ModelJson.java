@@ -320,7 +320,7 @@ public class ModelJson extends TabulaModelBase
 
     public void updateAnimation(Entity entity, float partialTick)
     {
-        float time = entity.worldObj.getTotalWorldTime() + partialTick;
+        float time = entity.ticksExisted + partialTick;
         time = time % animationLength;
         for (Entry<String, ArrayList<AnimationComponent>> entry : playingAnimation.sets.entrySet())
         {

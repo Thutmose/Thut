@@ -290,7 +290,7 @@ public class Vector3
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
         Vector3 v = getNewVector().set(x, y, z);
 
-        if (worldObj instanceof World) block.addCollisionBoxToList(state, (World) worldObj, pos,
+        if (worldObj instanceof World) state.addCollisionBoxToList((World) worldObj, pos,
                 v.getAABB().expand(0.03, 0.03, 0.03), aabbs, null);
         if (aabbs.size() == 0) return true;
 

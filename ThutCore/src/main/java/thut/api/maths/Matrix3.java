@@ -399,11 +399,11 @@ public class Matrix3
         return ret;
     }
 
-    public Vector3[] rows = new Vector3[3];
+    public Vector3[]                 rows = new Vector3[3];
 
-    int size = 3;
+    int                              size = 3;
 
-    Vector3[] pointSet;
+    Vector3[]                        pointSet;
 
     private ArrayList<AxisAlignedBB> collidingBoundingBoxes;
 
@@ -903,7 +903,7 @@ public class Matrix3
                     Block block = iblockstate.getBlock();
                     if (block.isCollidable())
                     {
-                        block.addCollisionBoxToList(iblockstate, world, blockpos, box, collidingBoundingBoxes, null);
+                        iblockstate.addCollisionBoxToList(world, blockpos, box, collidingBoundingBoxes, null);
                     }
                 }
             }
