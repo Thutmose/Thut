@@ -3,6 +3,8 @@ package thut.tech.common.blocks.lift;
 import java.util.List;
 import java.util.Random;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Predicate;
 
 import net.minecraft.block.Block;
@@ -11,48 +13,119 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
-import thut.api.maths.Vector3;
 import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
 
 public class BlockLift extends Block implements ITileEntityProvider
 {
+    public static enum EnumType implements IStringSerializable
+    {
+        LIFT(0, "lift"), CONTROLLER(1, "liftcontroller");
+
+        private static final EnumType[] META_LOOKUP = new EnumType[values().length];
+        static
+        {
+            EnumType[] var0 = values();
+            int var1 = var0.length;
+
+            for (int var2 = 0; var2 < var1; ++var2)
+            {
+                EnumType var3 = var0[var2];
+                META_LOOKUP[var3.getMetadata()] = var3;
+            }
+        }
+
+        public static EnumType byMetadata(int meta)
+        {
+            if (meta < 0 || meta >= META_LOOKUP.length)
+            {
+                meta = 0;
+            }
+
+            return META_LOOKUP[meta];
+        }
+
+        private final int    meta;
+
+        private final String name;
+
+        private final String unlocalizedName;
+
+        private EnumType(int meta, String name)
+        {
+            this(meta, name, name);
+        }
+
+        private EnumType(int meta, String name, String unlocalizedName)
+        {
+            this.meta = meta;
+            this.name = name;
+            this.unlocalizedName = unlocalizedName;
+        }
+
+        public int getMetadata()
+        {
+            return this.meta;
+        }
+
+        @Override
+        public String getName()
+        {
+            return this.name;
+        }
+
+        public String getUnlocalizedName()
+        {
+            return this.unlocalizedName;
+        }
+
+        @Override
+        public String toString()
+        {
+            return this.name;
+        }
+    }
+
     public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class,
             new Predicate<EnumType>()
-            {
-                public boolean apply(EnumType type)
-                {
-                    return type.getMetadata() < 4;
-                }
-            });
+                                                               {
+                                                                   @Override
+                                                                   public boolean apply(EnumType type)
+                                                                   {
+                                                                       return type.getMetadata() < 4;
+                                                                   }
+                                                               });
     public static final PropertyBool           CALLED  = PropertyBool.create("called");
+
     public static final PropertyBool           CURRENT = PropertyBool.create("current");
 
-    public int size = 5;
+    public int                                 size    = 5;
 
     public BlockLift()
     {
-        super(Material.iron);
+        super(Material.IRON);
         setHardness(3.5f);
         this.setUnlocalizedName("lift");
         this.setTickRandomly(true);
@@ -62,176 +135,24 @@ public class BlockLift extends Block implements ITileEntityProvider
         ThutBlocks.lift = this;
     }
 
+    /** Can this block provide power. Only wire currently seems to have this
+     * change based on its state. */
     @Override
-    /** Called when a block is placed using its ItemBlock. Args: World, X, Y, Z,
-     * side, hitX, hitY, hitZ, block metadata */
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
-            int meta, EntityLivingBase placer)
+    public boolean canProvidePower(IBlockState state)
     {
-        return getStateFromMeta(meta);
-    }
-
-    public EnumFacing getFacingfromEntity(EntityLiving e)
-    {
-        EnumFacing side = null;
-        double angle = e.rotationYaw % 360;
-
-        if (angle > 315 || angle <= 45) { return EnumFacing.SOUTH; }
-        if (angle > 45 && angle <= 135) { return EnumFacing.WEST; }
-        if (angle > 135 && angle <= 225) { return EnumFacing.NORTH; }
-        if (angle > 225 && angle <= 315) { return EnumFacing.EAST; }
-
-        return side;
-    }
-
-    @Override
-    public boolean onBlockActivated(World worldObj, BlockPos pos, IBlockState state, EntityPlayer player,
-            EnumFacing side, float hitX, float hitY, float hitZ)
-    {
-        if (state.getValue(VARIANT) == EnumType.LIFT)
-        {
-            ItemStack[][] stacks;
-            TileEntityLiftAccess te = (TileEntityLiftAccess) worldObj.getTileEntity(pos);
-            stacks = checkBlocks(worldObj, te, pos);
-            if (stacks != null && !worldObj.isRemote && player.getHeldItem() != null
-                    && player.getHeldItem().getItem() instanceof ItemLinker)
-            {
-                removeBlocks(worldObj, te, pos);
-                EntityLift lift = new EntityLift(worldObj, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-                lift.blocks = stacks;
-                lift.corners = te.corners.clone();
-                lift.owner = player.getUniqueID();
-                worldObj.spawnEntityInWorld(lift);
-                player.addChatMessage(new ChatComponentText("Sucessfully Made Lift"));
-                return true;
-            }
-            else if (te != null && side == EnumFacing.UP)
-            {
-                te.doButtonClick(side, hitX, hitY, hitZ);
-                return true;
-            }
-            return false;
-        }
-        else if (state.getValue(VARIANT) == EnumType.CONTROLLER)
-        {
-            TileEntityLiftAccess te = (TileEntityLiftAccess) worldObj.getTileEntity(pos);
-            if (te != null && (!te.isSideOn(side)
-                    || (player.getHeldItem() != null && player.getHeldItem().getItem() == Items.stick)))
-            {
-                if (player.getHeldItem() != null
-                        && (player.getHeldItem().getItem().getUnlocalizedName().toLowerCase().contains("wrench")
-                                || player.getHeldItem().getItem().getUnlocalizedName().toLowerCase()
-                                        .contains("screwdriver")
-                                || player.getHeldItem().getItem() instanceof ItemLinker
-                                || player.getHeldItem().getItem() == Items.stick))
-                {
-                    if (!worldObj.isRemote)
-                    {
-                        te.setSide(side, !te.isSideOn(side));
-                        te.markDirty();
-                    }
-                    return true;
-                }
-            }
-            else if (te != null && te.isSideOn(side))
-            {
-                if (player.getHeldItem() != null
-                        && (player.getHeldItem().getItem().getUnlocalizedName().toLowerCase().contains("wrench")
-                                || player.getHeldItem().getItem().getUnlocalizedName().toLowerCase().contains(
-                                        "screwdriver")
-                                || player.getHeldItem().getItem() instanceof ItemLinker))
-                {
-                    if (!worldObj.isRemote)
-                    {
-                        te.setSidePage(side, (te.getSidePage(side) + 1) % 4);
-                        te.markDirty();
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (te != null) te.doButtonClick(side, hitX, hitY, hitZ);
-                    return true;
-                }
-            }
-            else if (te == null) new Exception().printStackTrace();
-        }
         return true;
     }
 
     @Override
-    /** Ticks the block if it's been scheduled */
-    public void updateTick(World world, BlockPos pos, IBlockState state, Random rand)
+    protected BlockStateContainer createBlockState()
     {
-        TileEntity te = world.getTileEntity(pos);
-        if (te instanceof TileEntityLiftAccess)
-        {
-            // ((TileEntityLiftAccess) te).notifySurroundings();
-        }
+        return new BlockStateContainer(this, new IProperty[] { VARIANT, CALLED, CURRENT });
     }
 
-    public ItemStack[][] checkBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
+    @Override
+    public TileEntity createNewTileEntity(World var1, int var2)
     {
-
-        int xMin = te.corners[0][0];
-        int zMin = te.corners[0][1];
-        int xMax = te.corners[1][0];
-        int zMax = te.corners[1][1];
-
-        ItemStack[][] ret = new ItemStack[(xMax - xMin) + 1][(zMax - zMin) + 1];
-
-        Vector3 loc = Vector3.getNewVector().set(pos);
-        for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-            {
-                if (!(i == 0 && j == 0))
-                {
-                    IBlockState state = loc.set(pos).addTo(i, 0, j).getBlockState(worldObj);
-                    Block b;
-                    if ((b = state.getBlock()).isNormalCube())
-                    {
-                        ret[i - xMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    ret[i - xMin][j - zMin] = new ItemStack(this);
-                }
-            }
-        return ret;
-    }
-
-    public void removeBlocks(World worldObj, TileEntityLiftAccess te, BlockPos pos)
-    {
-        int xMin = te.corners[0][0];
-        int zMin = te.corners[0][1];
-        int xMax = te.corners[1][0];
-        int zMax = te.corners[1][1];
-        Vector3 loc = Vector3.getNewVector();
-        for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-                for (int k = 0; k < 1; k++)
-                {
-                    worldObj.setBlockToAir(loc.set(pos).add(i, k, j).getPos());
-                }
-    }
-
-    /** Called throughout the code as a replacement for block instanceof
-     * BlockContainer Moving this to the Block base class allows for mods that
-     * wish to extend vinella blocks, and also want to have a tile entity on
-     * that block, may. Return true from this function to specify this block has
-     * a tile entity.
-     *
-     * @param metadata
-     *            Metadata of the current block
-     * @return True if block has a tile entity, false otherwise */
-    public boolean hasTileEntity(int metadata)
-    {
-        return metadata == 1;
+        return new TileEntityLiftAccess();
     }
 
     /** Called throughout the code as a replacement for
@@ -249,27 +170,51 @@ public class BlockLift extends Block implements ITileEntityProvider
         return new TileEntityLiftAccess();
     }
 
-    ////////////////////////////////////////////////////// RedStone
-    ////////////////////////////////////////////////////// stuff/////////////////////////////////////////////////
     @Override
-    public int getWeakPower(IBlockAccess worldIn, BlockPos pos, IBlockState state, EnumFacing side)
+    /** Gets the metadata of the item this Block can drop. This method is called
+     * when the block gets destroyed. It returns the metadata of the dropped
+     * item based on the old metadata of the block. */
+    public int damageDropped(IBlockState state)
     {
-        if (state.getValue(VARIANT) == EnumType.CONTROLLER)
-        {
-            TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-            if (te.lift != null && (int) te.lift.posY == te.getPos().getY() - 2 && te.lift.motionY == 0) return 15;
-        }
-        return 0;
+        return state.getValue(VARIANT) == EnumType.LIFT ? 0 : 1;
     }
 
-    /** Can this block provide power. Only wire currently seems to have this
-     * change based on its state. */
-    public boolean canProvidePower()
+    public EnumFacing getFacingfromEntity(EntityLiving e)
     {
-        return true;
+        EnumFacing side = null;
+        double angle = e.rotationYaw % 360;
+
+        if (angle > 315 || angle <= 45) { return EnumFacing.SOUTH; }
+        if (angle > 45 && angle <= 135) { return EnumFacing.WEST; }
+        if (angle > 135 && angle <= 225) { return EnumFacing.NORTH; }
+        if (angle > 225 && angle <= 315) { return EnumFacing.EAST; }
+
+        return side;
     }
 
-    public int getStrongPower(IBlockAccess worldIn, BlockPos pos, IBlockState state, EnumFacing side)
+    @Override
+    /** Convert the BlockState into the correct metadata value */
+    public int getMetaFromState(IBlockState state)
+    {
+        int ret = state.getValue(VARIANT).meta;
+        if ((state.getValue(CALLED))) ret += 4;
+        if ((state.getValue(CURRENT))) ret += 8;
+        return ret;
+    }
+
+    @Override
+    /** Convert the given metadata into a BlockState for this Block */
+    public IBlockState getStateFromMeta(int meta)
+    {
+        int typeMeta = meta & 3;
+        boolean called = ((meta / 4) & 1) > 0;
+        boolean current = ((meta / 8) & 1) > 0;
+        return getDefaultState().withProperty(VARIANT, EnumType.byMetadata(typeMeta)).withProperty(CALLED, called)
+                .withProperty(CURRENT, current);
+    }
+
+    @Override
+    public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
     {
         return 0;
     }
@@ -287,6 +232,116 @@ public class BlockLift extends Block implements ITileEntityProvider
         {
             par3List.add(new ItemStack(par1, 1, j));
         }
+    }
+
+    ////////////////////////////////////////////////////// RedStone
+    ////////////////////////////////////////////////////// stuff/////////////////////////////////////////////////
+    @Override
+    public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
+    {
+        return blockState.getValue(CURRENT) ? 15 : 0;
+    }
+
+    /** Called throughout the code as a replacement for block instanceof
+     * BlockContainer Moving this to the Block base class allows for mods that
+     * wish to extend vinella blocks, and also want to have a tile entity on
+     * that block, may. Return true from this function to specify this block has
+     * a tile entity.
+     *
+     * @param metadata
+     *            Metadata of the current block
+     * @return True if block has a tile entity, false otherwise */
+    public boolean hasTileEntity(int metadata)
+    {
+        return metadata == 1;
+    }
+
+    @Override
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
+            EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)
+    {
+        if (state.getValue(VARIANT) == EnumType.LIFT)
+        {
+            ItemStack[][][] stacks;
+            TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+            stacks = EntityLift.checkBlocks(worldIn, te, pos);
+            if (stacks != null && !worldIn.isRemote && playerIn.getHeldItem(hand) != null
+                    && playerIn.getHeldItem(hand).getItem() instanceof ItemLinker)
+            {
+                EntityLift.removeBlocks(worldIn, te, pos);
+                EntityLift lift = new EntityLift(worldIn, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                lift.blocks = stacks;
+                lift.boundMax = te.boundMax.copy();
+                lift.boundMin = te.boundMin.copy();
+                lift.owner = playerIn.getUniqueID();
+                worldIn.spawnEntityInWorld(lift);
+                String message = "msg.lift.create";
+                playerIn.addChatMessage(new TextComponentTranslation(message));
+                return true;
+            }
+            else if (te != null && side == EnumFacing.UP)
+            {
+                te.doButtonClick(playerIn, side, hitX, hitY, hitZ);
+                return true;
+            }
+            return false;
+        }
+        else if (state.getValue(VARIANT) == EnumType.CONTROLLER)
+        {
+            TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+            if (te != null && (!te.isSideOn(side)
+                    || (playerIn.getHeldItem(hand) != null && playerIn.getHeldItem(hand).getItem() == Items.STICK)))
+            {
+                if (playerIn.getHeldItem(hand) != null
+                        && (playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
+                                || playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains(
+                                        "screwdriver")
+                                || playerIn.getHeldItem(hand).getItem() instanceof ItemLinker
+                                || playerIn.getHeldItem(hand).getItem() == Items.STICK))
+                {
+                    if (!worldIn.isRemote)
+                    {
+                        te.setSide(side, !te.isSideOn(side));
+                        if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);
+                    }
+                    return true;
+                }
+            }
+            else if (te != null && te.isSideOn(side))
+            {
+                if (playerIn.getHeldItem(hand) != null
+                        && (playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
+                                || playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains(
+                                        "screwdriver")
+                                || playerIn.getHeldItem(hand).getItem() instanceof ItemLinker))
+                {
+                    if (!worldIn.isRemote)
+                    {
+                        te.setSidePage(side, (te.getSidePage(side) + 1) % 4);
+                        if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);
+                    }
+                    // TODO see if update needed.
+                    te.markDirty();
+                    return true;
+                }
+                else
+                {
+                    if (te != null) te.doButtonClick(playerIn, side, hitX, hitY, hitZ);
+                    return true;
+                }
+            }
+            else if (te == null) new Exception().printStackTrace();
+        }
+        return true;
+    }
+
+    @Override
+    /** Called when a block is placed using its ItemBlock. Args: World, X, Y, Z,
+     * side, hitX, hitY, hitZ, block metadata */
+    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
+            int meta, EntityLivingBase placer)
+    {
+        return getStateFromMeta(meta);
     }
 
     /** Rotate the block. For vanilla blocks this rotates around the axis passed
@@ -316,108 +371,13 @@ public class BlockLift extends Block implements ITileEntityProvider
     }
 
     @Override
-    /** Gets the metadata of the item this Block can drop. This method is called
-     * when the block gets destroyed. It returns the metadata of the dropped
-     * item based on the old metadata of the block. */
-    public int damageDropped(IBlockState state)
+    /** Ticks the block if it's been scheduled */
+    public void updateTick(World world, BlockPos pos, IBlockState state, Random rand)
     {
-        return this.getMetaFromState(state);
-    }
-
-    @Override
-    public TileEntity createNewTileEntity(World var1, int var2)
-    {
-        return new TileEntityLiftAccess();
-    }
-
-    @Override
-    /** Convert the given metadata into a BlockState for this Block */
-    public IBlockState getStateFromMeta(int meta)
-    {
-        int typeMeta = meta & 3;
-        boolean called = ((meta / 4) & 1) > 0;
-        boolean current = ((meta / 8) & 1) > 0;
-        return getDefaultState().withProperty(VARIANT, EnumType.byMetadata(typeMeta)).withProperty(CALLED, called)
-                .withProperty(CURRENT, current);
-    }
-
-    @Override
-    /** Convert the BlockState into the correct metadata value */
-    public int getMetaFromState(IBlockState state)
-    {
-        int ret = ((EnumType) state.getValue(VARIANT)).meta;
-        if (((Boolean) state.getValue(CALLED))) ret += 4;
-        if (((Boolean) state.getValue(CURRENT))) ret += 8;
-        return ret;
-    }
-
-    @Override
-    protected BlockState createBlockState()
-    {
-        return new BlockState(this, new IProperty[] { VARIANT, CALLED, CURRENT });
-    }
-
-    public static enum EnumType implements IStringSerializable
-    {
-        LIFT(0, "lift"), CONTROLLER(1, "liftcontroller");
-
-        private static final EnumType[] META_LOOKUP = new EnumType[values().length];
-        private final int meta;
-        private final String name;
-        private final String unlocalizedName;
-
-        private EnumType(int meta, String name)
+        TileEntity te = world.getTileEntity(pos);
+        if (te instanceof TileEntityLiftAccess)
         {
-            this(meta, name, name);
-        }
-
-        private EnumType(int meta, String name, String unlocalizedName)
-        {
-            this.meta = meta;
-            this.name = name;
-            this.unlocalizedName = unlocalizedName;
-        }
-
-        public int getMetadata()
-        {
-            return this.meta;
-        }
-
-        public String toString()
-        {
-            return this.name;
-        }
-
-        public static EnumType byMetadata(int meta)
-        {
-            if (meta < 0 || meta >= META_LOOKUP.length)
-            {
-                meta = 0;
-            }
-
-            return META_LOOKUP[meta];
-        }
-
-        public String getName()
-        {
-            return this.name;
-        }
-
-        public String getUnlocalizedName()
-        {
-            return this.unlocalizedName;
-        }
-
-        static
-        {
-            EnumType[] var0 = values();
-            int var1 = var0.length;
-
-            for (int var2 = 0; var2 < var1; ++var2)
-            {
-                EnumType var3 = var0[var2];
-                META_LOOKUP[var3.getMetadata()] = var3;
-            }
+            // ((TileEntityLiftAccess) te).notifySurroundings();
         }
     }
 }

@@ -15,46 +15,12 @@ msg.liftSet.name=Elevator set
 msg.floorSet.name=Set this Floor to %s
 msg.lift.killed=Killed Elevator
 msg.lift.owner=This Elevator is owned by %s
+msg.lift.create=Successfully Made Elevator
 
-#InfoBook
-ttinfo.page1.1.name=Welcome the ThutTech Manual.
-ttinfo.page1.2.name= 
-ttinfo.page1.3.name=The following pages will describe how to create and operate an elevator system.
-ttinfo.page1.4.name= 
-ttinfo.page1.5.name=The first thing you will need to do, is craft an Elevator Block, Two or more Elevator Control Blocks, and a Device Linker.
+#InfoBook json
 
-ttinfo.page2.1.name=To start with, place the Elevator block, then surround it with normal blocks. Then use the gui on top to select the size.
-ttinfo.page2.2.name= 
-ttinfo.page2.3.name=A normal block can be any block which is a normal cube building block, like dirt, stone, resource blocks, etc.
+ttinfobook.json={pages:["[\"\",{\"text\":\"Welcome the ThutTech Manual.\",\"color\":\"dark_green\"},{\"text\":\"\n\nThe following pages will describe how to create and operate an elevator system.\n\nThe first thing you will need to do, is craft an Elevator Block, Two or more Elevator Control Blocks, and a Device Linker.\",\"color\":\"none\"}]","[\"\",{\"text\":\"To start with, place the Elevator block, then surround it with normal blocks. Then use the gui on top to select the size.\n\nA normal block can be any block which is a normal cube building block, like dirt, stone, resource blocks, etc.\"}]","[\"\",{\"text\":\"Next right click the elevator block with the Device Linker, and it will convert it into an elevator, and will use the blocks around it as well.\n\nIf the icons shown do not have a normal block underneath of them, the creation will fail.\"}]","[\"\",{\"text\":\"Next Shift-Right-Click the elevator with the Device Linker.  This will bind the linker to the Elevator.\n\nIf you wish to remove the Elevator, shift right click it with a stick, and it will drop all of the contained blocks.\"}]","[\"\",{\"text\":\"If you wish to change the texture of the central block, shift right click it with a block, and if it is a normal block, it will hold it for the texture.\n\nTo get the block back, shift right click it with an empty hand, and it will drop it.\"}]","[\"\",{\"text\":\"Next place the Control Blocks.\n\nThe Control Blocks need to be placed 2 blocks above where the Elevator should stop.\n\nRight click the face of the block that you want buttons on with the Device Linker, and buttons will display.\"}]","[\"\",{\"text\":\"Right clicking again with the Linker will cycle through the 4 different pages of buttons.\n\nIf you right click the face with a stick, it will toggle that face on and off.\n\nControl Blocks which are physically touching will be linked to the same floor.\"}]","[\"\",{\"text\":\"To actually Link the Elevator to the block, shift right click the number you want that floor to be with the Device Linker, and that block will be assigned as that floor.\n\nTo use, right click the required floor with empty hand, or any item that is not the Device Linker or Stick.\"}]","[\"\",{\"text\":\"The Control Block is compatible with OpenComputers, and has the following Methods available:\n\nsetFloor(number)\ngetFloor(number)\ncallFloor(number)\ncallYValue(number)\ngetYValue()\ngetFloorYValue(number)\"}]"],title:ThutTech Manual,author:Thutmose}
 
-ttinfo.page3.1.name=Next right click the elevator block with the Device Linker, and it will convert it into an elevator, and will use the blocks around it as well.
-ttinfo.page3.2.name= 
-ttinfo.page3.3.name=If the icons shown do not have a normal block underneath of them, the creation will fail.
-
-ttinfo.page4.1.name=Next Shift-Right-Click the elevator with the Device Linker.  This will bind the linker to the Elevator.
-ttinfo.page4.2.name= 
-ttinfo.page4.3.name=If you wish to remove the Elevator, shift right click it with a stick, and it will drop all of the contained blocks.
-
-ttinfo.page5.1.name=If you wish to change the texture of the central block, shift right click it with a block, and if it is a normal block, it will hold it for the texture.
-ttinfo.page5.2.name= 
-ttinfo.page5.3.name=To get the block back, shift right click it with an empty hand, and it will drop it.
-
-ttinfo.page6.1.name=Next place the Control Blocks.
-ttinfo.page6.2.name= 
-ttinfo.page6.3.name=The Control Blocks need to be placed 2 blocks above where the Elevator should stop.
-ttinfo.page6.4.name= 
-ttinfo.page6.5.name=Right click the face of the block that you want buttons on with the Device Linker, and buttons will display.
-
-ttinfo.page7.1.name=Right clicking again with the Linker will cycle through the 4 different pages of buttons.
-ttinfo.page7.2.name=If you right click the face with a stick, it will toggle that face on and off.
-ttinfo.page7.3.name= 
-ttinfo.page7.4.name=Control Blocks which are physically touching will be linked to the same floor.
-
-ttinfo.page8.1.name=To actually Link the Elevator to the block, shift right click the number you want that floor to be with the Device Linker, and that block will be assigned as that floor.
-ttinfo.page8.2.name= 
-ttinfo.page8.3.name=To use, right click the required floor with empty hand, or any item that is not the Device Linker or Stick.
-
-ttinfo.page9.name=The Control Block is compatible with OpenComputers, and has the following Methods available:
 
 #Misc
 entity.thuttech.thuttechlift.name=Elevator

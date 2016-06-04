@@ -1,17 +1,22 @@
 package thut.tech.common.items;
 
+import java.util.List;
 import java.util.UUID;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
@@ -31,60 +36,60 @@ public class ItemLinker extends Item
         instance = this;
     }
 
-    /** Called whenever this item is equipped and the right mouse button is
-     * pressed. Args: itemStack, world, entityPlayer */
-    public ItemStack onItemRightClick(ItemStack itemstack, World worldObj, EntityPlayer player)
+    @Override
+    /** If this function returns true (or the item is damageable), the
+     * ItemStack's NBT tag will be sent to the client. */
+    public boolean getShareTag()
     {
-        if (player.isSneaking()) player.inventory.addItemStackToInventory(TechCore.getInfoBook());
-        return itemstack;
+        return true;
     }
 
-    public boolean onItemUse(ItemStack itemstack, EntityPlayer player, World worldObj, BlockPos pos, EnumFacing side,
-            float hitX, float hitY, float hitZ)
+    @Override
+    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        if (itemstack.getTagCompound() == null)
+        if (stack.getTagCompound() == null)
         {
-            return false;
+            return EnumActionResult.PASS;
         }
         else
         {
-            IBlockState state = worldObj.getBlockState(pos);
+            IBlockState state = worldIn.getBlockState(pos);
 
             if (state.getBlock() == ThutBlocks.lift
-                    && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER && !player.isSneaking())
+                    && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER && !playerIn.isSneaking())
             {
-                TileEntityLiftAccess te = (TileEntityLiftAccess) worldObj.getTileEntity(pos);
-                te.setSide(side, true);
-                return true;
+                TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+                te.setSide(facing, true);
+                return EnumActionResult.SUCCESS;
             }
 
             UUID liftID;
             try
             {
-                liftID = UUID.fromString(itemstack.getTagCompound().getString("lift"));
+                liftID = UUID.fromString(stack.getTagCompound().getString("lift"));
             }
             catch (Exception e)
             {
-                return false;
+                return EnumActionResult.FAIL;
             }
 
-            EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
+            EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn.isRemote);
 
-            if (player.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
+            if (playerIn.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
             {
-                TileEntityLiftAccess te = (TileEntityLiftAccess) worldObj.getTileEntity(pos);
+                TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                 te.setLift(lift);
-                int floor = te.getButtonFromClick(side, hitX, hitY, hitZ);
+                int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
                 te.setFloor(floor);
 
-                String message = StatCollector.translateToLocalFormatted("msg.floorSet.name", floor);
+                String message = "msg.floorSet.name";
 
-                if (worldObj.isRemote) player.addChatMessage(new ChatComponentText(message));
-                return true;
+                if (worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                return EnumActionResult.SUCCESS;
             }
         }
-        return false;
+        return EnumActionResult.PASS;
     }
 
     public void setLift(EntityLift lift, ItemStack stack)
@@ -96,11 +101,12 @@ public class ItemLinker extends Item
         stack.getTagCompound().setString("lift", lift.id.toString());
     }
 
-    @Override
-    /** If this function returns true (or the item is damageable), the
-     * ItemStack's NBT tag will be sent to the client. */
-    public boolean getShareTag()
+    /** returns a list of items with the same ID, but different meta (eg: dye
+     * returns 16 items) */
+    @SideOnly(Side.CLIENT)
+    public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems)
     {
-        return true;
+        subItems.add(new ItemStack(itemIn, 1, 0));
+        subItems.add(TechCore.getInfoBook());
     }
 }

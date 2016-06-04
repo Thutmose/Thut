@@ -9,128 +9,132 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import thut.tech.common.entity.EntityLift;
 
 @SuppressWarnings("rawtypes")
-public class RenderLift<T extends EntityLivingBase> extends RendererLivingEntity
+public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
 {
 
-	float pitch = 0.0f;
-	float yaw = 0.0f;
-	long time = 0;
-	boolean up = true;
-	
-	@Override
-	public void doRender(EntityLivingBase entity, double d0, double d1, double d2,
-			float f, float f1) {
-		render(entity, d0, d1, d2);
-	}
-	
-	ResourceLocation texture;
-	
-	public RenderLift(RenderManager manager)
-	{
-		super(manager, null, 0);
-	}
+    float            pitch = 0.0f;
+    float            yaw   = 0.0f;
+    long             time  = 0;
+    boolean          up    = true;
 
+    ResourceLocation texture;
 
-	public void render(Entity te, double x,double y,double z)
-	{
-		if(te instanceof EntityLift)
-		{
-			renderBase(te, 1,x,y,z);
-		}
+    public RenderLift(RenderManager manager)
+    {
+        super(manager, null, 0);
+    }
 
-	}
+    @Override
+    public void doRender(EntityLivingBase entity, double d0, double d1, double d2, float f, float f1)
+    {
+        render(entity, d0, d1, d2);
+    }
 
-	private void renderBase(Entity te, float scale, double x,double y,double z)
-	{
-        
-        try {
-        	EntityLift lift = (EntityLift) te;
-        	
-        	GL11.glPushMatrix();
-        	GL11.glTranslated(x, y, z);
-        	GL11.glScaled(0.999, 0.999, 0.999);
+    public void render(Entity te, double x, double y, double z)
+    {
+        if (te instanceof EntityLift)
+        {
+            renderBase(te, 1, x, y, z);
+        }
 
-            int xMin = lift.corners[0][0];
-            int zMin = lift.corners[0][1];
-            int xMax = lift.corners[1][0];
-            int zMax = lift.corners[1][1];
-        	for(int i = xMin; i<=xMax; i++)
-        		for(int j = zMin; j<=zMax;j ++)
-        		{
-        			Block b = Blocks.iron_block;
-        			int meta = 0;
-        			if(lift.blocks!=null && lift.blocks.length>(i - xMin) && lift.blocks[0].length > j - zMin)
-        			{
-        				b = Block.getBlockFromItem(lift.blocks[i - xMin][j - zMin].getItem());
-        				meta = lift.blocks[i - xMin][j - zMin].getItemDamage();
-        			}
-        			if(i==0&&j==0&&lift.getHeldItem()!=null)
-        			{
-                        b = Block.getBlockFromItem(lift.getHeldItem().getItem());
-                        meta = lift.getHeldItem().getItemDamage();
-        			}
-        			//Render top platform
-        			GL11.glPushMatrix();
-        	        GL11.glTranslated(0 + i, 0+5, 0 + j);
-//        			RenderBlocks.getInstance().renderBlockAsItem(b, meta, 1.0f);
-        			GL11.glPopMatrix();
-        			//Render bottom platform
-        			GL11.glPushMatrix();
-        	        GL11.glTranslated(0 + i, 0+0.5, 0 + j);
+    }
 
-        	        
-        	        IBlockState iblockstate = b.getStateFromMeta(meta);
-//        	        System.out.println(iblockstate+" "+i+" "+j+" "+xMax+" "+xMin+" "+zMax+" "+zMin);
-        	        if (iblockstate.getBlock().getMaterial() != Material.air)
-        	        {
-        	            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
-        	            GlStateManager.enableRescaleNormal();
-        	            GlStateManager.pushMatrix();
-                        GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-                        GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
-        	            GlStateManager.translate(0.5F, 0.5F, 0.5F);
-//        	            GlStateManager.rotate(20.0F, 1.0F, 0.0F, 0.0F);
-//        	            GlStateManager.translate(0.25F, 0.1875F, 0.25F);
-        	            float f7 = 1.0F;
-        	            GlStateManager.scale(-f7, -f7, f7);
-        	            int i1 = lift.getBrightnessForRender(0);
-        	            int j1 = i1 % 65536;
-        	            int k1 = i1 / 65536;
-        	            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)j1 / 1.0F, (float)k1 / 1.0F);
-        	            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        	            FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
-        	            blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
-        	            GlStateManager.popMatrix();
-        	            GlStateManager.disableRescaleNormal();
-        	        }
-        	        
-        	        
-        			GL11.glPopMatrix();
-        		}
-        	
-        	GL11.glPopMatrix();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        
-	}
+    private void renderBase(Entity te, float scale, double x, double y, double z)
+    {
 
+        try
+        {
+            EntityLift lift = (EntityLift) te;
 
-	@Override
-	protected ResourceLocation getEntityTexture(Entity var1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+            GL11.glPushMatrix();
+            GL11.glTranslated(x, y, z);
+            GL11.glScaled(0.999, 0.999, 0.999);
+
+            int xMin = lift.boundMin.intX();
+            int zMin = lift.boundMin.intZ();
+            int xMax = lift.boundMax.intX();
+            int zMax = lift.boundMax.intZ();
+            int yMin = lift.boundMin.intY();
+            int yMax = lift.boundMax.intY();
+            for (int i = xMin; i <= xMax; i++)
+                for (int k = yMin; k <= yMax; k++)
+                    for (int j = zMin; j <= zMax; j++)
+                    {
+                        Block b = Blocks.AIR;
+                        int meta = 0;
+                        if (i - xMin >= lift.blocks.length || k - yMin >= lift.blocks[0].length
+                                || j - zMin >= lift.blocks[0][0].length)
+                        {
+                            
+                        }
+                        else
+                        {
+                            ItemStack stack = lift.blocks[i - xMin][k - yMin][j - zMin];
+                            if (stack == null) continue;
+                            b = Block.getBlockFromItem(stack.getItem());
+                            meta = stack.getItemDamage();
+                        }
+
+                        if (i == 0 && j == 0 && k == 0 && lift.inventory[0] != null)
+                        {//TODO make sure this actually works.
+                            b = Block.getBlockFromItem(lift.inventory[0].getItem());
+                            meta = lift.inventory[0].getItemDamage();
+                        }
+                        // Render bottom platform
+                        GL11.glPushMatrix();
+                        GL11.glTranslated(0 + i, k + 0.5, 0 + j);
+
+                        IBlockState iblockstate = b.getStateFromMeta(meta);
+                        if (iblockstate.getMaterial() != Material.AIR)
+                        {
+                            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft()
+                                    .getBlockRendererDispatcher();
+                            GlStateManager.enableRescaleNormal();
+                            GlStateManager.pushMatrix();
+                            GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+                            GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
+                            GlStateManager.translate(0.5F, 0.5F, 0.5F);
+                            float f7 = 1.0F;
+                            GlStateManager.scale(-f7, -f7, f7);
+                            int i1 = lift.getBrightnessForRender(0);
+                            int j1 = i1 % 65536;
+                            int k1 = i1 / 65536;
+                            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
+                            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                            FMLClientHandler.instance().getClient().renderEngine
+                                    .bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                            blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
+                            GlStateManager.popMatrix();
+                            GlStateManager.disableRescaleNormal();
+                        }
+                        GL11.glPopMatrix();
+                    }
+            GL11.glPopMatrix();
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    protected ResourceLocation getEntityTexture(T entity)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

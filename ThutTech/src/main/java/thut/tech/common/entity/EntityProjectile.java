@@ -37,10 +37,50 @@ public class EntityProjectile extends EntityFallingBlock
         // TODO Auto-generated constructor stub
     }
 
+    public Vector3 getAccelerationFromRails(Vector3 here)
+    {
+        Vector3 ret = Vector3.getNewVector();
+        EnumFacing dir = null;
+
+        for (EnumFacing side : EnumFacing.values())
+        {
+            if (side.getFrontOffsetY() == 0)
+            {
+                Block b = here.getBlock(worldObj, side);
+                if (b == Blocks.GOLDEN_RAIL)
+                {
+                    dir = side;
+                    break;
+                }
+            }
+        }
+        if (dir != null) ret.set(dir);
+        else return ret;
+        int n = 1;
+        boolean end = false;
+        Vector3 temp = Vector3.getNewVector();
+        Vector3 temp1 = Vector3.getNewVector();
+        while (!end)
+        {
+            temp1.set(ret).scalarMultBy(n++);
+            temp.set(temp1.addTo(here));
+            end = temp.getBlock(worldObj) != Blocks.GOLDEN_RAIL;
+        }
+        ret.scalarMultBy(n);
+
+        return ret;
+    }
+
+    boolean isOnRails(Vector3 here)
+    {
+        return here.getBlock(worldObj) == Blocks.GOLDEN_RAIL;
+    }
+
     /** Called to update the entity's position/logic. */
+    @Override
     public void onUpdate()
     {
-        if (block == null || block.getBlock().getMaterial() == Material.air)
+        if (block == null || block.getMaterial() == Material.AIR)
         {
             this.setDead();
         }
@@ -55,7 +95,7 @@ public class EntityProjectile extends EntityFallingBlock
             Vector3 velocity = Vector3.getNewVector().setToVelocity(this);
             double d = velocity.mag() + 1;
 
-            Block down = here.getBlock(worldObj, EnumFacing.DOWN);
+            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(worldObj);
 
             Vector3 hit = here.findNextSolidBlock(worldObj, velocity, d);
             d -= 1;
@@ -67,7 +107,7 @@ public class EntityProjectile extends EntityFallingBlock
                 accelerated = !dir.isEmpty();
                 dir.addVelocities(this);
             }
-            else if ((d < 0.04 && fallTime > 2 && down.getMaterial().isSolid()) && hit == null) hit = here.copy();
+            else if ((d < 0.04 && fallTime > 2 && downState.getMaterial().isSolid()) && hit == null) hit = here.copy();
 
             if (hit != null)
             {
@@ -76,7 +116,7 @@ public class EntityProjectile extends EntityFallingBlock
                 velocity.setVelocities(this);
                 this.moveEntity(this.motionX, this.motionY, this.motionZ);
                 ExplosionCustom boom = new ExplosionCustom(worldObj, this, hit, 100);
-                float h = block.getBlock().getBlockHardness(worldObj, hit.getPos());
+                float h = block.getBlockHardness(worldObj, hit.getPos());
                 double oldD = d;
                 d /= 100;
                 d = Math.max(d, oldD / 2);
@@ -103,44 +143,5 @@ public class EntityProjectile extends EntityFallingBlock
                 // int k = MathHelper.floor_double(this.posZ);
             }
         }
-    }
-
-    boolean isOnRails(Vector3 here)
-    {
-        return here.getBlock(worldObj) == Blocks.golden_rail;
-    }
-
-    public Vector3 getAccelerationFromRails(Vector3 here)
-    {
-        Vector3 ret = Vector3.getNewVector();
-        EnumFacing dir = null;
-
-        for (EnumFacing side : EnumFacing.values())
-        {
-            if (side.getFrontOffsetY() == 0)
-            {
-                Block b = here.getBlock(worldObj, side);
-                if (b == Blocks.golden_rail)
-                {
-                    dir = side;
-                    break;
-                }
-            }
-        }
-        if (dir != null) ret.set(dir);
-        else return ret;
-        int n = 1;
-        boolean end = false;
-        Vector3 temp = Vector3.getNewVector();
-        Vector3 temp1 = Vector3.getNewVector();
-        while (!end)
-        {
-            temp1.set(ret).scalarMultBy(n++);
-            temp.set(temp1.addTo(here));
-            end = temp.getBlock(worldObj) != Blocks.golden_rail;
-        }
-        ret.scalarMultBy(n);
-
-        return ret;
     }
 }
