@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -30,10 +31,12 @@ import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
@@ -47,17 +50,19 @@ import thut.tech.common.items.ItemLinker;
 
 public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IMultibox
 {
-    static final DataParameter<Integer>      DESTINATIONFLOORDW = EntityDataManager
+    static final DataParameter<Integer>             DESTINATIONFLOORDW = EntityDataManager
             .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
-    static final DataParameter<Integer>      DESTINATIONYDW     = EntityDataManager
+    static final DataParameter<Integer>             DESTINATIONYDW     = EntityDataManager
             .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
-    static final DataParameter<Integer>      CURRENTFLOORDW     = EntityDataManager
+    static final DataParameter<Integer>             CURRENTFLOORDW     = EntityDataManager
             .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
+    static final DataParameter<Optional<ItemStack>> CAMOBLOCKDW        = EntityDataManager
+            .<Optional<ItemStack>> createKey(EntityLift.class, DataSerializers.OPTIONAL_ITEM_STACK);
 
-    public static int                        ACCELERATIONTICKS  = 20;
+    public static int                               ACCELERATIONTICKS  = 20;
 
-    private static HashMap<UUID, EntityLift> lifts              = new HashMap<UUID, EntityLift>();
-    private static HashMap<UUID, EntityLift> lifts2             = new HashMap<UUID, EntityLift>();
+    private static HashMap<UUID, EntityLift>        lifts              = new HashMap<UUID, EntityLift>();
+    private static HashMap<UUID, EntityLift>        lifts2             = new HashMap<UUID, EntityLift>();
 
     public static void clear()
     {
@@ -160,8 +165,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     Matrix3                         wall1         = new Matrix3();
 
     public ItemStack[][][]          blocks        = null;
-
-    public ItemStack[]              inventory     = new ItemStack[1];
 
     public EntityLift(World par1World)
     {
@@ -498,6 +501,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this.dataManager.register(DESTINATIONFLOORDW, Integer.valueOf(0));
         this.dataManager.register(DESTINATIONYDW, Integer.valueOf(0));
         this.dataManager.register(CURRENTFLOORDW, Integer.valueOf(-1));
+        this.dataManager.register(CAMOBLOCKDW, Optional.<ItemStack> absent());
     }
 
     /** returns the bounding box for this entity */
@@ -543,11 +547,21 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return offsets;
     }
 
+    @Override
+    /** Applies the given player interaction to this Entity. */
+    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
+            EnumHand hand)
+    {
+        return EnumActionResult.PASS;
+    }
+
     /** First layer of player interaction */
     @Override
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
         ItemStack item = player.getHeldItem(hand);
+        if (hand != EnumHand.MAIN_HAND) return false;
+
         if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker
                 && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
         {
@@ -572,6 +586,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
                 player.addChatMessage(new TextComponentTranslation(message, ownerentity.getName()));
             }
+            return true;
         }
         if ((player.isSneaking() && item != null
                 && (player.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
@@ -595,20 +610,22 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             if (block.getStateFromMeta(item.getItemDamage()).isNormalCube())
             {
                 ItemStack item2 = item.splitStack(1);
-                if (inventory[0] != null && !worldObj.isRemote)
+                if (getHeldItem(null) != null && !worldObj.isRemote)
                 {
-                    this.entityDropItem(inventory[0], 1);
+                    this.entityDropItem(getHeldItem(null), 1);
                 }
-                inventory[0] = item2;
+                if (!worldObj.isRemote) setHeldItem(null, item2);
             }
+            return true;
         }
         else if (player.isSneaking() && item == null && (owner == null || owner.equals(player.getUniqueID())))
         {
-            if (inventory[0] != null && !worldObj.isRemote)
+            if (getHeldItem(null) != null && !worldObj.isRemote)
             {
-                this.entityDropItem(inventory[0], 1);
+                this.entityDropItem(getHeldItem(null), 1);
             }
-            inventory[0] = null;
+            if (!worldObj.isRemote) setHeldItem(null, null);
+            return true;
         }
         return false;
     }
@@ -741,7 +758,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (nbt.hasKey("replacement"))
         {
             NBTTagCompound held = nbt.getCompoundTag("replacement");
-            inventory[0] = ItemStack.loadItemStackFromNBT(held);
+            setHeldItem(null, ItemStack.loadItemStackFromNBT(held));
         }
         readList(nbt);
         readBlocks(nbt);
@@ -825,7 +842,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                             if (b != null) this.entityDropItem(b, 0.5f);
                         }
                 }
-                if (inventory[0] != null) this.entityDropItem(inventory[0], 1);
+                if (getHeldItem(null) != null) this.entityDropItem(getHeldItem(null), 1);
             }
         }
         super.setDead();
@@ -918,10 +935,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             nbt.setLong("ownerlower", owner.getLeastSignificantBits());
             nbt.setLong("ownerhigher", owner.getMostSignificantBits());
         }
-        if (inventory[0] != null)
+        if (getHeldItem(null) != null)
         {
             NBTTagCompound held = new NBTTagCompound();
-            inventory[0].writeToNBT(held);
+            getHeldItem(null).writeToNBT(held);
             nbt.setTag("replacement", held);
         }
 
@@ -956,19 +973,37 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public Iterable<ItemStack> getArmorInventoryList()
     {
-        return Lists.newArrayList(inventory);
+        return Lists.newArrayList();
     }
 
     @Override
     public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn)
     {
-        return inventory[0];
+        return null;
     }
 
     @Override
     public void setItemStackToSlot(EntityEquipmentSlot slotIn, ItemStack stack)
     {
-        inventory[0] = stack;
+    }
+
+    @Override
+    public ItemStack getHeldItem(EnumHand hand)
+    {
+        return dataManager.get(CAMOBLOCKDW).orNull();
+    }
+
+    @Override
+    public void setHeldItem(EnumHand hand, @Nullable ItemStack stack)
+    {
+        if (stack != null)
+        {
+            dataManager.set(CAMOBLOCKDW, Optional.of(stack));
+        }
+        else
+        {
+            dataManager.set(CAMOBLOCKDW, Optional.<ItemStack> absent());
+        }
     }
 
     @Override

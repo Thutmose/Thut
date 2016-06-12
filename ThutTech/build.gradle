@@ -21,7 +21,7 @@ dependencies {
     compile "li.cil.oc:OpenComputers:MC1.8.9-1.5.+:api"
 }
 */
-version = "3.0.0"
+version = "3.0.2"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
 
@@ -36,8 +36,12 @@ minecraft {
     mappings = "snapshot_20160518"
     makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
-
-
+jar {
+        manifest {
+        attributes 'FMLAT': 'thut_at.cfg'
+                        
+    }
+}
 processResources
 {
     // this will ensure that this task is redone when the versions change.

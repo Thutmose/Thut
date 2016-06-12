@@ -20,7 +20,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import thut.tech.common.entity.EntityLift;
 
-@SuppressWarnings("rawtypes")
 public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
 {
 
@@ -77,7 +76,7 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
                         if (i - xMin >= lift.blocks.length || k - yMin >= lift.blocks[0].length
                                 || j - zMin >= lift.blocks[0][0].length)
                         {
-                            
+
                         }
                         else
                         {
@@ -87,10 +86,10 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
                             meta = stack.getItemDamage();
                         }
 
-                        if (i == 0 && j == 0 && k == 0 && lift.inventory[0] != null)
-                        {//TODO make sure this actually works.
-                            b = Block.getBlockFromItem(lift.inventory[0].getItem());
-                            meta = lift.inventory[0].getItemDamage();
+                        if (i == 0 && j == 0 && k == 0 && lift.getHeldItem(null) != null)
+                        {
+                            b = Block.getBlockFromItem(lift.getHeldItem(null).getItem());
+                            meta = lift.getHeldItem(null).getItemDamage();
                         }
                         // Render bottom platform
                         GL11.glPushMatrix();

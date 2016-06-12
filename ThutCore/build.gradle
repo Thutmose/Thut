@@ -64,14 +64,14 @@ processResources
 }
 
 version = "${version_minecraft}-${version}"
-/*
+
 jar {
         manifest {
         attributes 'FMLAT': 'thut_at.cfg'
                         
     }
 }
-*/
+
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
