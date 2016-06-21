@@ -13,15 +13,14 @@ buildscript {
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
-/*
+
 repositories {
     maven { url = "http://maven.cil.li/" }
 }
 dependencies {
-    compile "li.cil.oc:OpenComputers:MC1.8.9-1.5.+:api"
+    compile "li.cil.oc:OpenComputers:MC1.9.4-1.6.+:api"
 }
-*/
-version = "3.0.2"
+version = "3.0.3"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
 

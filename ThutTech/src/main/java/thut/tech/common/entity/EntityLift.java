@@ -16,6 +16,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -274,6 +276,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (entity instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer) entity;
+
+            if (player.worldObj.isRemote && ConfigHandler.jitterfix)
+            {
+                Minecraft.getMinecraft().gameSettings.viewBobbing = false;
+            }
+
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
                 entity.onGround = true;
@@ -391,9 +399,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             for (int i = 0; i < list.size(); ++i)
             {
                 Entity entity = (Entity) list.get(i);
-                {
-                    applyEntityCollision(entity);
-                }
+                applyEntityCollision(entity);
             }
         }
     }
