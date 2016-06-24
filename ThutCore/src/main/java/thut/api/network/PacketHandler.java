@@ -75,6 +75,7 @@ public class PacketHandler
                 return null;
             }
         }
+
         public static final byte BLASTAFFECTED = 1;
         public static final byte TELEPORTID    = 2;
 
@@ -122,6 +123,7 @@ public class PacketHandler
             buf.writeBytes(buffer);
         }
     }
+
     public static class MessageServer implements IMessage
     {
         public static class MessageHandlerServer implements IMessageHandler<MessageServer, IMessage>
@@ -218,6 +220,7 @@ public class PacketHandler
                 Cruncher.fillFromInt(toFill, i);
                 vTemp.set(toFill);
                 vTemp.addTo(vMid);
+                if (provider.getPlayer() == null || provider.getPlayer().worldObj == null) { return; }
                 provider.getPlayer().worldObj.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y,
                         vTemp.z, 0, 0, 0);
                 if (n > max) break;

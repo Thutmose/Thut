@@ -6,7 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -46,10 +46,10 @@ public class SpawnDefuzz
     @SubscribeEvent
     public void deFuzzSpawn(ServerConnectionFromClientEvent event)
     {
-        if (event.handler instanceof NetHandlerPlayServer)
+        if (event.getHandler() instanceof NetHandlerPlayServer)
         {
             MinecraftServer mcServer = FMLCommonHandler.instance().getMinecraftServerInstance();
-            EntityPlayer player = ((NetHandlerPlayServer) event.handler).playerEntity;
+            EntityPlayer player = ((NetHandlerPlayServer) event.getHandler()).playerEntity;
             BlockPos worldSpawn = null;
             World playerWorld = mcServer.worldServerForDimension(player.dimension);
             GameProfile gameprofile = player.getGameProfile();

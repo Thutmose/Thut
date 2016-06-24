@@ -290,8 +290,8 @@ public class Vector3
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
         Vector3 v = getNewVector().set(x, y, z);
 
-        if (worldObj instanceof World) state.addCollisionBoxToList((World) worldObj, pos,
-                v.getAABB().expand(0.03, 0.03, 0.03), aabbs, null);
+        if (worldObj instanceof World)
+            state.addCollisionBoxToList((World) worldObj, pos, v.getAABB().expand(0.03, 0.03, 0.03), aabbs, null);
         if (aabbs.size() == 0) return true;
 
         for (AxisAlignedBB aabb : aabbs)
@@ -1123,6 +1123,7 @@ public class Vector3
     public float getExplosionResistance(Explosion boom, IBlockAccess world)
     {
         IBlockState state = getBlockState(world);
+        if (state == null) return 0;
         Block block = state.getBlock();
         if (block != null && !block.isAir(state, world, getPos())) { return block
                 .getExplosionResistance(boom.getExplosivePlacedBy()); }
