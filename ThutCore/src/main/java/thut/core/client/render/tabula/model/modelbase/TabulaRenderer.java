@@ -19,7 +19,7 @@ import thut.core.client.render.model.IRetexturableModel;
 @SideOnly(Side.CLIENT)
 public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 {
-    static final float        ratio       = 180f / (float) Math.PI;
+    static final float        ratio        = 180f / (float) Math.PI;
 
     private float             initRotateAngleX;
     private float             initRotateAngleY;
@@ -33,29 +33,31 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
     private float             initRotationPointY;
     private float             initRotationPointZ;
 
-    private float             initScaleX  = 1f;
-    private float             initScaleY  = 1f;
-    private float             initScaleZ  = 1f;
+    private float             initScaleX   = 1f;
+    private float             initScaleY   = 1f;
+    private float             initScaleZ   = 1f;
     private ModelRenderer     parent;
     private boolean           hasInitPose;
     private boolean           compiled;
     private int               displayList;
-    public float              scaleX      = 1f;
-    public float              scaleY      = 1f;
-    public float              scaleZ      = 1f;
+    public float              scaleX       = 1f;
+    public float              scaleY       = 1f;
+    public float              scaleZ       = 1f;
     public String             name;
     public String             identifier;
 
     private IAnimationChanger set;
     IPartTexturer             texturer;
-    double[]                  texOffsets  = { 0, 0 };
-    boolean                   offset      = true;
+    double[]                  texOffsets   = { 0, 0 };
+    boolean                   offset       = true;
 
-    boolean                   rotate      = true;
+    boolean                   rotate       = true;
 
-    boolean                   translate   = true;
+    boolean                   translate    = true;
 
-    boolean                   shouldScale = true;
+    boolean                   shouldScale  = true;
+
+    public boolean            transluscent = false;
 
     public TabulaRenderer(ModelBase modelBase)
     {
@@ -376,7 +378,6 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 
     private void unRotateToParent()
     {
-
         if (parent != null)
         {
             if (parent instanceof TabulaRenderer) ((TabulaRenderer) parent).unRotateToParent();

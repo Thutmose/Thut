@@ -87,6 +87,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         X3dXML.Material mat = appearance.material;
         if (mat == null) return null;
         String matName = mat.DEF;
+        boolean isDef = matName != null;
         if (matName == null)
         {
             matName = mat.USE.substring(3);
@@ -96,7 +97,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             matName = matName.substring(3);
         }
         Material material = mats.get(matName);
-        if (material == null || material.emissiveColor == null)
+        if (material == null || isDef)
         {
             String texName;
             if (appearance.tex != null && appearance.tex.DEF != null)
@@ -108,9 +109,12 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             {
                 texName = null;
             }
-            if (material == null) material = new Material(matName, texName, mat.getDiffuse(), mat.getSpecular(),
-                    mat.getEmissive(), mat.ambientIntensity, mat.shininess, mat.transparency);
-            else
+            if (material == null)
+            {
+                material = new Material(matName, texName, mat.getDiffuse(), mat.getSpecular(), mat.getEmissive(),
+                        mat.ambientIntensity, mat.shininess, mat.transparency);
+            }
+            if (material != null && isDef)
             {
                 if (material.texture == null) material.texture = texName;
                 material.ambientIntensity = mat.ambientIntensity;
@@ -119,6 +123,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
                 material.emissiveColor = mat.getEmissive();
                 material.specularColor = mat.getSpecular();
                 material.diffuseColor = mat.getDiffuse();
+                material.emissiveMagnitude = Math.min(1, (float) (mat.getEmissive().length() / Math.sqrt(3)) / 0.8f);
             }
             mats.put(matName, material);
         }

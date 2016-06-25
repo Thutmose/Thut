@@ -152,6 +152,7 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
         {
             GL11.glPushMatrix();
             GL11.glTranslated(offset.x, offset.y, offset.z);
+            GL11.glScalef(scale.x, scale.y, scale.z);
             o.renderAll();
             GL11.glPopMatrix();
         }

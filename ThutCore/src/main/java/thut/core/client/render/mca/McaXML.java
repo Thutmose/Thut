@@ -2,6 +2,7 @@ package thut.core.client.render.mca;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -12,6 +13,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.collect.Lists;
+
+import thut.core.client.render.model.TextureCoordinate;
+import thut.core.client.render.model.Vertex;
+import thut.core.client.render.x3d.ModelFormatException;
 
 public class McaXML
 {
@@ -61,6 +66,7 @@ public class McaXML
         GeometryNode    geometry;
         @XmlElement(name = "com.jme3.scene.Node")
         List<SceneNode> scenes = Lists.newArrayList();
+        SceneNode       parent;
     }
 
     @XmlRootElement(name = "com.jme3.scene.Node")
@@ -169,6 +175,52 @@ public class McaXML
     {
         @XmlElement(name = "MapEntry")
         List<MapEntry> entries = Lists.newArrayList();
+
+        public Vertex[] getNormals()
+        {
+            for (MapEntry entry : entries)
+            {
+                if (entry.savable.type.equals("Normal")) { return entry.savable.getFloats(); }
+            }
+            return null;
+        }
+
+        public Vertex[] getVerts()
+        {
+            for (MapEntry entry : entries)
+            {
+                if (entry.savable.type.equals("Position")) { return entry.savable.getFloats(); }
+            }
+            return null;
+        }
+
+        public Integer[] getOrder()
+        {
+            for (MapEntry entry : entries)
+            {
+                if (entry.savable.type.equals("Index"))
+                {
+                    String[] offset = entry.savable.data2.data.split(" ");
+                    Integer[] order = new Integer[offset.length];
+                    for (int i = 0; i < offset.length; i++)
+                    {
+                        String s1 = offset[i];
+                        order[i] = (Integer.parseInt(s1));
+                    }
+                    return order;
+                }
+            }
+            return null;
+        }
+
+        public TextureCoordinate[] getTex()
+        {
+            for (MapEntry entry : entries)
+            {
+                if (entry.savable.type.equals("TexCoord")) { return entry.savable.getTexture(entry.savable.data1.data); }
+            }
+            return null;
+        }
     }
 
     @XmlRootElement(name = "MapEntry")
@@ -189,6 +241,42 @@ public class McaXML
         DataFloat       data1;
         @XmlElement(name = "dataUnsignedInt")
         DataUnsignedInt data2;
+
+        public Vertex[] getFloats()
+        {
+            return parseVertices(data1.data, type);
+        }
+
+        private static Vertex[] parseVertices(String line, String type) throws ModelFormatException
+        {
+            ArrayList<Vertex> ret = new ArrayList<Vertex>();
+            float scale = type.equals("Position") ? 1 / 16f : 1;
+            String[] points = line.split(" ");
+            if (points.length
+                    % 3 != 0) { throw new ModelFormatException("Invalid number of elements in the points string"); }
+            for (int i = 0; i < points.length; i += 3)
+            {
+                Vertex toAdd = new Vertex(Float.parseFloat(points[i]) * scale, Float.parseFloat(points[i + 1]) * scale,
+                        Float.parseFloat(points[i + 2]) * scale);
+                ret.add(toAdd);
+            }
+            return ret.toArray(new Vertex[ret.size()]);
+        }
+
+        public TextureCoordinate[] getTexture(String point)
+        {
+            ArrayList<TextureCoordinate> ret = new ArrayList<TextureCoordinate>();
+            String[] points = point.split(" ");
+            if (points.length % 2 != 0) { throw new ModelFormatException(
+                    "Invalid number of elements in the points string " + points.length); }
+            for (int i = 0; i < points.length; i += 2)
+            {
+                TextureCoordinate toAdd = new TextureCoordinate(Float.parseFloat(points[i]),
+                        1 - Float.parseFloat(points[i + 1]));
+                ret.add(toAdd);
+            }
+            return ret.toArray(new TextureCoordinate[ret.size()]);
+        }
     }
 
     @XmlRootElement(name = "dataFloat")

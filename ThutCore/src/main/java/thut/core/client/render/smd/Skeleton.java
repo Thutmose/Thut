@@ -298,7 +298,8 @@ public class Skeleton
     private void initPose()
     {
         System.out.println(pose.animationName + " " + pose.frames.size());
-        SkeletonFrame frame = pose.frames.get(pose.frames.size()==1?0:1);
+
+        SkeletonFrame frame = pose.frames.get(0);
         pose.reset();
         pose.precalculateAnimation();
         for (Integer i : frame.positions.keySet())
