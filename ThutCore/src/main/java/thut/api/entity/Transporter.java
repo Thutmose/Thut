@@ -118,6 +118,6 @@ public class Transporter
             worldServer.spawnEntityInWorld(entityPlayerMP);
             worldServer.updateEntityWithOptionalForce(entityPlayerMP, false);
         }
-        return null;
+        return entityPlayerMP;
     }
 }
