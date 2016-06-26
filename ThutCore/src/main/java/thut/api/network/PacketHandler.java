@@ -1,5 +1,6 @@
 package thut.api.network;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,7 +11,9 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -66,6 +69,20 @@ public class PacketHandler
                     int id = buffer.readInt();
                     if (player.worldObj.getEntityByID(id) != null) player.worldObj.getEntityByID(id).setDead();
                 }
+                else if (channel == TILEUPDATE)
+                {
+                    try
+                    {
+                        NBTTagCompound nbt = buffer.readNBTTagCompoundFromBuffer();
+                        BlockPos pos = new BlockPos(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
+                        TileEntity tile = player.worldObj.getTileEntity(pos);
+                        tile.readFromNBT(nbt);
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override
@@ -78,6 +95,7 @@ public class PacketHandler
 
         public static final byte BLASTAFFECTED = 1;
         public static final byte TELEPORTID    = 2;
+        public static final byte TILEUPDATE    = 3;
 
         PacketBuffer             buffer;
 
@@ -265,5 +283,15 @@ public class PacketHandler
     public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)
     {
         packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
+    }
+
+    public static void sendTileUpdate(TileEntity tile)
+    {
+        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
+        NBTTagCompound nbt = new NBTTagCompound();
+        tile.writeToNBT(nbt);
+        buffer.writeNBTTagCompoundToBuffer(nbt);
+        MessageClient message = new MessageClient(buffer);
+        sendToAllNear(message, Vector3.getNewVector().set(tile), tile.getWorld().provider.getDimension(), 64);
     }
 }
