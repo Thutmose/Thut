@@ -33,7 +33,8 @@ import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
 
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
-public class TileEntityLiftAccess extends TileEntity implements ITickable//, SimpleComponent
+public class TileEntityLiftAccess extends TileEntity implements ITickable// ,
+                                                                         // SimpleComponent
 {
     public int                          power        = 0;
     public int                          prevPower    = 1;
@@ -75,6 +76,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable//, Sim
     public boolean                      read         = false;
     public boolean                      redstone     = true;
     public boolean                      powered      = false;
+    public boolean                      callPanel    = false;
 
     public TileEntityLiftAccess()
     {
@@ -82,17 +84,23 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable//, Sim
 
     public void buttonPress(int button)
     {
-        if (button != 0 && button <= 64 && lift != null && lift.floors[button - 1] > 0)
+        if (callPanel && lift != null)
         {
-            if (button == floor)
+            lift.call(floor);
+        }
+        else
+        {
+            if (button != 0 && button <= 64 && lift != null && lift.floors[button - 1] > 0)
             {
+                if (button == floor)
+                {
+                }
+                else
+                {
+                    if (lift.getCurrentFloor() == floor) lift.setCurrentFloor(-1);
+                }
+                lift.call(button);
             }
-            else
-            {
-                if (lift.getCurrentFloor() == floor) lift.setCurrentFloor(-1);
-            }
-
-            lift.call(button);
         }
     }
 
@@ -225,7 +233,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable//, Sim
             }
         }
         if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
-        markDirty();
     }
 
     public int getButtonFromClick(EnumFacing side, float hitX, float hitY, float hitZ)
@@ -272,7 +279,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable//, Sim
 
     }
 
-//    @Override //TODO re-add SimpleComponent when it is fixed.
+    // @Override //TODO re-add SimpleComponent when it is fixed.
     public String getComponentName()
     {
         return "lift";
@@ -416,6 +423,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable//, Sim
         root = Vector3.getNewVector();
         root = Vector3.readFromNBT(par1, "root");
         sides = par1.getByteArray("sides");
+        callPanel = par1.getBoolean("callPanel");
         if (sides.length != 6) sides = new byte[6];
         sidePages = par1.getByteArray("sidePages");
         if (sidePages.length != 6) sidePages = new byte[6];
@@ -609,6 +617,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable//, Sim
         par1.setInteger("floor", floor);
         par1.setByteArray("sides", sides);
         par1.setByteArray("sidePages", sidePages);
+        par1.setBoolean("callPanel", callPanel);
         if (root != null) root.writeToNBT(par1, "root");
         if (lift != null)
         {

@@ -45,7 +45,8 @@ public class ItemLinker extends Item
     }
 
     @Override
-    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
+    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
+            EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
         if (stack.getTagCompound() == null)
         {
@@ -79,13 +80,21 @@ public class ItemLinker extends Item
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
             {
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-                te.setLift(lift);
-                int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
-                te.setFloor(floor);
 
-                String message = "msg.floorSet.name";
-
-                if (worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                if (facing == EnumFacing.UP)
+                {
+                    te.callPanel = !te.callPanel;
+                    String message = "msg.callPanel.name";
+                    if (worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
+                }
+                else
+                {
+                    te.setLift(lift);
+                    int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
+                    te.setFloor(floor);
+                    String message = "msg.floorSet.name";
+                    if (worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                }
                 return EnumActionResult.SUCCESS;
             }
         }

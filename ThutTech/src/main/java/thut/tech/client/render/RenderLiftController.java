@@ -1,5 +1,7 @@
 package thut.tech.client.render;
 
+import java.awt.Color;
+
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.block.state.IBlockState;
@@ -55,7 +57,11 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         }
     }
 
-    private ResourceLocation texture;
+    private ResourceLocation texture_1 = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
+    private ResourceLocation texture_2 = new ResourceLocation("thuttech:textures/blocks/controlPanel_2.png");
+    private ResourceLocation overlay   = new ResourceLocation("thuttech:textures/blocks/overlay.png");
+    private ResourceLocation overlay_1 = new ResourceLocation("thuttech:textures/blocks/overlay_1.png");
+    private ResourceLocation font      = new ResourceLocation("thuttech:textures/blocks/font.png");
 
     public RenderLiftController()
     {
@@ -65,51 +71,53 @@ public class RenderLiftController extends TileEntitySpecialRenderer
     {
         for (int floor = 0; floor < (16); floor++)
         {
-            TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
+            drawNumber(floor + page * 16, floor);
+        }
+    }
 
-            GL11.glPushMatrix();
-            if (renderengine != null)
-            {
-                texture = new ResourceLocation("thuttech:textures/blocks/font.png");
-                renderengine.bindTexture(texture);
-            }
+    private void drawNumber(int number, int floor)
+    {
+        TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
 
-            Tessellator t = Tessellator.getInstance();
-            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);// .startDrawing(GL11.GL_QUADS);
-            double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
-            int actFloor = floor + page * 16;
-            double[] uvs = locationFromNumber((actFloor + 1) % 10);
-            double[] uvs1 = locationFromNumber((actFloor + 1) / 10);
-
-            if (actFloor > 8)
-            {
-                GL11.glTranslated(x + 0.01, y + 0.06, -0.001 * (5 + 1));
-                t.getBuffer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
-                t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
-
-                t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
-                t.getBuffer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
-
-                t.getBuffer().pos(0.15 + 0.1, 0.15, 0).tex(uvs1[0], uvs1[2]).color(0, 0, 0, 255).endVertex();
-                t.getBuffer().pos(0.15 + 0.1, 0, 0).tex(uvs1[0], uvs1[3]).color(0, 0, 0, 255).endVertex();
-
-                t.getBuffer().pos(0 + 0.1, 0, 0).tex(uvs1[1], uvs1[3]).color(0, 0, 0, 255).endVertex();
-                t.getBuffer().pos(0 + 0.1, 0.15, 0).tex(uvs1[1], uvs1[2]).color(0, 0, 0, 255).endVertex();
-            }
-            else
-            {
-                GL11.glTranslated(x + 0.05, y + 0.06, -0.001 * (5 + 1));
-                t.getBuffer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
-                t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
-
-                t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
-                t.getBuffer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
-            }
-            t.draw();
-
-            GL11.glPopMatrix();
+        GL11.glPushMatrix();
+        if (renderengine != null)
+        {
+            renderengine.bindTexture(font);
         }
 
+        Tessellator t = Tessellator.getInstance();
+        t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+        double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
+        int actFloor = number;
+        double[] uvs = locationFromNumber((actFloor + 1) % 10);
+        double[] uvs1 = locationFromNumber((actFloor + 1) / 10);
+
+        if (actFloor > 8)
+        {
+            GL11.glTranslated(x + 0.01, y + 0.06, -0.001 * (5 + 1));
+            t.getBuffer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
+
+            t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
+
+            t.getBuffer().pos(0.15 + 0.1, 0.15, 0).tex(uvs1[0], uvs1[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0.15 + 0.1, 0, 0).tex(uvs1[0], uvs1[3]).color(0, 0, 0, 255).endVertex();
+
+            t.getBuffer().pos(0 + 0.1, 0, 0).tex(uvs1[1], uvs1[3]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0 + 0.1, 0.15, 0).tex(uvs1[1], uvs1[2]).color(0, 0, 0, 255).endVertex();
+        }
+        else
+        {
+            GL11.glTranslated(x + 0.05, y + 0.06, -0.001 * (5 + 1));
+            t.getBuffer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
+
+            t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
+        }
+        t.draw();
+        GL11.glPopMatrix();
     }
 
     private void drawLiftBounds(int minX, int maxX, int minZ, int maxZ, int minY, int maxY)
@@ -119,8 +127,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         GL11.glPushMatrix();
         if (renderengine != null)
         {
-            texture = new ResourceLocation("thuttech:textures/blocks/greenOverlay.png");
-            renderengine.bindTexture(texture);
+            renderengine.bindTexture(overlay);
         }
         int floor = 5;
         double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
@@ -131,16 +138,15 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             for (int k = -minY; k <= maxY; k++)
                 for (int j = -minZ; j <= maxZ; j++)
                 {
-                    t.getBuffer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(255, 255, 255, 128).endVertex();
-                    t.getBuffer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(255, 255, 255, 128).endVertex();
+                    t.getBuffer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(0, 255, 0, 128).endVertex();
+                    t.getBuffer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(0, 255, 0, 128).endVertex();
+                    t.getBuffer().pos(0 + i, k, 0 + j).tex(1, 1).color(0, 255, 0, 128).endVertex();
+                    t.getBuffer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(0, 255, 0, 128).endVertex();
 
-                    t.getBuffer().pos(0 + i, k, 0 + j).tex(1, 1).color(255, 255, 255, 128).endVertex();
-                    t.getBuffer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(255, 255, 255, 128).endVertex();
-
-                    t.getBuffer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(255, 255, 255, 128).endVertex();
-                    t.getBuffer().pos(0 + i, k, 0 + j).tex(1, 1).color(255, 255, 255, 128).endVertex();
-                    t.getBuffer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(255, 255, 255, 128).endVertex();
-                    t.getBuffer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(255, 255, 255, 128).endVertex();
+                    t.getBuffer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(0, 255, 0, 128).endVertex();
+                    t.getBuffer().pos(0 + i, k, 0 + j).tex(1, 1).color(0, 255, 0, 128).endVertex();
+                    t.getBuffer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(0, 255, 0, 128).endVertex();
+                    t.getBuffer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(0, 255, 0, 128).endVertex();
                 }
 
         t.draw();
@@ -181,8 +187,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         GL11.glPushMatrix();
         if (renderengine != null)
         {
-            texture = new ResourceLocation("thuttech:textures/blocks/font.png");
-            renderengine.bindTexture(texture);
+            renderengine.bindTexture(font);
         }
 
         int floor = positionIndex;
@@ -204,7 +209,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         GL11.glPopMatrix();
     }
 
-    public void drawOverLay(TileEntityLiftAccess monitor, int floor, int colour, EnumFacing side)
+    public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, EnumFacing side, boolean wide)
     {
         floor = floor - monitor.getSidePage(side) * 16;
         IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
@@ -212,31 +217,32 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         if (isMonitor && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
         {
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
-            String col = colour == 0 ? "green" : colour == 1 ? "orange" : colour == 2 ? "blue" : "gray";
-
             GL11.glPushMatrix();
             if (renderengine != null)
             {
-                texture = new ResourceLocation("thuttech:textures/blocks/" + col + "Overlay.png");
-                renderengine.bindTexture(texture);
+                if (wide) renderengine.bindTexture(overlay_1);
+                else renderengine.bindTexture(overlay);
             }
-
             floor -= 1;
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
-            GL11.glTranslated(x, y, -0.001 * (colour + 1));
+            GL11.glTranslated(x, y, -0.0006);
             Tessellator t = Tessellator.getInstance();
             t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-            t.getBuffer().pos(0.25, 0.25, 0).tex(0, 0).color(255, 255, 255, 128).endVertex();
-            t.getBuffer().pos(0.25, 0, 0).tex(0, 1).color(255, 255, 255, 128).endVertex();
+            double amount = wide? 0.25:0;
+            t.getBuffer().pos(0.25 + amount, 0.25, 0).tex(0, 0)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()).endVertex();
+            t.getBuffer().pos(0.25 + amount, 0, 0).tex(0, 1)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()).endVertex();
 
-            t.getBuffer().pos(0, 0, 0).tex(1, 1).color(255, 255, 255, 128).endVertex();
-            t.getBuffer().pos(0, 0.25, 0).tex(1, 0).color(255, 255, 255, 128).endVertex();
+            t.getBuffer().pos(0, 0, 0).tex(1, 1)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()).endVertex();
+            t.getBuffer().pos(0, 0.25, 0).tex(1, 0)
+                    .color(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()).endVertex();
 
             t.draw();
             GL11.glPopMatrix();
         }
-
     }
 
     public double[] locationFromNumber(int number)
@@ -293,16 +299,14 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
             GL11.glTranslatef((float) x, (float) y, (float) z);
             TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
-
             GL11.glPushMatrix();
             if (renderengine != null)
             {
-                texture = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
-                renderengine.bindTexture(texture);
+                renderengine.bindTexture(texture_1);
             }
 
             Tessellator t = Tessellator.getInstance();
-            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
+            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 
             GL11.glTranslated(0, 1 + 0.001 * (0 + 0.5), 0);
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1F);
@@ -362,12 +366,20 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             GL11.glPushMatrix();
             if (renderengine != null)
             {
-                texture = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
+                ResourceLocation texture;
+                if (monitor.callPanel)
+                {
+                    texture = texture_2;
+                }
+                else
+                {
+                    texture = texture_1;
+                }
                 renderengine.bindTexture(texture);
             }
 
             Tessellator t = Tessellator.getInstance();
-            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);// .startDrawing(GL11.GL_QUADS);
+            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 
             GL11.glTranslated(0, 0, -0.001 * (0 + 0.5));
             t.getBuffer().pos(1, 1, 0).tex(0, 0).endVertex();
@@ -379,22 +391,47 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             t.draw();
             GL11.glPopMatrix();
 
-            drawFloorNumbers(monitor.getSidePage(dir));
-            if (monitor.lift != null)
+            if (monitor.callPanel)
             {
-                drawOverLay(monitor, monitor.floor, 0, dir);
-                drawOverLay(monitor, monitor.lift.getDestinationFloor(), 1, dir);
-                drawOverLay(monitor, monitor.lift.getCurrentFloor(), 2, dir);
+                GL11.glPushMatrix();
+                GL11.glTranslated(-0.11, -0.1, 0);
+                drawNumber(monitor.floor - 1, 1);
+                GL11.glPopMatrix();
+                GL11.glPushMatrix();
+                GL11.glTranslated(-0.5, -0.095, 0);
+                if (monitor.calledFloor == monitor.floor)
+                {
+                    Color colour = new Color(255, 255, 0, 255);
+                    drawOverLay(monitor, 1, colour, dir, true);
+                }
+                else if (monitor.currentFloor == monitor.floor)
+                {
+                    Color colour = new Color(0, 128, 255, 255);
+                    drawOverLay(monitor, 1, colour, dir, true);
+                }
+                GL11.glPopMatrix();
             }
-
-            if (monitor.lift != null)
-                for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
+            else
+            {
+                drawFloorNumbers(monitor.getSidePage(dir));
+                if (monitor.lift != null)
                 {
-                if ((monitor.lift.floors[j] < 0))
-                {
-                drawOverLay(monitor, j + 1, 3, dir);
+                    Color colour = new Color(0, 255, 0, 255);
+                    drawOverLay(monitor, monitor.floor, colour, dir, false);
+                    colour = new Color(255, 255, 0, 255);
+                    drawOverLay(monitor, monitor.lift.getDestinationFloor(), colour, dir, false);
+                    colour = new Color(0, 128, 255, 255);
+                    drawOverLay(monitor, monitor.lift.getCurrentFloor(), colour, dir, false);
+                    for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
+                    {
+                        colour = new Color(10, 10, 10, 255);
+                        if ((monitor.lift.floors[j] < 0))
+                        {
+                            drawOverLay(monitor, j + 1, colour, dir, false);
+                        }
+                    }
                 }
-                }
+            }
             GL11.glPopMatrix();
         }
 

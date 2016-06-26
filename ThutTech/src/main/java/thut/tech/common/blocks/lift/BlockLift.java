@@ -34,6 +34,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
+import thut.api.network.PacketHandler;
 import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
@@ -319,9 +320,8 @@ public class BlockLift extends Block implements ITileEntityProvider
                     {
                         te.setSidePage(side, (te.getSidePage(side) + 1) % 4);
                         if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);
+                        PacketHandler.sendTileUpdate(te);
                     }
-                    // TODO see if update needed.
-                    te.markDirty();
                     return true;
                 }
                 else
