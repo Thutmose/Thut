@@ -62,7 +62,7 @@ public class BlockHandler
 
     public static void registerBlocks(FMLPreInitializationEvent e)
     {
-        Block lift = new BlockLift();//.setRegistryName(ThutTechReference.MOD_ID, "lift")
+        Block lift = new BlockLift().setRegistryName(ThutTechReference.MOD_ID, "lift");
 
         GameRegistry.registerTileEntity(TileEntityLiftAccess.class, "liftaccesste");
 
@@ -71,7 +71,7 @@ public class BlockHandler
         EntityRegistry.registerModEntity(EntityProjectile.class, "thuttechprojectile", 2, TechCore.instance, 32, 1,
                 true);
 
-        GameRegistry.registerBlock(lift, ItemLiftBlock.class, "lift");
+        GameRegistry.registerBlock(lift, ItemLiftBlock.class);
 
     }
 }

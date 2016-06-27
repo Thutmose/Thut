@@ -537,7 +537,7 @@ public class TerrainSegment
 
     }
 
-    private void setBiome(int[] biomes)
+    public void setBiome(int[] biomes)
     {
         if (biomes.length == this.biomes.length) this.biomes = biomes;
         else

@@ -29,6 +29,7 @@ import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler.MessageClient.MessageHandlerClient;
 import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
+import thut.api.terrain.TerrainManager;
 
 public class PacketHandler
 {
@@ -83,6 +84,18 @@ public class PacketHandler
                         e.printStackTrace();
                     }
                 }
+                else if (channel == TERRAINSYNC)
+                {
+                    try
+                    {
+                        NBTTagCompound nbt = buffer.readNBTTagCompoundFromBuffer();
+                        TerrainManager.getInstance().getTerrain(player.worldObj).loadTerrain(nbt);
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override
@@ -96,6 +109,7 @@ public class PacketHandler
         public static final byte BLASTAFFECTED = 1;
         public static final byte TELEPORTID    = 2;
         public static final byte TILEUPDATE    = 3;
+        public static final byte TERRAINSYNC   = 4;
 
         PacketBuffer             buffer;
 
@@ -290,6 +304,7 @@ public class PacketHandler
         PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
         NBTTagCompound nbt = new NBTTagCompound();
         tile.writeToNBT(nbt);
+        buffer.writeByte(MessageClient.TILEUPDATE);
         buffer.writeNBTTagCompoundToBuffer(nbt);
         MessageClient message = new MessageClient(buffer);
         sendToAllNear(message, Vector3.getNewVector().set(tile), tile.getWorld().provider.getDimension(), 64);
