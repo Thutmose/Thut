@@ -51,19 +51,6 @@ public class McaModel extends X3dModel
     // }
     // }
 
-    public void loadModel(InputStream stream)
-    {
-        try
-        {
-            McaXML xml = new McaXML(stream);
-            makeObjects(xml);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     private void addChildren(Set<Children> set, Children node)
     {
         if (node.geometry != null)
@@ -88,6 +75,19 @@ public class McaModel extends X3dModel
             }
         }
         return ret;
+    }
+
+    public void loadModel(InputStream stream)
+    {
+        try
+        {
+            McaXML xml = new McaXML(stream);
+            makeObjects(xml);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     HashMap<String, IExtendedModelPart> makeObjects(McaXML xml) throws Exception

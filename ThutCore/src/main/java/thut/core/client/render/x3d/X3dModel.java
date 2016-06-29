@@ -49,27 +49,6 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         loadModel(l);
     }
 
-    @Override
-    public HashMap<String, IExtendedModelPart> getParts()
-    {
-        return parts;
-    }
-
-    public void loadModel(ResourceLocation model)
-    {
-        try
-        {
-            IResource res = Minecraft.getMinecraft().getResourceManager().getResource(model);
-            InputStream stream = res.getInputStream();
-            X3dXML xml = new X3dXML(stream);
-            makeObjects(xml);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     private void addChildren(Set<Transform> allTransforms, Transform transform)
     {
         for (Transform f : transform.transforms)
@@ -128,6 +107,27 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             mats.put(matName, material);
         }
         return material;
+    }
+
+    @Override
+    public HashMap<String, IExtendedModelPart> getParts()
+    {
+        return parts;
+    }
+
+    public void loadModel(ResourceLocation model)
+    {
+        try
+        {
+            IResource res = Minecraft.getMinecraft().getResourceManager().getResource(model);
+            InputStream stream = res.getInputStream();
+            X3dXML xml = new X3dXML(stream);
+            makeObjects(xml);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     HashMap<String, IExtendedModelPart> makeObjects(X3dXML xml) throws Exception

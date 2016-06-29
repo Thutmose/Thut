@@ -20,154 +20,16 @@ import thut.core.client.render.x3d.ModelFormatException;
 
 public class McaXML
 {
-    public Mca model;
-
-    public McaXML(InputStream stream) throws JAXBException
-    {
-        JAXBContext jaxbContext = JAXBContext.newInstance(Mca.class);
-        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        model = (Mca) unmarshaller.unmarshal(new InputStreamReader(stream));
-    }
-
-    @XmlRootElement(name = "mca.project.MCStandard.data.ProjectSavable")
-    public static class Mca
-    {
-        @XmlElement(name = "modelNode")
-        ModelNode node;
-    }
-
-    @XmlRootElement(name = "modelNode")
-    public static class ModelNode
-    {
-        @XmlElement(name = "world_bound")
-        WorldBound bound;
-        @XmlElement(name = "children")
-        Children   children;
-    }
-
-    @XmlRootElement(name = "animations")
-    public static class Animations
-    {
-
-    }
-
     @XmlRootElement(name = "mca.project.MCStandard.animation.Animation")
     public static class Animation
     {
 
     }
 
-    @XmlRootElement(name = "children")
-    public static class Children
+    @XmlRootElement(name = "animations")
+    public static class Animations
     {
-        @XmlAttribute(name = "size")
-        int             size;
-        @XmlElement(name = "com.jme3.scene.Geometry")
-        GeometryNode    geometry;
-        @XmlElement(name = "com.jme3.scene.Node")
-        List<SceneNode> scenes = Lists.newArrayList();
-        SceneNode       parent;
-    }
 
-    @XmlRootElement(name = "com.jme3.scene.Node")
-    public static class SceneNode
-    {
-        @XmlAttribute(name = "name")
-        String     name;
-        @XmlElement(name = "world_bound")
-        WorldBound bound;
-        @XmlElement(name = "transform")
-        Transform  transform;
-        @XmlElement(name = "children")
-        Children   children;
-    }
-
-    @XmlRootElement(name = "com.jme3.scene.Geometry")
-    public static class GeometryNode
-    {
-        @XmlElement(name = "mesh")
-        Mesh       mesh;
-        @XmlElement(name = "world_bound")
-        WorldBound bound;
-    }
-
-    @XmlRootElement(name = "mesh")
-    public static class Mesh
-    {
-        @XmlElement(name = "buffers")
-        Buffers    buffers;
-        @XmlElement(name = "modelBound")
-        ModelBound bound;
-    }
-
-    @XmlRootElement(name = "modelBound")
-    public static class ModelBound
-    {
-        @XmlAttribute(name = "xExtent")
-        float  x = 0;
-        @XmlAttribute(name = "yExtent")
-        float  y = 0;
-        @XmlAttribute(name = "zExtent")
-        float  z = 0;;
-        @XmlElement(name = "center")
-        Center center;
-    }
-
-    @XmlRootElement(name = "world_bound")
-    public static class WorldBound
-    {
-        @XmlAttribute(name = "xExtent")
-        float  x = 0;
-        @XmlAttribute(name = "yExtent")
-        float  y = 0;
-        @XmlAttribute(name = "zExtent")
-        float  z = 0;;
-        @XmlElement(name = "center")
-        Center center;
-    }
-
-    @XmlRootElement(name = "center")
-    public static class Center
-    {
-        @XmlAttribute(name = "x")
-        float x = 0;
-        @XmlAttribute(name = "y")
-        float y = 0;
-        @XmlAttribute(name = "z")
-        float z = 0;;
-    }
-
-    @XmlRootElement(name = "transform")
-    public static class Transform
-    {
-        @XmlElement(name = "rot")
-        Rot         rotation;
-        @XmlElement(name = "translation")
-        Translation translation;
-    }
-
-    @XmlRootElement(name = "translation")
-    public static class Translation
-    {
-        @XmlAttribute(name = "x")
-        float x = 0;
-        @XmlAttribute(name = "y")
-        float y = 0;
-        @XmlAttribute(name = "z")
-        float z = 0;
-    }
-
-    @XmlRootElement(name = "rot")
-    public static class Rot
-    {
-        @XmlAttribute(name = "x")
-        float x = 0;
-        @XmlAttribute(name = "y")
-        float y = 0;
-        @XmlAttribute(name = "z")
-        float z = 0;
-        @XmlAttribute(name = "w")
-        float w = 0;
     }
 
     @XmlRootElement(name = "buffers")
@@ -181,15 +43,6 @@ public class McaXML
             for (MapEntry entry : entries)
             {
                 if (entry.savable.type.equals("Normal")) { return entry.savable.getFloats(); }
-            }
-            return null;
-        }
-
-        public Vertex[] getVerts()
-        {
-            for (MapEntry entry : entries)
-            {
-                if (entry.savable.type.equals("Position")) { return entry.savable.getFloats(); }
             }
             return null;
         }
@@ -221,62 +74,38 @@ public class McaXML
             }
             return null;
         }
+
+        public Vertex[] getVerts()
+        {
+            for (MapEntry entry : entries)
+            {
+                if (entry.savable.type.equals("Position")) { return entry.savable.getFloats(); }
+            }
+            return null;
+        }
     }
 
-    @XmlRootElement(name = "MapEntry")
-    public static class MapEntry
+    @XmlRootElement(name = "center")
+    public static class Center
     {
-        @XmlAttribute(name = "key")
-        String  key;
-        @XmlElement(name = "Savable")
-        Savable savable;
+        @XmlAttribute(name = "x")
+        float x = 0;
+        @XmlAttribute(name = "y")
+        float y = 0;
+        @XmlAttribute(name = "z")
+        float z = 0;;
     }
 
-    @XmlRootElement(name = "Savable")
-    public static class Savable
+    @XmlRootElement(name = "children")
+    public static class Children
     {
-        @XmlAttribute(name = "buffer_type")
-        String          type;
-        @XmlElement(name = "dataFloat")
-        DataFloat       data1;
-        @XmlElement(name = "dataUnsignedInt")
-        DataUnsignedInt data2;
-
-        public Vertex[] getFloats()
-        {
-            return parseVertices(data1.data, type);
-        }
-
-        private static Vertex[] parseVertices(String line, String type) throws ModelFormatException
-        {
-            ArrayList<Vertex> ret = new ArrayList<Vertex>();
-            float scale = type.equals("Position") ? 1 / 16f : 1;
-            String[] points = line.split(" ");
-            if (points.length
-                    % 3 != 0) { throw new ModelFormatException("Invalid number of elements in the points string"); }
-            for (int i = 0; i < points.length; i += 3)
-            {
-                Vertex toAdd = new Vertex(Float.parseFloat(points[i]) * scale, Float.parseFloat(points[i + 1]) * scale,
-                        Float.parseFloat(points[i + 2]) * scale);
-                ret.add(toAdd);
-            }
-            return ret.toArray(new Vertex[ret.size()]);
-        }
-
-        public TextureCoordinate[] getTexture(String point)
-        {
-            ArrayList<TextureCoordinate> ret = new ArrayList<TextureCoordinate>();
-            String[] points = point.split(" ");
-            if (points.length % 2 != 0) { throw new ModelFormatException(
-                    "Invalid number of elements in the points string " + points.length); }
-            for (int i = 0; i < points.length; i += 2)
-            {
-                TextureCoordinate toAdd = new TextureCoordinate(Float.parseFloat(points[i]),
-                        1 - Float.parseFloat(points[i + 1]));
-                ret.add(toAdd);
-            }
-            return ret.toArray(new TextureCoordinate[ret.size()]);
-        }
+        @XmlAttribute(name = "size")
+        int             size;
+        @XmlElement(name = "com.jme3.scene.Geometry")
+        GeometryNode    geometry;
+        @XmlElement(name = "com.jme3.scene.Node")
+        List<SceneNode> scenes = Lists.newArrayList();
+        SceneNode       parent;
     }
 
     @XmlRootElement(name = "dataFloat")
@@ -295,5 +124,176 @@ public class McaXML
         String data;
         @XmlAttribute(name = "size")
         int    size;
+    }
+
+    @XmlRootElement(name = "com.jme3.scene.Geometry")
+    public static class GeometryNode
+    {
+        @XmlElement(name = "mesh")
+        Mesh       mesh;
+        @XmlElement(name = "world_bound")
+        WorldBound bound;
+    }
+
+    @XmlRootElement(name = "MapEntry")
+    public static class MapEntry
+    {
+        @XmlAttribute(name = "key")
+        String  key;
+        @XmlElement(name = "Savable")
+        Savable savable;
+    }
+
+    @XmlRootElement(name = "mca.project.MCStandard.data.ProjectSavable")
+    public static class Mca
+    {
+        @XmlElement(name = "modelNode")
+        ModelNode node;
+    }
+
+    @XmlRootElement(name = "mesh")
+    public static class Mesh
+    {
+        @XmlElement(name = "buffers")
+        Buffers    buffers;
+        @XmlElement(name = "modelBound")
+        ModelBound bound;
+    }
+
+    @XmlRootElement(name = "modelBound")
+    public static class ModelBound
+    {
+        @XmlAttribute(name = "xExtent")
+        float  x = 0;
+        @XmlAttribute(name = "yExtent")
+        float  y = 0;
+        @XmlAttribute(name = "zExtent")
+        float  z = 0;;
+        @XmlElement(name = "center")
+        Center center;
+    }
+
+    @XmlRootElement(name = "modelNode")
+    public static class ModelNode
+    {
+        @XmlElement(name = "world_bound")
+        WorldBound bound;
+        @XmlElement(name = "children")
+        Children   children;
+    }
+
+    @XmlRootElement(name = "rot")
+    public static class Rot
+    {
+        @XmlAttribute(name = "x")
+        float x = 0;
+        @XmlAttribute(name = "y")
+        float y = 0;
+        @XmlAttribute(name = "z")
+        float z = 0;
+        @XmlAttribute(name = "w")
+        float w = 0;
+    }
+
+    @XmlRootElement(name = "Savable")
+    public static class Savable
+    {
+        private static Vertex[] parseVertices(String line, String type) throws ModelFormatException
+        {
+            ArrayList<Vertex> ret = new ArrayList<Vertex>();
+            float scale = type.equals("Position") ? 1 / 16f : 1;
+            String[] points = line.split(" ");
+            if (points.length
+                    % 3 != 0) { throw new ModelFormatException("Invalid number of elements in the points string"); }
+            for (int i = 0; i < points.length; i += 3)
+            {
+                Vertex toAdd = new Vertex(Float.parseFloat(points[i]) * scale, Float.parseFloat(points[i + 1]) * scale,
+                        Float.parseFloat(points[i + 2]) * scale);
+                ret.add(toAdd);
+            }
+            return ret.toArray(new Vertex[ret.size()]);
+        }
+        @XmlAttribute(name = "buffer_type")
+        String          type;
+        @XmlElement(name = "dataFloat")
+        DataFloat       data1;
+
+        @XmlElement(name = "dataUnsignedInt")
+        DataUnsignedInt data2;
+
+        public Vertex[] getFloats()
+        {
+            return parseVertices(data1.data, type);
+        }
+
+        public TextureCoordinate[] getTexture(String point)
+        {
+            ArrayList<TextureCoordinate> ret = new ArrayList<TextureCoordinate>();
+            String[] points = point.split(" ");
+            if (points.length % 2 != 0) { throw new ModelFormatException(
+                    "Invalid number of elements in the points string " + points.length); }
+            for (int i = 0; i < points.length; i += 2)
+            {
+                TextureCoordinate toAdd = new TextureCoordinate(Float.parseFloat(points[i]),
+                        1 - Float.parseFloat(points[i + 1]));
+                ret.add(toAdd);
+            }
+            return ret.toArray(new TextureCoordinate[ret.size()]);
+        }
+    }
+
+    @XmlRootElement(name = "com.jme3.scene.Node")
+    public static class SceneNode
+    {
+        @XmlAttribute(name = "name")
+        String     name;
+        @XmlElement(name = "world_bound")
+        WorldBound bound;
+        @XmlElement(name = "transform")
+        Transform  transform;
+        @XmlElement(name = "children")
+        Children   children;
+    }
+
+    @XmlRootElement(name = "transform")
+    public static class Transform
+    {
+        @XmlElement(name = "rot")
+        Rot         rotation;
+        @XmlElement(name = "translation")
+        Translation translation;
+    }
+
+    @XmlRootElement(name = "translation")
+    public static class Translation
+    {
+        @XmlAttribute(name = "x")
+        float x = 0;
+        @XmlAttribute(name = "y")
+        float y = 0;
+        @XmlAttribute(name = "z")
+        float z = 0;
+    }
+
+    @XmlRootElement(name = "world_bound")
+    public static class WorldBound
+    {
+        @XmlAttribute(name = "xExtent")
+        float  x = 0;
+        @XmlAttribute(name = "yExtent")
+        float  y = 0;
+        @XmlAttribute(name = "zExtent")
+        float  z = 0;;
+        @XmlElement(name = "center")
+        Center center;
+    }
+
+    public Mca model;
+
+    public McaXML(InputStream stream) throws JAXBException
+    {
+        JAXBContext jaxbContext = JAXBContext.newInstance(Mca.class);
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        model = (Mca) unmarshaller.unmarshal(new InputStreamReader(stream));
     }
 }

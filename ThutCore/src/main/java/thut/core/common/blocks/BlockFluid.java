@@ -27,7 +27,7 @@ public abstract class BlockFluid extends BlockFluidFinite implements IHardenable
 
         boolean changed = false;
         boolean cont = true;
-        int quantaRemaining = ((Integer) state.getValue(LEVEL)) + 1 - flowDiff;
+        int quantaRemaining = (state.getValue(LEVEL)) + 1 - flowDiff;
         quantaRemaining = Math.max(1, quantaRemaining);
 
         // Flow vertically if possible

@@ -50,6 +50,11 @@ public class BiomeDatabase
         return BiomeType.NONE;
     }
 
+    public static Biome getBiome(String name)
+    {
+        return Biome.REGISTRY.getObject(new ResourceLocation(name));
+    }
+
     public static String getBiome(World world, Vector3 v)
     {
         int type = v.getBiomeID(world);
@@ -76,11 +81,6 @@ public class BiomeDatabase
     public static int getBiomeType(Biome biome)
     {
         return Biome.getIdForBiome(biome);
-    }
-
-    public static Biome getBiome(String name)
-    {
-        return Biome.REGISTRY.getObject(new ResourceLocation(name));
     }
 
     public static int getBiomeType(String name)

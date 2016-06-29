@@ -61,15 +61,6 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
         return core;
     }
 
-    /** Overriden in a sign to provide the text. */
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket()
-    {
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        this.writeToNBT(nbttagcompound);
-        return new SPacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
-    }
-
     @Override
     public ITextComponent getDisplayName()
     {
@@ -121,6 +112,15 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
     public ItemStack getStackInSlot(int i)
     {
         return core != null ? core.getStackInSlot(i) : null;
+    }
+
+    /** Overriden in a sign to provide the text. */
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket()
+    {
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
+        this.writeToNBT(nbttagcompound);
+        return new SPacketUpdateTileEntity(this.getPos(), 3, nbttagcompound);
     }
 
     @Override

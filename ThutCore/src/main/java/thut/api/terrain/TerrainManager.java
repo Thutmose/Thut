@@ -67,19 +67,6 @@ public class TerrainManager
     }
 
     @SubscribeEvent
-    public void ChunkWatchEvent(ChunkWatchEvent.Watch evt)
-    {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
-        NBTTagCompound terrainData = new NBTTagCompound();
-        TerrainManager.getInstance().getTerrain(evt.getPlayer().worldObj).saveTerrain(terrainData,
-                evt.getChunk().chunkXPos, evt.getChunk().chunkZPos);
-        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
-        buffer.writeNBTTagCompoundToBuffer(terrainData);
-        MessageClient message = new MessageClient(buffer);
-        PacketHandler.packetPipeline.sendToAll(message);
-    }
-
-    @SubscribeEvent
     public void ChunkSaveEvent(ChunkDataEvent.Save evt)
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
@@ -100,6 +87,19 @@ public class TerrainManager
         {
             e.printStackTrace();
         }
+    }
+
+    @SubscribeEvent
+    public void ChunkWatchEvent(ChunkWatchEvent.Watch evt)
+    {
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
+        NBTTagCompound terrainData = new NBTTagCompound();
+        TerrainManager.getInstance().getTerrain(evt.getPlayer().worldObj).saveTerrain(terrainData,
+                evt.getChunk().chunkXPos, evt.getChunk().chunkZPos);
+        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
+        buffer.writeNBTTagCompoundToBuffer(terrainData);
+        MessageClient message = new MessageClient(buffer);
+        PacketHandler.packetPipeline.sendToAll(message);
     }
 
     public WorldTerrain getTerrain(int id)
