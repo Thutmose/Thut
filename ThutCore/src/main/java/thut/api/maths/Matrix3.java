@@ -124,18 +124,10 @@ public class Matrix3
             @Override
             public int compare(AxisAlignedBB o1, AxisAlignedBB o2)
             {
-                if (o1.minY == o1.minY)
-                {
-                    if (o1.minX == o2.minX)
-                    {
-                        return MathHelper.floor_double(o1.minZ * 16) - MathHelper.floor_double(o2.minZ * 16);
-                    }
-                    else
-                    {
-                        return MathHelper.floor_double(o1.minX * 16) - MathHelper.floor_double(o2.minX * 16);
-                    }
-                }
-                return MathHelper.floor_double(o1.minY * 16) - MathHelper.floor_double(o2.minY * 16);
+                int diffY = MathHelper.floor_double(o1.minY * 16) - MathHelper.floor_double(o2.minY * 16);
+                int diffX = MathHelper.floor_double(o1.minX * 16) - MathHelper.floor_double(o2.minX * 16);
+                int diffZ = MathHelper.floor_double(o1.minZ * 16) - MathHelper.floor_double(o2.minZ * 16);
+                return diffY + diffX + diffZ;
             }
         });
         double minBoxY = Integer.MAX_VALUE;
