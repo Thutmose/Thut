@@ -11,12 +11,13 @@ tile.railgun.name=Block Cannon
 item.devicelinker.name=Device Linker
 
 #Chat Messages
-msg.liftSet.name=Elevator set
+msg.liftSet.name=Elevator bound to Linker
 msg.floorSet.name=Set this Floor to %s
 msg.callPanel.name=Set is Call Panel to %s
 msg.lift.killed=Killed Elevator
 msg.lift.owner=This Elevator is owned by %s
 msg.lift.create=Successfully Made Elevator
+msg.lift.camo=Set Camo block to %s
 
 #InfoBook json
 

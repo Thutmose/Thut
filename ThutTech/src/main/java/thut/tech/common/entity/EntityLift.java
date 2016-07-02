@@ -345,26 +345,20 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         // Add AABBS for blocks around under the base, to stop sending into
         // floor.
         MutableBlockPos pos = new MutableBlockPos(getPosition());
-        for (int i = -2 - sizeX / 2; i <= 2 + sizeX / 2; i++)
-            for (int j = -2 - sizeZ / 2; j <= 2 + sizeZ / 2; j++)
+        int mx = sizeX / 2;
+        int mz = sizeZ / 2;
+        if (sizeY > 1 && motionY == 0) for (int i = -1 - mx; i <= 1 + mx; i++)
+            for (int j = -1 - mz; j <= 1 + mz; j++)
             {
-                pos.setPos(getPosition());
-                pos.add(i, -1, j);
+                pos.setPos(getPosition().down());
+                pos.setPos(pos.getX() + i, pos.getY(), pos.getZ() + j);
                 IBlockState state = worldObj.getBlockState(pos);
                 Block block = state.getBlock();
                 AxisAlignedBB blockBox = block.getBoundingBox(state, worldObj, pos);
                 if (blockBox != null)
                 {
                     AxisAlignedBB box = blockBox.offset(pos);
-                    // Matrix3.getAABB(posX + blockBox.minX - 0.5 + boundMin.x +
-                    // i,
-                    // posY + blockBox.minY - 1, posZ + blockBox.minZ - 0.5 +
-                    // boundMin.z + j,
-                    // posX + blockBox.maxX - 0.5 + boundMin.x + i, posY +
-                    // blockBox.maxY - 1,
-                    // posZ + blockBox.maxZ - 0.5 + boundMin.z + j);
                     blockBoxes.add(box);
-                    // topY.add(box.maxY);
                 }
             }
 

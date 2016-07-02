@@ -25,14 +25,18 @@ group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.ht
 archivesBaseName = "thuttech"
 
 minecraft {
-    version = "1.9.4-12.17.0.1940"
+    version = "${version_minecraft}-${version_forge}"
+    mappings = "${version_mappings}"
     runDir = "run"
     useDepAts = true
     
     replace "@VERSION", project.version
     replaceIn "ThutTechReference.java"
+    replace "@DEP", "[${version_core},)"
+    replaceIn "ThutTechReference.java"
+    replace "@MCVERSION", "${version_mcsupport}"
+    replaceIn "ThutTechReference.java"
     
-    mappings = "snapshot_20160518"
     makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 jar {

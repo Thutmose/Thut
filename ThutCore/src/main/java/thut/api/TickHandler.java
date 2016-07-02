@@ -251,7 +251,7 @@ public class TickHandler
                 }
             }
         }
-        if (evt.phase != Phase.START || !blocks.containsKey(evt.world.provider.getDimension())
+        if (evt.phase != Phase.END || !blocks.containsKey(evt.world.provider.getDimension())
                 || blocks.get(evt.world.provider.getDimension()).size() == 0 || evt.world.isRemote)
             return;
 
