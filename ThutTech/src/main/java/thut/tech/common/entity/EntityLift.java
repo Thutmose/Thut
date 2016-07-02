@@ -17,11 +17,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
@@ -32,26 +32,125 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import thut.api.ThutBlocks;
-import thut.api.entity.IMultibox;
 import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
 import thut.tech.common.items.ItemLinker;
 
-public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IMultibox
+public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData// ,
+                                                                                      // IMultibox
 {
+    public static class LiftWorld implements IBlockAccess
+    {
+        final EntityLift lift;
+
+        public LiftWorld(EntityLift lift)
+        {
+            this.lift = lift;
+        }
+
+        @Override
+        public TileEntity getTileEntity(BlockPos pos)
+        {
+            return null;
+        }
+
+        @Override
+        public int getCombinedLight(BlockPos pos, int lightValue)
+        {
+            return 15 << 20 | 15 << 4;
+        }
+
+        @Override
+        public IBlockState getBlockState(BlockPos pos)
+        {
+            int xMin = lift.boundMin.intX();
+            int zMin = lift.boundMin.intZ();
+            int yMin = lift.boundMin.intY();
+            int i = pos.getX() - xMin;
+            int j = pos.getY() - yMin;
+            int k = pos.getZ() - zMin;
+            Block b = Blocks.AIR;
+
+            int meta = 0;
+            if (i >= lift.blocks.length || j >= lift.blocks[0].length || k >= lift.blocks[0][0].length || i < 0 || j < 0
+                    || k < 0)
+            {
+                return b.getDefaultState();
+            }
+            else
+            {
+                ItemStack stack = lift.blocks[i][j][k];
+                if (stack == null) return Blocks.AIR.getDefaultState();
+                b = Block.getBlockFromItem(stack.getItem());
+                meta = stack.getItemDamage();
+            }
+            if (i + xMin == 0 && k + zMin == 0 && j + yMin == 0 && lift.getHeldItem(null) != null)
+            {
+                b = Block.getBlockFromItem(lift.getHeldItem(null).getItem());
+                meta = lift.getHeldItem(null).getItemDamage();
+            }
+            IBlockState iblockstate = b.getStateFromMeta(meta);
+            return iblockstate;
+        }
+
+        @Override
+        public boolean isAirBlock(BlockPos pos)
+        {
+            IBlockState state = getBlockState(pos);
+            return state.getBlock().isAir(state, this, pos);
+        }
+
+        @Override
+        public Biome getBiomeGenForCoords(BlockPos pos)
+        {
+            return lift.getEntityWorld().getBiomeGenForCoords(pos);
+        }
+
+        @Override
+        public boolean extendedLevelsInChunkCache()
+        {
+            return false;
+        }
+
+        @Override
+        public int getStrongPower(BlockPos pos, EnumFacing direction)
+        {
+            return lift.getEntityWorld().getStrongPower(pos, direction);
+        }
+
+        @Override
+        public WorldType getWorldType()
+        {
+            return lift.getEntityWorld().getWorldType();
+        }
+
+        @Override
+        public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+        {
+            return getBlockState(pos).isSideSolid(this, pos, side);
+        }
+
+    }
+
     static final DataParameter<Integer>             DESTINATIONFLOORDW = EntityDataManager
             .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
     static final DataParameter<Integer>             DESTINATIONYDW     = EntityDataManager
@@ -129,44 +228,43 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
-    public Vector3                  boundMin      = Vector3.getNewVector();
-    public Vector3                  boundMax      = Vector3.getNewVector();
+    public Vector3             boundMin      = Vector3.getNewVector();
+    public Vector3             boundMax      = Vector3.getNewVector();
 
-    public double                   speedUp       = ConfigHandler.LiftSpeedUp;
-    public double                   speedDown     = -ConfigHandler.LiftSpeedDown;
-    public double                   acceleration  = 0.05;
-    public boolean                  up            = true;
-    public boolean                  toMoveY       = false;
-    public boolean                  moved         = false;
-    public boolean                  axis          = true;
-    public boolean                  hasPassenger  = false;
-    int                             n             = 0;
-    int                             passengertime = 10;
-    boolean                         first         = true;
-    Random                          r             = new Random();
+    private LiftWorld          world;
+    public double              speedUp       = ConfigHandler.LiftSpeedUp;
+    public double              speedDown     = -ConfigHandler.LiftSpeedDown;
+    public double              acceleration  = 0.05;
+    public boolean             up            = true;
+    public boolean             toMoveY       = false;
+    public boolean             moved         = false;
+    public boolean             axis          = true;
+    public boolean             hasPassenger  = false;
+    int                        n             = 0;
+    int                        passengertime = 10;
+    boolean                    first         = true;
+    Random                     r             = new Random();
 
-    public UUID                     id            = UUID.randomUUID();
-    public UUID                     owner;
+    public UUID                id            = UUID.randomUUID();
+    public UUID                owner;
 
-    public double                   prevFloorY    = 0;
-    public double                   prevFloor     = 0;
+    public double              prevFloorY    = 0;
+    public double              prevFloor     = 0;
 
-    public boolean                  called        = false;
-    TileEntityLiftAccess            current;
+    public boolean             called        = false;
+    TileEntityLiftAccess       current;
 
-    Matrix3                         mainBox       = new Matrix3();
-    Matrix3                         tempBox       = new Matrix3();
+    Matrix3                    mainBox       = new Matrix3();
+    Matrix3                    tempBox       = new Matrix3();
 
-    public HashMap<String, Matrix3> boxes         = new HashMap<String, Matrix3>();
-    public List<AxisAlignedBB>      blockBoxes    = Lists.newArrayList();
-    public HashMap<String, Vector3> offsets       = new HashMap<String, Vector3>();
-    public int[]                    floors        = new int[64];
-    Matrix3                         base          = new Matrix3();
+    public List<AxisAlignedBB> blockBoxes    = Lists.newArrayList();
+    public int[]               floors        = new int[64];
+    Matrix3                    base          = new Matrix3();
 
-    Matrix3                         top           = new Matrix3();
-    Matrix3                         wall1         = new Matrix3();
+    Matrix3                    top           = new Matrix3();
+    Matrix3                    wall1         = new Matrix3();
 
-    public ItemStack[][][]          blocks        = null;
+    public ItemStack[][][]     blocks        = null;
 
     public EntityLift(World par1World)
     {
@@ -178,6 +276,15 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             floors[i] = -1;
         }
+    }
+
+    public LiftWorld getLiftWorld()
+    {
+        if (world == null)
+        {
+            world = new LiftWorld(this);
+        }
+        return world;
     }
 
     public EntityLift(World world, double x, double y, double z)
@@ -214,6 +321,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int sizeY = blocks[0].length;
         int sizeZ = blocks[0][0].length;
         Set<Double> topY = Sets.newHashSet();
+        // Adds AABBS for contained blocks
         for (int i = 0; i < sizeX; i++)
             for (int k = 0; k < sizeY; k++)
                 for (int j = 0; j < sizeZ; j++)
@@ -228,16 +336,41 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     {
                         AxisAlignedBB box = Matrix3.getAABB(posX + blockBox.minX - 0.5 + boundMin.x + i,
                                 posY + blockBox.minY + k, posZ + blockBox.minZ - 0.5 + boundMin.z + j,
-                                posX + blockBox.maxX + 0.5 + boundMin.x + i, posY + blockBox.maxY + k,
-                                posZ + blockBox.maxZ + 0.5 + boundMin.z + j);
+                                posX + blockBox.maxX - 0.5 + boundMin.x + i, posY + blockBox.maxY + k,
+                                posZ + blockBox.maxZ - 0.5 + boundMin.z + j);
                         blockBoxes.add(box);
                         topY.add(box.maxY);
                     }
                 }
+        // Add AABBS for blocks around under the base, to stop sending into
+        // floor.
+        MutableBlockPos pos = new MutableBlockPos(getPosition());
+        for (int i = -2 - sizeX / 2; i <= 2 + sizeX / 2; i++)
+            for (int j = -2 - sizeZ / 2; j <= 2 + sizeZ / 2; j++)
+            {
+                pos.setPos(getPosition());
+                pos.add(i, -1, j);
+                IBlockState state = worldObj.getBlockState(pos);
+                Block block = state.getBlock();
+                AxisAlignedBB blockBox = block.getBoundingBox(state, worldObj, pos);
+                if (blockBox != null)
+                {
+                    AxisAlignedBB box = blockBox.offset(pos);
+                    // Matrix3.getAABB(posX + blockBox.minX - 0.5 + boundMin.x +
+                    // i,
+                    // posY + blockBox.minY - 1, posZ + blockBox.minZ - 0.5 +
+                    // boundMin.z + j,
+                    // posX + blockBox.maxX - 0.5 + boundMin.x + i, posY +
+                    // blockBox.maxY - 1,
+                    // posZ + blockBox.maxZ - 0.5 + boundMin.z + j);
+                    blockBoxes.add(box);
+                    // topY.add(box.maxY);
+                }
+            }
 
         v.setToVelocity(entity).subtractFrom(v1.setToVelocity(this));
         v1.clear();
-        Matrix3.doCollision(blockBoxes, entity.getEntityBoundingBox(), entity, 0, v, v1);
+        Matrix3.doCollision(blockBoxes, entity.getEntityBoundingBox(), entity, motionY, v, v1);
         for (Double d : topY)
             if (entity.posY >= d && entity.posY + entity.motionY <= d && motionY <= 0)
             {
@@ -303,20 +436,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return false;
     }
 
-    @Override
-    public Matrix3 bounds(Vector3 target)
-    {
-        int xMin = boundMin.intX();
-        int zMin = boundMin.intZ();
-        int xMax = boundMax.intX();
-        int zMax = boundMax.intZ();
-
-        tempBox.boxMin().set(xMin, 0, zMin);
-        tempBox.boxMax().set(xMax, 1, zMax);
-
-        return tempBox;
-    }
-
     public void call(int floor)
     {
         if (floor == 0 || floor > 64) { return; }
@@ -379,7 +498,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
-    @Override
     public void checkCollision()
     {
 
@@ -516,12 +634,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return null;
     }
 
-    @Override
-    public HashMap<String, Matrix3> getBoxes()
-    {
-        return boxes;
-    }
-
     /** Checks if the entity's current position is a valid location to spawn
      * this entity. */
     public boolean getCanSpawnHere()
@@ -545,12 +657,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public int getDestY()
     {
         return dataManager.get(DESTINATIONYDW);
-    }
-
-    @Override
-    public HashMap<String, Vector3> getOffsets()
-    {
-        return offsets;
     }
 
     @Override
@@ -612,15 +718,21 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         else if (player.isSneaking() && item != null && Block.getBlockFromItem(item.getItem()) != null
                 && (owner == null || owner.equals(player.getUniqueID())))
         {
+            System.out.println("Test");
             Block block = Block.getBlockFromItem(item.getItem());
-            if (block.getStateFromMeta(item.getItemDamage()).isNormalCube())
+            if (!(block instanceof ITileEntityProvider))
             {
                 ItemStack item2 = item.splitStack(1);
                 if (getHeldItem(null) != null && !worldObj.isRemote)
                 {
                     this.entityDropItem(getHeldItem(null), 1);
                 }
-                if (!worldObj.isRemote) setHeldItem(null, item2);
+                if (!worldObj.isRemote)
+                {
+                    String message = "msg.lift.camo";
+                    player.addChatMessage(new TextComponentTranslation(message, item.getDisplayName()));
+                    setHeldItem(null, item2);
+                }
             }
             return true;
         }
@@ -796,35 +908,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    @Override
-    public void setBoxes()
-    {
-        int xMin = boundMin.intX();
-        int zMin = boundMin.intZ();
-        int xMax = boundMax.intX();
-        int zMax = boundMax.intZ();
-        mainBox.boxMin().set(xMin, 0, zMin);
-        mainBox.boxMax().set(xMax, 1, zMax);
-
-        // TODO add additional boxes for other blocks.
-
-        Matrix3 m2;
-        if (!boxes.containsKey("base"))
-        {
-            m2 = new Matrix3();
-            boxes.put("base", m2);
-        }
-        else
-        {
-            m2 = boxes.get("base");
-        }
-
-        m2.boxMin().clear();
-        m2.boxMax().set(xMax - xMin, 1, zMax - zMin);
-        m2.boxRotation().clear();
-        boxes.put("base", m2);
-    }
-
     /** @param currentFloor
      *            the destinationFloor to set */
     public void setCurrentFloor(int currentFloor)
@@ -879,25 +962,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             floors[te.floor - 1] = -1;
             floors[floor - 1] = te.getPos().getY() - 2;
         }
-    }
-
-    @Override
-    public void setOffsets()
-    {
-
-        Vector3 v2;
-        if (!offsets.containsKey("base"))
-        {
-            v2 = Vector3.getNewVector();
-            offsets.put("base", v2);
-        }
-        else
-        {
-            v2 = offsets.get("base");
-        }
-        int xMin = boundMin.intX();
-        int zMin = boundMax.intZ();
-        v2.set(xMin, 0, zMin);
     }
 
     public void writeBlocks(NBTTagCompound nbt)

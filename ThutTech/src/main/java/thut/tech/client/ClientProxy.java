@@ -110,6 +110,7 @@ public class ClientProxy extends CommonProxy
     @Override
     public void preinit(FMLPreInitializationEvent event)
     {
+        super.preinit(event);
         ModelLoader.setCustomStateMapper(ThutBlocks.lift, (new StateMap.Builder()).withName(BlockLift.VARIANT)
                 .ignore(new IProperty[] { BlockLift.CALLED, BlockLift.CURRENT }).build());
 

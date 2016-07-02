@@ -20,7 +20,7 @@ repositories {
 dependencies {
     compile "li.cil.oc:OpenComputers:MC1.9.4-1.6.+:api"
 }
-version = "3.0.3"
+version = "3.0.4"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
 
@@ -29,7 +29,7 @@ minecraft {
     runDir = "run"
     useDepAts = true
     
-    replace "@VERSION@", project.version
+    replace "@VERSION", project.version
     replaceIn "ThutTechReference.java"
     
     mappings = "snapshot_20160518"
