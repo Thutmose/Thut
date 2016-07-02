@@ -25,6 +25,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -544,6 +545,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable// ,
                     worldObj.setBlockState(getPos(), state);
                 }
             }
+            MinecraftForge.EVENT_BUS.post(new EventLiftUpdate(this));
         }
 
         if (lift != null && floor > 0)

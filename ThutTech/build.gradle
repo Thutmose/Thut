@@ -15,12 +15,13 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 repositories {
-    maven { url = "http://maven.cil.li/" }
+    maven {url = "http://maven.cil.li/"}
+    maven {url 'http://maven.epoxide.xyz'}
 }
 dependencies {
-    compile "li.cil.oc:OpenComputers:MC1.9.4-1.6.+:api"
+    compile "li.cil.oc:OpenComputers:MC${version_oc}:api"
+    compile "net.darkhax.tesla:Tesla:${version_tesla}"
 }
-version = "3.0.4"
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
 

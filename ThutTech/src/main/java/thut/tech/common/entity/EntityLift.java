@@ -162,6 +162,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public static int                               ACCELERATIONTICKS  = 20;
 
+    public static boolean                           ENERGYUSE          = false;
+    public static int                               ENERGYCOST         = 100;
+
     private static HashMap<UUID, EntityLift>        lifts              = new HashMap<UUID, EntityLift>();
     private static HashMap<UUID, EntityLift>        lifts2             = new HashMap<UUID, EntityLift>();
 
@@ -231,6 +234,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public Vector3             boundMin      = Vector3.getNewVector();
     public Vector3             boundMax      = Vector3.getNewVector();
 
+    int                        energy        = 0;
     private LiftWorld          world;
     public double              speedUp       = ConfigHandler.LiftSpeedUp;
     public double              speedDown     = -ConfigHandler.LiftSpeedDown;
@@ -297,6 +301,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void accelerate()
     {
+        if (isServerWorld() && !consumePower())
+        {
+            toMoveY = false;
+        }
+
         motionX = 0;
         motionZ = 0;
         if (!toMoveY) motionY *= 0.5;
@@ -347,7 +356,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         MutableBlockPos pos = new MutableBlockPos(getPosition());
         int mx = sizeX / 2;
         int mz = sizeZ / 2;
-        if (sizeY > 1 && motionY == 0) for (int i = -1 - mx; i <= 1 + mx; i++)
+        if (sizeY > 1 && motionY == 0 && entity.posY < posY) for (int i = -1 - mx; i <= 1 + mx; i++)
             for (int j = -1 - mz; j <= 1 + mz; j++)
             {
                 pos.setPos(getPosition().down());
@@ -425,8 +434,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     /** Called when the entity is attacked. */
     public boolean attackEntityFrom(DamageSource source, int damage)
     {
-        if (damage > 15) { return true; }
-
         return false;
     }
 
@@ -521,16 +528,33 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     }
 
-    @SuppressWarnings("unused") // TODO make use of this
     private boolean consumePower()
-    {
+    {// TODO
+        if (!ENERGYUSE || !toMoveY) return true;
         boolean power = false;
-        // int sizeFactor = size == 1 ? 4 : size == 3 ? 23 : 55;
-        double energyCost = 0;// (destinationY - posY)*ENERGYCOST*sizeFactor;
+        Vector3 bounds = boundMax.subtract(boundMin);
+        double volume = bounds.x * bounds.y * bounds.z;
+        double energyCost = Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01;
         if (energyCost <= 0) return true;
-        if (!power) toMoveY = false;
+        power = (energy = (int) (energy - energyCost)) > 0;
+        System.out.println(energy+" "+power+" "+energyCost);
+        if (energy < 0) energy = 0;
+        if (!power){
+            this.setDestinationFloor(-1);
+            this.setDestY(0);
+            toMoveY = false;
+        }
         return power;
+    }
 
+    public int getEnergy()
+    {
+        return energy;
+    }
+
+    public void setEnergy(int energy)
+    {
+        this.energy = energy;
     }
 
     public void doMotion()
@@ -751,6 +775,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void onUpdate()
     {
+        if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
         this.prevPosY = posY;
 
         clearLiquids();
@@ -826,6 +851,41 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         blocks[i][k][j] = b;
                     }
         }
+        else if (nbt.hasKey("Blocks"))
+        {
+            NBTTagCompound blockTag = nbt.getCompoundTag("Blocks");
+            if (blockTag.hasKey("BlocksLength") || blockTag.hasKey("BlocksLengthX"))
+            {
+                int sizeX = blockTag.getInteger("BlocksLengthX");
+                int sizeZ = blockTag.getInteger("BlocksLengthZ");
+                int sizeY = blockTag.getInteger("BlocksLengthY");
+                if (sizeX == 0 || sizeZ == 0)
+                {
+                    sizeX = sizeZ = nbt.getInteger("BlocksLength");
+                }
+                if (sizeY == 0) sizeY = 1;
+
+                blocks = new ItemStack[sizeX][sizeY][sizeZ];
+                for (int i = 0; i < sizeX; i++)
+                    for (int k = 0; k < sizeY; k++)
+                        for (int j = 0; j < sizeZ; j++)
+                        {
+                            int n = -1;
+                            if (blockTag.hasKey("I" + i + "," + j))
+                            {
+                                n = blockTag.getInteger("I" + i + "," + j);
+                            }
+                            else if (blockTag.hasKey("I" + i + "," + k + "," + j))
+                            {
+                                n = blockTag.getInteger("I" + i + "," + k + "," + j);
+                            }
+                            if (n == -1) continue;
+                            ItemStack b = new ItemStack(Item.getItemById(n), 1,
+                                    blockTag.getInteger("M" + i + "," + k + "," + j));
+                            blocks[i][k][j] = b;
+                        }
+            }
+        }
     }
 
     @Override
@@ -833,6 +893,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         super.readEntityFromNBT(nbt);
         axis = nbt.getBoolean("axis");
+        energy = nbt.getInteger("energy");
         if (nbt.hasKey("size"))
         {
             double size = nbt.getDouble("size");
@@ -878,10 +939,19 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void readList(NBTTagCompound nbt)
     {
-        for (int i = 0; i < 64; i++)
+        if (nbt.hasKey("floors 0")) for (int i = 0; i < 64; i++)
         {
             floors[i] = nbt.getInteger("floors " + i);
             if (floors[i] == 0) floors[i] = -1;
+        }
+        else
+        {
+            NBTTagCompound floorTag = nbt.getCompoundTag("floors");
+            for (int i = 0; i < 64; i++)
+            {
+                floors[i] = floorTag.getInteger("" + i);
+                if (floors[i] == 0) floors[i] = -1;
+            }  
         }
     }
 
@@ -962,9 +1032,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         if (blocks != null)
         {
-            nbt.setInteger("BlocksLengthX", blocks.length);
-            nbt.setInteger("BlocksLengthY", blocks[0].length);
-            nbt.setInteger("BlocksLengthZ", blocks[0][0].length);
+            NBTTagCompound blocksTag = new NBTTagCompound();
+            blocksTag.setInteger("BlocksLengthX", blocks.length);
+            blocksTag.setInteger("BlocksLengthY", blocks[0].length);
+            blocksTag.setInteger("BlocksLengthZ", blocks[0][0].length);
             int sizeX = blocks.length;
             int sizeY = blocks[0].length;
             int sizeZ = blocks[0][0].length;
@@ -974,9 +1045,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     {
                         ItemStack b = blocks[i][k][j];
                         if (b == null || b.getItem() == null) continue;
-                        nbt.setInteger("block" + i + "," + k + "," + j, Item.getIdFromItem(b.getItem()));
-                        nbt.setInteger("meta" + i + "," + k + "," + j, b.getItemDamage());
+                        blocksTag.setInteger("I" + i + "," + k + "," + j, Item.getIdFromItem(b.getItem()));
+                        blocksTag.setInteger("M" + i + "," + k + "," + j, b.getItemDamage());
                     }
+            nbt.setTag("Blocks", blocksTag);
         }
     }
 
@@ -990,6 +1062,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         boundMin.writeToNBT(vector, "min");
         boundMax.writeToNBT(vector, "max");
         nbt.setTag("bounds", vector);
+        nbt.setInteger("energy", energy);
 
         nbt.setLong("lower", id.getLeastSignificantBits());
         nbt.setLong("higher", id.getMostSignificantBits());
@@ -1018,10 +1091,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void writeList(NBTTagCompound nbt)
     {
+        NBTTagCompound floorTag = new NBTTagCompound();
         for (int i = 0; i < 64; i++)
         {
-            nbt.setInteger("floors " + i, floors[i]);
+            floorTag.setInteger("" + i, floors[i]);
         }
+        nbt.setTag("floors", floorTag);
     }
 
     @Override

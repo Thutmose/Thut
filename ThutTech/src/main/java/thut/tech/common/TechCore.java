@@ -14,9 +14,11 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -39,6 +41,7 @@ import thut.tech.common.network.PacketPipeline.ClientPacket;
 import thut.tech.common.network.PacketPipeline.ClientPacket.MessageHandlerClient;
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
+import thut.tech.common.tesla.TeslaHandler;
 
 @Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, dependencies = ThutTechReference.DEPSTRING, version = ThutTechReference.VERSION, acceptedMinecraftVersions = ThutTechReference.MCVERSIONS)
 public class TechCore
@@ -127,12 +130,21 @@ public class TechCore
 
         Configuration config = new Configuration(e.getSuggestedConfigurationFile());
         ConfigHandler.load(config);
+        if (!Loader.isModLoaded("Tesla")) EntityLift.ENERGYUSE = false;
         packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel(ThutTechReference.MOD_ID);
 
         MinecraftForge.EVENT_BUS.register(this);
 
         packetPipeline.registerMessage(MessageHandlerClient.class, ClientPacket.class, 0, Side.CLIENT);
         packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Side.SERVER);
+    }
+    
+
+    @Optional.Method(modid = "Tesla")
+    @EventHandler
+    public void preInitTesla(FMLPreInitializationEvent e)
+    {
+        new TeslaHandler();
     }
 
     @EventHandler

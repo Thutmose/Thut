@@ -289,11 +289,6 @@ public class Matrix3
                 temp1.x = dx;
             }
         }
-
-        e.setEntityBoundingBox(
-                new AxisAlignedBB(e.getEntityBoundingBox().minX, boundingBox.minY, e.getEntityBoundingBox().minZ,
-                        e.getEntityBoundingBox().maxX, boundingBox.maxY, e.getEntityBoundingBox().maxZ));
-
         return collide;
     }
 
@@ -696,21 +691,21 @@ public class Matrix3
 
             Arrays.sort(boxes, new Comparator<AxisAlignedBB>()
             {
-                @Override
-                public int compare(AxisAlignedBB o1, AxisAlignedBB o2)
+                @Override // TODO
+                public int compare(AxisAlignedBB arg0, AxisAlignedBB arg1)
                 {
-                    if (o1.minY == o1.minY)
+                    int minX0 = (int) (arg0.minX * 32);
+                    int minY0 = (int) (arg0.minY * 32);
+                    int minZ0 = (int) (arg0.minZ * 32);
+                    int minX1 = (int) (arg1.minX * 32);
+                    int minY1 = (int) (arg1.minY * 32);
+                    int minZ1 = (int) (arg1.minZ * 32);
+                    if (minX0 == minX1)
                     {
-                        if (o1.minX == o2.minX)
-                        {
-                            return MathHelper.floor_double(o1.minZ * 16) - MathHelper.floor_double(o2.minZ * 16);
-                        }
-                        else
-                        {
-                            return MathHelper.floor_double(o1.minX * 16) - MathHelper.floor_double(o2.minX * 16);
-                        }
+                        if (minZ0 == minZ1) return minY0 - minY1;
+                        else return minZ0 - minZ1;
                     }
-                    return MathHelper.floor_double(o1.minY * 16) - MathHelper.floor_double(o2.minY * 16);
+                    return minX0 - minX1;
                 }
             });
             double minBoxY = Integer.MAX_VALUE;
