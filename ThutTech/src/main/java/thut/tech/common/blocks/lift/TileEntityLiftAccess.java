@@ -10,6 +10,7 @@ import java.util.Vector;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.SimpleComponent;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -34,8 +35,7 @@ import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
 
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
-public class TileEntityLiftAccess extends TileEntity implements ITickable// ,
-                                                                         // SimpleComponent
+public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
 {
     public int                          power        = 0;
     public int                          prevPower    = 1;
@@ -280,7 +280,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable// ,
 
     }
 
-    // @Override //TODO re-add SimpleComponent when it is fixed.
+    @Override
     public String getComponentName()
     {
         return "lift";
