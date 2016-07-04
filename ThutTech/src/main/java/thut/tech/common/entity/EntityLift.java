@@ -529,7 +529,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     }
 
     private boolean consumePower()
-    {// TODO
+    {
         if (!ENERGYUSE || !toMoveY) return true;
         boolean power = false;
         Vector3 bounds = boundMax.subtract(boundMin);
@@ -537,9 +537,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         double energyCost = Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01;
         if (energyCost <= 0) return true;
         power = (energy = (int) (energy - energyCost)) > 0;
-        System.out.println(energy+" "+power+" "+energyCost);
         if (energy < 0) energy = 0;
-        if (!power){
+        if (!power)
+        {
             this.setDestinationFloor(-1);
             this.setDestY(0);
             toMoveY = false;
@@ -729,6 +729,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             {
                 String message = "msg.lift.killed";
                 player.addChatMessage(new TextComponentTranslation(message));
+                this.setHealth(0);
                 setDead();
             }
             return true;
@@ -951,7 +952,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             {
                 floors[i] = floorTag.getInteger("" + i);
                 if (floors[i] == 0) floors[i] = -1;
-            }  
+            }
         }
     }
 
@@ -983,7 +984,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setDead()
     {
-        if (!worldObj.isRemote && !this.isDead)
+        if (!worldObj.isRemote && !this.isDead && this.getHealth() == 0)
         {
             if (blocks != null)
             {

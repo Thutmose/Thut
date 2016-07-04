@@ -2,9 +2,13 @@ package thut.tech.common;
 
 import static thut.tech.common.network.PacketPipeline.packetPipeline;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -137,14 +141,51 @@ public class TechCore
 
         packetPipeline.registerMessage(MessageHandlerClient.class, ClientPacket.class, 0, Side.CLIENT);
         packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Side.SERVER);
+
     }
-    
 
     @Optional.Method(modid = "Tesla")
     @EventHandler
     public void preInitTesla(FMLPreInitializationEvent e)
     {
         new TeslaHandler();
+    }
+
+    @Optional.Method(modid = "EnderIO")
+    @EventHandler
+    public void postInitEIO(FMLPostInitializationEvent e)
+    {
+        try
+        {
+            System.out.println("ADDING ELEVATOR TO EIO BLACKLIST");
+            Class<?> soulVessel = Class.forName("crazypants.enderio.item.ItemSoulVessel");
+            Class<?> enderIO = Class.forName("crazypants.enderio.EnderIO");
+            Field soulVesselItemField = enderIO.getDeclaredField("itemSoulVessel");
+            Object soulVesselItem = soulVesselItemField.get(null);
+            Field blacklistField = soulVessel.getDeclaredField("blackList");
+            blacklistField.setAccessible(true);
+            String liftName = EntityList.getEntityStringFromClass(EntityLift.class);
+            @SuppressWarnings("unchecked")
+            List<String> blacklist = (List<String>) blacklistField.get(soulVesselItem);
+            boolean has = false;
+            for (String s : blacklist)
+            {
+                if (s != null && s.equals(liftName))
+                {
+                    has = true;
+                    break;
+                }
+            }
+            if (!has)
+            {
+                blacklist.add(liftName);
+            }
+        }
+        catch (Exception e1)
+        {
+            System.err.println("ERROR ADDING ELEVATOR TO EIO BLACKLIST");
+            e1.printStackTrace();
+        }
     }
 
     @EventHandler
