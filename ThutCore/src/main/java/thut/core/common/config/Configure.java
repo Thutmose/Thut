@@ -7,4 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Configure
 {
     String category();
+
+    boolean needsMcRestart() default false;
 }
