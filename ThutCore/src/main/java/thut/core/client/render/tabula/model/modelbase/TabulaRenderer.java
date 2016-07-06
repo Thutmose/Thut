@@ -165,20 +165,21 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
             // Allows specific part recolouring,
 
             int rgba = 0;
+            boolean perPart = true;
             if (entity instanceof IMobColourable)
             {
                 int[] cols = ((IMobColourable) entity).getRGBA();
-                rgba += cols[2];
+                rgba += cols[0];
                 rgba += cols[1] << 8;
                 rgba += cols[2] << 16;
                 rgba += cols[3] << 24;
+                if (cols[0] == 0 && cols[1] == 0 && cols[2] == 0) perPart = false;
             }
             else
             {
                 rgba = 0xFFFFFFFF;
             }
-
-            rgba = set.getColourForPart(identifier, entity, rgba);
+            if (perPart) rgba = set.getColourForPart(identifier, entity, rgba);
 
             float alpha = ((rgba >> 24) & 255) / 255f;
             float red = ((rgba >> 16) & 255) / 255f;
