@@ -627,7 +627,7 @@ public class Vector3
         double dx, dy, dz;
         List<Entity> ret = new ArrayList<Entity>();
 
-        for (double i = 0; i < range; i += 0.0625)
+        for (double i = 0; i < range; i += size)
         {
             dx = i * direction.x;
             dy = i * direction.y;
@@ -1222,8 +1222,8 @@ public class Vector3
 
     public Vector3 horizonalPerp()
     {
-        Vector3 vectorH = getNewVector().set(x, 0, z);
-        return vectorH.rotateAboutLine(secondAxis, PI / 2, vectorH).normalize();
+        Vector3 vectorH = getNewVector().set(-z, 0, x);
+        return vectorH.norm();
     }
 
     // */
@@ -1352,14 +1352,14 @@ public class Vector3
         return getMaxY(world) <= y;
     }
 
-    public boolean isOnSurfaceIgnoringWater(Chunk chunk, IBlockAccess world)
+    public boolean isOnSurfaceIgnoringDecorationAndWater(Chunk chunk, IBlockAccess world)
     {
         int h = chunk.getHeightValue(intX() & 15, intZ() & 15);
         if (h <= y) return true;
         for (int i = h; i > y; i--)
         {
             Material m = world.getBlockState(new BlockPos(intX(), i, intZ())).getMaterial();
-            if (!(m == Material.WATER || m == Material.AIR)) return false;
+            if (!(m == Material.WATER || m == Material.AIR || m == Material.LEAVES || m == Material.WOOD)) return false;
         }
         return true;
     }
@@ -1543,8 +1543,7 @@ public class Vector3
         if (line.magSq() != 1) line = line.normalize();
 
         if (ret == null) ret = Vector3.getNewVector();
-        double[][] mat = rotBox;// new double[3][3];
-        // Matrix3 TransMatrix = rotBox.clear();
+        double[][] mat = rotBox;
 
         mat[0][0] = line.get(0) * line.get(0) * (1 - MathHelper.cos((float) angle)) + MathHelper.cos((float) angle);
         mat[0][1] = line.get(0) * line.get(1) * (1 - MathHelper.cos((float) angle))
@@ -1563,7 +1562,6 @@ public class Vector3
         mat[2][1] = line.get(2) * line.get(1) * (1 - MathHelper.cos((float) angle))
                 + line.get(0) * MathHelper.sin((float) angle);
         mat[2][2] = line.get(2) * line.get(2) * (1 - MathHelper.cos((float) angle)) + MathHelper.cos((float) angle);
-        double x = this.x, y = this.y, z = this.z;
 
         ret.x = mat[0][0] * x + mat[0][1] * y + mat[0][2] * z;
         ret.y = mat[1][0] * x + mat[1][1] * y + mat[1][2] * z;
@@ -1769,6 +1767,7 @@ public class Vector3
         return setBlock(worldObj, id, meta, 3);
     }
 
+    @SuppressWarnings("deprecation")
     public boolean setBlock(World worldObj, Block id, int meta, int flag)
     {
         if (doChunksExist(worldObj, 1))

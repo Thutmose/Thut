@@ -81,9 +81,6 @@ public class WorldCache implements IBlockAccess
             {
                 if (chunk.getBlockStorageArray()[i] != null)
                 {
-                    // BlockStateContainer to;
-                    // BlockStateContainer from =
-                    // chunk.getBlockStorageArray()[i].getData();
                     if (storageArrays[i] == null)
                     {
                         storageArrays[i] = chunk.getBlockStorageArray()[i];// TODO
@@ -92,8 +89,6 @@ public class WorldCache implements IBlockAccess
                                                                            // copying
                                                                            // this.
                     }
-                    // to = storageArrays[i].getData();
-                    // storageArrays[i]..setData(to);
                 }
                 else
                 {
@@ -104,10 +99,10 @@ public class WorldCache implements IBlockAccess
 
     }
 
-    public final World                    world;
+    public final World                       world;
     private final Long2ObjectMap<ChunkCache> map   = new Long2ObjectOpenHashMap<>();
 
-    final Set<ChunkCache>                 cache = Sets.newConcurrentHashSet();
+    final Set<ChunkCache>                    cache = Sets.newConcurrentHashSet();
 
     public WorldCache(World world_)
     {

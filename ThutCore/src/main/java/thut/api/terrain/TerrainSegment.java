@@ -90,7 +90,7 @@ public class TerrainSegment
                                                                                 if (segment.isInTerrainSegment(temp1.x,
                                                                                         temp1.y, temp1.z))
                                                                                     sky = sky
-                                                                                            || temp1.isOnSurfaceIgnoringWater(
+                                                                                            || temp1.isOnSurfaceIgnoringDecorationAndWater(
                                                                                                     chunk, world);
                                                                                 if (sky) break outer;
                                                                             }

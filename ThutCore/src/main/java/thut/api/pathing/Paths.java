@@ -54,7 +54,6 @@ public class Paths {
 
     public Path getPathHeapToEntity(Entity entityA, Entity entityB, float distance)
     {
-//    	System.out.println(Arrays.toString(cacheLock));
     	while(cacheLock[0])
     	{
     		try

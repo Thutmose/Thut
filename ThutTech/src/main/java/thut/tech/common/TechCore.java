@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityList;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
@@ -32,7 +31,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.api.entity.IMultibox;
 import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 import thut.core.common.CreativeTabThut;
@@ -97,20 +95,6 @@ public class TechCore
     public void livingRender(RenderLivingEvent.Post evt)
     {
         if (!Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()) return;
-
-        EntityPlayer p = proxy.getPlayer(null);
-        Vector3 v = Vector3.getNewVector().set(p);
-        Vector3 v1 = Vector3.getNewVector();
-        Object o = evt.getEntity();
-        if (o instanceof IMultibox)
-        {
-            IMultibox b = (IMultibox) o;
-            for (String s : b.getBoxes().keySet())
-            {
-                drawOutlinedBoundingBox(b.getBoxes().get(s), v1.set(o).subtractFrom(v), (b.getOffsets().get(s)),
-                        123456);
-            }
-        }
     }
 
     @EventHandler

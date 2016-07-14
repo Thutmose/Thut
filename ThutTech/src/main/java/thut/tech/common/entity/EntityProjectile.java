@@ -1,13 +1,19 @@
 package thut.tech.common.entity;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import thut.api.maths.ExplosionCustom;
+import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 
 public class EntityProjectile extends EntityFallingBlock
@@ -16,25 +22,16 @@ public class EntityProjectile extends EntityFallingBlock
     IBlockState block;
     boolean     accelerated = false;
 
-    public EntityProjectile(World p_i1706_1_)
+    public EntityProjectile(World worldIn)
     {
-        super(p_i1706_1_);
+        super(worldIn);
         // TODO Auto-generated constructor stub
     }
 
-    public EntityProjectile(World p_i45318_1_, double p_i45318_2_, double p_i45318_4_, double p_i45318_6_,
-            IBlockState b)
+    public EntityProjectile(World worldIn, double x, double y, double z, IBlockState fallingBlockState)
     {
-        super(p_i45318_1_, p_i45318_2_, p_i45318_4_, p_i45318_6_, b);
-        // TODO Auto-generated constructor stub
-        this.block = b;
-    }
-
-    public EntityProjectile(World p_i45319_1_, double p_i45319_2_, double p_i45319_4_, double p_i45319_6_,
-            IBlockState b, int p_i45319_9_)
-    {
-        super(p_i45319_1_, p_i45319_2_, p_i45319_4_, p_i45319_6_, b);
-        // TODO Auto-generated constructor stub
+        super(worldIn, x, y, z, fallingBlockState);
+        this.block = fallingBlockState;
     }
 
     public Vector3 getAccelerationFromRails(Vector3 here)
@@ -135,13 +132,44 @@ public class EntityProjectile extends EntityFallingBlock
             this.motionX *= 0.9800000190734863D;
             this.motionY *= 0.9800000190734863D;
             this.motionZ *= 0.9800000190734863D;
+        }
+    }
 
-            if (!this.worldObj.isRemote)
-            {
-                // int i = MathHelper.floor_double(this.posX);
-                // int j = MathHelper.floor_double(this.posY);
-                // int k = MathHelper.floor_double(this.posZ);
-            }
+    @Override
+    public void moveEntity(double x, double y, double z)
+    {
+        List<AxisAlignedBB> aabbs = Lists.newArrayList();
+        Matrix3 mainBox = new Matrix3();
+        Vector3 offset = Vector3.getNewVector();
+        mainBox.boxMin().clear();
+        mainBox.boxMax().x = width;
+        mainBox.boxMax().z = height;
+        mainBox.boxMax().y = width;
+        offset.set(-mainBox.boxMax().x / 2, 0, -mainBox.boxMax().z / 2);
+        Vector3 vec = Vector3.getNewVector().set(this);
+        mainBox.addOffsetTo(offset).addOffsetTo(vec);
+        AxisAlignedBB box = mainBox.getBoundingBox();
+        AxisAlignedBB box1 = box.expand(2 + width, 2 + height, 2 + width);
+        box1 = box1.addCoord(motionX, motionY, motionZ);
+        aabbs = mainBox.getCollidingBoxes(box1, worldObj, worldObj);
+        Matrix3.expandAABBs(aabbs, box);
+        Matrix3.mergeAABBs(aabbs, 0.01, 0.01, 0.01);
+        Vector3 diffs = Vector3.getNewVector().set(x, y, z);
+        mainBox.set(getEntityBoundingBox());
+        diffs.set(mainBox.doTileCollision(worldObj, aabbs, this, Vector3.empty, diffs, false));
+        boolean lock = false;
+        if (diffs.x != x || diffs.y != y || diffs.z != z)
+        {
+            lock = true;
+        }
+        x = diffs.x;
+        y = diffs.y;
+        z = diffs.z;
+        super.moveEntity(x, y, z);
+        if (lock)
+        {
+            this.worldObj.setBlockState(getPosition(), block);
+            this.setDead();
         }
     }
 }

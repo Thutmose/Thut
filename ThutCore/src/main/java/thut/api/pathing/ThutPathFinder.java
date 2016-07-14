@@ -7,6 +7,10 @@ import static net.minecraft.util.EnumFacing.SOUTH;
 import static net.minecraft.util.EnumFacing.UP;
 import static net.minecraft.util.EnumFacing.WEST;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
@@ -19,6 +23,7 @@ import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IntHashMap;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
@@ -70,6 +75,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     /** Selection of path points to add to the path */
     protected final PathPoint[]           pathOptionsb = new PathPoint[64];
     protected final IPathingMob           mob;
+    protected final List<AxisAlignedBB>   aabbs        = Lists.newArrayList();
 
     protected int                         PATHTIME     = 5000000;
 
@@ -170,6 +176,8 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         this.pointMap.clearMap();
         int i = MathHelper.floor_double(entity.getEntityBoundingBox().minY + 0.5D);
 
+        double dist = entity.getDistance(x, y, z);
+        dist = Math.max(2 * dist, 2 * distance);
         if (!mob.swims() && entity.isInWater())
         {
             i = (int) entity.getEntityBoundingBox().minY;
@@ -528,15 +536,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
         if (e.x > 1 || e.z > 1)
         {
-            v1.set(e);
-            box.clear();
-            box.boxMax().set(e);
-            box.boxMin().clear();
-            v1.y = 0;
-            v1.reverse().scalarMultBy(0.5);
-            box.addOffsetTo(v1);
-            v1.clear();
-            clear = !box.doTileCollision(worldMap, v, (Entity) mob, v1);
+            clear = mob.fits(worldMap, v, from);
             return clear;
         }
         else if (!(clear = v.clearOfBlocks(worldMap)
