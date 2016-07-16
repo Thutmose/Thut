@@ -1144,10 +1144,18 @@ public class Vector3
     public int getMaxY(World world, int x, int z)
     {
         Vector3 temp = Vector3.getNewVector().set(x, y, z);
-        int y = temp.getTopBlockY(world);
-
+        Chunk chunk = world.getChunkFromBlockCoords(getPos());
+        int y;
+        for (y = chunk.getHeight(getPos()); y > 5; y--)
+        {
+            IBlockState state = world.getBlockState(new BlockPos(intX(), y, intZ()));
+            if (state == null) continue;
+            if (state.getMaterial().isSolid())
+            {
+                break;
+            }
+        }
         if (Int(y) == intY()) return y;
-
         while (isNotSurfaceBlock(world, temp))
         {
             y--;

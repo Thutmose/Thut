@@ -3,7 +3,6 @@ package thut.api.terrain;
 import static thut.api.terrain.BiomeDatabase.contains;
 import static thut.api.terrain.BiomeType.INDUSTRIAL;
 import static thut.api.terrain.BiomeType.LAKE;
-import static thut.api.terrain.BiomeType.SKY;
 import static thut.api.terrain.BiomeType.VILLAGE;
 
 import java.util.HashMap;
@@ -14,8 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
@@ -81,17 +78,22 @@ public class TerrainSegment
                                                                     if (world.provider.doesWaterVaporize()) return -1;
                                                                     boolean sky = false;
                                                                     Vector3 temp1 = Vector3.getNewVector();
+                                                                    int x0 = segment.chunkX * 16, y0 = segment.chunkY * 16, z0 = segment.chunkZ * 16;
+                                                                    int dx = ((v.intX() - x0) / GRIDSIZE) * GRIDSIZE;
+                                                                    int dy = ((v.intY() - y0) / GRIDSIZE) * GRIDSIZE;
+                                                                    int dz = ((v.intZ() - z0) / GRIDSIZE) * GRIDSIZE;
+                                                                    int x1 = x0 + dx, y1 = y0 + dy, z1 = z0 + dz;
                                                                     outer:
-                                                                    for (int i = 0; i < GRIDSIZE; i++)
-                                                                        for (int j = 0; j < GRIDSIZE; j++)
-                                                                            for (int k = 0; k < GRIDSIZE; k++)
+                                                                    for (int i = x1; i < x1 + GRIDSIZE; i++)
+                                                                        for (int j = y1; j < y1 + GRIDSIZE; j++)
+                                                                            for (int k = z1; k < z1 + GRIDSIZE; k++)
                                                                             {
-                                                                                temp1.set(v).addTo(i, j, k);
-                                                                                if (segment.isInTerrainSegment(temp1.x,
-                                                                                        temp1.y, temp1.z))
-                                                                                    sky = sky
-                                                                                            || temp1.isOnSurfaceIgnoringDecorationAndWater(
-                                                                                                    chunk, world);
+                                                                                temp1.set(i, j, k);
+                                                                                if (segment.isInTerrainSegment(temp1.x, temp1.y, temp1.z))
+                                                                                {
+                                                                                    double y = temp1.getMaxY(world);
+                                                                                    sky = y <= temp1.y;
+                                                                                }
                                                                                 if (sky) break outer;
                                                                             }
                                                                     if (sky) return -1;
@@ -414,6 +416,13 @@ public class TerrainSegment
 
     private int getBiome(World world, Vector3 v, boolean caveAdjust)
     {
+        if (chunk == null || chunk.xPosition != chunkX || chunk.zPosition != chunkZ)
+            chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+        if (chunk == null)
+        {
+            Thread.dumpStack();
+            return 0;
+        }
         if (!biomeCheckers.isEmpty())
         {
             for (ISubBiomeChecker checker : biomeCheckers)
@@ -462,7 +471,7 @@ public class TerrainSegment
 
     public void refresh(World world)
     {
-        boolean sky = true;
+        long time = System.nanoTime();
         chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
         for (int i = 0; i < GRIDSIZE; i++)
             for (int j = 0; j < GRIDSIZE; j++)
@@ -474,34 +483,10 @@ public class TerrainSegment
                     int biome2 = adjustedNonCaveBiome(world, temp);
                     if (biome > 255 || biome2 > 255) toSave = true;
                     if (biome == -1) biome = biome2;
-                    else sky = false;
-
                     biomes[i + GRIDSIZE * j + GRIDSIZE * GRIDSIZE * k] = biome;
                 }
-        if (sky)
-        {
-            for (int i = 0; i < 16; i++)
-            {
-                IBlockState state = getCentre().add(0, -1 * i, 0).getBlockState(world);
-                sky = state.getBlock() == null || state.getMaterial() == Material.AIR;
-                if (!sky) break;
-            }
-        }
-        if (sky)
-        {
-            isSky = true;
-            for (int i = 0; i < GRIDSIZE; i++)
-                for (int j = 0; j < GRIDSIZE; j++)
-                    for (int k = 0; k < GRIDSIZE; k++)
-                    {
-                        biomes[i + GRIDSIZE * j + GRIDSIZE * GRIDSIZE * k] = SKY.getType();
-                    }
-        }
-
-        long time = System.nanoTime();
-
-        double dt = (System.nanoTime() - time) / 1000000000D;
-        if (dt > 0.001) System.out.println("industrial check took " + dt);
+        double dt = (System.nanoTime() - time) / 10e9;
+        if (dt > 0.01) System.out.println("subBiome check took " + dt);
     }
 
     public void saveToNBT(NBTTagCompound nbt)
@@ -535,6 +520,22 @@ public class TerrainSegment
         biomes[relX + GRIDSIZE * relY + GRIDSIZE * GRIDSIZE * relZ] = biome;
         if (biome > 255) toSave = true;
 
+    }
+
+    public int getBiomeLocal(int x, int y, int z)
+    {
+        int relX = x % GRIDSIZE;
+        int relY = y % GRIDSIZE;
+        int relZ = z % GRIDSIZE;
+        return biomes[relX + GRIDSIZE * relY + GRIDSIZE * GRIDSIZE * relZ];
+    }
+
+    public void setBiomeLocal(int x, int y, int z, int biome)
+    {
+        int relX = x % GRIDSIZE;
+        int relY = y % GRIDSIZE;
+        int relZ = z % GRIDSIZE;
+        biomes[relX + GRIDSIZE * relY + GRIDSIZE * GRIDSIZE * relZ] = biome;
     }
 
     public void setBiome(int[] biomes)
