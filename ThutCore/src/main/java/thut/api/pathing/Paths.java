@@ -25,11 +25,6 @@ public class Paths {
 
     public Path getEntityPathToXYZ(Entity entity, int x, int y, int z, float distance)
     {
-    	if(x==0&&z==0)
-    	{
-    		new Exception().printStackTrace();
-    		System.out.println(x+" "+y+" "+z);
-    	}
     	while(cacheLock[0])
     	{
     		try

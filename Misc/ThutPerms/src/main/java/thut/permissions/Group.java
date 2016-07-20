@@ -5,10 +5,12 @@ import java.util.UUID;
 
 import com.google.common.collect.Sets;
 
+import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommand;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class Group
 {
@@ -19,6 +21,18 @@ public class Group
     public Group(String name)
     {
         this.name = name;
+        for (ICommand command : FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager()
+                .getCommands().values())
+        {
+            if (command instanceof CommandBase)
+            {
+                CommandBase base = (CommandBase) command;
+                if (base.getRequiredPermissionLevel() <= 0)
+                {
+                    allowedCommands.add(command.getClass().getName());
+                }
+            }
+        }
     }
 
     public void writeToNBT(NBTTagCompound tag)

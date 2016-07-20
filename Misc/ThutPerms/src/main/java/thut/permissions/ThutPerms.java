@@ -41,11 +41,15 @@ public class ThutPerms
     protected static Map<String, Group> groupNameMap = Maps.newHashMap();
     protected static HashSet<Group>     groups       = Sets.newHashSet();
 
-    protected static Group              initial      = new Group("default");
+    protected static Group              initial;
 
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event)
     {
+        if (initial == null)
+        {
+            initial = new Group("default");
+        }
         event.registerServerCommand(new Command());
         MinecraftForge.EVENT_BUS.register(this);
         loadPerms(event.getServer());
@@ -184,5 +188,4 @@ public class ThutPerms
         Group g = groupIDMap.get(id);
         return g.canUse(command);
     }
-
 }

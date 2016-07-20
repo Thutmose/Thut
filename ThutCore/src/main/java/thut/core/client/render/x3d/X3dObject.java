@@ -32,6 +32,7 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
     public Vector4                             postRot1   = new Vector4();
     public Vector3                             preTrans   = Vector3.getNewVector();
     public Vector3                             postTrans  = Vector3.getNewVector();
+    public Vertex                              preScale   = new Vertex(1, 1, 1);
 
     public Vector3                             offset     = Vector3.getNewVector();
     public Vector4                             rotations  = new Vector4();
@@ -147,6 +148,7 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
     @Override
     public void renderAll()
     {
+        GL11.glScalef(preScale.x, preScale.y, preScale.z);
         render();
         for (IExtendedModelPart o : childParts.values())
         {
@@ -286,5 +288,13 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
         {
             if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(texturer);
         }
+    }
+
+    @Override
+    public void setPreScale(Vector3 scale)
+    {
+        preScale.x = (float) scale.x;
+        preScale.y = (float) scale.y;
+        preScale.z = (float) scale.z;
     }
 }

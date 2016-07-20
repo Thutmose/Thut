@@ -117,7 +117,7 @@ public class WorldCache implements IBlockAccess
         cache.add(chunkcache);
     }
 
-    @Override
+//    @Override
     public boolean extendedLevelsInChunkCache()
     {
         return false;

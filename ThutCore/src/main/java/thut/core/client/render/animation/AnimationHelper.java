@@ -35,6 +35,7 @@ public class AnimationHelper
         boolean animate = false;
         Vector3 temp = Vector3.getNewVector();
         float x = 0, y = 0, z = 0;
+        float sx = 1, sy = 1, sz = 1;
 
         float time = entity.ticksExisted + partialTick;
         time = time % animationLength;
@@ -54,11 +55,16 @@ public class AnimationHelper
                 x += (float) (component.rotChange[0] / component.length * componentTimer + component.rotOffset[0]);
                 y += (float) (component.rotChange[1] / component.length * componentTimer + component.rotOffset[1]);
                 z += (float) (component.rotChange[2] / component.length * componentTimer + component.rotOffset[2]);
+
+                sx += (float) (component.scaleChange[0] / component.length * componentTimer + component.scaleOffset[0]);
+                sy += (float) (component.scaleChange[1] / component.length * componentTimer + component.scaleOffset[1]);
+                sz += (float) (component.scaleChange[2] / component.length * componentTimer + component.scaleOffset[2]);
             }
         }
         if (animate)
         {
             part.setPreTranslations(temp);
+            part.setPreScale(temp.set(sx, sy, sz));
             Vector4 angle = null;
             if (z != 0)
             {
