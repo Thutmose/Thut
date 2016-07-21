@@ -1,0 +1,15 @@
+[
+{
+  "modid": "thutessentials",
+  "name": "Thut Essentials",
+  "description": "Permissions mod for Forge",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Thutmose"],
+  "credits": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
