@@ -1,3 +1,3 @@
 cd "%~dp0\ThutCore"
-gradlew setupDecompWorkspace eclipse
+cmd start /k gradlew setupDecompWorkspace eclipse
 pause

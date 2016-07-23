@@ -37,17 +37,37 @@ public class TeslaHandler
     {
         if (event.getTileEntity() instanceof TileEntityLiftAccess)
         {
-            class Provider extends BaseTeslaContainer implements ICapabilitySerializable<NBTTagCompound>
+            class Provider
+                    implements ICapabilitySerializable<NBTTagCompound>, ITeslaConsumer, ITeslaProducer, ITeslaHolder
             {
+                /** The amount of stored Tesla power. */
+                private long stored;
+
+                /** The maximum amount of Tesla power that can be stored. */
+                private long capacity;
+
+                /** The maximum amount of Tesla power that can be accepted. */
+                private long inputRate;
+
+                /** The maximum amount of Tesla power that can be extracted */
+                private long outputRate;
+
                 public Provider()
                 {
-                    super(5000000, 5000, 5000);
+                    this.stored = 0;
+                    this.capacity = 5000000;
+                    this.inputRate = 5000;
+                    this.outputRate = 5000;
                 }
 
                 @Override
                 public void deserializeNBT(NBTTagCompound nbt)
                 {
-                    super.deserializeNBT(nbt);
+                    this.stored = nbt.getLong("TeslaPower");
+                    if (nbt.hasKey("TeslaCapacity")) this.capacity = nbt.getLong("TeslaCapacity");
+                    if (nbt.hasKey("TeslaInput")) this.inputRate = nbt.getLong("TeslaInput");
+                    if (nbt.hasKey("TeslaOutput")) this.outputRate = nbt.getLong("TeslaOutput");
+                    if (this.stored > this.capacity) this.stored = this.capacity;
                 }
 
                 @SuppressWarnings("unchecked") // There isnt anything sane we
@@ -72,7 +92,41 @@ public class TeslaHandler
                 @Override
                 public NBTTagCompound serializeNBT()
                 {
-                    return (NBTTagCompound) super.serializeNBT();
+                    final NBTTagCompound dataTag = new NBTTagCompound();
+                    dataTag.setLong("TeslaPower", this.stored);
+                    dataTag.setLong("TeslaCapacity", this.capacity);
+                    dataTag.setLong("TeslaInput", this.inputRate);
+                    dataTag.setLong("TeslaOutput", this.outputRate);
+                    return dataTag;
+                }
+
+                @Override
+                public long getStoredPower()
+                {
+
+                    return this.stored;
+                }
+
+                @Override
+                public long getCapacity()
+                {
+                    return capacity;
+                }
+
+                @Override
+                public long takePower(long power, boolean simulated)
+                {
+                    final long removedPower = Math.min(this.stored, Math.min(this.outputRate, power));
+                    if (!simulated) this.stored -= removedPower;
+                    return removedPower;
+                }
+
+                @Override
+                public long givePower(long power, boolean simulated)
+                {
+                    final long acceptedTesla = Math.min(this.capacity - this.stored, Math.min(this.inputRate, power));
+                    if (!simulated) this.stored += acceptedTesla;
+                    return acceptedTesla;
                 }
             }
             event.addCapability(new ResourceLocation("thuttech:tesla"), new Provider());
@@ -84,17 +138,37 @@ public class TeslaHandler
     {
         if (event.getEntity() instanceof EntityLift)
         {
-            class Provider extends BaseTeslaContainer implements ICapabilitySerializable<NBTTagCompound>
+            class Provider
+                    implements ICapabilitySerializable<NBTTagCompound>, ITeslaConsumer, ITeslaProducer, ITeslaHolder
             {
+                /** The amount of stored Tesla power. */
+                private long stored;
+
+                /** The maximum amount of Tesla power that can be stored. */
+                private long capacity;
+
+                /** The maximum amount of Tesla power that can be accepted. */
+                private long inputRate;
+
+                /** The maximum amount of Tesla power that can be extracted */
+                private long outputRate;
+
                 public Provider()
                 {
-                    super(50000, 5000, 0);
+                    this.stored = 0;
+                    this.capacity = 5000000;
+                    this.inputRate = 5000;
+                    this.outputRate = 0;
                 }
 
                 @Override
                 public void deserializeNBT(NBTTagCompound nbt)
                 {
-                    super.deserializeNBT(nbt);
+                    this.stored = nbt.getLong("TeslaPower");
+                    if (nbt.hasKey("TeslaCapacity")) this.capacity = nbt.getLong("TeslaCapacity");
+                    if (nbt.hasKey("TeslaInput")) this.inputRate = nbt.getLong("TeslaInput");
+                    if (nbt.hasKey("TeslaOutput")) this.outputRate = nbt.getLong("TeslaOutput");
+                    if (this.stored > this.capacity) this.stored = this.capacity;
                 }
 
                 @SuppressWarnings("unchecked") // There isnt anything sane we
@@ -117,7 +191,41 @@ public class TeslaHandler
                 @Override
                 public NBTTagCompound serializeNBT()
                 {
-                    return (NBTTagCompound) super.serializeNBT();
+                    final NBTTagCompound dataTag = new NBTTagCompound();
+                    dataTag.setLong("TeslaPower", this.stored);
+                    dataTag.setLong("TeslaCapacity", this.capacity);
+                    dataTag.setLong("TeslaInput", this.inputRate);
+                    dataTag.setLong("TeslaOutput", this.outputRate);
+                    return dataTag;
+                }
+
+                @Override
+                public long getStoredPower()
+                {
+
+                    return this.stored;
+                }
+
+                @Override
+                public long getCapacity()
+                {
+                    return capacity;
+                }
+
+                @Override
+                public long takePower(long power, boolean simulated)
+                {
+                    final long removedPower = Math.min(this.stored, Math.min(this.outputRate, power));
+                    if (!simulated) this.stored -= removedPower;
+                    return removedPower;
+                }
+
+                @Override
+                public long givePower(long power, boolean simulated)
+                {
+                    final long acceptedTesla = Math.min(this.capacity - this.stored, Math.min(this.inputRate, power));
+                    if (!simulated) this.stored += acceptedTesla;
+                    return acceptedTesla;
                 }
             }
             event.addCapability(new ResourceLocation("thuttech:tesla"), new Provider());
