@@ -16,10 +16,11 @@ import thut.api.maths.Vector3;
 
 public class BiomeDatabase
 {
-    public static HashMap<Biome, Type[]>                    biomeTypes        = new HashMap<Biome, Type[]>();
+    public static HashMap<Biome, Type[]>                           biomeTypes        = new HashMap<Biome, Type[]>();
 
     public static final FMLControlledNamespacedRegistry<BiomeType> biomeTypeRegistry = PersistentRegistryManager
-            .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 256, 1024, true, null, null, null);
+            .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 256, 1024, true, null,
+                    null, null, null);
 
     public static boolean contains(Biome b, Type type)
     {
