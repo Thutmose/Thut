@@ -261,13 +261,17 @@ public class BlockLift extends Block implements ITileEntityProvider
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
             EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)
     {
+        boolean linkerOrStick = heldItem != null
+                && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
+                        || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
+                        || heldItem.getItem() instanceof ItemLinker || heldItem.getItem() == Items.STICK);
+        if (heldItem != null && playerIn.isSneaking() && !linkerOrStick) { return false; }
         if (state.getValue(VARIANT) == EnumType.LIFT)
         {
             ItemStack[][][] stacks;
             TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
             stacks = EntityLift.checkBlocks(worldIn, te, pos);
-            if (stacks != null && !worldIn.isRemote && playerIn.getHeldItem(hand) != null
-                    && playerIn.getHeldItem(hand).getItem() instanceof ItemLinker)
+            if (stacks != null && !worldIn.isRemote && heldItem != null && heldItem.getItem() instanceof ItemLinker)
             {
                 EntityLift.removeBlocks(worldIn, te, pos);
                 EntityLift lift = new EntityLift(worldIn, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
@@ -290,15 +294,9 @@ public class BlockLift extends Block implements ITileEntityProvider
         else if (state.getValue(VARIANT) == EnumType.CONTROLLER)
         {
             TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-            if (te != null && (!te.isSideOn(side)
-                    || (playerIn.getHeldItem(hand) != null && playerIn.getHeldItem(hand).getItem() == Items.STICK)))
+            if (te != null && (!te.isSideOn(side) || (heldItem != null && heldItem.getItem() == Items.STICK)))
             {
-                if (playerIn.getHeldItem(hand) != null
-                        && (playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
-                                || playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains(
-                                        "screwdriver")
-                                || playerIn.getHeldItem(hand).getItem() instanceof ItemLinker
-                                || playerIn.getHeldItem(hand).getItem() == Items.STICK))
+                if (linkerOrStick)
                 {
                     if (!worldIn.isRemote)
                     {
@@ -310,11 +308,9 @@ public class BlockLift extends Block implements ITileEntityProvider
             }
             else if (te != null && te.isSideOn(side))
             {
-                if (playerIn.getHeldItem(hand) != null
-                        && (playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
-                                || playerIn.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains(
-                                        "screwdriver")
-                                || playerIn.getHeldItem(hand).getItem() instanceof ItemLinker))
+                if (heldItem != null && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
+                        || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
+                        || heldItem.getItem() instanceof ItemLinker))
                 {
                     if (!worldIn.isRemote)
                     {

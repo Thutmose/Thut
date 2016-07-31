@@ -47,6 +47,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import thut.api.ThutBlocks;
 import thut.api.maths.Matrix3;
@@ -535,9 +536,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         Vector3 bounds = boundMax.subtract(boundMin);
         double volume = bounds.x * bounds.y * bounds.z;
         double energyCost = Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01;
+        energyCost = Math.max(energyCost, 1);
         if (energyCost <= 0) return true;
         power = (energy = (int) (energy - energyCost)) > 0;
         if (energy < 0) energy = 0;
+        MinecraftForge.EVENT_BUS.post(new EventLiftConsumePower(this, (long) energyCost));
         if (!power)
         {
             this.setDestinationFloor(-1);

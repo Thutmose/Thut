@@ -118,7 +118,7 @@ public class TechCore
 
         Configuration config = new Configuration(e.getSuggestedConfigurationFile());
         ConfigHandler.load(config);
-        if (!Loader.isModLoaded("Tesla")) EntityLift.ENERGYUSE = false;
+        if (!Loader.isModLoaded("tesla")) EntityLift.ENERGYUSE = false;
         packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel(ThutTechReference.MOD_ID);
 
         MinecraftForge.EVENT_BUS.register(this);
@@ -128,10 +128,11 @@ public class TechCore
 
     }
 
-    @Optional.Method(modid = "Tesla")
+    @Optional.Method(modid = "tesla")
     @EventHandler
     public void preInitTesla(FMLPreInitializationEvent e)
     {
+        System.out.println("TESLA LOCATED");
         new TeslaHandler();
     }
 
