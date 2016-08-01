@@ -331,6 +331,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int sizeY = blocks[0].length;
         int sizeZ = blocks[0][0].length;
         Set<Double> topY = Sets.newHashSet();
+        MutableBlockPos pos = new MutableBlockPos();
+        int xMin = boundMin.intX();
+        int zMin = boundMin.intZ();
+        int yMin = boundMin.intY();
         // Adds AABBS for contained blocks
         for (int i = 0; i < sizeX; i++)
             for (int k = 0; k < sizeY; k++)
@@ -338,10 +342,18 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 {
                     ItemStack stack = blocks[i][k][j];
                     if (stack == null || stack.getItem() == null) continue;
-
+                    pos.setPos(i + xMin, j + yMin, k + zMin);
                     Block block = Block.getBlockFromItem(stack.getItem());
                     IBlockState state = block.getStateFromMeta(stack.getItemDamage());
-                    AxisAlignedBB blockBox = block.getBoundingBox(state, worldObj, null);
+                    AxisAlignedBB blockBox = null;
+                    try
+                    {
+                        blockBox = block.getBoundingBox(state, worldObj, null);
+                    }
+                    catch (Exception e)
+                    {
+//                        blockBox = block.getBoundingBox(state, worldObj, pos);
+                    }
                     if (blockBox != null)
                     {
                         AxisAlignedBB box = Matrix3.getAABB(posX + blockBox.minX - 0.5 + boundMin.x + i,
@@ -354,7 +366,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 }
         // Add AABBS for blocks around under the base, to stop sending into
         // floor.
-        MutableBlockPos pos = new MutableBlockPos(getPosition());
+        pos.setPos(getPosition());
         int mx = sizeX / 2;
         int mz = sizeZ / 2;
         if (sizeY > 1 && motionY == 0 && entity.posY < posY) for (int i = -1 - mx; i <= 1 + mx; i++)
@@ -1110,7 +1122,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         NBTTagCompound tag = new NBTTagCompound();
         writeEntityToNBT(tag);
         buff.writeNBTTagCompoundToBuffer(tag);
-        lifts.put(id, this);
+        if (lifts.get(id) != this) lifts.put(id, this);
     }
 
     @Override

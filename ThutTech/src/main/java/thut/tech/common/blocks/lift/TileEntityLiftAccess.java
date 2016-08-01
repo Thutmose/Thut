@@ -565,10 +565,11 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             calledFloor = lift.getDestinationFloor();
             currentFloor = lift.getCurrentFloor();
         }
-        if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead))
+        EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
+        if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead || tempLift != lift))
         {
-            lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
-            if (lift == null) return;
+            lift = tempLift;
+            if (lift == null || lift.isDead) return;
         }
         if (getRoot().floor != floor)
         {
