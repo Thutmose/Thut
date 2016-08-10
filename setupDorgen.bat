@@ -1,3 +1,3 @@
 cd "%~dp0\Dorfgen"
-gradlew setupDecompWorkspace eclipse
+cmd /k gradlew setupDecompWorkspace eclipse
 pause

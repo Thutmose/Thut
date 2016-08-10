@@ -1,7 +1,6 @@
 package dorfgen.worldgen;
 
 import static dorfgen.WorldGenerator.scale;
-import static net.minecraftforge.common.ChestGenHooks.DUNGEON_CHEST;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,16 +16,14 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityMobSpawner;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.WeightedRandomChestContent;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.ComponentScatteredFeaturePieces;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
 import net.minecraft.world.gen.structure.StructureStart;
 import net.minecraft.world.gen.structure.StructureStrongholdPieces;
-import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.DungeonHooks;
 
 public class MapGenSites extends MapGenVillage
@@ -208,11 +205,11 @@ public class MapGenSites extends MapGenVillage
                         for (j2 = i1; j2 <= j1; ++j2)
                         {
                             blockpos1 = pos.add(l1, i2, j2);
-                            world_.setBlockState(blockpos1, Blocks.stone.getDefaultState(), 2);
+                            world_.setBlockState(blockpos1, Blocks.STONE.getDefaultState(), 2);
                         }
                     }
                 }
-                world_.setBlockState(pos.add(k - 1, 4, 0), Blocks.trapdoor.getDefaultState(), 2);
+                world_.setBlockState(pos.add(k - 1, 4, 0), Blocks.TRAPDOOR.getDefaultState(), 2);
                 System.out.println(pos);
 
                 // TODO re-copy dungeon code from 1.8 again for this
@@ -226,26 +223,26 @@ public class MapGenSites extends MapGenVillage
 
                             if (l1 != j && i2 != -1 && j2 != i1 && l1 != k && i2 != 4 && j2 != j1)
                             {
-                                if (world_.getBlockState(blockpos1).getBlock() != Blocks.chest)
+                                if (world_.getBlockState(blockpos1).getBlock() != Blocks.CHEST)
                                 {
                                     world_.setBlockToAir(blockpos1);
                                 }
                             }
                             else if (blockpos1.getY() >= 0
-                                    && !world_.getBlockState(blockpos1.down()).getBlock().getMaterial().isSolid())
+                                    && !world_.getBlockState(blockpos1.down()).getMaterial().isSolid())
                             {
                                 world_.setBlockToAir(blockpos1);
                             }
-                            else if (world_.getBlockState(blockpos1).getBlock().getMaterial().isSolid()
-                                    && world_.getBlockState(blockpos1).getBlock() != Blocks.chest)
+                            else if (world_.getBlockState(blockpos1).getMaterial().isSolid()
+                                    && world_.getBlockState(blockpos1).getBlock() != Blocks.CHEST)
                             {
                                 if (i2 == -1 && rand.nextInt(4) != 0)
                                 {
-                                    world_.setBlockState(blockpos1, Blocks.mossy_cobblestone.getDefaultState(), 2);
+                                    world_.setBlockState(blockpos1, Blocks.MOSSY_COBBLESTONE.getDefaultState(), 2);
                                 }
                                 else
                                 {
-                                    world_.setBlockState(blockpos1, Blocks.cobblestone.getDefaultState(), 2);
+                                    world_.setBlockState(blockpos1, Blocks.COBBLESTONE.getDefaultState(), 2);
                                 }
                             }
                         }
@@ -278,7 +275,7 @@ public class MapGenSites extends MapGenVillage
                                     {
                                         EnumFacing enumfacing = (EnumFacing) iterator.next();
 
-                                        if (world_.getBlockState(blockpos2.offset(enumfacing)).getBlock().getMaterial()
+                                        if (world_.getBlockState(blockpos2.offset(enumfacing)).getMaterial()
                                                 .isSolid())
                                         {
                                             ++k2;
@@ -287,16 +284,13 @@ public class MapGenSites extends MapGenVillage
 
                                     if (k2 == 1)
                                     {
-                                        world_.setBlockState(blockpos2, Blocks.chest.correctFacing(world_, blockpos2,
-                                                Blocks.chest.getDefaultState()), 2);
+                                        world_.setBlockState(blockpos2, Blocks.CHEST.correctFacing(world_, blockpos2,
+                                                Blocks.CHEST.getDefaultState()), 2);
                                         TileEntity tileentity1 = world_.getTileEntity(blockpos2);
 
                                         if (tileentity1 instanceof TileEntityChest)
                                         {
-                                            WeightedRandomChestContent.generateChestContents(rand,
-                                                    ChestGenHooks.getItems(DUNGEON_CHEST, rand),
-                                                    (TileEntityChest) tileentity1,
-                                                    ChestGenHooks.getCount(DUNGEON_CHEST, rand));
+                                            //TODO loot table here
                                         }
 
                                         break label197;
@@ -316,10 +310,10 @@ public class MapGenSites extends MapGenVillage
                 for (int h1 = 0; h1 < 4; h1++)
                 {
                     world_.setBlockState(pos.add(k - 1, h1, 0),
-                            Blocks.ladder.getDefaultState().withProperty(BlockLadder.FACING, EnumFacing.WEST), 2);
+                            Blocks.LADDER.getDefaultState().withProperty(BlockLadder.FACING, EnumFacing.WEST), 2);
                 }
 
-                world_.setBlockState(pos, Blocks.mob_spawner.getDefaultState(), 2);
+                world_.setBlockState(pos, Blocks.MOB_SPAWNER.getDefaultState(), 2);
                 TileEntity tileentity = world_.getTileEntity(pos);
 
                 if (tileentity instanceof TileEntityMobSpawner)

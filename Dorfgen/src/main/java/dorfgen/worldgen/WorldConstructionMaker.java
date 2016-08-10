@@ -25,8 +25,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 
 public class WorldConstructionMaker
@@ -82,15 +83,14 @@ public class WorldConstructionMaker
         return siteCol;
     }
 
-    public void buildSites(World world, int chunkX, int chunkZ, ChunkPrimer blocks, BiomeGenBase[] biomes)
+    public void buildSites(World world, int chunkX, int chunkZ, ChunkPrimer blocks, Biome[] biomes)
     {
         if (dorfs.structureMap.length == 0) return;
         SiteStructureGenerator structureGen = WorldGenerator.instance.structureGen;
-        int index;
         int x = (chunkX * 16 - WorldGenerator.shift.getX());
         int z = (chunkZ * 16 - WorldGenerator.shift.getZ());
         int x1, z1, h;
-
+        Biome plains = Biome.REGISTRY.getObject(new ResourceLocation("plains"));
         for (int i1 = 0; i1 < 16; i1++)
         {
             for (int k1 = 0; k1 < 16; k1++)
@@ -119,28 +119,23 @@ public class WorldConstructionMaker
                     }
 
                     IBlockState[] repBlocks = SiteMapColours.getSurfaceBlocks(siteCol);
-
-                    index = j << 0 | (i1) << 12 | (k1) << 8;
-
                     IBlockState surface = repBlocks[1];
                     IBlockState above = repBlocks[2];
 
                     boolean wall = siteCol == SiteMapColours.TOWNWALL;
                     boolean roof = siteCol.toString().contains("ROOF");
                     boolean farm = siteCol.toString().contains("FARM");
-                    if (farm) biomes[i1 + 16 * k1] = BiomeGenBase.plains;
+                    if (farm) biomes[i1 + 16 * k1] = plains;
 
                     if (surface == null && siteCol.toString().contains("ROOF"))
-                        surface = Blocks.brick_block.getDefaultState();
+                        surface = Blocks.BRICK_BLOCK.getDefaultState();
 
                     if (surface == null) // || blocks[index - 1] == Blocks.water
                                          // || blocks[index] == Blocks.water)
                         continue;
-                    blocks.setBlockState(index, surface);
-                    index = (j - 1) << 0 | (i1) << 12 | (k1) << 8;
-                    blocks.setBlockState(index, repBlocks[0]);
-                    index = (j + 1) << 0 | (i1) << 12 | (k1) << 8;
-                    if (above != null) blocks.setBlockState(index, above);
+                    blocks.setBlockState(i1, j, k1, surface);
+                    blocks.setBlockState(i1, j - 1, k1, repBlocks[0]);
+                    if (above != null) blocks.setBlockState(i1, j + 1, k1, above);
                     boolean tower = siteCol.toString().contains("TOWER");
                     if (wall || roof)
                     {
@@ -149,10 +144,8 @@ public class WorldConstructionMaker
                         while (j1 < h + 1)
                         {
                             j1 = j1 + 1;
-                            index = (j1) << 0 | (i1) << 12 | (k1) << 8;
-                            blocks.setBlockState(index, Blocks.air.getDefaultState());
-                            index = (h + num) << 0 | (i1) << 12 | (k1) << 8;
-                            blocks.setBlockState(index, surface);
+                            blocks.setBlockState(i1, j1, k1, Blocks.AIR.getDefaultState());
+                            blocks.setBlockState(i1, h + num, k1, surface);
                             ;
                         }
                         j1 = j;
@@ -161,8 +154,7 @@ public class WorldConstructionMaker
                             while (j1 < h + num)
                             {
                                 j1 = j1 + 1;
-                                index = (j1) << 0 | (i1) << 12 | (k1) << 8;
-                                blocks.setBlockState(index, surface);
+                                blocks.setBlockState(i1, j1, k1, surface);
                             }
                         }
                     }
@@ -185,32 +177,28 @@ public class WorldConstructionMaker
                             {
                                 h2 = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x1 + 1,
                                         z1, scale);
-                                index = (h2) << 0 | (i1 + 1) << 12 | (k1) << 8;
-                                blocks.setBlockState(index, Blocks.torch.getDefaultState());
+                                blocks.setBlockState(i1 + 1, h2, k1, Blocks.TORCH.getDefaultState());
                             }
 
                             if (nx != null && !nx.toString().contains("ROAD") && z1 % 8 == 0)
                             {
                                 h2 = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x1 - 1,
                                         z1, scale);
-                                index = (h2) << 0 | (i1 - 1) << 12 | (k1) << 8;
-                                blocks.setBlockState(index, Blocks.torch.getDefaultState());
+                                blocks.setBlockState(i1 - 1, h2, k1, Blocks.TORCH.getDefaultState());
                             }
 
                             if (pz != null && !pz.toString().contains("ROAD") && x1 % 8 == 0)
                             {
                                 h2 = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x1,
                                         z1 + 1, scale);
-                                index = (h2) << 0 | (i1) << 12 | (k1 + 1) << 8;
-                                blocks.setBlockState(index, Blocks.torch.getDefaultState());
+                                blocks.setBlockState(i1, h2, k1 + 1, Blocks.TORCH.getDefaultState());
                             }
 
                             if (nz != null && !nz.toString().contains("ROAD") && x1 % 8 == 0)
                             {
                                 h2 = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x1,
                                         z1 - 1, scale);
-                                index = (h2) << 0 | (i1) << 12 | (k1 - 1) << 8;
-                                blocks.setBlockState(index, Blocks.torch.getDefaultState());
+                                blocks.setBlockState(i1, h2, k1 - 1, Blocks.TORCH.getDefaultState());
                             }
                         }
                     }
@@ -245,12 +233,12 @@ public class WorldConstructionMaker
 
         if (index >= 0 && x1 < 16 && z1 < 16 && x1 >= 0 && z1 >= 0)
         {
-            if (index + 3 < 255) blocks.setBlockState(index + 3, Blocks.air.getDefaultState());
-            if (index + 2 < 255) blocks.setBlockState(index + 2, Blocks.air.getDefaultState());
-            if (index + 1 < 255) blocks.setBlockState(index + 1, Blocks.air.getDefaultState());
-            blocks.setBlockState(index, block.getDefaultState());
-            blocks.setBlockState(index - 1, Blocks.cobblestone.getDefaultState());
-            blocks.setBlockState(index - 2, Blocks.cobblestone.getDefaultState());
+            if (h + 2 < 255) blocks.setBlockState(x1, h + 2, z1, Blocks.AIR.getDefaultState());
+            if (h + 1 < 255) blocks.setBlockState(x1, h + 1, z1, Blocks.AIR.getDefaultState());
+            if (h + 0 < 255) blocks.setBlockState(x1, h + 0, z1, Blocks.AIR.getDefaultState());
+            blocks.setBlockState(x1, h - 1, z1, block.getDefaultState());
+            blocks.setBlockState(x1, h - 2, z1, Blocks.COBBLESTONE.getDefaultState());
+            blocks.setBlockState(x1, h - 3, z1, Blocks.COBBLESTONE.getDefaultState());
         }
     }
 
@@ -653,7 +641,7 @@ public class WorldConstructionMaker
         }
     }
 
-    public void buildRoads(World world, int chunkX, int chunkZ, ChunkPrimer blocks, BiomeGenBase[] biomes)
+    public void buildRoads(World world, int chunkX, int chunkZ, ChunkPrimer blocks, Biome[] biomes)
     {
         int x = (chunkX * 16 - WorldGenerator.shift.getX());
         int z = (chunkZ * 16 - WorldGenerator.shift.getZ());
@@ -722,19 +710,19 @@ public class WorldConstructionMaker
         switch (site)
         {
         case BUILDINGS:
-            return num == 0 ? Blocks.brick_block : null;
+            return num == 0 ? Blocks.BRICK_BLOCK : null;
         case WALLS:
-            return Blocks.stonebrick;
+            return Blocks.STONEBRICK;
         case FARMYELLOW:
-            return num == 0 ? Blocks.sand : null;
+            return num == 0 ? Blocks.SAND : null;
         case FARMORANGE:
-            return num == 0 ? Blocks.dirt : null;
+            return num == 0 ? Blocks.DIRT : null;
         case FARMLIMEGREEN:
-            return num == 0 ? Blocks.clay : null;
+            return num == 0 ? Blocks.CLAY : null;
         case FARMORANGELIGHT:
-            return num == 0 ? Blocks.hardened_clay : null;
+            return num == 0 ? Blocks.HARDENED_CLAY : null;
         case FARMGREEN:
-            return num == 0 ? Blocks.stained_hardened_clay : null;
+            return num == 0 ? Blocks.STAINED_HARDENED_CLAY : null;
         default:
             return null;
         }

@@ -10,12 +10,13 @@ import java.util.Set;
 import dorfgen.WorldGenerator;
 import dorfgen.conversion.Interpolator.BicubicInterpolator;
 import dorfgen.conversion.Interpolator.CachedBicubicInterpolator;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.biome.Biome;
 
 public class DorfMap
 {
 
-    public int[][]                                             biomeMap             = new int[0][0];
+    public Biome[][]                                           biomeMap             = new Biome[0][0];
     public int[][]                                             elevationMap         = new int[0][0];
     public int[][]                                             waterMap             = new int[0][0];
     public int[][]                                             riverMap             = new int[0][0];
@@ -40,9 +41,9 @@ public class DorfMap
     public static HashMap<Integer, HashSet<WorldConstruction>> constructionsByCoord = new HashMap<Integer, HashSet<WorldConstruction>>();
     static int                                                 waterShift           = -35;
 
-    public BicubicInterpolator       biomeInterpolator  = new BicubicInterpolator();
-    public CachedBicubicInterpolator heightInterpolator = new CachedBicubicInterpolator();
-    public CachedBicubicInterpolator miscInterpolator   = new CachedBicubicInterpolator();
+    public BicubicInterpolator                                 biomeInterpolator    = new BicubicInterpolator();
+    public CachedBicubicInterpolator                           heightInterpolator   = new CachedBicubicInterpolator();
+    public CachedBicubicInterpolator                           miscInterpolator     = new CachedBicubicInterpolator();
 
     static void addSiteByCoord(int x, int z, Site site)
     {
@@ -82,13 +83,13 @@ public class DorfMap
     {
         BufferedImage img = WorldGenerator.instance.biomeMap;
         if (img == null) return;
-        biomeMap = new int[img.getWidth()][img.getHeight()];
+        biomeMap = new Biome[img.getWidth()][img.getHeight()];
         for (int y = 0; y < img.getHeight(); y++)
         {
             for (int x = 0; x < img.getWidth(); x++)
             {
                 int rgb = WorldGenerator.instance.biomeMap.getRGB(x, y);
-                biomeMap[x][y] = BiomeList.GetBiomeIndex(rgb);
+                biomeMap[x][y] = BiomeList.GetBiome(rgb);
             }
         }
         WorldGenerator.instance.biomeMap = null;
@@ -107,6 +108,8 @@ public class DorfMap
         if (img == null) return;
         int shift = 10;
         elevationMap = new int[img.getWidth()][img.getHeight()];
+        Biome hillsPlus = Biome.REGISTRY.getObject(new ResourceLocation("extreme_hills_with_trees"));
+        Biome hills = Biome.REGISTRY.getObject(new ResourceLocation("extreme_hills"));
         for (int y = 0; y < img.getHeight(); y++)
         {
             for (int x = 0; x < img.getWidth(); x++)
@@ -121,9 +124,9 @@ public class DorfMap
                 }
                 h = Math.max(0, h);
                 elevationMap[x][y] = elevationSigmoid(h);
-                if (biomeMap.length > 0) if (h < 145 && biomeMap[x][y] == BiomeGenBase.extremeHillsPlus.biomeID)
+                if (biomeMap.length > 0) if (h < 145 && biomeMap[x][y] == hillsPlus)
                 {
-                    biomeMap[x][y] = BiomeGenBase.extremeHills.biomeID;
+                    biomeMap[x][y] = hills;
                 }
             }
         }
@@ -136,6 +139,9 @@ public class DorfMap
         if (img == null) return;
         waterMap = new int[img.getWidth()][img.getHeight()];
         riverMap = new int[img.getWidth()][img.getHeight()];
+        Biome riverId = Biome.REGISTRY.getObject(new ResourceLocation("river"));
+        Biome oceanId = Biome.REGISTRY.getObject(new ResourceLocation("ocean"));
+        Biome deep_oceanId = Biome.REGISTRY.getObject(new ResourceLocation("deep_ocean"));
         for (int y = 0; y < img.getHeight(); y++)
         {
             for (int x = 0; x < img.getWidth(); x++)
@@ -143,28 +149,28 @@ public class DorfMap
                 int rgb = WorldGenerator.instance.elevationWaterMap.getRGB(x, y);
 
                 int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = (rgb >> 0) & 0xFF;
-                int biome = biomeMap[x][y];
+                Biome biome = biomeMap[x][y];
 
-                if (r == 0 && g == 0 && biome != BiomeGenBase.river.biomeID)
+                if (r == 0 && g == 0 && biome != riverId)
                 {
                     waterMap[x][y] = b + 25 + waterShift;
                     if (biomeMap.length > 0)
                     {
                         if (waterMap[x][y] < 50)
                         {
-                            biomeMap[x][y] = BiomeGenBase.deepOcean.biomeID;
+                            biomeMap[x][y] = deep_oceanId;
                         }
                         else
                         {
-                            biomeMap[x][y] = BiomeGenBase.ocean.biomeID;
+                            biomeMap[x][y] = oceanId;
                         }
                         riverMap[x][y] = -1;
                     }
                 }
-                else if (r == 0 || biome == BiomeGenBase.river.biomeID)
+                else if (r == 0 || biome == riverId)
                 {
                     waterMap[x][y] = -1;
-                    riverMap[x][y] = biome == BiomeGenBase.river.biomeID ? b - waterShift : b;
+                    riverMap[x][y] = biome == riverId ? b - waterShift : b;
                 }
                 else
                 {
@@ -336,19 +342,19 @@ public class DorfMap
     public void postProcessBiomeMap()
     {
         boolean hasThermalMap = temperatureMap.length > 0;
-
+        Biome riverId = Biome.REGISTRY.getObject(new ResourceLocation("river"));
         for (int x = 0; x < biomeMap.length; x++)
             for (int z = 0; z < biomeMap[0].length; z++)
             {
-                int biome = biomeMap[x][z];
+                Biome biome = biomeMap[x][z];
                 int temperature = hasThermalMap ? temperatureMap[x][z] : 128;
                 int drainage = drainageMap.length > 0 ? drainageMap[x][z] : 100;
                 int rain = rainMap.length > 0 ? rainMap[x][z] : 100;
                 int evil = evilMap.length > 0 ? evilMap[x][z] : 100;
                 Region region = getRegionForCoords(x * scale, z * scale);
-                if (biome != BiomeGenBase.river.biomeID)
+                if (biome != riverId)
                 {
-                    int newBiome = BiomeList.getBiomeFromValues(biome, temperature, drainage, rain, evil, region);
+                    Biome newBiome = BiomeList.getBiomeFromValues(biome, temperature, drainage, rain, evil, region);
                     biomeMap[x][z] = newBiome;
                 }
             }
@@ -433,8 +439,8 @@ public class DorfMap
     {
         CAVE("cave"), FORTRESS("fortress"), TOWN("town"), HIPPYHUTS("forest retreat"), DARKFORTRESS(
                 "dark fortress"), HAMLET("hamlet"), VAULT("vault"), DARKPITS("dark pits"), HILLOCKS("hillocks"), TOMB(
-                        "tomb"), TOWER("tower"), MOUNTAINHALLS("mountain halls"), CAMP("camp"), LAIR("lair"), SHRINE(
-                                "shrine"), LABYRINTH("labyrinth");
+                        "tomb"), TOWER("tower"), MOUNTAINHALLS(
+                                "mountain halls"), CAMP("camp"), LAIR("lair"), SHRINE("shrine"), LABYRINTH("labyrinth");
 
         public final String name;
 

@@ -21,7 +21,7 @@ import dorfgen.conversion.SiteStructureGenerator.SiteStructures;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 
 public class RiverMaker
@@ -35,13 +35,8 @@ public class RiverMaker
         // TODO Auto-generated constructor stub
     }
 
-    public void makeRiversForChunk(World world, int chunkX, int chunkZ, ChunkPrimer primer, BiomeGenBase[] biomes)
+    public void makeRiversForChunk(World world, int chunkX, int chunkZ, ChunkPrimer primer, Biome[] biomes)
     {
-
-        // if(true)
-        // return;
-        //
-        int index;
         int x = (chunkX * 16 - WorldGenerator.shift.getX());
         int z = (chunkZ * 16 - WorldGenerator.shift.getZ());
         int x1, z1, h;
@@ -61,15 +56,10 @@ public class RiverMaker
                 boolean river = isInRiver(x1, z1);
                 if (!river) continue;
                 int j = h - 1;
-                index = j << 0 | (i1) << 12 | (k1) << 8;
-                primer.setBlockState(index, Blocks.water.getDefaultState());
-                index = j-- << 0 | (i1) << 12 | (k1) << 8;
-                primer.setBlockState(index, Blocks.water.getDefaultState());
-                index = j-- << 0 | (i1) << 12 | (k1) << 8;
-                primer.setBlockState(index, Blocks.water.getDefaultState());
-
+                primer.setBlockState(i1, j, k1, Blocks.WATER.getDefaultState());
+                if (j - 1 > 0) primer.setBlockState(i1, j - 1, k1, Blocks.WATER.getDefaultState());
+                if (j - 2 > 0) primer.setBlockState(i1, j - 2, k1, Blocks.WATER.getDefaultState());
                 // TODO make rivers that work with the new site code
-
             }
         }
     }
@@ -107,10 +97,7 @@ public class RiverMaker
         int kz = z / scale;// Abs/(scale);
         int key = kx + 8192 * kz;
         if (kx >= WorldGenerator.instance.dorfs.waterMap.length
-                || kz >= WorldGenerator.instance.dorfs.waterMap[0].length)
-        {
-            return false;
-        }
+                || kz >= WorldGenerator.instance.dorfs.waterMap[0].length) { return false; }
 
         int rgb = dorfs.structureMap[kx][kz];
         Color col1 = new Color(rgb);

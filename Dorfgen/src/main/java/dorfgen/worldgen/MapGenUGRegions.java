@@ -273,15 +273,15 @@ public class MapGenUGRegions extends MapGenCaves {
 
     protected boolean isOceanBlock(Block[] data, int index, int x, int y, int z, int chunkX, int chunkZ)
     {
-        return data[index] == Blocks.flowing_water || data[index] == Blocks.water;
+        return data[index] == Blocks.FLOWING_WATER || data[index] == Blocks.WATER;
     }
 
     //Exception biomes to make sure we generate like vanilla
-//    private boolean isExceptionBiome(BiomeGenBase biome)
+//    private boolean isExceptionBiome(Biome biome)
 //    {
-//        if (biome == BiomeGenBase.mushroomIsland) return true;
-//        if (biome == BiomeGenBase.beach) return true;
-//        if (biome == BiomeGenBase.desert) return true;
+//        if (biome == Biome.mushroomIsland) return true;
+//        if (biome == Biome.beach) return true;
+//        if (biome == Biome.desert) return true;
 //        return false;
 //    }
 
@@ -297,7 +297,7 @@ public class MapGenUGRegions extends MapGenCaves {
 //	    	return h <= y;
 //    	}
 //    	
-//        BiomeGenBase biome = worldObj.getBiomeGenForCoords(new BlockPos(x + chunkX * 16, 0, z + chunkZ * 16));
+//        Biome biome = worldObj.getBiomeGenForCoords(new BlockPos(x + chunkX * 16, 0, z + chunkZ * 16));
 //        return (isExceptionBiome(biome) ? data[index] == Blocks.grass : data[index] == biome.topBlock);
 //    }
 //
@@ -318,7 +318,7 @@ public class MapGenUGRegions extends MapGenCaves {
 //     */
 //    protected void digBlock(Block[] data, int index, int x, int y, int z, int chunkX, int chunkZ, boolean foundTop)
 //    {
-//        BiomeGenBase biome = worldObj.getBiomeGenForCoords(x + chunkX * 16, z + chunkZ * 16);
+//        Biome biome = worldObj.getBiomeGenForCoords(x + chunkX * 16, z + chunkZ * 16);
 //        Block top    = (isExceptionBiome(biome) ? Blocks.grass : biome.topBlock);
 //        Block filler = (isExceptionBiome(biome) ? Blocks.dirt  : biome.fillerBlock);
 //        Block block  = data[index];

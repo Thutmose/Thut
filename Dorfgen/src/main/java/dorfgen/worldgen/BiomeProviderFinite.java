@@ -8,33 +8,34 @@ import dorfgen.WorldGenerator;
 import dorfgen.conversion.DorfMap;
 import dorfgen.conversion.Interpolator.BicubicInterpolator;
 import dorfgen.conversion.Interpolator.CachedBicubicInterpolator;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.gen.structure.MapGenVillage;
 
-public class WorldChunkManagerFinite extends WorldChunkManager
+public class BiomeProviderFinite extends BiomeProvider
 {
     /** The biomes that are used to generate the chunk */
-    private BiomeGenBase[]           biomesForGeneration = new BiomeGenBase[256];
+    private Biome[]                  biomesForGeneration = new Biome[256];
     public BicubicInterpolator       biomeInterpolator   = new BicubicInterpolator();
     public CachedBicubicInterpolator heightInterpolator  = new CachedBicubicInterpolator();
     public CachedBicubicInterpolator miscInterpolator    = new CachedBicubicInterpolator();
 
-    public WorldChunkManagerFinite()
+    public BiomeProviderFinite()
     {
         super();
     }
 
-    public WorldChunkManagerFinite(World world)
+    public BiomeProviderFinite(World world)
     {
-        super(world);
+        super(world.getWorldInfo());
     }
 
     @Override
-    /** Returns the BiomeGenBase related to the x, z position on the world. */
-    public BiomeGenBase getBiomeGenerator(BlockPos pos)
+    /** Returns the Biome related to the x, z position on the world. */
+    public Biome getBiomeGenerator(BlockPos pos)
     {
         try
         {
@@ -45,12 +46,12 @@ public class WorldChunkManagerFinite extends WorldChunkManager
             System.out.println(pos);
             e.printStackTrace();
         }
-        return BiomeGenBase.ocean;
+        return Biome.REGISTRY.getObjectById(0);
     }
 
     @Override
     /** Returns an array of biomes for the location input. */
-    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int x, int z, int width, int length)
+    public Biome[] getBiomesForGeneration(Biome[] biomes, int x, int z, int width, int length)
     {
         biomes = super.getBiomesForGeneration(biomes, x, z, width, length);
         if (x >= 0 && z >= 0 && (x + 16) / scale <= WorldGenerator.instance.dorfs.biomeMap.length
@@ -66,7 +67,7 @@ public class WorldChunkManagerFinite extends WorldChunkManager
     /** Returns biomes to use for the blocks and loads the other data like
      * temperature and humidity onto the WorldChunkManager Args: oldBiomeList,
      * x, z, width, depth */
-    public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] biomes, int x, int z, int width, int depth)
+    public Biome[] loadBlockGeneratorData(Biome[] biomes, int x, int z, int width, int depth)
     {
         biomes = super.getBiomesForGeneration(biomes, x, z, width, depth);
         x -= WorldGenerator.shift.getX();
@@ -93,7 +94,7 @@ public class WorldChunkManagerFinite extends WorldChunkManager
      * @param z
      *            - y coordinate of the block being used
      * @param blocks */
-    private BiomeGenBase[] makeBiomes(BiomeGenBase[] biomes, int scale, int x, int z)
+    private Biome[] makeBiomes(Biome[] biomes, int scale, int x, int z)
     {
         int index;
         for (int i1 = 0; i1 < 16; i1++)
@@ -101,26 +102,31 @@ public class WorldChunkManagerFinite extends WorldChunkManager
             for (int k1 = 0; k1 < 16; k1++)
             {
                 index = (i1) + (k1) * 16;
-                int biome = getBiomeFromMaps(x + i1 - WorldGenerator.shift.getX(),
+                Biome biome = getBiomeFromMaps(x + i1 - WorldGenerator.shift.getX(),
                         z + k1 - WorldGenerator.shift.getZ());
-                
-                biomes[index] = BiomeGenBase.getBiome(biome);
+                biomes[index] = biome;
             }
         }
         return biomes;
     }
 
-    private int getBiomeFromMaps(int x, int z)
+    private Biome getBiomeFromMaps(int x, int z)
     {
         DorfMap dorfs = WorldGenerator.instance.dorfs;
+        Biome river = Biome.REGISTRY.getObject(new ResourceLocation("river"));
+        Biome ocean = Biome.REGISTRY.getObject(new ResourceLocation("ocean"));
+        Biome deep_ocean = Biome.REGISTRY.getObject(new ResourceLocation("deep_ocean"));
+        Biome frozen_ocean = Biome.REGISTRY.getObject(new ResourceLocation("frozen_ocean"));
+        Biome beach = Biome.REGISTRY.getObject(new ResourceLocation("beaches"));
+        Biome cold_beach = Biome.REGISTRY.getObject(new ResourceLocation("cold_beach"));
 
-        int b1 = biomeInterpolator.interpolateBiome(dorfs.biomeMap, x, z, scale);
+        Biome b1 = (Biome) biomeInterpolator.interpolateBiome(dorfs.biomeMap, x, z, scale);
         if (dorfs.riverMap.length > 0)
         {
             int r1 = miscInterpolator.interpolateHeight(scale, x, z, dorfs.riverMap);
             if (r1 > 0)
             {
-                b1 = BiomeGenBase.river.biomeID;
+                b1 = river;
             }
         }
 
@@ -130,25 +136,25 @@ public class WorldChunkManagerFinite extends WorldChunkManager
         int h1 = hasHeightmap ? heightInterpolator.interpolateHeight(scale, x, z, dorfs.elevationMap) : 64;
         int t1 = hasThermalMap ? miscInterpolator.interpolateHeight(scale, x, z, dorfs.temperatureMap) : 128;
 
-        if (h1 > 60 && (b1 == BiomeGenBase.deepOcean.biomeID || b1 == BiomeGenBase.ocean.biomeID))
+        if (h1 > 60 && (b1 == deep_ocean || b1 == ocean))
         {
-            b1 = BiomeGenBase.beach.biomeID;
+            b1 = beach;
             if (t1 < 80)
             {
-                b1 = BiomeGenBase.coldBeach.biomeID;
+                b1 = cold_beach;
             }
         }
-        else if (h1 > 45 && (b1 == BiomeGenBase.deepOcean.biomeID || b1 == BiomeGenBase.ocean.biomeID))
+        else if (h1 > 45 && (b1 == deep_ocean || b1 == ocean))
         {
-            b1 = BiomeGenBase.ocean.biomeID;
+            b1 = ocean;
             if (t1 < 65)
             {
-                b1 = BiomeGenBase.frozenOcean.biomeID;
+                b1 = frozen_ocean;
             }
         }
-        else if (h1 <= 45 && (b1 == BiomeGenBase.ocean.biomeID))
+        else if (h1 <= 45 && (b1 == ocean))
         {
-            b1 = BiomeGenBase.deepOcean.biomeID;
+            b1 = deep_ocean;
         }
 
         return b1;
@@ -156,12 +162,12 @@ public class WorldChunkManagerFinite extends WorldChunkManager
 
     @Override
     /** checks given Chunk's Biomes against List of allowed ones */
-    public boolean areBiomesViable(int p1_, int p2_, int p3_, List<BiomeGenBase> biomes)
+    public boolean areBiomesViable(int p1_, int p2_, int p3_, List<Biome> biomes)
     {
-        if (biomes == MapGenVillage.villageSpawnBiomes) return true;
+        if (biomes == MapGenVillage.VILLAGE_SPAWN_BIOMES) return true;
 
         biomesForGeneration = getBiomesForGeneration(biomesForGeneration, p1_, p2_, 0, 0);
-        for (BiomeGenBase b : biomesForGeneration)
+        for (Biome b : biomesForGeneration)
         {
             if (b != null)
             {

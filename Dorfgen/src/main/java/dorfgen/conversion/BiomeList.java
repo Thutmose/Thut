@@ -2,10 +2,12 @@ package dorfgen.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Random;
 
 import dorfgen.conversion.DorfMap.Region;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 
@@ -20,48 +22,47 @@ public class BiomeList
     public static int                               HOT       = 180;
     public static int                               SCORCHING = 255;
 
-    public static int DRY = 100;
-    public static int WET = 200;
+    public static int                               DRY       = 100;
+    public static int                               WET       = 200;
 
-    private static ArrayList<BiomeGenBase> biomeArray;
+    private static ArrayList<Biome>                 biomeArray;
 
-    public static int GetBiomeIndex(int rgb)
+    public static Biome GetBiome(int rgb)
     {
         if (biomes.containsKey(rgb)) return biomes.get(rgb).mineCraftBiome;
-        return 0;
+        return Biome.getBiome(0);
     }
 
-    public static int getBiomeFromValues(int biome, int temperature, int drainage, int rainfall, int evil,
+    public static Biome getBiomeFromValues(Biome biome, int temperature, int drainage, int rainfall, int evil,
             Region region)
     {
-        BiomeGenBase b = BiomeGenBase.getBiome(biome);
-
-        if (temperature < TEMPERATE && !BiomeDictionary.isBiomeOfType(b, Type.COLD))
+        Biome river = Biome.REGISTRY.getObject(new ResourceLocation("river"));
+        if (temperature < TEMPERATE && !BiomeDictionary.isBiomeOfType(biome, Type.COLD))
         {
             boolean freezing = temperature < FREEZING;
             boolean matched = false;
-            if (freezing && (BiomeDictionary.isBiomeOfType(b, Type.OCEAN)
-                    || BiomeDictionary.isBiomeOfType(b, Type.RIVER) || BiomeDictionary.isBiomeOfType(b, Type.BEACH)))
+            if (freezing && (BiomeDictionary.isBiomeOfType(biome, Type.OCEAN)
+                    || BiomeDictionary.isBiomeOfType(biome, Type.RIVER) || BiomeDictionary.isBiomeOfType(biome, Type.BEACH)))
             {
-                BiomeGenBase temp = getMatch(b, Type.SNOWY);
-                if (temp != b)
+                Biome temp = getMatch(biome, Type.SNOWY);
+                if (temp != biome)
                 {
-                    b = temp;
+                    biome = temp;
                     matched = true;
                 }
                 if (!matched)
                 {
-                    b = getMatch(b, Type.COLD);
+                    biome = getMatch(biome, Type.COLD);
                 }
             }
-            else if (b != BiomeGenBase.river)
+            else if (biome != river)
             {
                 // b = getMatch(b, Type.COLD);
             }
         }
 
         // if(true)
-        return b.biomeID;
+        return biome;
         // //TODO finish this
         //
         // if(temperature > WARM && !BiomeDictionary.isBiomeOfType(b, Type.HOT))
@@ -86,7 +87,7 @@ public class BiomeList
         // BiomeDictionary.isBiomeOfType(b, Type.SNOWY);
         // if(!cold)
         // {
-        // b = getMatch(BiomeGenBase.icePlains, Type.SNOWY);
+        // b = getMatch(Biome.icePlains, Type.SNOWY);
         // }
         // }
         // if(region.biomeMap.containsKey(biome))
@@ -104,13 +105,15 @@ public class BiomeList
 
     private static Random rand = new Random(1234);
 
-    private static BiomeGenBase getMatch(BiomeGenBase toMatch, Type type)
+    private static Biome getMatch(Biome toMatch, Type type)
     {
         if (biomeArray == null)
         {
-            biomeArray = new ArrayList<BiomeGenBase>();
-            for (BiomeGenBase b : BiomeGenBase.getBiomeGenArray())
+            biomeArray = new ArrayList<Biome>();
+            Iterator<Biome> iter = Biome.REGISTRY.iterator();
+            while (iter.hasNext())
             {
+                Biome b = iter.next();
                 if (b != null) biomeArray.add(b);
             }
         }
@@ -119,7 +122,7 @@ public class BiomeList
         biomes:
         for (int j = 0; j < biomeArray.size(); j++)
         {
-            BiomeGenBase b = biomeArray.get((j + i) % biomeArray.size());
+            Biome b = biomeArray.get((j + i) % biomeArray.size());
             if (b != toMatch && b != null)
             {
                 if (!BiomeDictionary.isBiomeOfType(b, type)) continue;

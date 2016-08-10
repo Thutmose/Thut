@@ -90,49 +90,49 @@ public enum SiteMapColours
 	public static IBlockState[] getSurfaceBlocks(SiteMapColours point)
 	{
 		IBlockState[] ret = new IBlockState[3];
-		ret[0] = Blocks.dirt.getDefaultState();
+		ret[0] = Blocks.DIRT.getDefaultState();
 		
 		if(point==ROAD)
 		{
-			ret[0] = Blocks.cobblestone.getDefaultState();
+			ret[0] = Blocks.COBBLESTONE.getDefaultState();
 			ret[1] = BlockRoadSurface.uggrass.getDefaultState();
 		}
 		if(point==LIGHTYELLOWFARM)
 		{
-			ret[1] = Blocks.farmland.getDefaultState();
-			ret[2] = Blocks.carrots.getDefaultState();
+			ret[1] = Blocks.FARMLAND.getDefaultState();
+			ret[2] = Blocks.CARROTS.getDefaultState();
 		}
 		if(point==YELLOWFARM)
 		{
-			ret[1] = Blocks.farmland.getDefaultState();
-			ret[2] = Blocks.potatoes.getDefaultState();
+			ret[1] = Blocks.FARMLAND.getDefaultState();
+			ret[2] = Blocks.POTATOES.getDefaultState();
 		}
 		if(point==BROWNFARM)
 		{
-			ret[1] = Blocks.farmland.getDefaultState();
-			ret[2] = Blocks.wheat.getDefaultState();
+			ret[1] = Blocks.FARMLAND.getDefaultState();
+			ret[2] = Blocks.WHEAT.getDefaultState();
 		}
 		if(point==BROWNFARMSPACER)
 		{
-			ret[0] = Blocks.water.getDefaultState();
-			ret[1] = Blocks.dirt.getStateFromMeta(2);
+			ret[0] = Blocks.WATER.getDefaultState();
+			ret[1] = Blocks.DIRT.getStateFromMeta(2);
 		}
 		if(point==YELLOWFARMSPACER)
 		{
-			ret[0] = Blocks.water.getDefaultState();
-			ret[1] = Blocks.dirt.getStateFromMeta(2);
+			ret[0] = Blocks.WATER.getDefaultState();
+			ret[1] = Blocks.DIRT.getStateFromMeta(2);
 		}
 		if(point==LIGHTYELLOWFARMSPACER)
 		{
-			ret[0] = Blocks.water.getDefaultState();
-			ret[1] = Blocks.dirt.getStateFromMeta(2);
+			ret[0] = Blocks.WATER.getDefaultState();
+			ret[1] = Blocks.DIRT.getStateFromMeta(2);
 		}
 		
 		
 		if(point==RIVER)
 		{
-			ret[0] = Blocks.water.getDefaultState();
-			ret[1] = Blocks.water.getDefaultState();
+			ret[0] = Blocks.WATER.getDefaultState();
+			ret[1] = Blocks.WATER.getDefaultState();
 		}
 //		if(point==SiteMapColours.LIGHTBROWNBUILDINGWALL)
 //		{

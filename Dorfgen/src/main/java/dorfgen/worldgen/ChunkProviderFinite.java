@@ -16,14 +16,14 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraft.world.gen.ChunkProviderGenerate;
+import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.MapGenRavine;
 import net.minecraft.world.gen.structure.MapGenMineshaft;
@@ -32,7 +32,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.terraingen.TerrainGen;
 
-public class ChunkProviderFinite extends ChunkProviderGenerate
+public class ChunkProviderFinite extends ChunkProviderOverworld
 {
     /** RNG. */
     private Random                   rand;
@@ -54,7 +54,7 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
     private RiverMaker               riverMaker          = new RiverMaker();
     private WorldConstructionMaker   constructor         = new WorldConstructionMaker();
     /** The biomes that are used to generate the chunk */
-    private BiomeGenBase[]           biomesForGeneration;
+    private Biome[]                  biomesForGeneration;
     public BicubicInterpolator       bicubicInterpolator = new BicubicInterpolator();
     public CachedBicubicInterpolator cachedInterpolator  = new CachedBicubicInterpolator();
 
@@ -74,7 +74,6 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
     /** Takes Chunk Coordinates */
     public void populateBlocksFromImage(int scale, int chunkX, int chunkZ, ChunkPrimer primer)
     {
-        int index;
         int x1, z1, w = 0;
         int x = chunkX * 16;
         int z = chunkZ * 16;
@@ -108,17 +107,12 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
 
                 for (int j = 0; j < h1; j++)
                 {
-                    index = j << 0 | (i1) << 12 | (k1) << 8;
-                    primer.setBlockState(index, Blocks.stone.getDefaultState());
-                    // blocks[index] = Blocks.stone;
-
+                    primer.setBlockState(i1, j, k1, Blocks.STONE.getDefaultState());
                 }
                 if (w <= 0) w = (int) (worldObj.provider.getHorizon());
                 if (water) for (int j = h1; j < w; j++)
                 {
-                    index = j << 0 | (i1) << 12 | (k1) << 8;
-                    primer.setBlockState(index, Blocks.water.getDefaultState());
-                    // blocks[index] = Blocks.water;
+                    primer.setBlockState(i1, j, k1, Blocks.WATER.getDefaultState());
                 }
             }
         }
@@ -127,35 +121,24 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
     public void fillOceans(int x, int z, ChunkPrimer primer)
     {
         byte b0 = (byte) (worldObj.provider.getHorizon());
-        int index;
+        Biome ocean = Biome.REGISTRY.getObject(new ResourceLocation("deep_ocean"));
         for (int i = 0; i < 16; i++)
             for (int k = 0; k < 16; k++)
             {
                 for (int j = 0; j < b0; j++)
                 {
-                    index = j << 0 | (i) << 12 | (k) << 8;
                     if (j < 10)
                     {
-                        primer.setBlockState(index, Blocks.stone.getDefaultState());
-                        // if (index < blocks.length)
-                        // blocks[index] = Blocks.stone;
-                        // else
-                        // System.err.println(index + " " + i + " " + k);
+                        primer.setBlockState(i, j, k, Blocks.STONE.getDefaultState());
                     }
                     else
                     {
-                        primer.setBlockState(index, Blocks.water.getDefaultState());
-                        // if (index < blocks.length)
-                        // blocks[index] = Blocks.water;
-                        // else
-                        // System.err.println(index + " " + i + " " + k);
+                        primer.setBlockState(i, j, k, Blocks.WATER.getDefaultState());
                     }
                 }
-                index = i + k * 16;
-
-                biomesForGeneration[index] = BiomeGenBase.deepOcean;
+                int index = i + k * 16;
+                biomesForGeneration[index] = ocean;
             }
-
     }
 
     @Override
@@ -171,7 +154,7 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
         // Block[] ablock = new Block[256 * worldObj.getHeight()];
         // byte[] abyte = new byte[256 * worldObj.getHeight()];
 
-        this.biomesForGeneration = this.worldObj.getWorldChunkManager().loadBlockGeneratorData(this.biomesForGeneration,
+        this.biomesForGeneration = this.worldObj.getBiomeProvider().loadBlockGeneratorData(this.biomesForGeneration,
                 chunkX * 16, chunkZ * 16, 16, 16);
         if (WorldGenerator.instance.dorfs.elevationMap.length == 0) WorldGenerator.finite = false;
 
@@ -198,10 +181,8 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
         {
             return super.provideChunk(chunkX, chunkZ);
         }
+        this.replaceBiomeBlocks(chunkX, chunkZ, primer, biomesForGeneration);
 
-        this.replaceBlocksForBiome(chunkX, chunkZ, primer, this.biomesForGeneration);// Replace
-                                                                                     // biome
-                                                                                     // Blocks
         // this.caveGenerator.func_151539_a(this, this.worldObj, chunkX, chunkZ,
         // ablock);
         // this.ravineGenerator.func_151539_a(this, this.worldObj, chunkX,
@@ -217,7 +198,7 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
             // chunkZ, ablock);
             // this.scatteredFeatureGenerator.func_151539_a(this, this.worldObj,
             // chunkX, chunkZ, ablock);
-            this.villageGenerator.generate(this, this.worldObj, chunkX, chunkZ, primer);
+            this.villageGenerator.generate(this.worldObj, chunkX, chunkZ, primer);
         }
 
         Chunk chunk;// = new BigChunk(this.worldObj, ablock, abyte, chunkX,
@@ -231,12 +212,10 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
         // }
         chunk = new Chunk(worldObj, primer, chunkX, chunkZ);
         byte[] abyte1 = chunk.getBiomeArray();
-
         for (int k = 0; k < abyte1.length; ++k)
         {
-            abyte1[k] = (byte) this.biomesForGeneration[k].biomeID;
+            abyte1[k] = (byte) Biome.getIdForBiome(this.biomesForGeneration[k]);
         }
-
         chunk.generateSkylightMap();
         return chunk;
     }
@@ -260,30 +239,30 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
 
     @Override
     /** Populates chunk with ores etc etc */
-    public void populate(IChunkProvider provider, int x, int z)
+    public void populate(int x, int z)
     {
         BlockFalling.fallInstantly = true;
         int k = x * 16;
         int l = z * 16;
         BlockPos blockpos = new BlockPos(k, 0, l);
-        BiomeGenBase biomegenbase = this.worldObj.getBiomeGenForCoords(new BlockPos(k + 16, 0, l + 16));
+        Biome Biome = this.worldObj.getBiomeGenForCoords(new BlockPos(k + 16, 0, l + 16));
         this.rand.setSeed(this.worldObj.getSeed());
         long i1 = this.rand.nextLong() / 2L * 2L + 1L;
         long j1 = this.rand.nextLong() / 2L * 2L + 1L;
         this.rand.setSeed((long) x * i1 + (long) z * j1 ^ this.worldObj.getSeed());
         boolean flag = false;
 
-        MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Pre(provider, worldObj, rand, x, z, flag));
+        MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Pre(this, worldObj, rand, x, z, flag));
 
         // if(true)
         // return;
         if (this.mapFeaturesEnabled)
         {
-            this.mineshaftGenerator.generateStructure(this.worldObj, this.rand, new ChunkCoordIntPair(x, z));// Generate
-                                                                                                             // structures
-                                                                                                             // in
-                                                                                                             // chunk
-            flag = this.villageGenerator.generateStructure(this.worldObj, this.rand, new ChunkCoordIntPair(x, z));// TODO
+            this.mineshaftGenerator.generateStructure(this.worldObj, this.rand, new ChunkPos(x, z));// Generate
+                                                                                                    // structures
+                                                                                                    // in
+                                                                                                    // chunk
+            flag = this.villageGenerator.generateStructure(this.worldObj, this.rand, new ChunkPos(x, z));// TODO
             // this.scatteredFeatureGenerator.generateStructuresInChunk(this.worldObj,
             // this.rand, p_73153_2_, p_73153_3_);
             WorldGenerator.instance.structureGen.generate(x, z, worldObj);
@@ -293,7 +272,7 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
         int l1;
         // }//TODO ponds and lakes in appropriate biomes
 
-        boolean doGen = TerrainGen.populate(provider, worldObj, rand, x, z, flag, DUNGEON);
+        boolean doGen = TerrainGen.populate(this, worldObj, rand, x, z, flag, DUNGEON);
         for (k1 = 0; doGen && k1 < 8; ++k1)
         {
             // l1 = k + this.rand.nextInt(16) + 8;
@@ -303,15 +282,15 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
             // blockpos.add(l1, i2, j2));//TODO
         }
 
-        biomegenbase.decorate(this.worldObj, this.rand, new BlockPos(k, 0, l));
-        if (TerrainGen.populate(provider, worldObj, rand, x, z, flag, ANIMALS))
+        Biome.decorate(this.worldObj, this.rand, new BlockPos(k, 0, l));
+        if (TerrainGen.populate(this, worldObj, rand, x, z, flag, ANIMALS))
         {
             // SpawnerAnimals.performWorldGenSpawning(this.worldObj,
-            // biomegenbase, k + 8, l + 8, 16, 16, this.rand);
+            // Biome, k + 8, l + 8, 16, 16, this.rand);
         }
 
         blockpos = blockpos.add(8, 0, 8);
-        doGen = TerrainGen.populate(provider, worldObj, rand, x, z, flag, ICE);
+        doGen = TerrainGen.populate(this, worldObj, rand, x, z, flag, ICE);
         for (k1 = 0; doGen && k1 < 16; ++k1)
         {
             for (l1 = 0; l1 < 16; ++l1)
@@ -321,17 +300,17 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
 
                 if (this.worldObj.canBlockFreezeWater(blockpos2)) // .func_175675_v(blockpos2))
                 {
-                    this.worldObj.setBlockState(blockpos2, Blocks.ice.getDefaultState(), 2);
+                    this.worldObj.setBlockState(blockpos2, Blocks.ICE.getDefaultState(), 2);
                 }
 
                 if (this.worldObj.canSnowAt(blockpos1, true))
                 {
-                    this.worldObj.setBlockState(blockpos1, Blocks.snow_layer.getDefaultState(), 2);
+                    this.worldObj.setBlockState(blockpos1, Blocks.SNOW_LAYER.getDefaultState(), 2);
                 }
             }
         }
 
-        MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Post(provider, worldObj, rand, x, z, flag));
+        MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Post(this, worldObj, rand, x, z, flag));
 
         BlockFalling.fallInstantly = false;
     }
@@ -347,8 +326,10 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
      * @param blocks */
     private void makeBeaches(int scale, int x, int z, ChunkPrimer blocks)
     {
-        int index;
         int x1, z1, h1;
+        Biome beach = Biome.REGISTRY.getObject(new ResourceLocation("beach"));
+        Biome ocean = Biome.REGISTRY.getObject(new ResourceLocation("ocean"));
+        Biome deep = Biome.REGISTRY.getObject(new ResourceLocation("deep_ocean"));
         for (int i1 = 0; i1 < 16; i1++)
         {
             for (int k1 = 0; k1 < 16; k1++)
@@ -361,45 +342,42 @@ public class ChunkProviderFinite extends ChunkProviderGenerate
                     h1 = 10;
                 }
                 else h1 = WorldGenerator.instance.dorfs.elevationMap[x1][z1];
-                int b1 = biomesForGeneration[i1 + 16 * k1].biomeID;
-                boolean beach = false;
+                Biome b1 = biomesForGeneration[i1 + 16 * k1];
+                boolean isBeach = false;
 
-                if (b1 == BiomeGenBase.ocean.biomeID || b1 == BiomeGenBase.deepOcean.biomeID
-                        || b1 == BiomeGenBase.beach.biomeID)
+                if (b1 == ocean || b1 == deep || b1 == beach)
                 {
                     for (int j = 100; j > 10; j--)
                     {
-                        index = j << 0 | (i1) << 12 | (k1) << 8;
-                        if (!isIndexEmpty(blocks, index) && getBlock(blocks, index) != Blocks.water)
+                        if (!isIndexEmpty(blocks, i1, j, k1) && getBlock(blocks, i1, j, k1) != Blocks.WATER)
                         {
                             h1 = j;
-                            beach = true;
+                            isBeach = true;
                             break;
                         }
                     }
                 }
-                if (beach)
+                if (isBeach)
                 {
                     for (int j = h1 + 1; j < worldObj.provider.getHorizon(); j++)
                     {
-                        index = j << 0 | (i1) << 12 | (k1) << 8;
-                        blocks.setBlockState(index, Blocks.water.getDefaultState());
+                        blocks.setBlockState(i1, j, k1, Blocks.WATER.getDefaultState());
                     }
                 }
             }
         }
     }
 
-    public static Block getBlock(ChunkPrimer primer, int index)
+    public static Block getBlock(ChunkPrimer primer, int x, int y, int z)
     {
-        IBlockState state = primer.getBlockState(index);
-        return state != null ? state.getBlock() : Blocks.air;
+        IBlockState state = primer.getBlockState(x, y, z);
+        return state != null ? state.getBlock() : Blocks.AIR;
     }
 
-    public static boolean isIndexEmpty(ChunkPrimer primer, int index)
+    public static boolean isIndexEmpty(ChunkPrimer primer, int x, int y, int z)
     {
-        IBlockState state = primer.getBlockState(index);
-        return state == null || state.getBlock() == Blocks.air;
+        IBlockState state = primer.getBlockState(x, y, z);
+        return state == null || state.getBlock() == Blocks.AIR;
     }
 
     /** Converts the instance data to a readable string. */

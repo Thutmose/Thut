@@ -2,11 +2,13 @@ package dorfgen.conversion;
 
 import java.awt.Color;
 
+import net.minecraft.world.biome.Biome;
+
 public class BiomeConversion     
 {
     Color colorKey;
-    public int mineCraftBiome;
-    public BiomeConversion(Color color, int biome)
+    public Biome mineCraftBiome;
+    public BiomeConversion(Color color, Biome biome)
     {
         colorKey = color;
         mineCraftBiome = biome;

@@ -14,8 +14,10 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 public class ItemDebug extends Item
@@ -25,19 +27,19 @@ public class ItemDebug extends Item
     {
         super();
         this.setUnlocalizedName("debug");
-        this.setCreativeTab(CreativeTabs.tabTools);
+        this.setCreativeTab(CreativeTabs.TOOLS);
     }
 
     @SuppressWarnings("unused")
     @Override
-    public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player)
+    public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn,
+            EnumHand hand)
     {
+        int x = MathHelper.floor_double(playerIn.posX);
+        int y = (int) playerIn.posY;
+        int z = MathHelper.floor_double(playerIn.posZ);
 
-        int x = MathHelper.floor_double(player.posX);
-        int y = (int) player.posY;
-        int z = MathHelper.floor_double(player.posZ);
-
-        if (world.isRemote) return itemstack;
+        if (worldIn.isRemote) return super.onItemRightClick(itemStackIn, worldIn, playerIn, hand);
 
         DorfMap dorfs = WorldGenerator.instance.dorfs;
         int n = 0;
@@ -81,10 +83,9 @@ public class ItemDebug extends Item
             int pixelX = (x - site.corners[0][0] * scale - scale / 2 - width / 2) / width;
             int pixelY = (z - site.corners[0][1] * scale - scale / 2 - width / 2) / width;
             mess = "" + SiteMapColours.getMatch(site.rgbmap[pixelX][pixelY]);
-            player.addChatMessage(new ChatComponentText(mess));
+            playerIn.addChatMessage(new TextComponentString(mess));
         }
-
-        return itemstack;
+        return super.onItemRightClick(itemStackIn, worldIn, playerIn, hand);
     }
 
 }

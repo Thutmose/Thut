@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
@@ -35,30 +36,30 @@ import dorfgen.conversion.DorfMap.SiteType;
 import dorfgen.conversion.DorfMap.Structure;
 import dorfgen.conversion.DorfMap.StructureType;
 import dorfgen.conversion.DorfMap.WorldConstruction;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 public class FileLoader
 {
 
-    public static String biomes = "";
+    public static String                          biomes                 = "";
 
-    public static File resourceDir = null;
+    public static File                            resourceDir            = null;
 
-    public String elevation              = "";
-    public String elevationWater         = "";
-    public String biome                  = "";
-    public String temperature            = "";
-    public String evil                   = "";
-    public String rain                   = "";
-    public String volcanism              = "";
-    public String vegitation             = "";
-    public String structs                = "";
-    public String legends                = "";
-    public String legendsPlus            = "";
-    public String constructionFineCoords = "";
-    public String siteInfo               = "";
+    public String                                 elevation              = "";
+    public String                                 elevationWater         = "";
+    public String                                 biome                  = "";
+    public String                                 temperature            = "";
+    public String                                 evil                   = "";
+    public String                                 rain                   = "";
+    public String                                 volcanism              = "";
+    public String                                 vegitation             = "";
+    public String                                 structs                = "";
+    public String                                 legends                = "";
+    public String                                 legendsPlus            = "";
+    public String                                 constructionFineCoords = "";
+    public String                                 siteInfo               = "";
 
-    public static HashMap<Integer, BufferedImage> sites = new HashMap<Integer, BufferedImage>();
+    public static HashMap<Integer, BufferedImage> sites                  = new HashMap<Integer, BufferedImage>();
 
     public FileLoader()
     {
@@ -766,7 +767,6 @@ public class FileLoader
             r = Integer.parseInt(row.get(0));
             g = Integer.parseInt(row.get(1));
             b = Integer.parseInt(row.get(2));
-
             try
             {
                 biomeId = Integer.parseInt(row.get(3));
@@ -778,11 +778,14 @@ public class FileLoader
 
             if (biomeId < 0)
             {
-                for (BiomeGenBase biome : BiomeGenBase.getBiomeGenArray())
+                Iterator<Biome> iterator = Biome.REGISTRY.iterator();
+                while (iterator.hasNext())
                 {
-                    if (biome != null && biome.biomeName.replace(" ", "").equalsIgnoreCase(biomeName.replace(" ", "")))
+                    Biome biome = iterator.next();
+                    if (biome != null
+                            && biome.getBiomeName().replace(" ", "").equalsIgnoreCase(biomeName.replace(" ", "")))
                     {
-                        biomeId = biome.biomeID;
+                        biomeId = Biome.getIdForBiome(biome);
                         break;
                     }
                 }
@@ -793,7 +796,7 @@ public class FileLoader
                 continue;
             }
             Color c = new Color(r, g, b);
-            BiomeList.biomes.put(c.getRGB(), new BiomeConversion(c, biomeId));
+            BiomeList.biomes.put(c.getRGB(), new BiomeConversion(c, Biome.getBiome(biomeId)));
         }
 
     }

@@ -27,8 +27,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemDoor;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class SiteStructureGenerator
@@ -128,7 +128,7 @@ public class SiteStructureGenerator
     public void placeTorch(World world, int x, int y, int z)
     {
         BlockPos pos = new BlockPos(x, y, z);
-        IBlockState state = Blocks.torch.getDefaultState();
+        IBlockState state = Blocks.TORCH.getDefaultState();
         Iterator<?> iterator = EnumFacing.Plane.HORIZONTAL.iterator();
         EnumFacing enumfacing1 = EnumFacing.EAST;
 
@@ -143,7 +143,7 @@ public class SiteStructureGenerator
         }
         while (!world.isSideSolid(pos.offset(enumfacing1.getOpposite()), enumfacing1, true));
 
-        state = Blocks.torch.getDefaultState().withProperty(BlockTorch.FACING, enumfacing1);
+        state = Blocks.TORCH.getDefaultState().withProperty(BlockTorch.FACING, enumfacing1);
 
         world.setBlockState(pos, state);
     }
@@ -192,8 +192,8 @@ public class SiteStructureGenerator
 
                         boolean surrounded = isBlockSurroundedByWall(site, structures, wall, x1, z1);
 
-                        world.setBlockState(new BlockPos(x2, h - 1, z2), Blocks.stonebrick.getDefaultState());
-                        world.setBlockState(new BlockPos(x2, h - 2, z2), Blocks.stonebrick.getDefaultState());
+                        world.setBlockState(new BlockPos(x2, h - 1, z2), Blocks.STONEBRICK.getDefaultState());
+                        world.setBlockState(new BlockPos(x2, h - 2, z2), Blocks.STONEBRICK.getDefaultState());
                         for (int k = h; k < h + 6; k++)
                         {
                             if (k < h + 3 || k >= h + 4)
@@ -203,18 +203,18 @@ public class SiteStructureGenerator
                                     if (k == h + 5)
                                     {
                                         if ((x1 + z1) % 3 > 0) world.setBlockState(new BlockPos(x2, k, z2),
-                                                Blocks.stonebrick.getDefaultState());
+                                                Blocks.STONEBRICK.getDefaultState());
                                     }
                                     else
                                     {
                                         world.setBlockState(new BlockPos(x2, k, z2),
-                                                Blocks.stonebrick.getDefaultState());
+                                                Blocks.STONEBRICK.getDefaultState());
                                     }
                                 }
                             }
                             else
                             {
-                                world.setBlockState(new BlockPos(x2, k, z2), Blocks.stonebrick.getDefaultState());
+                                world.setBlockState(new BlockPos(x2, k, z2), Blocks.STONEBRICK.getDefaultState());
                             }
                         }
                     }
@@ -222,7 +222,7 @@ public class SiteStructureGenerator
                     StructureSpace struct = structures.getStructure(x1, z1, scale);
                     if (struct != null) // Generate Building
                     {
-                        Block material = Blocks.planks;
+                        Block material = Blocks.PLANKS;
                         int height = 3;
                         boolean mid;
                         boolean villager = mid = x1 == struct.getMid(site, scale)[0]
@@ -231,7 +231,7 @@ public class SiteStructureGenerator
 
                         if (tower)
                         {
-                            material = Blocks.stonebrick;
+                            material = Blocks.STONEBRICK;
                             height = 10;
                             villager = false;
                         }
@@ -249,11 +249,11 @@ public class SiteStructureGenerator
                         {
                             for (int l = height - 1; l >= -1; l--)
                             {
-                                world.setBlockState(new BlockPos(x2, h + l, z2), Blocks.air.getDefaultState(), 2);
+                                world.setBlockState(new BlockPos(x2, h + l, z2), Blocks.AIR.getDefaultState(), 2);
                             }
                             if (struct.roofType != SiteMapColours.TOWERROOF)
                             {
-                                world.setBlockState(new BlockPos(x2, h, z2), Blocks.carpet.getDefaultState());
+                                world.setBlockState(new BlockPos(x2, h, z2), Blocks.CARPET.getDefaultState());
                             }
                         }
 
@@ -268,14 +268,14 @@ public class SiteStructureGenerator
                             world.setBlockState(new BlockPos(x2, h - 1, z2), material.getDefaultState());
                             // Crenellation
                             if (inWall && (x1 + z1) % 3 > 0) world.setBlockState(new BlockPos(x2, h + height + 1, z2),
-                                    Blocks.stonebrick.getDefaultState());
+                                    Blocks.STONEBRICK.getDefaultState());
                         }
 
                         // Place the doors
                         if (struct.shouldBeDoor(site, x1, z1, scale))
                         {
                             ItemDoor.placeDoor(world, new BlockPos(x2, h, z2),
-                                    struct.getDoorDirection(site, x1, z1, scale, structures), Blocks.oak_door);
+                                    struct.getDoorDirection(site, x1, z1, scale, structures), Blocks.OAK_DOOR, false);
                         }
 
                         // Pace the torches in roof
@@ -290,9 +290,9 @@ public class SiteStructureGenerator
                             {
                                 // Towers get lamps with levers under them
                                 world.setBlockState(new BlockPos(x2, h - 1, z2),
-                                        Blocks.lit_redstone_lamp.getDefaultState());
+                                        Blocks.LIT_REDSTONE_LAMP.getDefaultState());
                                 world.setBlockState(new BlockPos(x2, h - 3, z2), material.getDefaultState());
-                                world.setBlockState(new BlockPos(x2, h - 2, z2), Blocks.lever.getDefaultState());
+                                world.setBlockState(new BlockPos(x2, h - 2, z2), Blocks.LEVER.getDefaultState());
                                 turnOnLever(world, x2, h - 2, z2);
                             }
                         }
@@ -395,20 +395,20 @@ public class SiteStructureGenerator
                                             // corridor, and
                                             // place a torch there
                                             if ((b = world.getBlockState(new BlockPos(x2, h + 1, z2))
-                                                    .getBlock()) != Blocks.stonebrick && !(b instanceof BlockDoor))
+                                                    .getBlock()) != Blocks.STONEBRICK && !(b instanceof BlockDoor))
                                             {
                                                 placeTorch(world, x2, h + 1, z2);
                                             }
                                             else if (pos
                                                     && (b = world.getBlockState(new BlockPos(x2 - 1, h + 1, z2))
-                                                            .getBlock()) != Blocks.stonebrick
+                                                            .getBlock()) != Blocks.STONEBRICK
                                                     && !(b instanceof BlockDoor))
                                             {
                                                 placeTorch(world, x2 - 1, h + 1, z2);
                                             }
                                             else if (neg
                                                     && (b = world.getBlockState(new BlockPos(x2 + 1, h + 1, z2))
-                                                            .getBlock()) != Blocks.stonebrick
+                                                            .getBlock()) != Blocks.STONEBRICK
                                                     && !(b instanceof BlockDoor))
                                             {
                                                 placeTorch(world, x2 + 1, h + 1, z2);
@@ -422,20 +422,20 @@ public class SiteStructureGenerator
                                         {
                                             Block b;
                                             if ((b = world.getBlockState(new BlockPos(x2, h + 1, z2))
-                                                    .getBlock()) != Blocks.stonebrick && !(b instanceof BlockDoor))
+                                                    .getBlock()) != Blocks.STONEBRICK && !(b instanceof BlockDoor))
                                             {
                                                 placeTorch(world, x2, h + 1, z2);
                                             }
                                             else if (pos
                                                     && (b = world.getBlockState(new BlockPos(x2, h + 1, z2 - 1))
-                                                            .getBlock()) != Blocks.stonebrick
+                                                            .getBlock()) != Blocks.STONEBRICK
                                                     && !(b instanceof BlockDoor))
                                             {
                                                 placeTorch(world, x2, h + 1, z2 - 1);
                                             }
                                             else if (neg
                                                     && (b = world.getBlockState(new BlockPos(x2 + 1, h + 1, z2))
-                                                            .getBlock()) != Blocks.stonebrick
+                                                            .getBlock()) != Blocks.STONEBRICK
                                                     && !(b instanceof BlockDoor))
                                             {
                                                 placeTorch(world, x2, h + 1, z2 + 1);
@@ -450,7 +450,7 @@ public class SiteStructureGenerator
                     StructureSpace struct = structures.getStructure(x1, z1, scale);
                     if (struct != null)
                     {
-                        Block material = Blocks.stonebrick;
+                        Block material = Blocks.STONEBRICK;
                         int height = 10;
                         boolean mid;
                         h = struct.getFloor(site, scale);
@@ -467,16 +467,16 @@ public class SiteStructureGenerator
                                 // needed
                                 world.setBlockState(new BlockPos(x2 - 1, h + l, z2), material.getDefaultState(), 2);
                                 BlockPos pos = new BlockPos(x2, h + l, z2);
-                                IBlockState state = Blocks.ladder.getDefaultState();
+                                IBlockState state = Blocks.LADDER.getDefaultState();
                                 EnumFacing enumfacing1 = EnumFacing.EAST;
-                                state = Blocks.ladder.getDefaultState().withProperty(BlockLadder.FACING, enumfacing1);
+                                state = Blocks.LADDER.getDefaultState().withProperty(BlockLadder.FACING, enumfacing1);
                                 world.setBlockState(pos, state);
 
                             }
                             world.setBlockState(new BlockPos(x2 + 1, h + height - 1, z2), material.getDefaultState(),
                                     2);
                             world.setBlockState(new BlockPos(x2, h + height - 1, z2),
-                                    Blocks.trapdoor.getDefaultState()
+                                    Blocks.TRAPDOOR.getDefaultState()
                                             .withProperty(BlockTrapDoor.HALF, BlockTrapDoor.DoorHalf.TOP)
                                             .withProperty(BlockTrapDoor.FACING, EnumFacing.WEST),
                                     0);
