@@ -65,8 +65,7 @@ public class FiniteHandler
             // TODO remove this print when done.
             if (evt.getEntity() instanceof EntityPlayer) System.out.println(
                     pos + " " + xMin + " " + xMax + " " + yMin + " " + yMax + " " + scale + " " + posOld + " " + newIn);
-//            TelDestination tele = new TelDestination(evt.getEntity().dimension, pos);
-//            Transporter.teleportEntity(evt.getEntity(), tele);//TODO teleporter
+            Transporter.teleportEntity(evt.getEntity(), pos, evt.getEntity().dimension, false);
 
         }
     }

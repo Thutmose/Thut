@@ -18,6 +18,7 @@ import dorfgen.conversion.Interpolator.BicubicInterpolator;
 import dorfgen.conversion.SiteStructureGenerator;
 import dorfgen.conversion.SiteStructureGenerator.RiverExit;
 import dorfgen.conversion.SiteStructureGenerator.SiteStructures;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
@@ -32,7 +33,6 @@ public class RiverMaker
     public RiverMaker()
     {
         dorfs = WorldGenerator.instance.dorfs;
-        // TODO Auto-generated constructor stub
     }
 
     public void makeRiversForChunk(World world, int chunkX, int chunkZ, ChunkPrimer primer, Biome[] biomes)
@@ -40,6 +40,8 @@ public class RiverMaker
         int x = (chunkX * 16 - WorldGenerator.shift.getX());
         int z = (chunkZ * 16 - WorldGenerator.shift.getZ());
         int x1, z1, h;
+        IBlockState water = Blocks.WATER.getDefaultState();
+//        water = Blocks.GLASS.getDefaultState();
         for (int i1 = 0; i1 < 16; i1++)
         {
             for (int k1 = 0; k1 < 16; k1++)
@@ -49,16 +51,16 @@ public class RiverMaker
                 if (x1 >= WorldGenerator.instance.dorfs.waterMap.length
                         || z1 >= WorldGenerator.instance.dorfs.waterMap[0].length)
                 {
-                    h = 1;
+                    h = 1;// TODO find height from here
                 }
-                else h = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x + i1, z + k1,
-                        scale);
+                // else
+                h = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap, x + i1, z + k1, scale);
                 boolean river = isInRiver(x1, z1);
                 if (!river) continue;
                 int j = h - 1;
-                primer.setBlockState(i1, j, k1, Blocks.WATER.getDefaultState());
-                if (j - 1 > 0) primer.setBlockState(i1, j - 1, k1, Blocks.WATER.getDefaultState());
-                if (j - 2 > 0) primer.setBlockState(i1, j - 2, k1, Blocks.WATER.getDefaultState());
+                primer.setBlockState(i1, j, k1, water);
+                if (j - 1 > 0) primer.setBlockState(i1, j - 1, k1, water);
+                if (j - 2 > 0) primer.setBlockState(i1, j - 2, k1, water);
                 // TODO make rivers that work with the new site code
             }
         }
@@ -310,9 +312,13 @@ public class RiverMaker
 
         try
         {
-            // System.out.println(Arrays.toString(point1)+"
-            // "+Arrays.toString(point2) +" "+Arrays.toString(point3)+"
-            // "+Arrays.toString(point4)+" "+river);
+            //@formatter:off
+//            System.out.println(Arrays.toString(point1) + ","
+//                    + Arrays.toString(point2) + ","
+//                    + Arrays.toString(point3) + ","
+//                    + Arrays.toString(point4) + " " + river);
+            //@formatter:on
+            width = 2;//TODO
         }
         catch (Exception e)
         {
@@ -394,7 +400,6 @@ public class RiverMaker
                 if (Math.abs(tx) < width && Math.abs(tz) < width) return true;
             }
         }
-
         return false;
     }
 }

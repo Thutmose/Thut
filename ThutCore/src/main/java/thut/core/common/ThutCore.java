@@ -18,7 +18,7 @@ import thut.api.terrain.TerrainManager;
 import thut.core.common.handlers.ConfigHandler;
 import thut.reference.ThutCoreReference;
 
-@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
+@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, dependencies = ThutCoreReference.DEPSTRING, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
 public class ThutCore
 {
 
@@ -34,8 +34,8 @@ public class ThutCore
     public static Block[]         blocks;
     public static Item[]          items;
 
-    public static Biome    volcano;
-    public static Biome    chalk;
+    public static Biome           volcano;
+    public static Biome           chalk;
 
     // Configuration Handler that handles the config file
     public ConfigHandler          config;

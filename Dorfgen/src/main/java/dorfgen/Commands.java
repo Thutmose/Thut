@@ -102,7 +102,7 @@ public class Commands extends CommandBase
             Region region = WorldGenerator.instance.dorfs.getRegionForCoords(pos.getX(), pos.getZ());
             HashSet<Site> sites = WorldGenerator.instance.dorfs.getSiteForCoords(pos.getX(), pos.getZ());
             String message = "Region: " + region.toString();
-            for (Site site : sites)
+            if (sites != null) for (Site site : sites)
             {
                 message += ", Site: " + site;
             }

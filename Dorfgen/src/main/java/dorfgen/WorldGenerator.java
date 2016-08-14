@@ -16,10 +16,6 @@ import dorfgen.conversion.SiteStructureGenerator;
 import dorfgen.worldgen.BiomeProviderFinite;
 import dorfgen.worldgen.MapGenSites.Start;
 import dorfgen.worldgen.WorldTypeFinite;
-import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
@@ -27,27 +23,20 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent.Decorate;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent.Decorate.EventType;
 import net.minecraftforge.event.world.WorldEvent.Load;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
 
-@Mod(modid = WorldGenerator.MODID, name = WorldGenerator.NAME, version = "1.8", acceptableRemoteVersions = "*")
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, 
+dependencies = Reference.DEPSTRING, acceptableRemoteVersions = "*")
 public class WorldGenerator
 {
-
-    public static final String          MODID        = "dorfgen";
-    public static final String          NAME         = "DF World Generator";
-
-    @Mod.Instance(MODID)
+    @Mod.Instance(Reference.MOD_ID)
     public static WorldGenerator        instance;
 
     public BufferedImage                elevationMap;
@@ -82,8 +71,6 @@ public class WorldGenerator
         instance = this;
     }
 
-    Block roadgravel;
-
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
@@ -93,12 +80,9 @@ public class WorldGenerator
         File file = e.getSuggestedConfigurationFile();
         String seperator = System.getProperty("file.separator");
 
-        GameRegistry.registerItem(new ItemDebug(), "debugItem");// TODO texture
-        GameRegistry.registerBlock(roadgravel = new BlockRoadSurface(), "roadgravel");
-
         String folder = file.getAbsolutePath();
         String name = file.getName();
-        FileLoader.biomes = folder.replace(name, MODID + seperator + "biomes.csv");
+        FileLoader.biomes = folder.replace(name, Reference.MOD_ID + seperator + "biomes.csv");
         //
         MapGenStructureIO.registerStructure(Start.class, "dorfsitestart");
         //
@@ -130,23 +114,6 @@ public class WorldGenerator
         catch (Exception e)
         {
         }
-        if (evt.getSide() == Side.CLIENT)
-        {
-            Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(roadgravel), 0,
-                    new ModelResourceLocation("dorfgen:roadgravel", "inventory"));
-        }
-    }
-
-    @EventHandler
-    public void postInit(FMLPostInitializationEvent e)
-    {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
-        {
-            Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(
-                    Item.getItemFromBlock(BlockRoadSurface.uggrass), 0,
-                    new ModelResourceLocation("dorfgen:roadgravel", "inventory"));
-
-        }
     }
 
     @EventHandler
@@ -160,7 +127,6 @@ public class WorldGenerator
     {
         if (evt.getWorld().provider.getBiomeProvider() instanceof BiomeProviderFinite)
         {
-
             if (!spawnSite.isEmpty())
             {
                 ArrayList<Site> sites = new ArrayList<Site>(DorfMap.sitesById.values());

@@ -8,7 +8,6 @@ import static net.minecraft.util.EnumFacing.WEST;
 
 import java.util.HashSet;
 
-import dorfgen.BlockRoadSurface;
 import dorfgen.WorldGenerator;
 import dorfgen.conversion.DorfMap;
 import dorfgen.conversion.DorfMap.ConstructionType;
@@ -244,7 +243,7 @@ public class WorldConstructionMaker
 
     private void safeSetToRoad(int x, int z, int h, int chunkX, int chunkZ, ChunkPrimer blocks)
     {
-        safeSetToRoad(x, z, h, chunkX, chunkZ, blocks, BlockRoadSurface.uggrass);
+        safeSetToRoad(x, z, h, chunkX, chunkZ, blocks, Blocks.GRAVEL);
     }
 
     private static final int ROADWIDTH = 3;

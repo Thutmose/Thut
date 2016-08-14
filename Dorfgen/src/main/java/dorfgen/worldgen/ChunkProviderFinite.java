@@ -26,6 +26,7 @@ import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.MapGenRavine;
+import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenVillage;
 import net.minecraftforge.common.MinecraftForge;
@@ -101,6 +102,7 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
                             WorldGenerator.instance.dorfs.waterMap, x1, z1, 1) > 0);
                 }
                 h1 = Math.max(h1, 10);
+                // h1 = Math.max(h1, 65);//TODO
 
                 double s = worldObj.provider.getHeight() / 256d;
                 if (h1 > worldObj.provider.getHorizon()) h1 = (int) (h1 * s);
@@ -168,9 +170,12 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
             int x = imgX;
             int z = imgZ;
             populateBlocksFromImage(scale, chunkX, chunkZ, primer);
-            riverMaker.makeRiversForChunk(worldObj, chunkX, chunkZ, primer, biomesForGeneration);
-            constructor.buildSites(worldObj, chunkX, chunkZ, primer, biomesForGeneration);
-            constructor.buildRoads(worldObj, chunkX, chunkZ, primer, biomesForGeneration);
+            // riverMaker.makeRiversForChunk(worldObj, chunkX, chunkZ, primer,
+            // biomesForGeneration);
+            // constructor.buildSites(worldObj, chunkX, chunkZ, primer,
+            // biomesForGeneration);
+            // constructor.buildRoads(worldObj, chunkX, chunkZ, primer,
+            // biomesForGeneration);
             makeBeaches(scale, x / scale, z / scale, primer);
         }
         else if (WorldGenerator.finite)
@@ -181,7 +186,46 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
         {
             return super.provideChunk(chunkX, chunkZ);
         }
-        this.replaceBiomeBlocks(chunkX, chunkZ, primer, biomesForGeneration);
+
+        if (net.minecraftforge.event.ForgeEventFactory.onReplaceBiomeBlocks(this, chunkX, chunkZ, primer,
+                this.worldObj))
+        {
+            double[] depthBuffer = new double[256];
+            NoiseGeneratorPerlin surfaceNoise = new NoiseGeneratorPerlin(this.rand, 4);
+            depthBuffer = surfaceNoise.getRegion(depthBuffer, (double) (chunkX * 16), (double) (chunkZ * 16), 16, 16,
+                    0.0625D, 0.0625D, 1.0D);
+            int backupSeaLevel = this.worldObj.getSeaLevel();
+
+            for (int i = 0; i < 16; ++i)
+            {
+                for (int j = 0; j < 16; ++j)
+                {
+                    Biome biome = biomesForGeneration[j + i * 16];
+//                    if (!BiomeDictionary.isBiomeOfType(biome, Type.OCEAN))
+//                    {
+//                        this.worldObj.setSeaLevel(0);// TODO find height at this
+//                                                     // location, use 2 less
+//                                                     // than that
+//                    }
+//                    else
+//                    {
+//                        this.worldObj.setSeaLevel(backupSeaLevel);
+//                    }
+                    biome.genTerrainBlocks(this.worldObj, this.rand, primer, chunkX * 16 + i, chunkZ * 16 + j,
+                            depthBuffer[j + i * 16]);
+                }
+            }
+            this.worldObj.setSeaLevel(backupSeaLevel);
+        }
+
+        if (imgX >= 0 && imgZ >= 0 && (imgX + 16) / scale <= WorldGenerator.instance.dorfs.elevationMap.length
+                && (imgZ + 16) / scale <= WorldGenerator.instance.dorfs.elevationMap[0].length)
+        {
+            riverMaker.makeRiversForChunk(worldObj, chunkX, chunkZ, primer, biomesForGeneration);
+            constructor.buildSites(worldObj, chunkX, chunkZ, primer, biomesForGeneration);
+            constructor.buildRoads(worldObj, chunkX, chunkZ, primer, biomesForGeneration);
+        }
+        // this.replaceBiomeBlocks(chunkX, chunkZ, primer, biomesForGeneration);
 
         // this.caveGenerator.func_151539_a(this, this.worldObj, chunkX, chunkZ,
         // ablock);

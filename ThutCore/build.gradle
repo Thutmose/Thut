@@ -35,6 +35,8 @@ minecraft {
     replaceIn "ThutCoreReference.java"
     replace "@MCVERSION", "${version_mcsupport}"
     replaceIn "ThutCoreReference.java"
+    replace "@FORGEVERSION", "${version_forgedep}"
+    replaceIn "ThutCoreReference.java"
 }
 
 processResources

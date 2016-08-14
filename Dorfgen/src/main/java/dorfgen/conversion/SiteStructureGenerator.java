@@ -261,11 +261,18 @@ public class SiteStructureGenerator
                         {
                             world.setBlockState(new BlockPos(x2, h - 1, z2), material.getDefaultState());
                             world.setBlockState(new BlockPos(x2, h + height + 1, z2), material.getDefaultState());
+                            if (!inWall)
+                                world.setBlockState(new BlockPos(x2, h + height + 2, z2), material.getDefaultState());
                         }
                         else
                         {
                             // Floor
                             world.setBlockState(new BlockPos(x2, h - 1, z2), material.getDefaultState());
+                            // Inner Floor
+                            world.setBlockState(new BlockPos(x2, h + 3, z2), material.getDefaultState());
+                            // Ceiling
+                            world.setBlockState(new BlockPos(x2, h + 7, z2), material.getDefaultState());
+                            world.setBlockState(new BlockPos(x2, h + 8, z2), material.getDefaultState());
                             // Crenellation
                             if (inWall && (x1 + z1) % 3 > 0) world.setBlockState(new BlockPos(x2, h + height + 1, z2),
                                     Blocks.STONEBRICK.getDefaultState());
@@ -274,8 +281,13 @@ public class SiteStructureGenerator
                         // Place the doors
                         if (struct.shouldBeDoor(site, x1, z1, scale))
                         {
-                            ItemDoor.placeDoor(world, new BlockPos(x2, h, z2),
-                                    struct.getDoorDirection(site, x1, z1, scale, structures), Blocks.OAK_DOOR, false);
+                            EnumFacing doorDir = struct.getDoorDirection(site, x1, z1, scale, structures);
+                            ItemDoor.placeDoor(world, new BlockPos(x2, h, z2), doorDir, Blocks.OAK_DOOR, false);
+                            // Doors to the top of the wall
+                            if (tower && wall != null)
+                            {
+                                ItemDoor.placeDoor(world, new BlockPos(x2, h + 4, z2), doorDir, Blocks.OAK_DOOR, false);
+                            }
                         }
 
                         // Pace the torches in roof
@@ -288,12 +300,20 @@ public class SiteStructureGenerator
                             }
                             else
                             {
-                                // Towers get lamps with levers under them
+                                // Towers get lamps with levers under them for
+                                // lower room
                                 world.setBlockState(new BlockPos(x2, h - 1, z2),
                                         Blocks.LIT_REDSTONE_LAMP.getDefaultState());
-                                world.setBlockState(new BlockPos(x2, h - 3, z2), material.getDefaultState());
-                                world.setBlockState(new BlockPos(x2, h - 2, z2), Blocks.LEVER.getDefaultState());
+                                world.setBlockState(new BlockPos(x2, h - 2, z2), Blocks.LEVER.getDefaultState()
+                                        .withProperty(BlockLever.FACING, BlockLever.EnumOrientation.DOWN_Z));
                                 turnOnLever(world, x2, h - 2, z2);
+                                // Towers get lamps with levers over them for
+                                // top room
+                                world.setBlockState(new BlockPos(x2, h + 7, z2),
+                                        Blocks.LIT_REDSTONE_LAMP.getDefaultState());
+                                world.setBlockState(new BlockPos(x2, h + 8, z2), Blocks.LEVER.getDefaultState()
+                                        .withProperty(BlockLever.FACING, BlockLever.EnumOrientation.UP_Z));
+                                turnOnLever(world, x2, h + 8, z2);
                             }
                         }
                         else
@@ -924,8 +944,8 @@ public class SiteStructureGenerator
         /** Pixel Coordinates in the site map image */
         public final int[]          max;
 
-        protected int[][] bounds;
-        protected int[]   mid;
+        protected int[][]           bounds;
+        protected int[]             mid;
 
         public StructureSpace(int[] minCoords, int[] maxCoords, SiteMapColours roof)
         {

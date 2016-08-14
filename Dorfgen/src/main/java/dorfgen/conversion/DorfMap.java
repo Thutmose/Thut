@@ -95,7 +95,7 @@ public class DorfMap
         WorldGenerator.instance.biomeMap = null;
     }
 
-    private int elevationSigmoid(int preHeight)
+    public static int elevationSigmoid(int preHeight)
     {
         double a = preHeight;
 
@@ -122,8 +122,8 @@ public class DorfMap
                 {
                     h = b + waterShift;
                 }
-                h = Math.max(0, h);
-                elevationMap[x][y] = elevationSigmoid(h);
+                h = Math.max(10, h);
+                elevationMap[x][y] = h;// elevationSigmoid(h);
                 if (biomeMap.length > 0) if (h < 145 && biomeMap[x][y] == hillsPlus)
                 {
                     biomeMap[x][y] = hills;
