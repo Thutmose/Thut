@@ -2,7 +2,6 @@ package dorfgen.conversion;
 
 public class Interpolator
 {
-
     public static class CubicInterpolator
     {
         public static double getValue(double[] p, double x)
@@ -14,7 +13,9 @@ public class Interpolator
 
     public static class BicubicInterpolator extends CubicInterpolator
     {
-        private double[] arr = new double[4];
+        private double[] arr  = new double[4];
+        private double[][] tempArr = new double[4][4];
+        private Object[] temp = new Object[16];
 
         public double getValue(double[][] p, double x, double y)
         {
@@ -30,7 +31,7 @@ public class Interpolator
             int pixelX = xAbs / scale;
             int pixelY = yAbs / scale;
             double x = (xAbs - scale * pixelX) / (double) scale, y = (yAbs - scale * pixelY) / (double) scale;
-            double[][] arr = new double[4][4];
+            double[][] arr = tempArr;
             for (int i = -1; i <= 2; i++)
                 for (int k = -1; k <= 2; k++)
                 {
@@ -60,7 +61,7 @@ public class Interpolator
 
             double max = -1;
             int index = -1;
-            Object[] biomes = new Object[16];
+            Object[] biomes = temp;
             for (int i = -1; i < 3; i++)
                 for (int k = -1; k < 3; k++)
                 {

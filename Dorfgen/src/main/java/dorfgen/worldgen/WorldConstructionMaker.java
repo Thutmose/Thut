@@ -221,7 +221,8 @@ public class WorldConstructionMaker
         return 0;
     }
 
-    private void safeSetToRoad(int x, int z, int h, int chunkX, int chunkZ, ChunkPrimer blocks, Block block)
+    private void safeSetToRoad(int x, int z, int h, int chunkX, int chunkZ, ChunkPrimer blocks, Biome[] biomes,
+            Block block)
     {
         int index;
 
@@ -237,19 +238,19 @@ public class WorldConstructionMaker
             if (h + 0 < 255) blocks.setBlockState(x1, h + 0, z1, Blocks.AIR.getDefaultState());
             blocks.setBlockState(x1, h - 1, z1, block.getDefaultState());
             blocks.setBlockState(x1, h - 2, z1, Blocks.COBBLESTONE.getDefaultState());
-            blocks.setBlockState(x1, h - 3, z1, Blocks.COBBLESTONE.getDefaultState());
+            biomes[x1 + 16 * z1] = WorldGenerator.roadBiome;
         }
     }
 
-    private void safeSetToRoad(int x, int z, int h, int chunkX, int chunkZ, ChunkPrimer blocks)
+    private void safeSetToRoad(int x, int z, int h, int chunkX, int chunkZ, ChunkPrimer blocks, Biome[] biomes)
     {
-        safeSetToRoad(x, z, h, chunkX, chunkZ, blocks, Blocks.GRAVEL);
+        safeSetToRoad(x, z, h, chunkX, chunkZ, blocks, biomes, Blocks.GRAVEL);
     }
 
-    private static final int ROADWIDTH = 3;
+    private static final int ROADWIDTH = 1;
 
     private void genSingleRoad(EnumFacing begin, EnumFacing end, int x, int z, int chunkX, int chunkZ,
-            ChunkPrimer blocks)
+            ChunkPrimer blocks, Biome[] biomes)
     {
         int nearestEmbarkX = x - (x % scale);
         int nearestEmbarkZ = z - (z % scale);
@@ -278,13 +279,14 @@ public class WorldConstructionMaker
                     h = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap,
                             nearestX + nearestEmbarkX + w, nearestZ + nearestEmbarkZ + w2, scale);
                     safeSetToRoad(nearestX + nearestEmbarkX + w, nearestZ + nearestEmbarkZ + w2, h, chunkX, chunkZ,
-                            blocks);
+                            blocks, biomes);
                 }
             }
         }
     }
 
-    private void genSingleRoadToPos(int x, int z, int chunkX, int chunkZ, int toRoadX, int toRoadZ, ChunkPrimer blocks)
+    private void genSingleRoadToPos(int x, int z, int chunkX, int chunkZ, int toRoadX, int toRoadZ, ChunkPrimer blocks,
+            Biome[] biomes)
     {
         int nearestEmbarkX = x - (x % scale);
         int nearestEmbarkZ = z - (z % scale);
@@ -320,9 +322,6 @@ public class WorldConstructionMaker
 
         for (double i = -0.05; i <= 1.05; i += 0.01)
         {
-            // interX = (1.-i)*(1.-i)*startX + 2.*(1.-i)*i*c + i*i*endX;
-            // interZ = (1.-i)*(1.-i)*startZ + 2.*(1.-i)*i*c + i*i*endZ;
-
             interX = startX * (1.0 - i) + endX * i;
             interZ = startZ * (1.0 - i) + endZ * i;
 
@@ -338,7 +337,7 @@ public class WorldConstructionMaker
                     h = bicubicInterpolator.interpolate(WorldGenerator.instance.dorfs.elevationMap,
                             nearestX + nearestEmbarkX + w, nearestZ + nearestEmbarkZ + w2, scale);
                     safeSetToRoad(nearestX + nearestEmbarkX + w, nearestZ + nearestEmbarkZ + w2, h, chunkX, chunkZ,
-                            blocks);
+                            blocks, biomes);
                 }
             }
         }
@@ -459,7 +458,7 @@ public class WorldConstructionMaker
         return null;
     }
 
-    private void genRoads(int x, int z, int chunkX, int chunkZ, ChunkPrimer blocks)
+    private void genRoads(int x, int z, int chunkX, int chunkZ, ChunkPrimer blocks, Biome[] biomes)
     {
         int nearestEmbarkX = x - (x % scale);
         int nearestEmbarkZ = z - (z % scale);
@@ -472,7 +471,7 @@ public class WorldConstructionMaker
             {
                 if (dirs[i] && dirs[j])
                 {
-                    genSingleRoad(DIRS[i], DIRS[j], x, z, chunkX, chunkZ, blocks);
+                    genSingleRoad(DIRS[i], DIRS[j], x, z, chunkX, chunkZ, blocks, biomes);
                 }
             }
         }
@@ -603,7 +602,8 @@ public class WorldConstructionMaker
         }
     }
 
-    private void genRoadEndConnector(int roadEndX, int roadEndZ, int chunkX, int chunkZ, ChunkPrimer blocks)
+    private void genRoadEndConnector(int roadEndX, int roadEndZ, int chunkX, int chunkZ, ChunkPrimer blocks,
+            Biome[] biomes)
     {
         int minDistSqr = Integer.MAX_VALUE, dist;
         int x1, z1;
@@ -632,7 +632,7 @@ public class WorldConstructionMaker
 
         if (minDistSqr != Integer.MAX_VALUE)
         {
-            genSingleRoadToPos(embarkX, embarkZ, chunkX, chunkZ, roadEndX, roadEndZ, blocks);
+            genSingleRoadToPos(embarkX, embarkZ, chunkX, chunkZ, roadEndX, roadEndZ, blocks, biomes);
         }
         else
         {
@@ -648,27 +648,27 @@ public class WorldConstructionMaker
         if (isNearSiteRoadEnd(x, z))
         {
             int[] roadEnd = getSiteRoadEnd(x, z);
-            genRoadEndConnector(roadEnd[0], roadEnd[1], x, z, blocks);
+            genRoadEndConnector(roadEnd[0], roadEnd[1], x, z, blocks, biomes);
         }
 
         if (isInSite(x, z)) return;
 
-        genRoads(x - (x % scale), z - (z % scale), x, z, blocks);
+        genRoads(x - (x % scale), z - (z % scale), x, z, blocks, biomes);
 
         if ((x + 16) - ((x + 16) % scale) > x - (x % scale))
         {
             if ((z + 16) - ((z + 16) % scale) > z - (z % scale))
             {
-                genRoads((x + 16) - ((x + 16) % scale), (z + 16) - ((z + 16) % scale), x, z, blocks);
+                genRoads((x + 16) - ((x + 16) % scale), (z + 16) - ((z + 16) % scale), x, z, blocks, biomes);
             }
             else
             {
-                genRoads((x + 16) - ((x + 16) % scale), z - (z % scale), x, z, blocks);
+                genRoads((x + 16) - ((x + 16) % scale), z - (z % scale), x, z, blocks, biomes);
             }
         }
         else if ((z + 16) - ((z + 16) % scale) > z - (z % scale))
         {
-            genRoads(x - (x % scale), (z + 16) - ((z + 16) % scale), x, z, blocks);
+            genRoads(x - (x % scale), (z + 16) - ((z + 16) % scale), x, z, blocks, biomes);
         }
     }
 

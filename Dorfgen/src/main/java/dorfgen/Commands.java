@@ -17,7 +17,11 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunkGenerator;
+import net.minecraft.world.gen.ChunkProviderServer;
 
 public class Commands extends CommandBase
 {
@@ -39,8 +43,7 @@ public class Commands extends CommandBase
     @Override
     public String getCommandUsage(ICommandSender sender)
     {
-        // TODO Auto-generated method stub
-        return "dorfgen <text>";
+        return "dorfgen <arguments>";
     }
 
     @Override
@@ -67,6 +70,7 @@ public class Commands extends CommandBase
 
             EntityPlayer entity = (EntityPlayer) sender;
             Site telesite = null;
+            int x, z;
             try
             {
                 int id = Integer.parseInt(name);
@@ -86,12 +90,22 @@ public class Commands extends CommandBase
             }
             if (telesite != null)
             {
-                int x = telesite.x * WorldGenerator.scale + WorldGenerator.scale;
-                int z = telesite.z * WorldGenerator.scale + WorldGenerator.scale;
+                x = telesite.x * WorldGenerator.scale + WorldGenerator.scale;
+                z = telesite.z * WorldGenerator.scale + WorldGenerator.scale;
 
                 int y = WorldGenerator.instance.dorfs.elevationMap[(x - WorldGenerator.shift.getX())
                         / WorldGenerator.scale][(z - WorldGenerator.shift.getZ()) / WorldGenerator.scale];
                 entity.addChatMessage(new TextComponentString("Teleported to " + telesite));
+                entity.setPositionAndUpdate(x, y, z);
+            }
+            else if(name.equals("tile"))
+            {
+                x = Integer.parseInt(args[2]) * WorldGenerator.scale + WorldGenerator.scale;
+                z = Integer.parseInt(args[3]) * WorldGenerator.scale + WorldGenerator.scale;
+
+                int y = WorldGenerator.instance.dorfs.elevationMap[(x - WorldGenerator.shift.getX())
+                        / WorldGenerator.scale][(z - WorldGenerator.shift.getZ()) / WorldGenerator.scale];
+                entity.addChatMessage(new TextComponentString("Teleported to " + args[2]+" "+args[3]));
                 entity.setPositionAndUpdate(x, y, z);
             }
         }
@@ -108,14 +122,27 @@ public class Commands extends CommandBase
             }
             entity.addChatMessage(new TextComponentString(message));
         }
+        else if (args.length > 0 && args[0].equalsIgnoreCase("regen"))
+        {
+            ChunkProviderServer provider = (ChunkProviderServer) sender.getEntityWorld().getChunkProvider();
+            Chunk chunk = sender.getEntityWorld().getChunkFromBlockCoords(sender.getPosition());
+            IChunkGenerator generator = provider.chunkGenerator;
+            long key = ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+            chunk = generator.provideChunk(chunk.xPosition, chunk.zPosition);
+            provider.id2ChunkMap.put(key, chunk);
+            chunk.onChunkLoad();
+            chunk.populateChunk(provider, generator);
+        }
+        else
+        {
+            throw new CommandException("Error with command arguments");
+        }
     }
 
     @Override
     public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args,
             @Nullable BlockPos pos)
     {
-        // TODO Auto-generated method stub
-
         if (args[0].equalsIgnoreCase("tp"))
         {
             Collection<Site> sites = DorfMap.sitesById.values();

@@ -35,11 +35,11 @@ public class BiomeProviderFinite extends BiomeProvider
 
     @Override
     /** Returns the Biome related to the x, z position on the world. */
-    public Biome getBiomeGenerator(BlockPos pos)
+    public Biome getBiome(BlockPos pos)
     {
         try
         {
-            return super.getBiomeGenerator(pos);
+            return super.getBiome(pos);
         }
         catch (Exception e)
         {
@@ -67,7 +67,7 @@ public class BiomeProviderFinite extends BiomeProvider
     /** Returns biomes to use for the blocks and loads the other data like
      * temperature and humidity onto the WorldChunkManager Args: oldBiomeList,
      * x, z, width, depth */
-    public Biome[] loadBlockGeneratorData(Biome[] biomes, int x, int z, int width, int depth)
+    public Biome[] getBiomes(Biome[] biomes, int x, int z, int width, int depth)
     {
         biomes = super.getBiomesForGeneration(biomes, x, z, width, depth);
         x -= WorldGenerator.shift.getX();

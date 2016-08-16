@@ -156,7 +156,7 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
         // Block[] ablock = new Block[256 * worldObj.getHeight()];
         // byte[] abyte = new byte[256 * worldObj.getHeight()];
 
-        this.biomesForGeneration = this.worldObj.getBiomeProvider().loadBlockGeneratorData(this.biomesForGeneration,
+        this.biomesForGeneration = this.worldObj.getBiomeProvider().getBiomes(this.biomesForGeneration,
                 chunkX * 16, chunkZ * 16, 16, 16);
         if (WorldGenerator.instance.dorfs.elevationMap.length == 0) WorldGenerator.finite = false;
 
@@ -289,7 +289,7 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
         int k = x * 16;
         int l = z * 16;
         BlockPos blockpos = new BlockPos(k, 0, l);
-        Biome Biome = this.worldObj.getBiomeGenForCoords(new BlockPos(k + 16, 0, l + 16));
+        Biome Biome = this.worldObj.getBiome(new BlockPos(k + 16, 0, l + 16));
         this.rand.setSeed(this.worldObj.getSeed());
         long i1 = this.rand.nextLong() / 2L * 2L + 1L;
         long j1 = this.rand.nextLong() / 2L * 2L + 1L;

@@ -18,6 +18,7 @@ import dorfgen.worldgen.MapGenSites.Start;
 import dorfgen.worldgen.WorldTypeFinite;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent.Decorate;
@@ -32,8 +33,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, 
-dependencies = Reference.DEPSTRING, acceptableRemoteVersions = "*")
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, dependencies = Reference.DEPSTRING, acceptableRemoteVersions = "*")
 public class WorldGenerator
 {
     @Mod.Instance(Reference.MOD_ID)
@@ -63,6 +63,7 @@ public class WorldGenerator
 
     public static String                configLocation;
     public static String                biomes;
+    public static Biome                 roadBiome;
 
     private final boolean[]             done         = { false };
 
@@ -86,6 +87,7 @@ public class WorldGenerator
         //
         MapGenStructureIO.registerStructure(Start.class, "dorfsitestart");
         //
+        roadBiome = Biome.REGISTRY.getObjectById(1);
     }
 
     @EventHandler

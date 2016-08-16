@@ -956,11 +956,10 @@ public class SiteStructureGenerator
 
         public int[][] getBounds(Site site, int scale)
         {
-            // if(bounds==null)
+            if (bounds == null) bounds = new int[2][2];
             {
                 int width = (scale / SITETOBLOCK);
                 int offset = scale / 2;
-                bounds = new int[2][2];
                 bounds[0][0] = min[0] * width + site.corners[0][0] * scale + offset;// -
                                                                                     // width/2;
                 bounds[0][1] = min[1] * width + site.corners[0][1] * scale + offset;// -
@@ -1034,11 +1033,13 @@ public class SiteStructureGenerator
             return false;
         }
 
+        int[] temp = new int[4];
+
         public int getFloor(Site site, int scale)
         {
             getBounds(site, scale);
             int floor = 0;
-            int[] corners = new int[4];
+            int[] corners = temp;
             corners[0] = dorfs.biomeInterpolator.interpolate(dorfs.elevationMap, bounds[0][0], bounds[0][1], scale);
             corners[1] = dorfs.biomeInterpolator.interpolate(dorfs.elevationMap, bounds[1][0], bounds[1][1], scale);
             corners[2] = dorfs.biomeInterpolator.interpolate(dorfs.elevationMap, bounds[1][0], bounds[0][1], scale);
