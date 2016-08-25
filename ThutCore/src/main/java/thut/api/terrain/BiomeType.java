@@ -32,7 +32,7 @@ public class BiomeType extends IForgeRegistryEntry.Impl<BiomeType>
         }
         if (generate)
         {
-            BiomeType ret = new BiomeType(name.toLowerCase(), name);
+            BiomeType ret = new BiomeType(name.toLowerCase(java.util.Locale.ENGLISH), name);
             return ret;
         }
         return NONE;

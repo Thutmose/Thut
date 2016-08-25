@@ -45,7 +45,7 @@ public class BiomeDatabase
     {
         if (b != null)
         {
-            if (b.getBiomeName().toLowerCase().contains("flower")) return BiomeType.FLOWER;
+            if (b.getBiomeName().toLowerCase(java.util.Locale.ENGLISH).contains("flower")) return BiomeType.FLOWER;
         }
         return BiomeType.NONE;
     }
