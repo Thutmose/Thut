@@ -9,6 +9,8 @@ public class ConfigHandler
     public static double  LiftSpeedDown         = 0.35;
     public static double  LiftSpeedDownOccupied = 0;
     public static int     controllerProduction  = 16;
+    public static int     maxHeight             = 5;
+    public static int     maxRadius             = 2;
     public static boolean jitterfix             = true;
 
     public static void load(Configuration conf)
@@ -30,6 +32,8 @@ public class ConfigHandler
         EntityLift.ENERGYCOST = conf.getInt("energyCost", "Lift Settings", 100, 0, 1000, "Base Energy use for Lifts");
         controllerProduction = conf.getInt("controllerProduction", "Lift Settings", 16, 0, 5000,
                 "T/t produced by the controller blocks");
+        maxHeight = conf.get("Lift Settings", "maxHeight", 5, "Max allowed height of a lift.").getInt();
+        maxRadius= conf.get("Lift Settings", "maxRadius", 2, "Max allowed radius of a lift (2 gives 5x5 as maximum).").getInt();
         conf.save();
     }
 

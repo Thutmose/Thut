@@ -78,7 +78,9 @@ public class TerrainSegment
                                                                     if (world.provider.doesWaterVaporize()) return -1;
                                                                     boolean sky = false;
                                                                     Vector3 temp1 = Vector3.getNewVector();
-                                                                    int x0 = segment.chunkX * 16, y0 = segment.chunkY * 16, z0 = segment.chunkZ * 16;
+                                                                    int x0 = segment.chunkX * 16,
+                                                                            y0 = segment.chunkY * 16,
+                                                                            z0 = segment.chunkZ * 16;
                                                                     int dx = ((v.intX() - x0) / GRIDSIZE) * GRIDSIZE;
                                                                     int dy = ((v.intY() - y0) / GRIDSIZE) * GRIDSIZE;
                                                                     int dz = ((v.intZ() - z0) / GRIDSIZE) * GRIDSIZE;
@@ -89,7 +91,8 @@ public class TerrainSegment
                                                                             for (int k = z1; k < z1 + GRIDSIZE; k++)
                                                                             {
                                                                                 temp1.set(i, j, k);
-                                                                                if (segment.isInTerrainSegment(temp1.x, temp1.y, temp1.z))
+                                                                                if (segment.isInTerrainSegment(temp1.x,
+                                                                                        temp1.y, temp1.z))
                                                                                 {
                                                                                     double y = temp1.getMaxY(world);
                                                                                     sky = y <= temp1.y;
@@ -160,15 +163,15 @@ public class TerrainSegment
                 {
 
                     boolean bool = true;
-                    int i1 = MathHelper.floor_double(v.intX() + i / 16.0D);
+                    int i1 = MathHelper.floor_double((v.intX() + i)) >> 4;
                     // int j1 = MathHelper.floor_double(v.intY()+i / 16.0D);
-                    int k1 = MathHelper.floor_double(v.intZ() + i / 16.0D);
+                    int k1 = MathHelper.floor_double((v.intZ() + i)) >> 4;
 
-                    bool = i1 == v.intX() / 16 && k1 == v.intZ() / 16;// &&j==chunkY;
+                    bool = i1 == v.intX() >> 4 && k1 == v.intZ() >> 4;// &&j==chunkY;
 
                     if (bool)
                     {
-                        temp.set(v).add(i, j, k);
+                        temp.set(v).addTo(i, j, k);
                         if (temp.getBlock(world) == b || (b == null && temp.getBlock(world) == null))
                         {
                             ret++;

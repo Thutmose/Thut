@@ -19,6 +19,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
+import thut.api.maths.ExplosionCustom;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
@@ -58,6 +59,13 @@ public class ItemLinker extends Item
     {
         if (stack.getTagCompound() == null)
         {
+            if (!worldIn.isRemote)
+            {
+                ExplosionCustom boom = new ExplosionCustom(worldIn, playerIn, pos.getX() + 0.5, pos.getY() + 0.5 - 8,
+                        pos.getZ() + 0.5, 0.5f);
+//                boom.doExplosion();
+            }
+
             return EnumActionResult.PASS;
         }
         else

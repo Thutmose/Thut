@@ -276,7 +276,7 @@ public class Matrix3
             else
             {
                 z1 = box.maxZ;
-            } // TODO
+            }
             aabbs.set(i, new AxisAlignedBB(x0, y0, z0, x1, y1, z1));
         }
     }
@@ -976,7 +976,6 @@ public class Matrix3
                 {
                     temp1.z = dzmax;
                 }
-                // TODO
             }
             else
             {

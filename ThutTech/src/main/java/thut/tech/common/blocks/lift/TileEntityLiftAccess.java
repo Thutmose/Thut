@@ -33,6 +33,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
 import thut.tech.common.entity.EntityLift;
+import thut.tech.common.handlers.ConfigHandler;
 
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
@@ -183,7 +184,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             if (button == 2)
             {
-                boundMin.x = Math.max(-2, boundMin.x - 1);
+                boundMin.x = Math.max(-ConfigHandler.maxRadius, boundMin.x - 1);
             }
             else if (button == 3)
             {
@@ -191,7 +192,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             }
             else if (button == 6)
             {
-                boundMin.z = Math.max(-2, boundMin.z - 1);
+                boundMin.z = Math.max(-ConfigHandler.maxRadius, boundMin.z - 1);
             }
             else if (button == 7)
             {
@@ -203,7 +204,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             }
             else if (button == 11)
             {
-                boundMax.x = Math.min(2, boundMax.x + 1);
+                boundMax.x = Math.min(ConfigHandler.maxRadius, boundMax.x + 1);
             }
             else if (button == 14)
             {
@@ -211,7 +212,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             }
             else if (button == 15)
             {
-                boundMax.z = Math.min(2, boundMax.z + 1);
+                boundMax.z = Math.min(ConfigHandler.maxRadius, boundMax.z + 1);
             }
             else
             {
@@ -221,7 +222,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 }
                 else if (button == 1 || button == 5 || button == 9 || button == 13)
                 {
-                    boundMax.y = Math.min(5, boundMax.y + 1);
+                    boundMax.y = Math.min(ConfigHandler.maxHeight, boundMax.y + 1);
                 }
             }
         }

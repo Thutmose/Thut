@@ -6,10 +6,12 @@ import com.mojang.authlib.GameProfile;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntitySkull;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class Command extends CommandBase
 {
@@ -72,6 +74,21 @@ public class Command extends CommandBase
             sender.addChatMessage(new TextComponentString("Removed group " + groupName));
             return true;
         }
+        if (args.length == 3 && args[0].equalsIgnoreCase("copyGroup"))
+        {
+            String groupFrom = args[1];
+            Group gFrom = ThutPerms.groupNameMap.get(groupFrom);
+            if (gFrom == null) { throw new CommandException(
+                    "Error, specified Group " + groupFrom + " does not exist."); }
+            String groupTo = args[2];
+            Group gTo = ThutPerms.groupNameMap.get(groupTo);
+            if (gTo == null) { throw new CommandException("Error, specified Group " + groupTo + " does not exist."); }
+            gTo.allowedCommands.clear();
+            gTo.all = gFrom.all;
+            gTo.allowedCommands.addAll(gFrom.allowedCommands);
+            sender.addChatMessage(new TextComponentString("Copied from " + groupFrom + " to " + groupTo));
+            return true;
+        }
         if (args.length == 3 && args[0].equalsIgnoreCase("renameGroup"))
         {
             String groupName = args[1];
@@ -121,27 +138,58 @@ public class Command extends CommandBase
         {
             String groupName = args[1];
             String command = args[2];
-            try
-            {
-                Class<?> cmd = Class.forName(command);
-                if (cmd == null) { throw new CommandException("Error, Command not found."); }
-            }
-            catch (Exception e)
-            {
-                throw new CommandException("Error, Command not found.");
-            }
             boolean enable = Boolean.parseBoolean(args[3]);
             Group g = ThutPerms.groupNameMap.get(groupName);
             if (g == null) { throw new CommandException("Error, Group not found, please create it first."); }
-            if (enable)
+            if (command.equalsIgnoreCase("all"))
             {
-                g.allowedCommands.add(command);
+                g.all = enable;
+                sender.addChatMessage(new TextComponentString("Set all Permission for " + groupName + " to " + enable));
+                return true;
             }
             else
             {
-                g.allowedCommands.remove(command);
+                try
+                {
+                    Class<?> cmd = Class.forName(command);
+                    if (cmd == null) { throw new CommandException("Error, Command not found."); }
+                }
+                catch (Exception e)
+                {
+                    throw new CommandException("Error, Command not found.");
+                }
+                if (enable)
+                {
+                    g.allowedCommands.add(command);
+                }
+                else
+                {
+                    g.allowedCommands.remove(command);
+                }
+                sender.addChatMessage(new TextComponentString("Set Permission for " + groupName + " " + enable));
+                return true;
             }
-            sender.addChatMessage(new TextComponentString("Set Permission for " + groupName + " " + enable));
+        }
+        else if (args.length == 3 && args[0].equalsIgnoreCase("editPerms") && args[2].equals("reset"))
+        {
+            String groupName = args[1];
+            Group g = ThutPerms.groupNameMap.get(groupName);
+            if (g == null) { throw new CommandException("Error, Group not found, please create it first."); }
+            g.allowedCommands.clear();
+            g.all = false;
+            for (ICommand command : FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager()
+                    .getCommands().values())
+            {
+                if (command instanceof CommandBase)
+                {
+                    CommandBase base = (CommandBase) command;
+                    if (base.getRequiredPermissionLevel() <= 0)
+                    {
+                        g.allowedCommands.add(command.getClass().getName());
+                    }
+                }
+            }
+            sender.addChatMessage(new TextComponentString("Reset Permissions for " + groupName));
             return true;
         }
         return false;

@@ -109,6 +109,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 b = Block.getBlockFromItem(lift.getHeldItem(null).getItem());
                 meta = lift.getHeldItem(null).getItemDamage();
             }
+            @SuppressWarnings("deprecation")
             IBlockState iblockstate = b.getStateFromMeta(meta);
             return iblockstate;
         }
@@ -319,6 +320,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     /** Applies a velocity to each of the entities pushing them away from each
      * other. Args: entity */
+    @SuppressWarnings("deprecation")
     @Override
     public void applyEntityCollision(Entity entity)
     {

@@ -5,8 +5,6 @@ import static thut.tech.common.network.PacketPipeline.packetPipeline;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityList;
 import net.minecraft.init.Items;
@@ -31,8 +29,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.api.maths.Matrix3;
-import thut.api.maths.Vector3;
 import thut.core.common.CreativeTabThut;
 import thut.tech.ThutTechReference;
 import thut.tech.common.entity.EntityLift;
@@ -45,6 +41,7 @@ import thut.tech.common.network.PacketPipeline.ServerPacket;
 import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
 import thut.tech.common.tesla.TeslaHandler;
 
+@SuppressWarnings("deprecation")
 @Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, dependencies = ThutTechReference.DEPSTRING, version = ThutTechReference.VERSION, acceptedMinecraftVersions = ThutTechReference.MCVERSIONS)
 public class TechCore
 {
@@ -55,24 +52,6 @@ public class TechCore
     public static TechCore        instance;
 
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
-
-    @SideOnly(Side.CLIENT)
-    /** Draws lines for the edges of the bounding box. */
-    public static void drawOutlinedBoundingBox(Matrix3 box, Vector3 globalOffset, Vector3 localOffset, int colour)
-    {
-        GL11.glDepthMask(false);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glDisable(GL11.GL_CULL_FACE);
-        GL11.glDisable(GL11.GL_BLEND);
-
-        GL11.glPopMatrix();
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glEnable(GL11.GL_LIGHTING);
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glDepthMask(true);
-    }
 
     public static ItemStack getInfoBook()
     {

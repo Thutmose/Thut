@@ -288,7 +288,8 @@ public abstract class ConfigBase extends Configuration
                 String[] vars = update.split("`");
                 int[] toSet = new int[vars.length];
                 for (int i = 0; i < vars.length; i++)
-                    toSet[i] = Integer.parseInt(vars[i]);
+                    toSet[i] = Integer.parseInt(vars[i].trim());
+                field.set(this, toSet);
                 p = get(c.category(), field.getName(), defaultValue);
                 o = field.get(this);
                 defaultValue = (int[]) o;

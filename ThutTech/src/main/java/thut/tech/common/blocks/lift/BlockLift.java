@@ -122,8 +122,6 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     public static final PropertyBool           CURRENT = PropertyBool.create("current");
 
-    public int                                 size    = 5;
-
     public BlockLift()
     {
         super(Material.IRON);

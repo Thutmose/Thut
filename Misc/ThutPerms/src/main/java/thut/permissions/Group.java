@@ -15,6 +15,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 public class Group
 {
     public final String name;
+    boolean             all             = false;
     Set<String>         allowedCommands = Sets.newHashSet();
     Set<UUID>           members         = Sets.newHashSet();
 
@@ -49,6 +50,7 @@ public class Group
             members.appendTag(new NBTTagString(id.toString()));
         }
         tag.setTag("members", members);
+        tag.setBoolean("all", all);
     }
 
     public void readFromNBT(NBTTagCompound tag)
@@ -74,10 +76,11 @@ public class Group
                 e.printStackTrace();
             }
         }
+        all = tag.getBoolean("all");
     }
 
     public boolean canUse(ICommand command)
     {
-        return allowedCommands.contains(command.getClass().getName());
+        return all || allowedCommands.contains(command.getClass().getName());
     }
 }
