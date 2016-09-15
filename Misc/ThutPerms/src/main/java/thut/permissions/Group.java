@@ -57,14 +57,14 @@ public class Group
     {
         NBTTagList list = (NBTTagList) tag.getTag("commands");
         allowedCommands.clear();
-        for (int i = 0; i < list.tagCount(); i++)
+        if (list != null) for (int i = 0; i < list.tagCount(); i++)
         {
             String command = list.getStringTagAt(i);
             allowedCommands.add(command);
         }
         list = (NBTTagList) tag.getTag("members");
         members.clear();
-        for (int i = 0; i < list.tagCount(); i++)
+        if (list != null) for (int i = 0; i < list.tagCount(); i++)
         {
             String id = list.getStringTagAt(i);
             try
@@ -76,7 +76,7 @@ public class Group
                 e.printStackTrace();
             }
         }
-        all = tag.getBoolean("all");
+        if (tag.hasKey("all")) all = tag.getBoolean("all");
     }
 
     public boolean canUse(ICommand command)

@@ -12,7 +12,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
-import thut.api.maths.ExplosionCustom;
+import thut.api.boom.ExplosionCustom;
 import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 

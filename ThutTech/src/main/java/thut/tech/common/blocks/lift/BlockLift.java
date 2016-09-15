@@ -271,8 +271,9 @@ public class BlockLift extends Block implements ITileEntityProvider
             stacks = EntityLift.checkBlocks(worldIn, te, pos);
             if (stacks != null && !worldIn.isRemote && heldItem != null && heldItem.getItem() instanceof ItemLinker)
             {
-                EntityLift.removeBlocks(worldIn, te, pos);
                 EntityLift lift = new EntityLift(worldIn, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                lift.tiles = EntityLift.checkTiles(worldIn, te, pos);
+                EntityLift.removeBlocks(worldIn, te, pos);
                 lift.blocks = stacks;
                 lift.boundMax = te.boundMax.copy();
                 lift.boundMin = te.boundMin.copy();

@@ -3,19 +3,26 @@ package thut.core.common.handlers;
 import java.io.File;
 
 import net.minecraftforge.common.MinecraftForge;
-import thut.api.maths.ExplosionCustom;
+import thut.api.boom.ExplosionCustom;
 import thut.core.common.config.ConfigBase;
 import thut.core.common.config.Configure;
 
 public class ConfigHandler extends ConfigBase
 {
-//    @Configure(category = "items")
-//    private boolean           spout           = false;
-//    @Configure(category = "items")
-//    private boolean           tank            = false;
-    @Configure(category = "misc")
-    private int               explosionRadius = 127;
-//    private static List<Item> items           = new ArrayList<Item>();
+    private static final String BOOMS           = "explosions";
+
+    // @Configure(category = "items")
+    // private boolean spout = false;
+    // @Configure(category = "items")
+    // private boolean tank = false;
+    @Configure(category = BOOMS)
+    private int                 explosionRadius = 127;
+    @Configure(category = BOOMS)
+    private int[]               explosionRate   = { 2000, 10000 };
+    @Configure(category = BOOMS)
+    private boolean             affectAir       = true;
+    @Configure(category = BOOMS)
+    private double              minBlastEffect  = 0.1;
 
     public ConfigHandler()
     {
@@ -34,15 +41,9 @@ public class ConfigHandler extends ConfigBase
     @Override
     protected void applySettings()
     {
-//        if (spout) items.add(new ItemSpout());
-//        if (tank) items.add(new ItemTank());
-//        items.add(new ItemDusts());
-
         ExplosionCustom.MAX_RADIUS = explosionRadius;
-
-//        for (Item item : items)
-//        {
-//            GameRegistry.register(item);
-//        }
+        ExplosionCustom.AFFECTINAIR = affectAir;
+        if (explosionRate.length == 2) ExplosionCustom.MAXPERTICK = explosionRate;
+        ExplosionCustom.MINBLASTDAMAGE = (float) minBlastEffect;
     }
 }

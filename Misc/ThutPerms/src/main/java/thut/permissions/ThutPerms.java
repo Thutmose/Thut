@@ -42,6 +42,7 @@ public class ThutPerms
     protected static HashSet<Group>     groups       = Sets.newHashSet();
 
     protected static Group              initial;
+    protected static Group              mods;
 
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event)
@@ -50,9 +51,14 @@ public class ThutPerms
         {
             initial = new Group("default");
         }
+        if (mods == null)
+        {
+            mods = new Group("mods");
+        }
         event.registerServerCommand(new Command());
         MinecraftForge.EVENT_BUS.register(this);
         loadPerms(event.getServer());
+        mods.all = true;
     }
 
     @SubscribeEvent
@@ -72,6 +78,7 @@ public class ThutPerms
         EntityPlayer entityPlayer = evt.player;
         if (groupIDMap.get(entityPlayer.getUniqueID()) == null)
         {
+            // TODO put them in mods if OP
             initial.members.add(entityPlayer.getUniqueID());
             groupIDMap.put(entityPlayer.getUniqueID(), initial);
             savePerms(FMLCommonHandler.instance().getMinecraftServerInstance());
@@ -115,6 +122,15 @@ public class ThutPerms
                 {
                     groupIDMap.put(id, initial);
                 }
+                dflt = nbttagcompound1.getCompoundTag("mods");
+                name = dflt.getString("name");
+                mods = addGroup(name);
+                groups.remove(mods);
+                mods.readFromNBT(dflt);
+                for (UUID id : mods.members)
+                {
+                    groupIDMap.put(id, mods);
+                }
             }
             catch (FileNotFoundException e)
             {
@@ -148,6 +164,10 @@ public class ThutPerms
                 dflt.setString("name", initial.name);
                 initial.writeToNBT(dflt);
                 nbttagcompound.setTag("default", dflt);
+                dflt = new NBTTagCompound();
+                dflt.setString("name", mods.name);
+                mods.writeToNBT(dflt);
+                nbttagcompound.setTag("mods", dflt);
                 nbttagcompound.setTag("groups", groupTags);
                 NBTTagCompound nbttagcompound1 = new NBTTagCompound();
                 nbttagcompound1.setTag("Data", nbttagcompound);
@@ -180,6 +200,13 @@ public class ThutPerms
         Group group = groupNameMap.get(name);
         group.members.add(id);
         groupIDMap.put(id, group);
+    }
+
+    static Group getGroup(String name)
+    {
+        if (name.equals(initial.name)) return initial;
+        if (name.equals(mods.name)) return mods;
+        return groupNameMap.get(name);
     }
 
     private boolean canUse(ICommand command, EntityPlayer sender)

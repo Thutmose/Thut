@@ -35,13 +35,13 @@ public class Command extends CommandBase
         try
         {
             done = tryEditGroup(server, sender, args);
-            done = done || tryEditPerm(server, sender, args);
+            if (!done) done = done || tryEditPerm(server, sender, args);
+            if (!done) done = done || getInfo(server, sender, args);
         }
         catch (Exception e)
         {
             if (e instanceof CommandException) throw (CommandException) e;
             done = false;
-            e.printStackTrace();
         }
         if (!done)
         {
@@ -58,7 +58,7 @@ public class Command extends CommandBase
         if (args.length == 2 && args[0].equalsIgnoreCase("addGroup"))
         {
             String groupName = args[1];
-            Group g = ThutPerms.groupNameMap.get(groupName);
+            Group g = ThutPerms.getGroup(groupName);
             if (g != null) { throw new CommandException("Error, Group already exists, cannot create again."); }
             g = ThutPerms.addGroup(groupName);
             sender.addChatMessage(new TextComponentString("Created group " + groupName));
@@ -67,7 +67,7 @@ public class Command extends CommandBase
         if (args.length == 2 && args[0].equalsIgnoreCase("removeGroup"))
         {
             String groupName = args[1];
-            Group g = ThutPerms.groupNameMap.get(groupName);
+            Group g = ThutPerms.getGroup(groupName);
             if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
             ThutPerms.groups.remove(g);
             ThutPerms.groupNameMap.remove(groupName);
@@ -77,11 +77,11 @@ public class Command extends CommandBase
         if (args.length == 3 && args[0].equalsIgnoreCase("copyGroup"))
         {
             String groupFrom = args[1];
-            Group gFrom = ThutPerms.groupNameMap.get(groupFrom);
+            Group gFrom = ThutPerms.getGroup(groupFrom);
             if (gFrom == null) { throw new CommandException(
                     "Error, specified Group " + groupFrom + " does not exist."); }
             String groupTo = args[2];
-            Group gTo = ThutPerms.groupNameMap.get(groupTo);
+            Group gTo = ThutPerms.getGroup(groupTo);
             if (gTo == null) { throw new CommandException("Error, specified Group " + groupTo + " does not exist."); }
             gTo.allowedCommands.clear();
             gTo.all = gFrom.all;
@@ -93,9 +93,9 @@ public class Command extends CommandBase
         {
             String groupName = args[1];
             String newName = args[2];
-            Group g = ThutPerms.groupNameMap.get(groupName);
+            Group g = ThutPerms.getGroup(groupName);
             if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
-            Group g1 = ThutPerms.groupNameMap.get(newName);
+            Group g1 = ThutPerms.getGroup(newName);
             if (g1 != null) { throw new CommandException("Error, specified Group already exists."); }
             ThutPerms.groups.remove(g);
             ThutPerms.groupNameMap.remove(groupName);
@@ -103,6 +103,11 @@ public class Command extends CommandBase
             if (g == ThutPerms.initial)
             {
                 ThutPerms.initial = g1;
+                ThutPerms.groups.remove(g1);
+            }
+            else if (g == ThutPerms.mods)
+            {
+                ThutPerms.mods = g1;
                 ThutPerms.groups.remove(g1);
             }
             g1.allowedCommands.addAll(g.allowedCommands);
@@ -117,7 +122,7 @@ public class Command extends CommandBase
         {
             String groupName = args[1];
             String playerName = args[2];
-            Group g = ThutPerms.groupNameMap.get(groupName);
+            Group g = ThutPerms.getGroup(groupName);
             if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
             GameProfile profile = new GameProfile(null, playerName);
             profile = TileEntitySkull.updateGameprofile(profile);
@@ -139,7 +144,7 @@ public class Command extends CommandBase
             String groupName = args[1];
             String command = args[2];
             boolean enable = Boolean.parseBoolean(args[3]);
-            Group g = ThutPerms.groupNameMap.get(groupName);
+            Group g = ThutPerms.getGroup(groupName);
             if (g == null) { throw new CommandException("Error, Group not found, please create it first."); }
             if (command.equalsIgnoreCase("all"))
             {
@@ -173,7 +178,7 @@ public class Command extends CommandBase
         else if (args.length == 3 && args[0].equalsIgnoreCase("editPerms") && args[2].equals("reset"))
         {
             String groupName = args[1];
-            Group g = ThutPerms.groupNameMap.get(groupName);
+            Group g = ThutPerms.getGroup(groupName);
             if (g == null) { throw new CommandException("Error, Group not found, please create it first."); }
             g.allowedCommands.clear();
             g.all = false;
@@ -190,6 +195,77 @@ public class Command extends CommandBase
                 }
             }
             sender.addChatMessage(new TextComponentString("Reset Permissions for " + groupName));
+            return true;
+        }
+        return false;
+    }
+
+    boolean getInfo(MinecraftServer server, ICommandSender sender, String[] args) throws Exception
+    {
+        if (args[0].equalsIgnoreCase("playerGroup"))
+        {
+            String playerName = args[1];
+            GameProfile profile = new GameProfile(null, playerName);
+            profile = TileEntitySkull.updateGameprofile(profile);
+            if (profile.getId() == null) { throw new CommandException("Error, cannot find profile for " + playerName); }
+            Group current = ThutPerms.groupIDMap.get(profile.getId());
+            if (current == null) sender.addChatMessage(new TextComponentString(playerName + " is not in a group"));
+            else sender.addChatMessage(new TextComponentString(playerName + " is currently in " + current.name));
+            return true;
+        }
+        else if (args[0].equalsIgnoreCase("exists"))
+        {
+            String groupName = args[1];
+            Group g = ThutPerms.getGroup(groupName);
+            if (g != null) sender.addChatMessage(new TextComponentString("Group " + groupName + " exists."));
+            else sender.addChatMessage(new TextComponentString("Group " + groupName + "does not exist."));
+            return true;
+        }
+        else if (args[0].equalsIgnoreCase("hasPerms"))
+        {
+            String groupName = args[1];
+            String perm = args[2];
+            Group g = ThutPerms.getGroup(groupName);
+            if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
+            if (g.allowedCommands.contains(perm) || g.all)
+                sender.addChatMessage(new TextComponentString("Group " + groupName + " can use " + perm));
+            else sender.addChatMessage(new TextComponentString("Group " + groupName + " can not use " + perm));
+            return true;
+        }
+        else if (args[0].equalsIgnoreCase("listMembers"))
+        {
+            String groupName = args[1];
+            Group g = ThutPerms.getGroup(groupName);
+            if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
+            sender.addChatMessage(new TextComponentString("Members of Group " + groupName));
+            for (UUID id : g.members)
+            {
+                GameProfile profile = new GameProfile(id, null);
+                profile = server.getMinecraftSessionService().fillProfileProperties(profile, true);
+                sender.addChatMessage(new TextComponentString(profile.getName()));
+            }
+            return true;
+        }
+        else if (args[0].equalsIgnoreCase("listGroups"))
+        {
+            sender.addChatMessage(new TextComponentString("List of existing Groups:"));
+            sender.addChatMessage(new TextComponentString(ThutPerms.initial.name));
+            sender.addChatMessage(new TextComponentString(ThutPerms.mods.name));
+            for (Group g : ThutPerms.groups)
+            {
+                sender.addChatMessage(new TextComponentString(g.name));
+            }
+            return true;
+        }
+        else if (args[0].equalsIgnoreCase("listCommands"))
+        {
+            sender.addChatMessage(new TextComponentString("List of existing commands:"));
+            for (ICommand command : FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager()
+                    .getCommands().values())
+            {
+                String name = command.getCommandName();
+                sender.addChatMessage(new TextComponentString(name + "->" + command.getClass().getName()));
+            }
             return true;
         }
         return false;

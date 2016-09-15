@@ -21,7 +21,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.WorldCache.ChunkCache;
 import thut.api.block.IOwnableTE;
-import thut.api.maths.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 
@@ -280,7 +279,6 @@ public class TickHandler
         if (evt.getWorld().provider.getDimension() == 0)
         {
             blocks.clear();
-            ExplosionCustom.explosions.clear();
         }
         // Remove world cache for dimension
         worldCaches.remove(evt.getWorld().provider.getDimension());

@@ -16,7 +16,7 @@ import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.IFluidContainerItem;
 import thut.api.ThutItems;
-import thut.api.maths.ExplosionCustom;
+import thut.api.boom.ExplosionCustom;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
 
