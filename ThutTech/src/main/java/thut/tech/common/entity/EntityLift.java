@@ -1,5 +1,6 @@
 package thut.tech.common.entity;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -41,6 +42,7 @@ import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
@@ -57,10 +59,9 @@ import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
 import thut.tech.common.items.ItemLinker;
 
-public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData// ,
-                                                                                      // IMultibox
+public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData
 {
-    public static class LiftWorld extends World// implements IBlockAccess
+    public static class LiftWorld extends World
     {
 
         final EntityLift lift;
@@ -77,14 +78,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         public TileEntity getTileEntity(BlockPos pos)
         {
             if (lift.tiles == null) { return null; }
-            int xMin = lift.boundMin.intX();
-            int zMin = lift.boundMin.intZ();
-            int yMin = lift.boundMin.intY();
-            int i = pos.getX() - xMin;
-            int j = pos.getY() - yMin;
-            int k = pos.getZ() - zMin;
+            int i = pos.getX() - MathHelper.floor_double(lift.posX + lift.boundMin.x);
+            int j = pos.getY() - MathHelper.floor_double(lift.posY + lift.boundMin.y);
+            int k = pos.getZ() - MathHelper.floor_double(lift.posZ + lift.boundMin.z);
             if (i >= lift.tiles.length || j >= lift.tiles[0].length || k >= lift.tiles[0][0].length || i < 0 || j < 0
                     || k < 0) { return null; }
+            if (lift.tiles[i][j][k] != null) lift.tiles[i][j][k].setPos(pos);
             return lift.tiles[i][j][k];
         }
 
@@ -98,15 +97,14 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         public IBlockState getBlockState(BlockPos pos)
         {
             int xMin = lift.boundMin.intX();
-            int zMin = lift.boundMin.intZ();
             int yMin = lift.boundMin.intY();
-            int i = pos.getX() - xMin;
-            int j = pos.getY() - yMin;
-            int k = pos.getZ() - zMin;
+            int zMin = lift.boundMin.intZ();
+            int i = pos.getX() - MathHelper.floor_double(lift.posX + lift.boundMin.x);
+            int j = pos.getY() - MathHelper.floor_double(lift.posY + lift.boundMin.y);
+            int k = pos.getZ() - MathHelper.floor_double(lift.posZ + lift.boundMin.z);
             Block b = Blocks.AIR;
 
             if (lift.blocks == null) { return Blocks.AIR.getDefaultState(); }
-
             int meta = 0;
             if (i >= lift.blocks.length || j >= lift.blocks[0].length || k >= lift.blocks[0][0].length || i < 0 || j < 0
                     || k < 0)
@@ -186,20 +184,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
          * is a client world. Flags can be added together. */
         public boolean setBlockState(BlockPos pos, IBlockState newState, int flags)
         {
-            int xMin = lift.boundMin.intX();
-            int zMin = lift.boundMin.intZ();
-            int yMin = lift.boundMin.intY();
-            int i = pos.getX() - xMin;
-            int j = pos.getY() - yMin;
-            int k = pos.getZ() - zMin;
+            int i = pos.getX() - MathHelper.floor_double(lift.posX + lift.boundMin.x);
+            int j = pos.getY() - MathHelper.floor_double(lift.posY + lift.boundMin.y);
+            int k = pos.getZ() - MathHelper.floor_double(lift.posZ + lift.boundMin.z);
             if (lift.blocks == null) return false;
             if (i >= lift.blocks.length || j >= lift.blocks[0].length || k >= lift.blocks[0][0].length || i < 0 || j < 0
                     || k < 0) { return false; }
             Block b = newState.getBlock();
-            lift.blocks[i][k][j] = new ItemStack(b, 1, b.getMetaFromState(newState));
+            lift.blocks[i][j][k] = new ItemStack(b, 1, b.getMetaFromState(newState));
             return false;
         }
-
     }
 
     static final DataParameter<Integer>             DESTINATIONFLOORDW = EntityDataManager
@@ -382,7 +376,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         if (tiles[i][k][j] != null)
                         {
                             tiles[i][k][j].setWorldObj(world);
-                            tiles[i][k][j].setPos(new BlockPos(i + xMin, k + yMin, j + zMin));
+                            tiles[i][k][j].setPos(new BlockPos(i + xMin + posX, k + yMin + posY, j + zMin + posZ));
                             tiles[i][k][j].validate();
                         }
                     }
@@ -809,12 +803,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (hand != EnumHand.MAIN_HAND) return false;
         if (!worldObj.isRemote)
         {
-            int xMin = boundMin.intX();
-            int zMin = boundMin.intZ();
-            int yMin = boundMin.intY();
+            int xMin = MathHelper.floor_double(boundMin.intX() + posX);
+            int zMin = MathHelper.floor_double(boundMin.intZ() + posZ);
+            int yMin = MathHelper.floor_double(boundMin.intY() + posY);
             int sizeX = blocks.length;
             int sizeY = blocks[0].length;
             int sizeZ = blocks[0][0].length;
+            System.out.println(Arrays.deepToString(blocks));
             for (int i = 0; i < sizeX; i++)
                 for (int k = 0; k < sizeY; k++)
                     for (int j = 0; j < sizeZ; j++)
@@ -825,9 +820,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         IBlockState state = this.getLiftWorld().getBlockState(pos);
                         boolean activate = state.getBlock().onBlockActivated(this.getLiftWorld(), pos, state, player,
                                 hand, null, EnumFacing.DOWN, 0, 0, 0);
-                        System.out.println(activate + " " + state);
+                        System.out.println(activate + " " + state + " " + tile);
 
-                        // TODO
                     }
             PacketHandler.sendEntityUpdate(this);
         }

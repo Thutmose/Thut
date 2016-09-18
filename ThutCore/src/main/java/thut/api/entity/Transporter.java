@@ -1,6 +1,7 @@
 package thut.api.entity;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -89,18 +90,29 @@ public class Transporter
     {
         if (dimension != entity.dimension)
         {
-            return teleportToDimension(entity, t2, dimension, destBlocked);
+            entity = teleportToDimension(entity, t2, dimension);
         }
         else if (entity instanceof EntityPlayer)
         {
             entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
-            return entity;
+        }
+        if (entity instanceof EntityPlayerMP)
+        {
+            EntityPlayerMP playerIn = (EntityPlayerMP) entity;
+            WorldServer world = entity.getServer().worldServerForDimension(dimension);
+            EntityTracker tracker = world.getEntityTracker();
+            if(tracker.getTrackingPlayers(playerIn).getClass().getSimpleName().equals("EmptySet"))
+            {
+                tracker.trackEntity(playerIn);
+                tracker.updateVisibility(playerIn);
+                System.err.println("Readded "+playerIn);
+            }
         }
         return entity;
     }
 
     // From RFTools.
-    private static Entity teleportToDimension(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
+    private static Entity teleportToDimension(Entity entity, Vector3 t2, int dimension)
     {
         int oldDimension = entity.worldObj.provider.getDimension();
         EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;

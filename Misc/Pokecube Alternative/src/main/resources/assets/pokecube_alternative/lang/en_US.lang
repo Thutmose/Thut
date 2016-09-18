@@ -1,0 +1,12 @@
+#
+# Messages
+pokecubeextras.pokebelt.useBelt=Please use the pokebelt to manage your pokemobs!
+pokecubeextras.pokebelt.inventoryButton=Pokemon Inventory
+pokecubeextras.pokebelt.normalInventoryButton=Normal Inventory
+pokecubeextras.pokebelt.firstslotreserved=The first slot of your inventory is reserved for your pokemon!
+#
+# Keys
+keybind.nextpoke=Next Pokemon
+keybind.prevpoke=Previous Pokemon
+keybind.togglebarcontrol= Toggle Bar Control (Hold Down)
+key.categories.pokecubeextras=Pokecube Extras

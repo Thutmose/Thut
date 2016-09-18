@@ -1,19 +1,18 @@
-package thut.essentials.commands;
+package thut.essentials.commands.warps;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
-import thut.essentials.ThutEssentials;
+import thut.essentials.util.BaseCommand;
+import thut.essentials.util.WarpManager;
 
-public class Fly extends CommandBase
+public class Warps extends BaseCommand
 {
 
-    @Override
-    public String getCommandName()
+    public Warps()
     {
-        return ThutEssentials.commands.get("fly").get(0);
+        super("warps", 0);
     }
 
     @Override
@@ -26,11 +25,7 @@ public class Fly extends CommandBase
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
         EntityPlayer player = getCommandSenderAsPlayer(sender);
-        player.capabilities.allowFlying = !player.capabilities.allowFlying;
-        if (!player.capabilities.allowFlying)
-        {
-            player.capabilities.isFlying = false;
-        }
-        player.sendPlayerAbilities();
+        WarpManager.sendWarpsList(player);
     }
+
 }

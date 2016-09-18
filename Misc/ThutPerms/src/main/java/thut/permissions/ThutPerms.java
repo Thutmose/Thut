@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
@@ -14,35 +15,62 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerList;
+import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Optional;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 @Mod(modid = ThutPerms.MODID, name = "Thut Permissions", version = ThutPerms.VERSION, dependencies = "", updateJSON = ThutPerms.UPDATEURL, acceptableRemoteVersions = "*", acceptedMinecraftVersions = ThutPerms.MCVERSIONS)
 public class ThutPerms
 {
-    public static final String          MODID        = "thutperms";
-    public static final String          VERSION      = "0.0.1";
-    public static final String          UPDATEURL    = "";
+    public static final String          MODID         = "thutperms";
+    public static final String          VERSION       = "0.1.1";
+    public static final String          UPDATEURL     = "";
 
-    public final static String          MCVERSIONS   = "[1.9.4]";
+    public final static String          MCVERSIONS    = "[1.9.4]";
 
-    protected static Map<UUID, Group>   groupIDMap   = Maps.newHashMap();
-    protected static Map<String, Group> groupNameMap = Maps.newHashMap();
-    protected static HashSet<Group>     groups       = Sets.newHashSet();
+    protected static Map<UUID, Group>   groupIDMap    = Maps.newHashMap();
+    protected static Map<String, Group> groupNameMap  = Maps.newHashMap();
+    protected static HashSet<Group>     groups        = Sets.newHashSet();
 
     protected static Group              initial;
     protected static Group              mods;
+
+    static boolean                      allCommandUse = false;
+    static File                         configFile    = null;
+
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent e)
+    {
+        Configuration config = new Configuration(configFile = e.getSuggestedConfigurationFile());
+        config.load();
+        allCommandUse = config.getBoolean("allCommandUse", Configuration.CATEGORY_GENERAL, false,
+                "Can any player use OP commands if their group is allowed to?");
+        config.save();
+    }
+
+    @Optional.Method(modid = "worldedit")
+    @EventHandler
+    public void serverAboutToStart(FMLServerStartingEvent event)
+    {
+        com.sk89q.worldedit.forge.ForgeWorldEdit.inst.setPermissionsProvider(new WorldEditPermissions());
+    }
 
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event)
@@ -59,11 +87,26 @@ public class ThutPerms
         MinecraftForge.EVENT_BUS.register(this);
         loadPerms(event.getServer());
         mods.all = true;
+
+        if (allCommandUse)
+        {
+            Field f = ReflectionHelper.findField(PlayerList.class, "commandsAllowedForAll", "field_72407_n", "t");
+            f.setAccessible(true);
+            try
+            {
+                f.set(event.getServer().getPlayerList(), true);
+            }
+            catch (IllegalArgumentException | IllegalAccessException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     @SubscribeEvent
     void commandUseEvent(CommandEvent event)
     {
+        if (!event.getSender().getServer().isDedicatedServer()) return;
         if (event.getSender() instanceof EntityPlayer && !canUse(event.getCommand(), (EntityPlayer) event.getSender()))
         {
             event.getSender().addChatMessage(new TextComponentString(
@@ -72,16 +115,39 @@ public class ThutPerms
         }
     }
 
+    @Optional.Method(modid = "thutessentials")
+    @SubscribeEvent
+    public void NameEvent(thut.essentials.events.NameEvent evt)
+    {
+        Group g = ThutPerms.groupIDMap.get(evt.toName.getUniqueID());
+        if (g == null) return;
+        String name = evt.getName();
+        if (!g.prefix.isEmpty()) name = g.prefix + " " + name;
+        if (!g.suffix.isEmpty()) name = name + " " + g.suffix;
+        evt.setName(name);
+    }
+
     @SubscribeEvent
     public void PlayerLoggin(PlayerLoggedInEvent evt)
     {
         EntityPlayer entityPlayer = evt.player;
         if (groupIDMap.get(entityPlayer.getUniqueID()) == null)
         {
-            // TODO put them in mods if OP
-            initial.members.add(entityPlayer.getUniqueID());
-            groupIDMap.put(entityPlayer.getUniqueID(), initial);
-            savePerms(FMLCommonHandler.instance().getMinecraftServerInstance());
+            UserListOpsEntry userentry = ((EntityPlayerMP) entityPlayer).mcServer.getPlayerList().getOppedPlayers()
+                    .getEntry(entityPlayer.getGameProfile());
+            if (userentry != null && userentry.getPermissionLevel() >= 4)
+            {
+                mods.members.add(entityPlayer.getUniqueID());
+                groupIDMap.put(entityPlayer.getUniqueID(), mods);
+                savePerms(FMLCommonHandler.instance().getMinecraftServerInstance());
+            }
+            else
+            {
+                initial.members.add(entityPlayer.getUniqueID());
+                groupIDMap.put(entityPlayer.getUniqueID(), initial);
+                savePerms(FMLCommonHandler.instance().getMinecraftServerInstance());
+            }
+            entityPlayer.refreshDisplayName();
         }
     }
 

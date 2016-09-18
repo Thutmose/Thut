@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import thut.tech.common.entity.EntityLift;
@@ -51,12 +52,10 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
         {
             renderBase(te, 1, x, y, z);
         }
-
     }
 
     private void renderBase(Entity te, float scale, double x, double y, double z)
     {
-
         try
         {
             EntityLift lift = (EntityLift) te;
@@ -64,12 +63,12 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
             GL11.glTranslated(x, y, z);
             GL11.glScaled(0.999, 0.999, 0.999);
             MutableBlockPos pos = new MutableBlockPos();
-            int xMin = lift.boundMin.intX();
-            int zMin = lift.boundMin.intZ();
-            int xMax = lift.boundMax.intX();
-            int zMax = lift.boundMax.intZ();
-            int yMin = lift.boundMin.intY();
-            int yMax = lift.boundMax.intY();
+            int xMin = MathHelper.floor_double(lift.boundMin.intX() + lift.posX);
+            int zMin = MathHelper.floor_double(lift.boundMin.intZ() + lift.posZ);
+            int xMax = MathHelper.floor_double(lift.boundMax.intX() + lift.posX);
+            int zMax = MathHelper.floor_double(lift.boundMax.intZ() + lift.posZ);
+            int yMin = MathHelper.floor_double(lift.boundMin.intY() + lift.posY);
+            int yMax = MathHelper.floor_double(lift.boundMax.intY() + lift.posY);
 
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
@@ -95,7 +94,7 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
         if (old)
         {
             GL11.glPushMatrix();
-            GL11.glTranslated(pos.getX(), pos.getY() + 0.5, pos.getZ());
+            GL11.glTranslated(pos.getX() - lift.posX + 0.5, pos.getY() + 0.5 - lift.posY, pos.getZ() - lift.posZ + 0.5);
             if (iblockstate.getMaterial() != Material.AIR)
             {
                 BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
@@ -120,6 +119,8 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
         }
         else
         {
+            GL11.glPushMatrix();
+            GL11.glTranslated(pos.getX() - lift.posX + 0.5, pos.getY() + 0.5 - lift.posY, pos.getZ() - lift.posZ + 0.5);
             b.begin(7, DefaultVertexFormats.BLOCK);
             b.setTranslation(-0.5, 0, -0.5);
             int i1 = lift.getBrightnessForRender(0);
@@ -130,6 +131,7 @@ public class RenderLift<T extends EntityLivingBase> extends RenderLivingBase<T>
             BlockRendererDispatcher blockrenderer = Minecraft.getMinecraft().getBlockRendererDispatcher();
             blockrenderer.renderBlock(iblockstate, pos, lift.getLiftWorld(), b);
             t.draw();
+            GL11.glPopMatrix();
         }
     }
 

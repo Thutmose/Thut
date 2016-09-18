@@ -11,10 +11,12 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import thut.api.TickHandler;
 import thut.api.maths.Cruncher;
 import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
+import thut.core.common.commands.ConfigCommand;
 import thut.core.common.handlers.ConfigHandler;
 import thut.reference.ThutCoreReference;
 
@@ -34,8 +36,8 @@ public class ThutCore
     public static Block[]         blocks;
     public static Item[]          items;
 
-    public static Biome    volcano;
-    public static Biome    chalk;
+    public static Biome           volcano;
+    public static Biome           chalk;
 
     // Configuration Handler that handles the config file
     public ConfigHandler          config;
@@ -68,5 +70,11 @@ public class ThutCore
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new TickHandler());
         new Cruncher();
+    }
+
+    @EventHandler
+    public void serverLoad(FMLServerStartingEvent event)
+    {
+        event.registerServerCommand(new ConfigCommand());
     }
 }

@@ -22,7 +22,7 @@ public class ConfigHandler extends ConfigBase
     @Configure(category = BOOMS)
     private boolean             affectAir       = true;
     @Configure(category = BOOMS)
-    private double              minBlastEffect  = 0.1;
+    private double              minBlastEffect  = 0.25;
 
     public ConfigHandler()
     {

@@ -82,7 +82,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             if (appearance.tex != null && appearance.tex.DEF != null)
             {
                 texName = appearance.tex.DEF.substring(3);
-                texName = texName.substring(0, texName.lastIndexOf("_png"));
+                if (texName.contains("_png")) texName = texName.substring(0, texName.lastIndexOf("_png"));
             }
             else
             {

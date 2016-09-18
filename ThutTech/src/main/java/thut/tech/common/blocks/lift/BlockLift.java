@@ -268,6 +268,7 @@ public class BlockLift extends Block implements ITileEntityProvider
         {
             ItemStack[][][] stacks;
             TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+            if (te == null) return false;
             stacks = EntityLift.checkBlocks(worldIn, te, pos);
             if (stacks != null && !worldIn.isRemote && heldItem != null && heldItem.getItem() instanceof ItemLinker)
             {

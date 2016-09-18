@@ -1,3 +1,3 @@
 cd "%~dp0\ThutCore"
-gradlew build
+gradlew clean build
 pause

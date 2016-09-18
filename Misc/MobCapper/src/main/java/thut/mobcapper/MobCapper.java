@@ -6,12 +6,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityOwnable;
 import net.minecraft.entity.IMerchant;
-import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -27,12 +26,12 @@ public class MobCapper
 {
     public static final String MODID      = "mobcapper";
     public static final String VERSION    = "1.0.0";
-    public final static String MCVERSIONS = "[1.8.8,1.8.9]";
+    public final static String MCVERSIONS = "[1.9.4]";
 
     @Mod.Instance("MobCapper")
-    public static MobCapper instance;
+    public static MobCapper    instance;
 
-    Config conf;
+    Config                     conf;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
@@ -45,23 +44,23 @@ public class MobCapper
     @SubscribeEvent
     public void specialEvent(LivingSpawnEvent evt)
     {
-        if (evt.world.isRemote) return;
-        if (evt.entity instanceof EntityLivingBase && !(evt.entity instanceof EntityPlayer))
+        if (evt.getWorld().isRemote) return;
+        if (evt.getEntity() instanceof EntityLivingBase && !(evt.getEntity() instanceof EntityPlayer))
         {
-            boolean shouldCull = (evt.entity instanceof IMob);
-            shouldCull = shouldCull || (evt.entity instanceof IAnimals);
-            shouldCull = shouldCull && !(evt.entity instanceof IMerchant);
-            shouldCull = shouldCull && !(evt.entity instanceof IBossDisplayData);
-            boolean tameable = evt.entity instanceof EntityTameable;
+            boolean shouldCull = (evt.getEntity() instanceof IMob);
+            shouldCull = shouldCull || (evt.getEntity() instanceof IAnimals);
+            shouldCull = shouldCull && !(evt.getEntity() instanceof IMerchant);
+            shouldCull = shouldCull && (evt.getEntity().isNonBoss());
+            boolean tameable = evt.getEntity() instanceof EntityTameable;
 
             if (tameable || !shouldCull)
             {
                 if (!tameable) return;
-                EntityTameable tame = (EntityTameable) evt.entity;
+                EntityTameable tame = (EntityTameable) evt.getEntity();
                 if (tame.isTamed()) { return; }
             }
-            World world = evt.world;
-            AxisAlignedBB box = new AxisAlignedBB(evt.x, evt.y, evt.z, evt.x, evt.y, evt.z);
+            World world = evt.getWorld();
+            AxisAlignedBB box = new AxisAlignedBB(evt.getX(), evt.getY(), evt.getZ(), evt.getX(), evt.getY(), evt.getZ());
             List<Entity> l;
             List<EntityPlayer> l2 = world.getEntitiesWithinAABB(EntityPlayer.class,
                     box.expand(Config.number2, Config.number2, Config.number2));
@@ -69,7 +68,7 @@ public class MobCapper
             boolean player = !l2.isEmpty();
             if (player)
             {
-                l = world.getEntitiesWithinAABB(evt.entity.getClass(),
+                l = world.getEntitiesWithinAABB(evt.getEntity().getClass(),
                         box.expand(Config.number2, Config.number2, Config.number2));
             }
             else
@@ -90,31 +89,31 @@ public class MobCapper
     @SubscribeEvent
     public void joinEvent(EntityJoinWorldEvent evt)
     {
-        if (evt.world.isRemote) return;
-        if (evt.entity instanceof EntityLivingBase && !(evt.entity instanceof EntityPlayer))
+        if (evt.getWorld().isRemote) return;
+        if (evt.getEntity() instanceof EntityLivingBase && !(evt.getEntity() instanceof EntityPlayer))
         {
-            boolean shouldCull = (evt.entity instanceof IMob);
-            shouldCull = shouldCull || (evt.entity instanceof IAnimals);
-            shouldCull = shouldCull && !(evt.entity instanceof IMerchant);
-            shouldCull = shouldCull && !(evt.entity instanceof IBossDisplayData);
-            boolean tameable = evt.entity instanceof EntityTameable;
-            boolean ownable = evt.entity instanceof IEntityOwnable;
+            boolean shouldCull = (evt.getEntity() instanceof IMob);
+            shouldCull = shouldCull || (evt.getEntity() instanceof IAnimals);
+            shouldCull = shouldCull && !(evt.getEntity() instanceof IMerchant);
+            shouldCull = shouldCull && (evt.getEntity().isNonBoss());
+            boolean tameable = evt.getEntity() instanceof EntityTameable;
+            boolean ownable = evt.getEntity() instanceof IEntityOwnable;
             if (tameable || !shouldCull)
             {
                 if (!tameable) return;
-                EntityTameable tame = (EntityTameable) evt.entity;
+                EntityTameable tame = (EntityTameable) evt.getEntity();
                 if (tame.isTamed()) { return; }
             }
             if (ownable || !shouldCull)
             {
                 if (!ownable) return;
-                IEntityOwnable tame = (IEntityOwnable) evt.entity;
+                IEntityOwnable tame = (IEntityOwnable) evt.getEntity();
                 if (tame.getOwner() != null) { return; }
             }
 
-            World world = evt.world;
-            AxisAlignedBB box = new AxisAlignedBB(evt.entity.posX, evt.entity.posY, evt.entity.posZ, evt.entity.posX,
-                    evt.entity.posY, evt.entity.posZ);
+            World world = evt.getWorld();
+            AxisAlignedBB box = new AxisAlignedBB(evt.getEntity().posX, evt.getEntity().posY, evt.getEntity().posZ,
+                    evt.getEntity().posX, evt.getEntity().posY, evt.getEntity().posZ);
             List<? extends Entity> l;
             List<EntityPlayer> l2 = world.getEntitiesWithinAABB(EntityPlayer.class,
                     box.expand(Config.number2, Config.number2, Config.number2));
@@ -122,7 +121,7 @@ public class MobCapper
             boolean player = !l2.isEmpty();
             if (player)
             {
-                l = world.getEntitiesWithinAABB(evt.entity.getClass(),
+                l = world.getEntitiesWithinAABB(evt.getEntity().getClass(),
                         box.expand(Config.number2, Config.number2, Config.number2));
             }
             else

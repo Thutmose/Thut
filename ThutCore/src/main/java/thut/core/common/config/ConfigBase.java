@@ -216,7 +216,7 @@ public abstract class ConfigBase extends Configuration
             removeCategory(cat);
     }
 
-    public void updateField(Field field, String update) throws Exception
+    public void updateField(Field field, Object update) throws Exception
     {
         load();
         Property p = null;
@@ -224,7 +224,7 @@ public abstract class ConfigBase extends Configuration
         if ((field.getType() == Long.TYPE) || (field.getType() == Long.class))
         {
             long defaultValue = field.getLong(defaults);
-            field.set(this, Long.parseLong(update));
+            field.set(this, Long.parseLong((String) update));
             p = get(c.category(), field.getName(), (int) defaultValue);
             defaultValue = field.getLong(this);
             p.set(defaultValue);
@@ -240,7 +240,7 @@ public abstract class ConfigBase extends Configuration
         else if ((field.getType() == Integer.TYPE) || (field.getType() == Integer.class))
         {
             int defaultValue = field.getInt(defaults);
-            field.set(this, Integer.parseInt(update));
+            field.set(this, Integer.parseInt((String) update));
             p = get(c.category(), field.getName(), defaultValue);
             defaultValue = field.getInt(this);
             p.set(defaultValue);
@@ -248,7 +248,7 @@ public abstract class ConfigBase extends Configuration
         else if ((field.getType() == Float.TYPE) || (field.getType() == Float.class))
         {
             float defaultValue = field.getFloat(defaults);
-            field.set(this, Float.parseFloat(update));
+            field.set(this, Float.parseFloat((String) update));
             p = get(c.category(), field.getName(), defaultValue);
             defaultValue = field.getFloat(this);
             p.set(defaultValue);
@@ -256,7 +256,7 @@ public abstract class ConfigBase extends Configuration
         else if ((field.getType() == Double.TYPE) || (field.getType() == Double.class))
         {
             double defaultValue = field.getDouble(defaults);
-            field.set(this, Double.parseDouble(update));
+            field.set(this, Double.parseDouble((String) update));
             p = get(c.category(), field.getName(), defaultValue);
             defaultValue = field.getDouble(this);
             p.set(defaultValue);
@@ -264,7 +264,7 @@ public abstract class ConfigBase extends Configuration
         else if ((field.getType() == Boolean.TYPE) || (field.getType() == Boolean.class))
         {
             boolean defaultValue = field.getBoolean(defaults);
-            field.set(this, Boolean.parseBoolean(update));
+            field.set(this, Boolean.parseBoolean((String) update));
             p = get(c.category(), field.getName(), defaultValue);
             defaultValue = field.getBoolean(this);
             p.set(defaultValue);
@@ -275,7 +275,7 @@ public abstract class ConfigBase extends Configuration
             if (o instanceof String[])
             {
                 String[] defaultValue = (String[]) o;
-                String[] vars = update.split("``");
+                String[] vars = update instanceof String ? ((String) update).split("``") : (String[]) update;
                 field.set(this, vars);
                 p = get(c.category(), field.getName(), defaultValue);
                 o = field.get(this);
@@ -285,10 +285,19 @@ public abstract class ConfigBase extends Configuration
             else if (o instanceof int[])
             {
                 int[] defaultValue = (int[]) o;
-                String[] vars = update.split("`");
-                int[] toSet = new int[vars.length];
-                for (int i = 0; i < vars.length; i++)
-                    toSet[i] = Integer.parseInt(vars[i].trim());
+                String[] vars = update instanceof String ? ((String) update).split("``")
+                        : update instanceof String[] ? (String[]) update : null;
+                int[] toSet = null;
+                if (vars == null)
+                {
+                    toSet = (int[]) update;
+                }
+                else
+                {
+                    toSet = new int[vars.length];
+                    for (int i = 0; i < vars.length; i++)
+                        toSet[i] = Integer.parseInt(vars[i].trim());
+                }
                 field.set(this, toSet);
                 p = get(c.category(), field.getName(), defaultValue);
                 o = field.get(this);
