@@ -28,11 +28,11 @@ public class KeyHandler
     public static void init()
     {
         nextPoke = new KeyBinding(I18n.format("keybind.nextpoke"), Keyboard.KEY_DOWN,
-                I18n.format("key.categories.pokecubeextras"));
+                I18n.format("key.categories.pokecube_alternative"));
         prevPoke = new KeyBinding(I18n.format("keybind.prevpoke"), Keyboard.KEY_UP,
-                I18n.format("key.categories.pokecubeextras"));
-        toggleBarControl = new KeyBinding(I18n.format("keybind.togglebarcontrol"), Keyboard.KEY_LMENU,
-                I18n.format("key.categories.pokecubeextras"));
+                I18n.format("key.categories.pokecube_alternative"));
+        toggleBarControl = new KeyBinding(I18n.format("keybind.togglebarcontrol"), Keyboard.KEY_LCONTROL,
+                I18n.format("key.categories.pokecube_alternative"));
         ClientRegistry.registerKeyBinding(nextPoke);
         ClientRegistry.registerKeyBinding(prevPoke);
         ClientRegistry.registerKeyBinding(toggleBarControl);

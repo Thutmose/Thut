@@ -410,6 +410,19 @@ public class Command extends CommandBase
             }
             return true;
         }
+        else if (args[0].equalsIgnoreCase("listPerms"))
+        {
+            String groupName = args[1];
+            Group g = ThutPerms.getGroup(groupName);
+            if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
+            sender.addChatMessage(new TextComponentString("List of allowed commands:"));
+            for (String s : g.allowedCommands)
+            {
+                sender.addChatMessage(new TextComponentString(s));
+            }
+            sender.addChatMessage(new TextComponentString("all set to: " + g.all));
+            return true;
+        }
         return false;
     }
 }

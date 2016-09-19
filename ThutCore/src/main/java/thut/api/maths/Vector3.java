@@ -739,6 +739,7 @@ public class Vector3
     {
 
         IBlockState state = getBlockState(worldMap);
+        if (state == null) return true;
         Block block = state.getBlock();
 
         if (state.isNormalCube()) return false;

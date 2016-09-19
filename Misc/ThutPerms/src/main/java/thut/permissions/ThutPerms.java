@@ -36,24 +36,25 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-@Mod(modid = ThutPerms.MODID, name = "Thut Permissions", version = ThutPerms.VERSION, dependencies = "", updateJSON = ThutPerms.UPDATEURL, acceptableRemoteVersions = "*", acceptedMinecraftVersions = ThutPerms.MCVERSIONS)
+@Mod(modid = ThutPerms.MODID, name = "Thut Permissions", version = ThutPerms.VERSION, dependencies = "after:worldedit", updateJSON = ThutPerms.UPDATEURL, acceptableRemoteVersions = "*", acceptedMinecraftVersions = ThutPerms.MCVERSIONS)
 public class ThutPerms
 {
-    public static final String          MODID         = "thutperms";
-    public static final String          VERSION       = "0.1.1";
-    public static final String          UPDATEURL     = "";
+    public static final String          MODID            = "thutperms";
+    public static final String          VERSION          = "0.1.1";
+    public static final String          UPDATEURL        = "";
 
-    public final static String          MCVERSIONS    = "[1.9.4]";
+    public final static String          MCVERSIONS       = "[1.9.4]";
 
-    protected static Map<UUID, Group>   groupIDMap    = Maps.newHashMap();
-    protected static Map<String, Group> groupNameMap  = Maps.newHashMap();
-    protected static HashSet<Group>     groups        = Sets.newHashSet();
+    protected static Map<UUID, Group>   groupIDMap       = Maps.newHashMap();
+    protected static Map<String, Group> groupNameMap     = Maps.newHashMap();
+    protected static HashSet<Group>     groups           = Sets.newHashSet();
 
     protected static Group              initial;
     protected static Group              mods;
+    WorldEditPermissions                worldEditSupport = new WorldEditPermissions();
 
-    static boolean                      allCommandUse = false;
-    static File                         configFile    = null;
+    static boolean                      allCommandUse    = false;
+    static File                         configFile       = null;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
@@ -63,13 +64,14 @@ public class ThutPerms
         allCommandUse = config.getBoolean("allCommandUse", Configuration.CATEGORY_GENERAL, false,
                 "Can any player use OP commands if their group is allowed to?");
         config.save();
+
     }
 
     @Optional.Method(modid = "worldedit")
     @EventHandler
     public void serverAboutToStart(FMLServerStartingEvent event)
     {
-        com.sk89q.worldedit.forge.ForgeWorldEdit.inst.setPermissionsProvider(new WorldEditPermissions());
+        com.sk89q.worldedit.forge.ForgeWorldEdit.inst.setPermissionsProvider(worldEditSupport);
     }
 
     @EventHandler

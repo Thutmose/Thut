@@ -1,6 +1,10 @@
 package pokecube.alternative.client.gui;
 
+import java.util.Set;
+
 import org.lwjgl.input.Mouse;
+
+import com.google.common.collect.Sets;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -19,6 +23,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class GuiEvents
 {
+    public static Set<String> whitelistedGuis = Sets.newHashSet();
 
     @SideOnly(value = Side.CLIENT)
     @SubscribeEvent
@@ -60,7 +65,15 @@ public class GuiEvents
     {
         if (event.getGui() == gui) return;
         // if (event.getGui() != null) return;
-        if (event.getGui() instanceof GuiContainer)
+
+        if (!whitelistedGuis.contains("pokecube.core.client.gui.blocks.GuiHealTable"))
+        {
+            whitelistedGuis.add("pokecube.core.client.gui.blocks.GuiHealTable");
+            whitelistedGuis.add("pokecube.core.client.gui.blocks.GuiPC");
+            whitelistedGuis.add("pokecube.core.client.gui.blocks.GuiTradingTable");
+        }
+
+        if (event.getGui() instanceof GuiContainer && whitelistedGuis.contains(event.getGui().getClass().getName()))
         {
             if (event.getGui() != lastcontainer)
             {
@@ -109,7 +122,6 @@ public class GuiEvents
             {
                 try
                 {
-                    gui.handleKeyboardInput();
                 }
                 catch (Exception e)
                 {

@@ -323,26 +323,14 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     int                        passengertime = 10;
     boolean                    first         = true;
     Random                     r             = new Random();
-
     public UUID                id            = UUID.randomUUID();
     public UUID                owner;
-
     public double              prevFloorY    = 0;
     public double              prevFloor     = 0;
-
     public boolean             called        = false;
     TileEntityLiftAccess       current;
-
-    Matrix3                    mainBox       = new Matrix3();
-    Matrix3                    tempBox       = new Matrix3();
-
     public List<AxisAlignedBB> blockBoxes    = Lists.newArrayList();
     public int[]               floors        = new int[64];
-    Matrix3                    base          = new Matrix3();
-
-    Matrix3                    top           = new Matrix3();
-    Matrix3                    wall1         = new Matrix3();
-
     public ItemStack[][][]     blocks        = null;
     public TileEntity[][][]    tiles         = null;
 

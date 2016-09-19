@@ -9,6 +9,7 @@ import com.google.common.io.Files;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -68,11 +69,38 @@ public class EventHandlerCommon
         int slotIndex = event.getEntityPlayer().inventory.currentItem;
         if (slotIndex != 0)
         {
-            if (PokecubeManager.isFilled(item) == true)
+            if (PokecubeManager.isFilled(item))
             {
                 if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
                 {
-                    player.addChatMessage(new TextComponentString(I18n.format(Reference.MODID + ".pokebelt.useBelt")));
+                    IBeltCapability cap = player.getCapability(BELTAI_CAP, null);
+                    boolean toBelt = false;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        if (cap.getCube(i) == null)
+                        {
+                            cap.setCube(i, item);
+                            player.inventory.setInventorySlotContents(slotIndex, null);
+                            syncPokemon(player);
+                            toBelt = true;
+                            break;
+                        }
+                    }
+                    if(toBelt)
+                    {
+                        player.addChatMessage(new TextComponentString(I18n.format(Reference.MODID + ".pokebelt.tobelt")));
+                    }
+                    else
+                    {
+                        player.addChatMessage(new TextComponentString(I18n.format(Reference.MODID + ".pokebelt.useBelt")));
+                        EntityItem entityitem = player.dropItem(item, false);
+                        if (entityitem != null)
+                        {
+                            entityitem.setNoPickupDelay();
+                            entityitem.setOwner(player.getName());
+                        }
+                        player.inventory.setInventorySlotContents(slotIndex, null);
+                    }
                     event.setCanceled(true);
                 }
             }
