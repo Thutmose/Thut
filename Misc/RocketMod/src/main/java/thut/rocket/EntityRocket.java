@@ -1,6 +1,5 @@
 package thut.rocket;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -18,6 +17,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -80,9 +80,6 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         @Override
         public IBlockState getBlockState(BlockPos pos)
         {
-            int xMin = lift.boundMin.getX();
-            int yMin = lift.boundMin.getY();
-            int zMin = lift.boundMin.getZ();
             int i = pos.getX() - MathHelper.floor_double(lift.posX + lift.boundMin.getX());
             int j = pos.getY() - MathHelper.floor_double(lift.posY + lift.boundMin.getY());
             int k = pos.getZ() - MathHelper.floor_double(lift.posZ + lift.boundMin.getZ());
@@ -101,11 +98,6 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
                 if (stack == null || stack.getItem() == null) return Blocks.AIR.getDefaultState();
                 b = Block.getBlockFromItem(stack.getItem());
                 meta = stack.getItemDamage();
-            }
-            if (i + xMin == 0 && k + zMin == 0 && j + yMin == 0 && lift.getHeldItem(null) != null)
-            {
-                b = Block.getBlockFromItem(lift.getHeldItem(null).getItem());
-                meta = lift.getHeldItem(null).getItemDamage();
             }
             @SuppressWarnings("deprecation")
             IBlockState iblockstate = b.getStateFromMeta(meta);
@@ -192,6 +184,18 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         return TileEntity.create(tag);
     }
 
+    public static EntityRocket makeRocket(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
+    {
+        EntityRocket rocket = new EntityRocket(worldObj, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        rocket.blocks = checkBlocks(worldObj, min, max, pos);
+        rocket.tiles = checkTiles(worldObj, min, max, pos);
+        rocket.boundMin = min;
+        rocket.boundMax = max;
+        removeBlocks(worldObj, min, max, pos);
+        worldObj.spawnEntityInWorld(rocket);
+        return rocket;
+    }
+
     public static void removeBlocks(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
     {
         int xMin = min.getX();
@@ -204,7 +208,10 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
             for (int j = yMin; j <= yMax; j++)
                 for (int k = zMin; k <= zMax; k++)
                 {
-                    worldObj.setBlockToAir(pos.add(i, j, k));
+                    BlockPos temp = pos.add(i, j, k);
+                    TileEntity tile = worldObj.getTileEntity(temp);
+                    if (tile != null) tile.invalidate();
+                    worldObj.setBlockState(temp, Blocks.AIR.getDefaultState());
                 }
     }
 
@@ -223,7 +230,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
                 {
                     IBlockState state = worldObj.getBlockState(pos.add(i, j, k));
                     Block b = state.getBlock();
-                    ret[i - xMin][k - yMin][j - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
+                    ret[i - xMin][j - yMin][k - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
                 }
         return ret;
     }
@@ -250,7 +257,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
                         {
                             NBTTagCompound tag = new NBTTagCompound();
                             tag = old.writeToNBT(tag);
-                            ret[i - xMin][k - yMin][j - zMin] = makeTile(tag);
+                            ret[i - xMin][j - yMin][k - zMin] = makeTile(tag);
                         }
                     }
                 }
@@ -261,7 +268,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     public BlockPos            boundMax      = BlockPos.ORIGIN;
 
     int                        energy        = 0;
-    private EntityWorld          world;
+    private EntityWorld        world;
     public double              speedUp       = 0.25;                // ConfigHandler.LiftSpeedUp;
     public double              speedDown     = -0.25;               // ConfigHandler.LiftSpeedDown;
     public double              acceleration  = 0.05;
@@ -430,7 +437,28 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
             EnumHand hand)
     {
-        return EnumActionResult.PASS;
+        if (hand == EnumHand.MAIN_HAND)
+        {
+            vec = vec.addVector(-0.01, -0.01, -0.01);
+            int xMin = MathHelper.floor_double(vec.xCoord + posX);
+            int yMin = MathHelper.floor_double(vec.yCoord + posY);
+            int zMin = MathHelper.floor_double(vec.zCoord + posZ);
+            BlockPos pos = new BlockPos(xMin, yMin, zMin);
+            IBlockState state = getWorld().getBlockState(pos);
+            System.out.println(state + " " + pos + " " + vec + " " + this);
+            System.out.println(player.getPosition());
+
+            // Ray trace to a litte more than vec, and look for solid blocks.
+            // TODO hit x, y, and z.
+            float hitX, hitY, hitZ;
+            hitX = hitY = hitZ = 0;
+            boolean activate = state.getBlock().onBlockActivated(getWorld(), pos, state, player, hand, stack,
+                    EnumFacing.DOWN, hitX, hitY, hitZ);
+            if (activate) return EnumActionResult.SUCCESS;
+            else return EnumActionResult.FAIL;
+
+        }
+        return EnumActionResult.FAIL;
     }
 
     /** First layer of player interaction */
@@ -440,26 +468,10 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         if (hand != EnumHand.MAIN_HAND) return false;
         if (!worldObj.isRemote)
         {
-            int xMin = MathHelper.floor_double(boundMin.getX() + posX);
-            int zMin = MathHelper.floor_double(boundMin.getZ() + posZ);
-            int yMin = MathHelper.floor_double(boundMin.getY() + posY);
-            int sizeX = blocks.length;
-            int sizeY = blocks[0].length;
-            int sizeZ = blocks[0][0].length;
-            System.out.println(Arrays.deepToString(blocks));
-            for (int i = 0; i < sizeX; i++)
-                for (int k = 0; k < sizeY; k++)
-                    for (int j = 0; j < sizeZ; j++)
-                    {
-                        BlockPos pos = new BlockPos(i + xMin, k + yMin, j + zMin);
-                        if (pos.distanceSq(BlockPos.NULL_VECTOR) == 0) continue;
-                        TileEntity tile = this.getWorld().getTileEntity(pos);
-                        IBlockState state = this.getWorld().getBlockState(pos);
-                        boolean activate = state.getBlock().onBlockActivated(this.getWorld(), pos, state, player,
-                                hand, null, EnumFacing.DOWN, 0, 0, 0);
-                        System.out.println(activate + " " + state + " " + tile);
-
-                    }
+            if (stack != null && stack.getItem() == Items.STICK)
+            {
+                this.setDead();
+            }
             // PacketHandler.sendEntityUpdate(this);
         }
         return false;
@@ -475,6 +487,8 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     public void onUpdate()
     {
         if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
+        this.height = boundMax.getY();
+        this.width = 1 + boundMax.getX() - boundMin.getX();
         this.prevPosY = posY;
         if (motionY == 0)
         {
@@ -555,12 +569,6 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         }
         id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
         if (nbt.hasKey("ownerhigher")) owner = new UUID(nbt.getLong("ownerhigher"), nbt.getLong("ownerlower"));
-
-        if (nbt.hasKey("replacement"))
-        {
-            NBTTagCompound held = nbt.getCompoundTag("replacement");
-            setHeldItem(null, ItemStack.loadItemStackFromNBT(held));
-        }
         readList(nbt);
         readBlocks(nbt);
     }
@@ -610,20 +618,31 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     @Override
     public void setDead()
     {
-        if (!worldObj.isRemote && !this.isDead && this.getHealth() == 0)
+        if (!worldObj.isRemote && !this.isDead)
         {
-            if (blocks != null)
-            {
-                for (ItemStack[][] barrarr : blocks)
-                {
-                    for (ItemStack[] barr : barrarr)
-                        for (ItemStack b : barr)
+            int xMin = boundMin.getX();
+            int zMin = boundMin.getZ();
+            int yMin = boundMin.getY();
+            int sizeX = blocks.length;
+            int sizeY = blocks[0].length;
+            int sizeZ = blocks[0][0].length;
+            for (int i = 0; i < sizeX; i++)
+                for (int j = 0; j < sizeY; j++)
+                    for (int k = 0; k < sizeZ; k++)
+                    {
+                        BlockPos pos = new BlockPos(i + xMin + posX, j + yMin + posY, k + zMin + posZ);
+                        IBlockState state = getWorld().getBlockState(pos);
+                        TileEntity tile = getWorld().getTileEntity(pos);
+                        if (state != null)
                         {
-                            if (b != null) this.entityDropItem(b, 0.5f);
+                            worldObj.setBlockState(pos, state);
+                            if (tile != null)
+                            {
+                                TileEntity newTile = worldObj.getTileEntity(pos);
+                                newTile.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                            }
                         }
-                }
-                if (getHeldItem(null) != null) this.entityDropItem(getHeldItem(null), 1);
-            }
+                    }
         }
         super.setDead();
     }
@@ -675,7 +694,6 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     {
         super.writeEntityToNBT(nbt);
         nbt.setBoolean("axis", axis);
-
         NBTTagCompound vector = new NBTTagCompound();
         vector.setInteger("minx", boundMin.getX());
         vector.setInteger("miny", boundMin.getY());
@@ -685,22 +703,13 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         vector.setInteger("maxz", boundMax.getZ());
         nbt.setTag("bounds", vector);
         nbt.setInteger("energy", energy);
-
         nbt.setLong("lower", id.getLeastSignificantBits());
         nbt.setLong("higher", id.getMostSignificantBits());
-
         if (owner != null)
         {
             nbt.setLong("ownerlower", owner.getLeastSignificantBits());
             nbt.setLong("ownerhigher", owner.getMostSignificantBits());
         }
-        if (getHeldItem(null) != null)
-        {
-            NBTTagCompound held = new NBTTagCompound();
-            getHeldItem(null).writeToNBT(held);
-            nbt.setTag("replacement", held);
-        }
-
         writeList(nbt);
         try
         {

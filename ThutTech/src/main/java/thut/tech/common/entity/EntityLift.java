@@ -238,7 +238,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             for (int j = zMin; j <= zMax; j++)
                 for (int k = yMin; k <= yMax; k++)
                 {
-                    worldObj.setBlockToAir(loc.set(pos).add(i, k, j).getPos());
+                    BlockPos temp = loc.set(pos).add(i, k, j).getPos();
+                    TileEntity tile = worldObj.getTileEntity(temp);
+                    if (tile != null) tile.invalidate();
+                    worldObj.setBlockState(temp, Blocks.AIR.getDefaultState());
                 }
     }
 
@@ -1087,18 +1090,29 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         if (!worldObj.isRemote && !this.isDead && this.getHealth() == 0)
         {
-            if (blocks != null)
-            {
-                for (ItemStack[][] barrarr : blocks)
-                {
-                    for (ItemStack[] barr : barrarr)
-                        for (ItemStack b : barr)
+            int xMin = boundMin.intX();
+            int zMin = boundMin.intZ();
+            int yMin = boundMin.intY();
+            int sizeX = blocks.length;
+            int sizeY = blocks[0].length;
+            int sizeZ = blocks[0][0].length;
+            for (int i = 0; i < sizeX; i++)
+                for (int j = 0; j < sizeY; j++)
+                    for (int k = 0; k < sizeZ; k++)
+                    {
+                        BlockPos pos = new BlockPos(i + xMin + posX, j + yMin + posY, k + zMin + posZ);
+                        IBlockState state = getLiftWorld().getBlockState(pos);
+                        TileEntity tile = getLiftWorld().getTileEntity(pos);
+                        if (state != null)
                         {
-                            if (b != null) this.entityDropItem(b, 0.5f);
+                            worldObj.setBlockState(pos, state);
+                            if (tile != null)
+                            {
+                                TileEntity newTile = worldObj.getTileEntity(pos);
+                                newTile.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                            }
                         }
-                }
-                if (getHeldItem(null) != null) this.entityDropItem(getHeldItem(null), 1);
-            }
+                    }
         }
         super.setDead();
     }
