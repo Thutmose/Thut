@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockStairs;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -23,6 +24,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
@@ -162,10 +166,13 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         }
     }
 
-    public static int     ACCELERATIONTICKS = 20;
+    static final DataParameter<BlockPos> SEAT              = EntityDataManager.<BlockPos> createKey(EntityRocket.class,
+            DataSerializers.BLOCK_POS);
 
-    public static boolean ENERGYUSE         = false;
-    public static int     ENERGYCOST        = 100;
+    public static int                    ACCELERATIONTICKS = 20;
+
+    public static boolean                ENERGYUSE         = false;
+    public static int                    ENERGYCOST        = 100;
 
     public static TileEntity makeTile(NBTTagCompound tag)
     {
@@ -307,18 +314,30 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         this.setPosition(x, y, z);
     }
 
+    @Override
+    protected void entityInit()
+    {
+        super.entityInit();
+        dataManager.register(SEAT, BlockPos.ORIGIN);
+    }
+
     /** Applies a velocity to each of the entities pushing them away from each
      * other. Args: entity */
     @Override
     public void applyEntityCollision(Entity entity)
     {
-        collider.applyEntityCollision(entity);
+        if (!isPassenger(entity)) collider.applyEntityCollision(entity);
     }
 
     /** Called when the entity is attacked. */
     public boolean attackEntityFrom(DamageSource source, int damage)
     {
         return false;
+    }
+
+    private BlockPos getSeat()
+    {
+        return dataManager.get(SEAT);
     }
 
     @Override
@@ -335,8 +354,8 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
             {
 
             }
-            else passenger.setPosition(this.posX + offset.getX(), this.posY+ 0.75 + offset.getY() + passenger.getYOffset(),
-                    this.posZ + offset.getZ());
+            else passenger.setPosition(this.posX + offset.getX(),
+                    this.posY + 0.75 + offset.getY() + passenger.getYOffset(), this.posZ + offset.getZ());
         }
     }
 
@@ -348,7 +367,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         if (locationsByPassenger.containsKey(passenger)) return;
 
         // TODO here we look for a seat to put them in
-        locationsByPassenger.put(passenger, new BlockPos(0, 1, 1));
+        locationsByPassenger.put(passenger, getSeat());
     }
 
     @Override
@@ -439,12 +458,6 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         this.motionZ *= 0.9800000190734863D;
     }
 
-    @Override
-    protected void entityInit()
-    {
-        super.entityInit();
-    }
-
     /** returns the bounding box for this entity */
     public AxisAlignedBB getBoundingBox()
     {
@@ -458,6 +471,27 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         return false;
     }
 
+    public BlockPos rayTraceInternal(Vec3d start, Vec3d end)
+    {
+        Vec3d direction = end.subtract(start).normalize();
+        double distance = 4;
+        for (int i = 0; i < distance; i++)
+        {
+            Vec3d temp = start.add(direction.scale(i));
+            int xMin = MathHelper.floor_double(temp.xCoord + posX);
+            int yMin = MathHelper.floor_double(temp.yCoord + posY);
+            int zMin = MathHelper.floor_double(temp.zCoord + posZ);
+            BlockPos pos = new BlockPos(xMin, yMin, zMin);
+            IBlockState state = getWorld().getBlockState(pos);
+            // TODO ray trace against the state's boxes instead.
+            if (state.getMaterial().isSolid()) return pos;
+        }
+        int xMin = MathHelper.floor_double(end.xCoord + posX);
+        int yMin = MathHelper.floor_double(end.yCoord + posY);
+        int zMin = MathHelper.floor_double(end.zCoord + posZ);
+        return new BlockPos(xMin, yMin, zMin);
+    }
+
     @Override
     /** Applies the given player interaction to this Entity. */
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
@@ -469,35 +503,32 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
         {
             vec = vec.addVector(vec.xCoord > 0 ? -0.01 : 0.01, vec.yCoord > 0 ? -0.01 : 0.01,
                     vec.zCoord > 0 ? -0.01 : 0.01);
-            int xMin = MathHelper.floor_double(vec.xCoord + posX);
-            int yMin = MathHelper.floor_double(vec.yCoord + posY);
-            int zMin = MathHelper.floor_double(vec.zCoord + posZ);
-            BlockPos pos = new BlockPos(xMin, yMin, zMin);
+            BlockPos pos = rayTraceInternal(
+                    player.getPositionVector().addVector(0, player.getEyeHeight(), 0).subtract(getPositionVector()),
+                    vec);
             IBlockState state = getWorld().getBlockState(pos);
-
+            System.out.println(state);
             // Ray trace to a litte more than vec, and look for solid blocks.
             // TODO hit x, y, and z.
             float hitX, hitY, hitZ;
             hitX = hitY = hitZ = 0;
 
-            if (state.getBlock() == Blocks.ANVIL)
+            if (state.getBlock() instanceof BlockStairs && !isPassenger(player))
             {
                 pos = pos.subtract(this.getPosition());
-                System.out.println(player+" "+pos);
+                System.out.println(player + " " + pos);
                 System.out.println(locationsByPassenger);
                 locationsByPassenger.put(player, pos);
                 if (!player.startRiding(this)) locationsByPassenger.remove(player);
+                else dataManager.set(SEAT, pos);
                 return EnumActionResult.SUCCESS;
             }
 
             boolean activate = state.getBlock().onBlockActivated(getWorld(), pos, state, player, hand, stack,
                     EnumFacing.DOWN, hitX, hitY, hitZ);
             if (activate) return EnumActionResult.SUCCESS;
-            else if (!state.getMaterial().isSolid()) return EnumActionResult.SUCCESS;
-            if (getPassengers().contains(player))
-            {
-                player.dismountRidingEntity();
-            }
+            // else if (!state.getMaterial().isSolid()) return
+            // EnumActionResult.SUCCESS;
 
         }
         return EnumActionResult.FAIL;
@@ -508,7 +539,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
         if (hand != EnumHand.MAIN_HAND) return false;
-        if (stack != null)
+        if (stack != null && !worldObj.isRemote)
         {
             System.out.println("interact " + stack.getDisplayName());
 

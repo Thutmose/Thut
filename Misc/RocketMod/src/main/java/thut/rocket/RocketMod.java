@@ -3,9 +3,10 @@ package thut.rocket;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
@@ -53,11 +54,27 @@ public class RocketMod
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void interactRightClickBlock(PlayerInteractEvent.RightClickBlock evt)
     {
-        if (evt.getHand() == EnumHand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack() != null) return;
-        System.out.println(evt.getPos());
-        if (evt.getWorld().getBlockState(evt.getPos()).getBlock() == Blocks.GOLD_BLOCK)
+        if (evt.getHand() == EnumHand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack() == null || !evt.getEntityPlayer().isSneaking()) return;
+
+        ItemStack stack = evt.getItemStack();
+        String[] arr = stack.getDisplayName().split(",");
+        BlockPos min = null;
+        BlockPos max = null;
+        if (arr.length == 6)
         {
-            EntityRocket.makeRocket(evt.getWorld(), new BlockPos(-1, 0, -1), new BlockPos(1, 10, 1), evt.getPos());
+            try
+            {
+                min = new BlockPos(Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
+                max = new BlockPos(Integer.parseInt(arr[3]), Integer.parseInt(arr[4]), Integer.parseInt(arr[5]));
+            }
+            catch (NumberFormatException e)
+            {
+                evt.getEntityPlayer().addChatMessage(new TextComponentString("no good name."));
+            }
+        }
+        if (min != null && max != null)
+        {
+            EntityRocket.makeRocket(evt.getWorld(), min, max, evt.getPos());
         }
     }
 }
