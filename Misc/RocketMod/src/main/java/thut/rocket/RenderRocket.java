@@ -90,7 +90,9 @@ public class RenderRocket<T extends EntityLivingBase> extends RenderLivingBase<T
         if (old)
         {
             GL11.glPushMatrix();
-            GL11.glTranslated(pos.getX() - lift.posX + 0.5, pos.getY() + 0.5 - lift.posY, pos.getZ() - lift.posZ + 0.5);
+            BlockPos liftPos = lift.getPosition();
+            GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(),
+                    pos.getZ() - liftPos.getZ());
             if (iblockstate.getMaterial() != Material.AIR)
             {
                 BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
