@@ -13,9 +13,10 @@ import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -40,38 +41,29 @@ public class RenderRocket<T extends EntityLivingBase> extends RenderLivingBase<T
     }
 
     @Override
-    public void doRender(EntityLivingBase entity, double d0, double d1, double d2, float f, float f1)
-    {
-        render(entity, d0, d1, d2);
-    }
-
-    public void render(Entity te, double x, double y, double z)
-    {
-        renderBase(te, 1, x, y, z);
-    }
-
-    private void renderBase(Entity te, float scale, double x, double y, double z)
+    public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
         try
         {
-            EntityRocket lift = (EntityRocket) te;
+            EntityRocket rocket = (EntityRocket) entity;
             GL11.glPushMatrix();
             GL11.glTranslated(x, y, z);
             GL11.glScaled(0.999, 0.999, 0.999);
             MutableBlockPos pos = new MutableBlockPos();
-            int xMin = MathHelper.floor_double(lift.boundMin.getX() + lift.posX);
-            int zMin = MathHelper.floor_double(lift.boundMin.getZ() + lift.posZ);
-            int xMax = MathHelper.floor_double(lift.boundMax.getX() + lift.posX);
-            int zMax = MathHelper.floor_double(lift.boundMax.getZ() + lift.posZ);
-            int yMin = MathHelper.floor_double(lift.boundMin.getY() + lift.posY);
-            int yMax = MathHelper.floor_double(lift.boundMax.getY() + lift.posY);
+            int xMin = MathHelper.floor_double(rocket.boundMin.getX() + rocket.posX);
+            int zMin = MathHelper.floor_double(rocket.boundMin.getZ() + rocket.posZ);
+            int xMax = MathHelper.floor_double(rocket.boundMax.getX() + rocket.posX);
+            int zMax = MathHelper.floor_double(rocket.boundMax.getZ() + rocket.posZ);
+            int yMin = MathHelper.floor_double(rocket.boundMin.getY() + rocket.posY);
+            int yMax = MathHelper.floor_double(rocket.boundMax.getY() + rocket.posY);
 
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
                         pos.setPos(i, j, k);
-                        drawBlockAt(pos, lift);
+                        drawBlockAt(pos, rocket);
+                        drawTileAt(pos, rocket, partialTicks);
                     }
             GL11.glPopMatrix();
 
@@ -80,57 +72,65 @@ public class RenderRocket<T extends EntityLivingBase> extends RenderLivingBase<T
         {
             e.printStackTrace();
         }
-
     }
 
     private void drawBlockAt(BlockPos pos, EntityRocket lift)
     {
-        boolean old = true;
         IBlockState iblockstate = lift.getWorld().getBlockState(pos);
-        if (old)
+        GL11.glPushMatrix();
+        BlockPos liftPos = lift.getPosition();
+        GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(), pos.getZ() - liftPos.getZ());
+        if (iblockstate.getMaterial() != Material.AIR)
         {
-            GL11.glPushMatrix();
-            BlockPos liftPos = lift.getPosition();
-            GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(),
-                    pos.getZ() - liftPos.getZ());
-            if (iblockstate.getMaterial() != Material.AIR)
-            {
-                BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
-                GlStateManager.enableRescaleNormal();
-                GlStateManager.pushMatrix();
-                GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-                GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
-                GlStateManager.translate(0.5F, 0.5F, 0.5F);
-                float f7 = 1.0F;
-                GlStateManager.scale(-f7, -f7, f7);
-                int i1 = lift.getBrightnessForRender(0);
-                int j1 = i1 % 65536;
-                int k1 = i1 / 65536;
-                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-                blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
-                GlStateManager.popMatrix();
-                GlStateManager.disableRescaleNormal();
-            }
-            GL11.glPopMatrix();
-        }
-        else
-        {
-            GL11.glPushMatrix();
-            GL11.glTranslated(pos.getX() - lift.posX + 0.5, pos.getY() + 0.5 - lift.posY, pos.getZ() - lift.posZ + 0.5);
-            b.begin(7, DefaultVertexFormats.BLOCK);
-            b.setTranslation(-0.5, 0, -0.5);
+            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+            iblockstate = iblockstate.getActualState(lift.getWorld(), pos);
+            GlStateManager.enableRescaleNormal();
+            GlStateManager.pushMatrix();
+            GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
+            GlStateManager.translate(0.5F, 0.5F, 0.5F);
+            float f7 = 1.0F;
+            GlStateManager.scale(-f7, -f7, f7);
             int i1 = lift.getBrightnessForRender(0);
             int j1 = i1 % 65536;
             int k1 = i1 / 65536;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            BlockRendererDispatcher blockrenderer = Minecraft.getMinecraft().getBlockRendererDispatcher();
-            blockrenderer.renderBlock(iblockstate, pos, lift.getWorld(), b);
-            t.draw();
-            GL11.glPopMatrix();
+            FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            if (iblockstate.getRenderType() != EnumBlockRenderType.ENTITYBLOCK_ANIMATED)
+                blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
+            GlStateManager.popMatrix();
+            GlStateManager.disableRescaleNormal();
         }
+        GL11.glPopMatrix();
+    }
+
+    private void drawTileAt(BlockPos pos, EntityRocket rocket, float partialTicks)
+    {
+        TileEntity tile = rocket.getWorld().getTileEntity(pos);
+        GL11.glPushMatrix();
+        BlockPos liftPos = rocket.getPosition();
+        GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(), pos.getZ() - liftPos.getZ());
+        if (tile != null)
+        {
+            GlStateManager.enableRescaleNormal();
+            GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+            GlStateManager.pushMatrix();
+            GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
+            GlStateManager.translate(0.5F, 0.5F, 0.5F);
+            GlStateManager.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
+            float f7 = 1.0F;
+            GlStateManager.scale(-f7, -f7, f7);
+            int i1 = rocket.getBrightnessForRender(0);
+            int j1 = i1 % 65536;
+            int k1 = i1 / 65536;
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            TileEntityRendererDispatcher.instance.renderTileEntityAt(tile, 0, 0, 0, partialTicks);
+            GlStateManager.popMatrix();
+            GlStateManager.disableRescaleNormal();
+        }
+        GL11.glPopMatrix();
     }
 
     @Override

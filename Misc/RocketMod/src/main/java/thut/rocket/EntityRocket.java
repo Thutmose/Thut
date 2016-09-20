@@ -34,6 +34,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -68,7 +69,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
             int k = pos.getZ() - MathHelper.floor_double(lift.posZ + lift.boundMin.getZ());
             if (i >= lift.tiles.length || j >= lift.tiles[0].length || k >= lift.tiles[0][0].length || i < 0 || j < 0
                     || k < 0) { return null; }
-            if (lift.tiles[i][j][k] != null) lift.tiles[i][j][k].setPos(pos);
+            if (lift.tiles[i][j][k] != null) lift.tiles[i][j][k].setPos(new BlockPos(pos));
             return lift.tiles[i][j][k];
         }
 
@@ -206,7 +207,7 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
                     BlockPos temp = pos.add(i, j, k);
                     TileEntity tile = worldObj.getTileEntity(temp);
                     if (tile != null) tile.invalidate();
-                    worldObj.setBlockState(temp, Blocks.AIR.getDefaultState());
+                    worldObj.setBlockState(temp, Blocks.AIR.getDefaultState(), 2);
                 }
     }
 
@@ -519,8 +520,8 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
                 System.out.println(player + " " + pos);
                 System.out.println(locationsByPassenger);
                 locationsByPassenger.put(player, pos);
+                dataManager.set(SEAT, pos);
                 if (!player.startRiding(this)) locationsByPassenger.remove(player);
-                else dataManager.set(SEAT, pos);
                 return EnumActionResult.SUCCESS;
             }
 
@@ -588,13 +589,28 @@ public class EntityRocket extends EntityLivingBase implements IEntityAdditionalS
     public void onUpdate()
     {
         if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
+        this.getWorld().setTotalWorldTime(this.worldObj.getTotalWorldTime());
+
+        int sizeX = blocks.length;
+        int sizeY = blocks[0].length;
+        int sizeZ = blocks[0][0].length;
+        for (int i = 0; i < sizeX; i++)
+            for (int j = 0; j < sizeY; j++)
+                for (int k = 0; k < sizeZ; k++)
+                {
+                    if (tiles[i][j][k] instanceof ITickable)
+                    {
+                        ((ITickable) tiles[i][j][k]).update();
+                    }
+                }
+
         this.height = boundMax.getY();
         this.width = 1 + boundMax.getX() - boundMin.getX();
         if (motionY == 0)
         {
             this.setPosition(posX, Math.round(posY), posZ);
         }
-        this.motionY -= 0.07;
+        this.motionY -= 0.007;
         doMotion();
         checkCollision();
     }

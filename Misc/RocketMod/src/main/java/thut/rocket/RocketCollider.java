@@ -46,6 +46,7 @@ public class RocketCollider
         int xMin = rocket.boundMin.getX();
         int zMin = rocket.boundMin.getZ();
         int yMin = rocket.boundMin.getY();
+        // Expand by velociteis as well.
         // Adds AABBS for contained blocks
         for (int i = 0; i < sizeX; i++)
             for (int k = 0; k < sizeY; k++)
@@ -53,45 +54,54 @@ public class RocketCollider
                 {
                     ItemStack stack = rocket.blocks[i][k][j];
                     if (stack == null || stack.getItem() == null) continue;
+                    List<AxisAlignedBB> toAdd = Lists.newArrayList();
                     pos.setPos(i + xMin, j + yMin, k + zMin);
                     Block block = Block.getBlockFromItem(stack.getItem());
-                    IBlockState state = block.getStateFromMeta(stack.getItemDamage());
-                    AxisAlignedBB blockBox = null;
+                    IBlockState state = block.getStateFromMeta(stack.getItemDamage()).getActualState(rocket.getWorld(),
+                            pos);
                     try
                     {
-                        blockBox = block.getBoundingBox(state, rocket.worldObj, null);
+                        toAdd.add(state.getCollisionBoundingBox(rocket.getWorld(), pos));
+                        // state.addCollisionBoxToList(rocket.getWorld(), pos,
+                        // TileEntity.INFINITE_EXTENT_AABB, toAdd,
+                        // null);
                     }
                     catch (Exception e)
                     {
                         // blockBox = block.getBoundingBox(state, worldObj,
                         // pos);
                     }
-                    if (blockBox != null)
+                    for (AxisAlignedBB blockBox : toAdd)
                     {
-                        AxisAlignedBB box = Matrix3.getAABB(
-                                rocket.posX + blockBox.minX - 0.5 + rocket.boundMin.getX() + i,
-                                rocket.posY + blockBox.minY + k,
-                                rocket.posZ + blockBox.minZ - 0.5 + rocket.boundMin.getZ() + j,
-                                rocket.posX + blockBox.maxX - 0.5 + rocket.boundMin.getX() + i,
-                                rocket.posY + blockBox.maxY + k,
-                                rocket.posZ + blockBox.maxZ - 0.5 + rocket.boundMin.getZ() + j);
-                        blockBoxes.add(box);
-                        topY.add(box.maxY);
+                        if (blockBox != null)
+                        {
+                            float dx = 0.5f;
+                            float dz = 0.5f;
+                            AxisAlignedBB box = Matrix3.getAABB(
+                                    rocket.posX + blockBox.minX - dx + rocket.boundMin.getX() + i,
+                                    rocket.posY + blockBox.minY + k,
+                                    rocket.posZ + blockBox.minZ - dz + rocket.boundMin.getZ() + j,
+                                    rocket.posX + blockBox.maxX - dx + rocket.boundMin.getX() + i,
+                                    rocket.posY + blockBox.maxY + k,
+                                    rocket.posZ + blockBox.maxZ - dz + rocket.boundMin.getZ() + j);
+                            blockBoxes.add(box);
+                            topY.add(box.maxY);
+                        }
                     }
                 }
         // Add AABBS for blocks around under the base, to stop sending into
         // floor.
         pos.setPos(rocket.getPosition());
-        int mx = sizeX / 2;
-        int mz = sizeZ / 2;
-        if (sizeY > 1 && rocket.motionY == 0 && entity.posY < rocket.posY) for (int i = -1 - mx; i <= 1 + mx; i++)
+        int mx = sizeX;
+        int mz = sizeZ;
+        if (sizeY > 1) for (int i = -1 - mx; i <= 1 + mx; i++)
             for (int j = -1 - mz; j <= 1 + mz; j++)
             {
                 pos.setPos(rocket.getPosition().down());
                 pos.setPos(pos.getX() + i, pos.getY(), pos.getZ() + j);
                 IBlockState state = rocket.worldObj.getBlockState(pos);
-                Block block = state.getBlock();
-                AxisAlignedBB blockBox = block.getBoundingBox(state, rocket.worldObj, pos);
+                AxisAlignedBB blockBox = state.getActualState(rocket.worldObj, pos)
+                        .getCollisionBoundingBox(rocket.worldObj, pos);
                 if (blockBox != null)
                 {
                     AxisAlignedBB box = blockBox.offset(pos);
@@ -114,112 +124,117 @@ public class RocketCollider
 
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
 
+        boolean merge = false;
+
         // Here we merge the boxes into less boxes, by taking any boxes with
         // shared faces and merging them.
-        double dx1 = maxX - minX;
-        double dy1 = maxY - minY;
-        double dz1 = maxZ - minZ;
-        Comparator<AxisAlignedBB> comparator = new Comparator<AxisAlignedBB>()
+        if (merge)
         {
-            @Override
-            public int compare(AxisAlignedBB arg0, AxisAlignedBB arg1)
+            double dx1 = maxX - minX;
+            double dy1 = maxY - minY;
+            double dz1 = maxZ - minZ;
+            Comparator<AxisAlignedBB> comparator = new Comparator<AxisAlignedBB>()
             {
-                int minX0 = (int) (arg0.minX * 32);
-                int minY0 = (int) (arg0.minY * 32);
-                int minZ0 = (int) (arg0.minZ * 32);
-                int minX1 = (int) (arg1.minX * 32);
-                int minY1 = (int) (arg1.minY * 32);
-                int minZ1 = (int) (arg1.minZ * 32);
-                if (minX0 == minX1)
+                @Override
+                public int compare(AxisAlignedBB arg0, AxisAlignedBB arg1)
                 {
-                    if (minZ0 == minZ1) return minY0 - minY1;
-                    else return minZ0 - minZ1;
+                    int minX0 = (int) (arg0.minX * 32);
+                    int minY0 = (int) (arg0.minY * 32);
+                    int minZ0 = (int) (arg0.minZ * 32);
+                    int minX1 = (int) (arg1.minX * 32);
+                    int minY1 = (int) (arg1.minY * 32);
+                    int minZ1 = (int) (arg1.minZ * 32);
+                    if (minX0 == minX1)
+                    {
+                        if (minZ0 == minZ1) return minY0 - minY1;
+                        else return minZ0 - minZ1;
+                    }
+                    return minX0 - minX1;
                 }
-                return minX0 - minX1;
-            }
-        };
-        AxisAlignedBB[] boxes = blockBoxes.toArray(new AxisAlignedBB[blockBoxes.size()]);
-        blockBoxes.clear();
-        Arrays.sort(boxes, comparator);
-        AxisAlignedBB b1;
-        AxisAlignedBB b2;
-        for (int i = 0; i < boxes.length; i++)
-        {
-            b1 = boxes[i];
-            if (b1 == null) continue;
-            for (int j = 0; j < boxes.length; j++)
+            };
+            AxisAlignedBB[] boxes = blockBoxes.toArray(new AxisAlignedBB[blockBoxes.size()]);
+            blockBoxes.clear();
+            Arrays.sort(boxes, comparator);
+            AxisAlignedBB b1;
+            AxisAlignedBB b2;
+            for (int i = 0; i < boxes.length; i++)
             {
-                b2 = boxes[j];
-                if (i == j || b2 == null) continue;
-                if (Math.abs(b2.maxY - b1.maxY) < dy1 && Math.abs(b2.minY - b1.minY) < dy1
-                        && Math.abs(b2.maxX - b1.maxX) < dx1 && Math.abs(b2.minX - b1.minX) < dx1
-                        && Math.abs(b2.minZ - b1.maxZ) < dz1)
+                b1 = boxes[i];
+                if (b1 == null) continue;
+                for (int j = 0; j < boxes.length; j++)
                 {
-                    b1 = b1.union(b2);
-                    boxes[i] = b1;
-                    boxes[j] = null;
-                }
-            }
-        }
-        for (int i = 0; i < boxes.length; i++)
-        {
-            b1 = boxes[i];
-            if (b1 == null) continue;
-            for (int j = 0; j < boxes.length; j++)
-            {
-                b2 = boxes[j];
-                if (i == j || b2 == null) continue;
-                if (Math.abs(b2.maxY - b1.maxY) < dy1 && Math.abs(b2.minY - b1.minY) < dy1
-                        && Math.abs(b2.maxZ - b1.maxZ) < dz1 && Math.abs(b2.minZ - b1.minZ) < dz1
-                        && Math.abs(b2.minX - b1.maxX) < dx1)
-                {
-                    b1 = b1.union(b2);
-                    boxes[i] = b1;
-                    boxes[j] = null;
+                    b2 = boxes[j];
+                    if (i == j || b2 == null) continue;
+                    if (Math.abs(b2.maxY - b1.maxY) < dy1 && Math.abs(b2.minY - b1.minY) < dy1
+                            && Math.abs(b2.maxX - b1.maxX) < dx1 && Math.abs(b2.minX - b1.minX) < dx1
+                            && Math.abs(b2.minZ - b1.maxZ) < dz1)
+                    {
+                        b1 = b1.union(b2);
+                        boxes[i] = b1;
+                        boxes[j] = null;
+                    }
                 }
             }
-        }
-        for (int i = 0; i < boxes.length; i++)
-        {
-            b1 = boxes[i];
-            if (b1 == null) continue;
-            for (int j = 0; j < boxes.length; j++)
+            for (int i = 0; i < boxes.length; i++)
             {
-                b2 = boxes[j];
-                if (i == j || b2 == null) continue;
-                if (Math.abs(b2.maxX - b1.maxX) < dx1 && Math.abs(b2.minX - b1.minX) < dx1
-                        && Math.abs(b2.maxZ - b1.maxZ) < dz1 && Math.abs(b2.minZ - b1.minZ) < dz1
-                        && Math.abs(b2.minY - b1.maxY) < dy1)
+                b1 = boxes[i];
+                if (b1 == null) continue;
+                for (int j = 0; j < boxes.length; j++)
                 {
-                    b1 = b1.union(b2);
-                    boxes[i] = b1;
-                    boxes[j] = null;
+                    b2 = boxes[j];
+                    if (i == j || b2 == null) continue;
+                    if (Math.abs(b2.maxY - b1.maxY) < dy1 && Math.abs(b2.minY - b1.minY) < dy1
+                            && Math.abs(b2.maxZ - b1.maxZ) < dz1 && Math.abs(b2.minZ - b1.minZ) < dz1
+                            && Math.abs(b2.minX - b1.maxX) < dx1)
+                    {
+                        b1 = b1.union(b2);
+                        boxes[i] = b1;
+                        boxes[j] = null;
+                    }
                 }
             }
-        }
+            for (int i = 0; i < boxes.length; i++)
+            {
+                b1 = boxes[i];
+                if (b1 == null) continue;
+                for (int j = 0; j < boxes.length; j++)
+                {
+                    b2 = boxes[j];
+                    if (i == j || b2 == null) continue;
+                    if (Math.abs(b2.maxX - b1.maxX) < dx1 && Math.abs(b2.minX - b1.minX) < dx1
+                            && Math.abs(b2.maxZ - b1.maxZ) < dz1 && Math.abs(b2.minZ - b1.minZ) < dz1
+                            && Math.abs(b2.minY - b1.maxY) < dy1)
+                    {
+                        b1 = b1.union(b2);
+                        boxes[i] = b1;
+                        boxes[j] = null;
+                    }
+                }
+            }
 
-        for (int i = 0; i < boxes.length; i++)
-        {
-            b1 = boxes[i];
-            if (b1 == null) continue;
-            for (int j = 0; j < boxes.length; j++)
+            for (int i = 0; i < boxes.length; i++)
             {
-                b2 = boxes[j];
-                if (i == j || b2 == null) continue;
-                // Check if subbox after previous passes, if so, combine.
-                if (b2.maxX <= b1.maxX && b2.maxY <= b1.maxY && b2.maxZ <= b1.maxZ && b2.minX >= b1.minX
-                        && b2.minY >= b1.minY && b2.minZ >= b1.minZ)
+                b1 = boxes[i];
+                if (b1 == null) continue;
+                for (int j = 0; j < boxes.length; j++)
                 {
-                    boxes[i] = b1;
-                    boxes[j] = null;
+                    b2 = boxes[j];
+                    if (i == j || b2 == null) continue;
+                    // Check if subbox after previous passes, if so, combine.
+                    if (b2.maxX <= b1.maxX && b2.maxY <= b1.maxY && b2.maxZ <= b1.maxZ && b2.minX >= b1.minX
+                            && b2.minY >= b1.minY && b2.minZ >= b1.minZ)
+                    {
+                        boxes[i] = b1;
+                        boxes[j] = null;
+                    }
                 }
             }
-        }
-        for (AxisAlignedBB b : boxes)
-        {
-            if (b != null)
+            for (AxisAlignedBB b : boxes)
             {
-                blockBoxes.add(b);
+                if (b != null)
+                {
+                    blockBoxes.add(b);
+                }
             }
         }
         // Finished merging the boxes.
