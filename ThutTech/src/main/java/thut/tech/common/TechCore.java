@@ -155,6 +155,5 @@ public class TechCore
     @EventHandler
     public void serverStop(FMLServerStoppedEvent e)
     {
-        EntityLift.clear();
     }
 }

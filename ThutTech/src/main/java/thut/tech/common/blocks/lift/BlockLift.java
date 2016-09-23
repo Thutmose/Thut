@@ -28,7 +28,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -36,7 +35,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.network.PacketHandler;
 import thut.tech.common.TechCore;
-import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
 
 public class BlockLift extends Block implements ITileEntityProvider
@@ -266,29 +264,6 @@ public class BlockLift extends Block implements ITileEntityProvider
         if (heldItem != null && playerIn.isSneaking() && !linkerOrStick) { return false; }
         if (state.getValue(VARIANT) == EnumType.LIFT)
         {
-            ItemStack[][][] stacks;
-            TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-            if (te == null) return false;
-            stacks = EntityLift.checkBlocks(worldIn, te, pos);
-            if (stacks != null && !worldIn.isRemote && heldItem != null && heldItem.getItem() instanceof ItemLinker)
-            {
-                EntityLift lift = new EntityLift(worldIn, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-                lift.tiles = EntityLift.checkTiles(worldIn, te, pos);
-                EntityLift.removeBlocks(worldIn, te, pos);
-                lift.blocks = stacks;
-                lift.boundMax = te.boundMax.copy();
-                lift.boundMin = te.boundMin.copy();
-                lift.owner = playerIn.getUniqueID();
-                worldIn.spawnEntityInWorld(lift);
-                String message = "msg.lift.create";
-                playerIn.addChatMessage(new TextComponentTranslation(message));
-                return true;
-            }
-            else if (te != null && side == EnumFacing.UP)
-            {
-                te.doButtonClick(playerIn, side, hitX, hitY, hitZ);
-                return true;
-            }
             return false;
         }
         else if (state.getValue(VARIANT) == EnumType.CONTROLLER)

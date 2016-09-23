@@ -32,6 +32,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.maths.Vector3;
+import thut.api.network.PacketHandler;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.ConfigHandler;
 
@@ -157,7 +158,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (check != null && check.size() > 0)
         {
             lift = check.get(0);
-            liftID = lift.id;
+            liftID = lift.getPersistentID();
         }
         return !(check == null || check.isEmpty());
     }
@@ -175,9 +176,9 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public void doButtonClick(EntityLivingBase clicker, EnumFacing side, float hitX, float hitY, float hitZ)
     {
-        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj.isRemote))
+        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj))
         {
-            lift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
+            lift = EntityLift.getLiftFromUUID(liftID, worldObj);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
         if (isLift && blockID == ThutBlocks.lift)
@@ -476,6 +477,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public void setLift(EntityLift lift)
     {
         this.lift = lift;
+        this.liftID = lift.getUniqueID();
+        PacketHandler.sendTileUpdate(this);
     }
 
     public void setRoot(TileEntityLiftAccess root)
@@ -509,14 +512,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     @Override
     public void update()
     {
-        if (first)
-        {
-            blockID = worldObj.getBlockState(getPos()).getBlock();
-            isLift = worldObj.getBlockState(getPos()).getValue(BlockLift.VARIANT) == BlockLift.EnumType.LIFT;
-            here = Vector3.getNewVector().set(this);
-            first = false;
-        }
-
+        if (here == null) here = Vector3.getNewVector();
+        here.set(this);
         if (isLift) { return; }
 
         if ((lift == null || lift.isDead))
@@ -566,7 +563,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             calledFloor = lift.getDestinationFloor();
             currentFloor = lift.getCurrentFloor();
         }
-        EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, worldObj.isRemote);
+        EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, worldObj);
         if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead || tempLift != lift))
         {
             lift = tempLift;
@@ -615,9 +612,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public NBTTagCompound writeToNBT(NBTTagCompound par1)
     {
         super.writeToNBT(par1);
-        if (blockID == null) blockID = ThutBlocks.liftRail;
-        if (blockID == null) blockID = worldObj.getBlockState(getPos()).getBlock();
-        par1.setString("block id", blockID.getLocalizedName());
         par1.setInteger("floor", floor);
         par1.setByteArray("sides", sides);
         par1.setByteArray("sidePages", sidePages);
@@ -625,7 +619,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (root != null) root.writeToNBT(par1, "root");
         if (lift != null)
         {
-            liftID = lift.id;
+            liftID = lift.getPersistentID();
         }
         if (liftID != null)
         {

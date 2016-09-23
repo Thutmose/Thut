@@ -1,9 +1,19 @@
 package thut.core.common;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.BlockEvent.BreakEvent;
+import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -12,7 +22,9 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.api.TickHandler;
+import thut.api.block.IOwnableTE;
 import thut.api.maths.Cruncher;
 import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
@@ -76,5 +88,41 @@ public class ThutCore
     public void serverLoad(FMLServerStartingEvent event)
     {
         event.registerServerCommand(new ConfigCommand());
+    }
+
+    @SubscribeEvent
+    public void BreakBlock(BreakEvent evt)
+    {
+        EntityPlayer player = evt.getPlayer();
+        TileEntity tile = evt.getWorld().getTileEntity(evt.getPos());
+        if (tile instanceof IOwnableTE)
+        {
+            IOwnableTE te = (IOwnableTE) tile;
+            NBTTagCompound tag = tile.writeToNBT(new NBTTagCompound());
+            if (tag.hasKey("admin") && tag.getBoolean("admin") && !te.canEdit(player))
+            {
+                evt.setCanceled(true);
+                return;
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void ExplosionEvent(ExplosionEvent.Detonate evt)
+    {
+        List<BlockPos> toRemove = Lists.newArrayList();
+        for (BlockPos pos : evt.getAffectedBlocks())
+        {
+            TileEntity tile = evt.getWorld().getTileEntity(pos);
+            if (tile instanceof IOwnableTE)
+            {
+                NBTTagCompound tag = tile.writeToNBT(new NBTTagCompound());
+                if (tag.hasKey("admin") && tag.getBoolean("admin"))
+                {
+                    toRemove.add(pos);
+                }
+            }
+        }
+        evt.getAffectedBlocks().removeAll(toRemove);
     }
 }

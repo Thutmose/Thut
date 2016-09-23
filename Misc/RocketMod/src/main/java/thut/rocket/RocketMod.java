@@ -3,6 +3,7 @@ package thut.rocket;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -14,11 +15,12 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.entity.blockentity.IBlockEntity;
+import thut.api.entity.blockentity.RenderBlockEntity;
 
 @Mod(modid = RocketMod.MODID, name = "Rocket Mod", version = RocketMod.VERSION)
 public class RocketMod
@@ -43,7 +45,7 @@ public class RocketMod
             @Override
             public Render<? super EntityLivingBase> createRenderFor(RenderManager manager)
             {
-                return new RenderRocket(manager);
+                return new RenderBlockEntity(manager);
             }
         });
     }
@@ -51,10 +53,12 @@ public class RocketMod
     /** Uses player interact here to also prevent opening of inventories.
      * 
      * @param evt */
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    @SubscribeEvent
     public void interactRightClickBlock(PlayerInteractEvent.RightClickBlock evt)
     {
-        if (evt.getHand() == EnumHand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack() == null || !evt.getEntityPlayer().isSneaking()) return;
+        if (evt.getHand() == EnumHand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack() == null
+                || !evt.getEntityPlayer().isSneaking() || evt.getItemStack().getItem() != Items.STICK)
+            return;
 
         ItemStack stack = evt.getItemStack();
         String[] arr = stack.getDisplayName().split(",");
@@ -74,7 +78,7 @@ public class RocketMod
         }
         if (min != null && max != null)
         {
-            EntityRocket.makeRocket(evt.getWorld(), min, max, evt.getPos());
+            IBlockEntity.BlockEntityFormer.makeBlockEntity(evt.getWorld(), min, max, evt.getPos(), EntityRocket.class);
         }
     }
 }

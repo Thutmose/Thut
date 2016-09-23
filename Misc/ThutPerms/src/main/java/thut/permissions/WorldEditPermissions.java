@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.sk89q.worldedit.forge.ForgePermissionsProvider;
 
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -14,16 +13,15 @@ import net.minecraftforge.fml.common.Optional.Interface;
 import net.minecraftforge.fml.common.Optional.InterfaceList;
 
 @InterfaceList({ @Interface(iface = "com.sk89q.worldedit.forge.ForgePermissionsProvider", modid = "worldedit") })
-public class WorldEditPermissions implements ForgePermissionsProvider
+public class WorldEditPermissions implements com.sk89q.worldedit.forge.ForgePermissionsProvider
 {
     Map<String, Set<String>> commandsMap = Maps.newHashMap();
 
     @Optional.Method(modid = "worldedit")
-    @Override
     public boolean hasPermission(EntityPlayerMP player, String permission)
     {
         Set<String> commands = commandsMap.get(permission);
-        Group g = ThutPerms.groupIDMap.get(player.getUniqueID());
+        Group g = GroupManager.instance.groupIDMap.get(player.getUniqueID());
         if (commands != null && g != null)
         {
             if (g.all) return true;
@@ -36,7 +34,6 @@ public class WorldEditPermissions implements ForgePermissionsProvider
     }
 
     @Optional.Method(modid = "worldedit")
-    @Override
     public void registerPermission(ICommand command, String permission)
     {
         if (command == null || permission == null) return;

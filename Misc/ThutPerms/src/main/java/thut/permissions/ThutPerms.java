@@ -3,15 +3,16 @@ package thut.permissions;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.UUID;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.commons.io.FileUtils;
+
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,26 +36,35 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import thut.permissions.commands.CommandManager;
 
 @Mod(modid = ThutPerms.MODID, name = "Thut Permissions", version = ThutPerms.VERSION, dependencies = "after:worldedit", updateJSON = ThutPerms.UPDATEURL, acceptableRemoteVersions = "*", acceptedMinecraftVersions = ThutPerms.MCVERSIONS)
 public class ThutPerms
 {
-    public static final String          MODID            = "thutperms";
-    public static final String          VERSION          = "0.1.1";
-    public static final String          UPDATEURL        = "";
+    public static final String MODID         = "thutperms";
+    public static final String VERSION       = "0.1.1";
+    public static final String UPDATEURL     = "";
 
-    public final static String          MCVERSIONS       = "[1.9.4]";
+    public final static String MCVERSIONS    = "[1.9.4]";
 
-    protected static Map<UUID, Group>   groupIDMap       = Maps.newHashMap();
-    protected static Map<String, Group> groupNameMap     = Maps.newHashMap();
-    protected static HashSet<Group>     groups           = Sets.newHashSet();
+    public static boolean      allCommandUse = false;
+    public static File         configFile    = null;
 
-    protected static Group              initial;
-    protected static Group              mods;
-    WorldEditPermissions                worldEditSupport = new WorldEditPermissions();
+    static ExclusionStrategy   exclusion     = new ExclusionStrategy()
+                                             {
+                                                 @Override
+                                                 public boolean shouldSkipField(FieldAttributes f)
+                                                 {
+                                                     String name = f.getName();
+                                                     return name.equals("groupIDMap") || name.equals("groupNameMap");
+                                                 }
 
-    static boolean                      allCommandUse    = false;
-    static File                         configFile       = null;
+                                                 @Override
+                                                 public boolean shouldSkipClass(Class<?> clazz)
+                                                 {
+                                                     return false;
+                                                 }
+                                             };
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
@@ -71,24 +81,28 @@ public class ThutPerms
     @EventHandler
     public void serverAboutToStart(FMLServerStartingEvent event)
     {
+        thut.permissions.WorldEditPermissions worldEditSupport = new thut.permissions.WorldEditPermissions();
         com.sk89q.worldedit.forge.ForgeWorldEdit.inst.setPermissionsProvider(worldEditSupport);
+        System.out.println("REGISTERING WORLD EDIT SUPPORT");
     }
 
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event)
     {
-        if (initial == null)
+        loadPerms();
+        if (GroupManager.instance.initial == null)
         {
-            initial = new Group("default");
+            GroupManager.instance.initial = new Group("default");
+            savePerms();
         }
-        if (mods == null)
+        if (GroupManager.instance.mods == null)
         {
-            mods = new Group("mods");
+            GroupManager.instance.mods = new Group("mods");
+            GroupManager.instance.mods.all = true;
+            savePerms();
         }
-        event.registerServerCommand(new Command());
+        new CommandManager(event);
         MinecraftForge.EVENT_BUS.register(this);
-        loadPerms(event.getServer());
-        mods.all = true;
 
         if (allCommandUse)
         {
@@ -121,7 +135,7 @@ public class ThutPerms
     @SubscribeEvent
     public void NameEvent(thut.essentials.events.NameEvent evt)
     {
-        Group g = ThutPerms.groupIDMap.get(evt.toName.getUniqueID());
+        Group g = GroupManager.instance.groupIDMap.get(evt.toName.getUniqueID());
         if (g == null) return;
         String name = evt.getName();
         if (!g.prefix.isEmpty()) name = g.prefix + " " + name;
@@ -133,27 +147,59 @@ public class ThutPerms
     public void PlayerLoggin(PlayerLoggedInEvent evt)
     {
         EntityPlayer entityPlayer = evt.player;
-        if (groupIDMap.get(entityPlayer.getUniqueID()) == null)
+        if (GroupManager.instance.groupIDMap.get(entityPlayer.getUniqueID()) == null)
         {
             UserListOpsEntry userentry = ((EntityPlayerMP) entityPlayer).mcServer.getPlayerList().getOppedPlayers()
                     .getEntry(entityPlayer.getGameProfile());
             if (userentry != null && userentry.getPermissionLevel() >= 4)
             {
-                mods.members.add(entityPlayer.getUniqueID());
-                groupIDMap.put(entityPlayer.getUniqueID(), mods);
-                savePerms(FMLCommonHandler.instance().getMinecraftServerInstance());
+                GroupManager.instance.mods.members.add(entityPlayer.getUniqueID());
+                GroupManager.instance.groupIDMap.put(entityPlayer.getUniqueID(), GroupManager.instance.mods);
+                savePerms();
             }
             else
             {
-                initial.members.add(entityPlayer.getUniqueID());
-                groupIDMap.put(entityPlayer.getUniqueID(), initial);
-                savePerms(FMLCommonHandler.instance().getMinecraftServerInstance());
+                GroupManager.instance.initial.members.add(entityPlayer.getUniqueID());
+                GroupManager.instance.groupIDMap.put(entityPlayer.getUniqueID(), GroupManager.instance.initial);
+                savePerms();
             }
             entityPlayer.refreshDisplayName();
         }
     }
 
-    static void loadPerms(MinecraftServer server)
+    public static void loadPerms()
+    {
+        String folder = FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName();
+        File file = FMLCommonHandler.instance().getSavesDirectory();
+        File saveFolder = new File(file, folder);
+        File permsFolder = new File(saveFolder, "permissions");
+        if (!permsFolder.exists()) permsFolder.mkdirs();
+        File permsFile = new File(permsFolder, "permissions.json");
+        if (permsFile.exists())
+        {
+            try
+            {
+                Gson gson = new GsonBuilder().addDeserializationExclusionStrategy(exclusion).setPrettyPrinting()
+                        .create();
+                String json = FileUtils.readFileToString(permsFile, "UTF-8");
+                GroupManager.instance = gson.fromJson(json, GroupManager.class);
+                GroupManager.instance.init();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        else
+        {
+            GroupManager.instance = new GroupManager();
+            loadPermsOld(FMLCommonHandler.instance().getMinecraftServerInstance());
+            savePerms();
+        }
+    }
+
+    @Deprecated
+    static void loadPermsOld(MinecraftServer server)
     {
         File file = server.getFile("thutperms.dat");
 
@@ -176,28 +222,28 @@ public class ThutPerms
                         g.readFromNBT(tag);
                         for (UUID id : g.members)
                         {
-                            groupIDMap.put(id, g);
+                            GroupManager.instance.groupIDMap.put(id, g);
                         }
-                        groups.add(g);
+                        GroupManager.instance.groups.add(g);
                     }
                 }
                 NBTTagCompound dflt = nbttagcompound1.getCompoundTag("default");
                 String name = dflt.getString("name");
-                initial = addGroup(name);
-                groups.remove(initial);
-                initial.readFromNBT(dflt);
-                for (UUID id : initial.members)
+                GroupManager.instance.initial = addGroup(name);
+                GroupManager.instance.groups.remove(GroupManager.instance.initial);
+                GroupManager.instance.initial.readFromNBT(dflt);
+                for (UUID id : GroupManager.instance.initial.members)
                 {
-                    groupIDMap.put(id, initial);
+                    GroupManager.instance.groupIDMap.put(id, GroupManager.instance.initial);
                 }
                 dflt = nbttagcompound1.getCompoundTag("mods");
                 name = dflt.getString("name");
-                mods = addGroup(name);
-                groups.remove(mods);
-                mods.readFromNBT(dflt);
-                for (UUID id : mods.members)
+                GroupManager.instance.mods = addGroup(name);
+                GroupManager.instance.groups.remove(GroupManager.instance.mods);
+                GroupManager.instance.mods.readFromNBT(dflt);
+                for (UUID id : GroupManager.instance.mods.members)
                 {
-                    groupIDMap.put(id, mods);
+                    GroupManager.instance.groupIDMap.put(id, GroupManager.instance.mods);
                 }
             }
             catch (FileNotFoundException e)
@@ -212,75 +258,51 @@ public class ThutPerms
 
     }
 
-    static void savePerms(MinecraftServer server)
+    static void savePerms()
     {
-        File file = server.getFile("thutperms.dat");
-        if (file != null)
+        String folder = FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName();
+        File file = FMLCommonHandler.instance().getSavesDirectory();
+        File saveFolder = new File(file, folder);
+        File permsFolder = new File(saveFolder, "permissions");
+        if (!permsFolder.exists()) permsFolder.mkdirs();
+        File permsFile = new File(permsFolder, "permissions.json");
+        try
         {
-            try
-            {
-                NBTTagCompound nbttagcompound = new NBTTagCompound();
-                NBTTagList groupTags = new NBTTagList();
-                for (Group g : groups)
-                {
-                    NBTTagCompound tag = new NBTTagCompound();
-                    tag.setString("name", g.name);
-                    g.writeToNBT(tag);
-                    groupTags.appendTag(tag);
-                }
-                NBTTagCompound dflt = new NBTTagCompound();
-                dflt.setString("name", initial.name);
-                initial.writeToNBT(dflt);
-                nbttagcompound.setTag("default", dflt);
-                dflt = new NBTTagCompound();
-                dflt.setString("name", mods.name);
-                mods.writeToNBT(dflt);
-                nbttagcompound.setTag("mods", dflt);
-                nbttagcompound.setTag("groups", groupTags);
-                NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-                nbttagcompound1.setTag("Data", nbttagcompound);
-                FileOutputStream fileoutputstream = new FileOutputStream(file);
-                CompressedStreamTools.writeCompressed(nbttagcompound1, fileoutputstream);
-                fileoutputstream.close();
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            Gson gson = new GsonBuilder().addSerializationExclusionStrategy(exclusion).setPrettyPrinting().create();
+            FileUtils.writeStringToFile(permsFile, gson.toJson(GroupManager.instance));
         }
-
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
-    static Group addGroup(String name)
+    public static Group addGroup(String name)
     {
         Group ret = new Group(name);
-        groupNameMap.put(name, ret);
-        groups.add(ret);
+        GroupManager.instance.groupNameMap.put(name, ret);
+        GroupManager.instance.groups.add(ret);
         return ret;
     }
 
-    static void addToGroup(UUID id, String name)
+    public static void addToGroup(UUID id, String name)
     {
-        Group group = groupNameMap.get(name);
+        Group group = GroupManager.instance.groupNameMap.get(name);
         group.members.add(id);
-        groupIDMap.put(id, group);
+        GroupManager.instance.groupIDMap.put(id, group);
     }
 
-    static Group getGroup(String name)
+    public static Group getGroup(String name)
     {
-        if (name.equals(initial.name)) return initial;
-        if (name.equals(mods.name)) return mods;
-        return groupNameMap.get(name);
+        if (name.equals(GroupManager.instance.initial.name)) return GroupManager.instance.initial;
+        if (name.equals(GroupManager.instance.mods.name)) return GroupManager.instance.mods;
+        return GroupManager.instance.groupNameMap.get(name);
     }
 
     private boolean canUse(ICommand command, EntityPlayer sender)
     {
         UUID id = sender.getUniqueID();
-        Group g = groupIDMap.get(id);
+        Group g = GroupManager.instance.groupIDMap.get(id);
         return g.canUse(command);
     }
 }

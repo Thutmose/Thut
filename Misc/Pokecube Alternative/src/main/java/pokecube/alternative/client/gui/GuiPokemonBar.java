@@ -63,7 +63,7 @@ public class GuiPokemonBar extends Gui
         {
             --scaleFactor2;
         }
-        scaleFactor2 *= 1.0f;
+        scaleFactor2 *= 0.8f;
         GL11.glScaled(scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor);
         ResourceLocation bar = new ResourceLocation(Reference.MODID, "textures/gui/pokemon_hotbar.png");
         this.mc.renderEngine.bindTexture(bar);
@@ -71,7 +71,7 @@ public class GuiPokemonBar extends Gui
         int texH = 129;
         // Render the bar
         int xPos = 0; // Distance from left to start
-        int yPos = (int) (80); // Distance from top to start
+        int yPos = (int) (70); // Distance from top to start
         this.drawTexturedModalRect(xPos, yPos, 0, 0, texW, texH);
         // Render the arrow
         IBeltCapability capability = Minecraft.getMinecraft().thePlayer.getCapability(EventHandlerCommon.BELTAI_CAP,

@@ -57,10 +57,10 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         GL11.glRotated(90, 1, 0, 0);
         GL11.glRotated(180, 0, 0, 1);
         GL11.glTranslatef(dx, dy, dz);
-        float s = 0.525f;
+        float s = 0.52f;
         if (entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS) == null)
         {
-            s = 0.465f;
+            s = 0.46f;
         }
         GL11.glScalef(s, s, s);
         this.livingEntityRenderer.bindTexture(belt_1);
@@ -93,42 +93,26 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
             ItemStack stack = cap.getCube(i);
             if (stack != null)
             {
+                float amountX = 0.25f;
+                float amountZ = 0.15f;
                 GlStateManager.pushMatrix();
                 if (i < 3)
                 {
-                    if (i == 2)
-                    {
-                        dz = -0.5f;
-                        ry = 0;
-                        dx = 0;
-                    }
-                    else
-                    {
-                        dz = -0.25f * (i + 1);
-                        dx = 0.25f;
-                        ry = -90;
-                    }
+                    dz = -amountZ * (i + 1) - 0.07f;
+                    dx = amountX;
+                    ry = -90;
                 }
                 else
                 {
-                    if (i == 5)
-                    {
-                        dz = 0.5f;
-                        ry = 180;
-                        dx = 0;
-                    }
-                    else
-                    {
-                        dz = 0.25f * (i - 2);
-                        dx = 0.25f;
-                        ry = -90;
-                    }
+                    dz = amountZ * (i - 2) + 0.07f;
+                    dx = amountX;
+                    ry = -90;
                 }
                 GlStateManager.translate(dx, dy, dz);
                 GlStateManager.rotate(rx, 1, 0, 0);
                 GlStateManager.rotate(ry, 0, 1, 0);
                 GlStateManager.rotate(rz, 0, 0, 1);
-                GlStateManager.scale(0.15, 0.15, 0.15);
+                GlStateManager.scale(0.135, 0.135, 0.135);
                 Minecraft.getMinecraft().getItemRenderer().renderItem(player, stack, null);
                 GlStateManager.popMatrix();
             }

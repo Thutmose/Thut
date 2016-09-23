@@ -1,4 +1,4 @@
-package thut.essentials.commands;
+package thut.permissions.commands;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -8,13 +8,11 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -30,7 +28,6 @@ import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.ClickEvent.Action;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import thut.essentials.util.BaseCommand;
 
 public class CommandManager
 {
@@ -140,7 +137,7 @@ public class CommandManager
         return new TextComponentString(text).setStyle(
                 new Style().setBold(bold).setColor(colour).setClickEvent(new ClickEvent(Action.RUN_COMMAND, command)));
     }
-    
+
     public static boolean isOp(ICommandSender sender)
     {
         if (FMLCommonHandler.instance().getMinecraftServerInstance() != null
@@ -189,8 +186,6 @@ public class CommandManager
         commands.put("delrule", Lists.newArrayList("delrule"));
     }
 
-    Set<BaseCommand> commandSet = Sets.newHashSet();
-
     public CommandManager(FMLServerStartingEvent event)
     {
         List<Class<?>> foundClasses;
@@ -214,10 +209,6 @@ public class CommandManager
                     if (move != null && move.getCommandName() != null)
                     {
                         event.registerServerCommand(move);
-                        if (move instanceof BaseCommand)
-                        {
-                            commandSet.add((BaseCommand) move);
-                        }
                     }
                     else
                     {
@@ -229,14 +220,6 @@ public class CommandManager
         catch (Exception e)
         {
             e.printStackTrace();
-        }
-    }
-
-    public void clear()
-    {
-        for (BaseCommand c : commandSet)
-        {
-            c.destroy();
         }
     }
 }

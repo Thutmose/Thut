@@ -1,4 +1,4 @@
-package thut.rocket;
+package thut.api.entity.blockentity;
 
 import static java.lang.Math.max;
 
@@ -19,52 +19,99 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import thut.api.maths.Matrix3;
-import thut.tech.common.handlers.ConfigHandler;
 
-public class RocketCollider
+public class BlockEntityUpdater
 {
-    final EntityRocket  rocket;
+    final IBlockEntity  blockEntity;
+    final Entity        theEntity;
     List<AxisAlignedBB> blockBoxes = Lists.newArrayList();
+    Set<TileEntity>     erroredSet = Sets.newHashSet();
 
-    public RocketCollider(EntityRocket rocket)
+    public BlockEntityUpdater(IBlockEntity rocket)
     {
-        this.rocket = rocket;
+        this.blockEntity = rocket;
+        this.theEntity = (Entity) rocket;
+    }
+
+    public void onUpdate()
+    {
+        theEntity.height = blockEntity.getMax().getY();
+        theEntity.width = 1 + blockEntity.getMax().getX() - blockEntity.getMin().getX();
+        if (theEntity.motionY == 0)
+        {
+            theEntity.setPosition(theEntity.posX, Math.round(theEntity.posY), theEntity.posZ);
+        }
+        blockEntity.getFakeWorld().setTotalWorldTime(theEntity.worldObj.getTotalWorldTime());
+        MutableBlockPos pos = new MutableBlockPos();
+        int xMin = blockEntity.getMin().getX();
+        int zMin = blockEntity.getMin().getZ();
+        int yMin = blockEntity.getMin().getY();
+        int sizeX = blockEntity.getTiles().length;
+        int sizeY = blockEntity.getTiles()[0].length;
+        int sizeZ = blockEntity.getTiles()[0][0].length;
+        for (int i = 0; i < sizeX; i++)
+            for (int j = 0; j < sizeY; j++)
+                for (int k = 0; k < sizeZ; k++)
+                {
+                    pos.setPos(i + xMin + theEntity.posX, j + yMin + theEntity.posY, k + zMin + theEntity.posZ);
+
+                    // TODO rotate here by entity rotation.
+
+                    if (blockEntity.getTiles()[i][j][k] != null)
+                        blockEntity.getTiles()[i][j][k].setPos(pos.toImmutable());
+                    if (blockEntity.getTiles()[i][j][k] instanceof ITickable)
+                    {
+                        if (erroredSet.contains(blockEntity.getTiles()[i][j][k])) continue;
+                        try
+                        {
+                            ((ITickable) blockEntity.getTiles()[i][j][k]).update();
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            System.err.println("Error with Tile Entity " + blockEntity.getTiles()[i][j][k]);
+                            erroredSet.add(blockEntity.getTiles()[i][j][k]);
+                        }
+                    }
+                }
     }
 
     @SuppressWarnings("deprecation")
     public void applyEntityCollision(Entity entity)
     {
+        if ((theEntity.rotationYaw+360)%90 > 5) return;
+
         blockBoxes.clear();
-        int sizeX = rocket.blocks.length;
-        int sizeY = rocket.blocks[0].length;
-        int sizeZ = rocket.blocks[0][0].length;
+        int sizeX = blockEntity.getBlocks().length;
+        int sizeY = blockEntity.getBlocks()[0].length;
+        int sizeZ = blockEntity.getBlocks()[0][0].length;
         Set<Double> topY = Sets.newHashSet();
         MutableBlockPos pos = new MutableBlockPos();
-        int xMin = rocket.boundMin.getX();
-        int zMin = rocket.boundMin.getZ();
-        int yMin = rocket.boundMin.getY();
+        int xMin = blockEntity.getMin().getX();
+        int zMin = blockEntity.getMin().getZ();
+        int yMin = blockEntity.getMin().getY();
         // Expand by velociteis as well.
         // Adds AABBS for contained blocks
         for (int i = 0; i < sizeX; i++)
             for (int k = 0; k < sizeY; k++)
                 for (int j = 0; j < sizeZ; j++)
                 {
-                    ItemStack stack = rocket.blocks[i][k][j];
+                    ItemStack stack = blockEntity.getBlocks()[i][k][j];
                     if (stack == null || stack.getItem() == null) continue;
                     List<AxisAlignedBB> toAdd = Lists.newArrayList();
                     pos.setPos(i + xMin, j + yMin, k + zMin);
                     Block block = Block.getBlockFromItem(stack.getItem());
-                    IBlockState state = block.getStateFromMeta(stack.getItemDamage()).getActualState(rocket.getWorld(),
-                            pos);
+                    IBlockState state = block.getStateFromMeta(stack.getItemDamage())
+                            .getActualState(blockEntity.getFakeWorld(), pos);
                     try
                     {
-                        toAdd.add(state.getCollisionBoundingBox(rocket.getWorld(), pos));
-                        // state.addCollisionBoxToList(rocket.getWorld(), pos,
-                        // TileEntity.INFINITE_EXTENT_AABB, toAdd,
-                        // null);
+                        toAdd.add(state.getCollisionBoundingBox(blockEntity.getFakeWorld(), pos));
+                        // TODO find collsion box list instead.
                     }
                     catch (Exception e)
                     {
@@ -78,12 +125,12 @@ public class RocketCollider
                             float dx = 0.5f;
                             float dz = 0.5f;
                             AxisAlignedBB box = Matrix3.getAABB(
-                                    rocket.posX + blockBox.minX - dx + rocket.boundMin.getX() + i,
-                                    rocket.posY + blockBox.minY + k,
-                                    rocket.posZ + blockBox.minZ - dz + rocket.boundMin.getZ() + j,
-                                    rocket.posX + blockBox.maxX - dx + rocket.boundMin.getX() + i,
-                                    rocket.posY + blockBox.maxY + k,
-                                    rocket.posZ + blockBox.maxZ - dz + rocket.boundMin.getZ() + j);
+                                    theEntity.posX + blockBox.minX - dx + blockEntity.getMin().getX() + i,
+                                    theEntity.posY + blockBox.minY + k,
+                                    theEntity.posZ + blockBox.minZ - dz + blockEntity.getMin().getZ() + j,
+                                    theEntity.posX + blockBox.maxX - dx + blockEntity.getMin().getX() + i,
+                                    theEntity.posY + blockBox.maxY + k,
+                                    theEntity.posZ + blockBox.maxZ - dz + blockEntity.getMin().getZ() + j);
                             blockBoxes.add(box);
                             topY.add(box.maxY);
                         }
@@ -91,17 +138,17 @@ public class RocketCollider
                 }
         // Add AABBS for blocks around under the base, to stop sending into
         // floor.
-        pos.setPos(rocket.getPosition());
+        pos.setPos(theEntity.getPosition());
         int mx = sizeX;
         int mz = sizeZ;
         if (sizeY > 1) for (int i = -1 - mx; i <= 1 + mx; i++)
             for (int j = -1 - mz; j <= 1 + mz; j++)
             {
-                pos.setPos(rocket.getPosition().down());
+                pos.setPos(theEntity.getPosition().down());
                 pos.setPos(pos.getX() + i, pos.getY(), pos.getZ() + j);
-                IBlockState state = rocket.worldObj.getBlockState(pos);
-                AxisAlignedBB blockBox = state.getActualState(rocket.worldObj, pos)
-                        .getCollisionBoundingBox(rocket.worldObj, pos);
+                IBlockState state = theEntity.worldObj.getBlockState(pos);
+                AxisAlignedBB blockBox = state.getActualState(theEntity.worldObj, pos)
+                        .getCollisionBoundingBox(theEntity.worldObj, pos);
                 if (blockBox != null)
                 {
                     AxisAlignedBB box = blockBox.offset(pos);
@@ -109,8 +156,8 @@ public class RocketCollider
                 }
             }
         Vector3f temp1 = new Vector3f();
-        Vector3f diffs = new Vector3f((float) (rocket.motionX - entity.motionX),
-                (float) (rocket.motionY - entity.motionY), (float) (rocket.motionY - entity.motionY));
+        Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
+                (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionY - entity.motionY));
 
         double minX = entity.getEntityBoundingBox().minX;
         double minY = entity.getEntityBoundingBox().minY;
@@ -119,8 +166,8 @@ public class RocketCollider
         double maxY = entity.getEntityBoundingBox().maxY;
         double maxZ = entity.getEntityBoundingBox().maxZ;
         double factor = 0.75d;
-        double dx = max(maxX - minX, 0.5) / factor + (entity.motionX - rocket.motionX),
-                dz = max(maxZ - minZ, 0.5) / factor + (entity.motionZ - rocket.motionZ), r;
+        double dx = max(maxX - minX, 0.5) / factor + (entity.motionX - theEntity.motionX),
+                dz = max(maxZ - minZ, 0.5) / factor + (entity.motionZ - theEntity.motionZ), r;
 
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
 
@@ -239,7 +286,7 @@ public class RocketCollider
         }
         // Finished merging the boxes.
 
-        double yTop = Math.min(entity.stepHeight + entity.posY + rocket.motionY, maxY);
+        double yTop = Math.min(entity.stepHeight + entity.posY + theEntity.motionY, maxY);
 
         boolean floor = false;
         boolean ceiling = false;
@@ -265,7 +312,7 @@ public class RocketCollider
             collidesX = collidesX && (collidesZ || collidesY);
 
             if (collidesX && collidesZ && yTop >= aabb.maxY
-                    && boundingBox.minY - entity.stepHeight - rocket.motionY <= aabb.maxY - diffs.y)
+                    && boundingBox.minY - entity.stepHeight - theEntity.motionY <= aabb.maxY - diffs.y)
             {
                 if (!floor)
                 {
@@ -321,10 +368,10 @@ public class RocketCollider
         // Figure out top most collsion postion, if it collides, then set
         // vertical motion to 0.
         for (Double d : topY)
-            if (entity.posY >= d && entity.posY + entity.motionY <= d && rocket.motionY <= 0)
+            if (entity.posY >= d && entity.posY + entity.motionY <= d && theEntity.motionY <= 0)
             {
-                double diff = (entity.posY + entity.motionY) - (d + rocket.motionY);
-                double check = Math.max(0.5, Math.abs(entity.motionY + rocket.motionY));
+                double diff = (entity.posY + entity.motionY) - (d + theEntity.motionY);
+                double check = Math.max(0.5, Math.abs(entity.motionY + theEntity.motionY));
                 if (diff > 0 || diff < -0.5 || Math.abs(diff) > check)
                 {
                     entity.motionY = 0;
@@ -343,15 +390,15 @@ public class RocketCollider
             }
             else if (temp1.y < 0)
             {
-                boolean below = entity.posY + entity.height - (entity.motionY + rocket.motionY) < rocket.posY;
+                boolean below = entity.posY + entity.height - (entity.motionY + theEntity.motionY) < theEntity.posY;
                 if (below)
                 {
                     temp1.y = 0;
                 }
             }
-            if (temp1.x != 0) entity.motionX = rocket.motionX;
-            if (temp1.y != 0) entity.motionY = rocket.motionY;
-            if (temp1.z != 0) entity.motionZ = rocket.motionZ;
+            if (temp1.x != 0) entity.motionX = theEntity.motionX;
+            if (temp1.y != 0) entity.motionY = theEntity.motionY;
+            if (temp1.z != 0) entity.motionZ = theEntity.motionZ;
             if (temp1.y != 0) collidedY = true;
             temp1.add(new Vector3f((float) entity.posX, (float) entity.posY, (float) entity.posZ));
             entity.setPosition(temp1.x, temp1.y, temp1.z);
@@ -361,7 +408,7 @@ public class RocketCollider
         {
             EntityPlayer player = (EntityPlayer) entity;
 
-            if (player.worldObj.isRemote && ConfigHandler.jitterfix)
+            if (player.worldObj.isRemote)
             {
                 // This fixes jitter, need a better way to handle this.
                 Minecraft.getMinecraft().gameSettings.viewBobbing = false;

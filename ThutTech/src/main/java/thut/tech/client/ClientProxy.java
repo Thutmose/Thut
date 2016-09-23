@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutBlocks;
-import thut.tech.client.render.RenderLift;
+import thut.api.entity.blockentity.RenderBlockEntity;
 import thut.tech.client.render.RenderLiftController;
 import thut.tech.common.CommonProxy;
 import thut.tech.common.blocks.lift.BlockLift;
@@ -81,16 +81,17 @@ public class ClientProxy extends CommonProxy
     public void initClient()
     {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController());
-//        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDoor.class, new RenderDoor());
+        // ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDoor.class,
+        // new RenderDoor());
 
         Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(ThutBlocks.lift),
                 0, new ModelResourceLocation("thuttech:lift", "inventory"));
         Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(ThutBlocks.lift),
                 1, new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
 
-//        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(
-//                Item.getItemFromBlock(BlockRailgun.instance), 0,
-//                new ModelResourceLocation("thuttech:railgun", "inventory"));
+        // Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(
+        // Item.getItemFromBlock(BlockRailgun.instance), 0,
+        // new ModelResourceLocation("thuttech:railgun", "inventory"));
 
         Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
                 new ModelResourceLocation("thuttech:devicelinker", "inventory"));
@@ -119,11 +120,10 @@ public class ClientProxy extends CommonProxy
 
         RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<EntityLivingBase>()
         {
-            @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override
             public Render<? super EntityLivingBase> createRenderFor(RenderManager manager)
             {
-                return new RenderLift(manager);
+                return new RenderBlockEntity<>(manager);
             }
         });
     }
