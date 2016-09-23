@@ -22,10 +22,13 @@ public class ItemHandler
 
     public static void registerRecipes()
     {
-        GameRegistry.addRecipe(new ItemStack(ItemLinker.instance), "xyx", " x ", "   ", 'x', Items.IRON_INGOT, 'y', Items.REDSTONE);
-        GameRegistry.addRecipe(new ItemStack(lift, 1, 0), "xyx", "zxz", "zzz", 'x', Items.IRON_INGOT, 'y', Items.REDSTONE, 'z',
-                new ItemStack(Blocks.STONE));
-        GameRegistry.addRecipe(new ItemStack(lift, 1, 1), "xyx", "yxy", "xyx", 'x', Items.IRON_INGOT, 'y', Items.REDSTONE);
+        GameRegistry.addRecipe(new ItemStack(ItemLinker.instance), "xyx", " x ", "   ", 'x', Items.IRON_INGOT, 'y',
+                Items.REDSTONE);
+        GameRegistry.addRecipe(new ItemStack(lift, 1, 0), "xyx", "zxz", "zzz", 'x', Items.IRON_INGOT, 'y',
+                Items.REDSTONE, 'z', new ItemStack(Blocks.STONE));
+        GameRegistry.addRecipe(new ItemStack(lift, 1, 1), "xyx", "yxy", "xyx", 'x', Items.IRON_INGOT, 'y',
+                Items.REDSTONE);
         GameRegistry.addShapelessRecipe(TechCore.getInfoBook(), new ItemStack(ItemLinker.instance), Items.BOOK);
+        ItemLinker.liftblocks = new ItemStack(lift, 1, 0);
     }
 }

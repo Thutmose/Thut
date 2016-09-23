@@ -120,94 +120,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         GL11.glPopMatrix();
     }
 
-    private void drawLiftBounds(int minX, int maxX, int minZ, int maxZ, int minY, int maxY)
-    {
-        TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
-
-        GL11.glPushMatrix();
-        if (renderengine != null)
-        {
-            renderengine.bindTexture(overlay);
-        }
-        int floor = 5;
-        double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
-        GL11.glTranslated(x - 0.125, 1 + 0.001 * (1), y - 0.125);
-        Tessellator t = Tessellator.getInstance();
-        t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        for (int i = -minX; i <= maxX; i++)
-            for (int k = -minY; k <= maxY; k++)
-                for (int j = -minZ; j <= maxZ; j++)
-                {
-                    t.getBuffer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(0, 255, 0, 128).endVertex();
-                    t.getBuffer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(0, 255, 0, 128).endVertex();
-                    t.getBuffer().pos(0 + i, k, 0 + j).tex(1, 1).color(0, 255, 0, 128).endVertex();
-                    t.getBuffer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(0, 255, 0, 128).endVertex();
-
-                    t.getBuffer().pos(0 + i, k, 0.25 + j).tex(1, 0).color(0, 255, 0, 128).endVertex();
-                    t.getBuffer().pos(0 + i, k, 0 + j).tex(1, 1).color(0, 255, 0, 128).endVertex();
-                    t.getBuffer().pos(0.25 + i, k, 0 + j).tex(0, 1).color(0, 255, 0, 128).endVertex();
-                    t.getBuffer().pos(0.25 + i, k, 0.25 + j).tex(0, 0).color(0, 255, 0, 128).endVertex();
-                }
-
-        t.draw();
-        GL11.glPopMatrix();
-    }
-
-    private void drawLiftGui(TileEntityLiftAccess monitor)
-    {
-        int xMin = -monitor.boundMin.intX();
-        int zMin = -monitor.boundMin.intZ();
-        int yMin = -monitor.boundMin.intY();
-        int xMax = monitor.boundMax.intX();
-        int zMax = monitor.boundMax.intZ();
-        int yMax = monitor.boundMax.intY();
-        drawOnTop(xMin, 0);
-        drawOnTop(12, 1);
-        drawOnTop(14, 2);
-        drawOnTop(xMin, 3);
-        drawOnTop(zMin, 4);
-        drawOnTop(12, 5);
-        drawOnTop(14, 6);
-        drawOnTop(zMin, 7);
-
-        drawOnTop(xMax, 8);
-        drawOnTop(12, 9);
-        drawOnTop(14, 10);
-        drawOnTop(xMax, 11);
-        drawOnTop(zMax, 12);
-        drawOnTop(12, 13);
-        drawOnTop(14, 14);
-        drawOnTop(zMax, 15);
-        drawLiftBounds(xMin, xMax, zMin, zMax, yMin, yMax);
-    }
-
-    private void drawOnTop(int fontIndex, int positionIndex)
-    {
-        TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
-        GL11.glPushMatrix();
-        if (renderengine != null)
-        {
-            renderengine.bindTexture(font);
-        }
-
-        int floor = positionIndex;
-        Tessellator t = Tessellator.getInstance();
-        t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);// .startDrawing(GL11.GL_QUADS);
-        double x1 = ((double) (3 - floor & 3)) / (double) 4, y1 = ((double) 3 - (floor >> 2)) / 4;
-        double[] uvs = locationFromNumber(fontIndex);
-
-        GL11.glTranslated(x1 + 0.05, 1 + 0.002 * (0 + 0.5), y1 + 0.06);
-
-        t.getBuffer().pos(0.15, 0.0, 0.15).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
-        t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
-
-        t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
-        t.getBuffer().pos(0, 0.0, 0.15).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
-
-        t.draw();
-
-        GL11.glPopMatrix();
-    }
 
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, EnumFacing side, boolean wide)
     {
@@ -295,43 +207,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
         if (monitor.getBlockMetadata() == 0 && monitor.getBlockType() == ThutBlocks.lift)
         {
-            GL11.glPushMatrix();
-
-            GL11.glTranslatef((float) x, (float) y, (float) z);
-            TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
-            GL11.glPushMatrix();
-            if (renderengine != null)
-            {
-                renderengine.bindTexture(texture_1);
-            }
-
-            Tessellator t = Tessellator.getInstance();
-            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-
-            GL11.glTranslated(0, 1 + 0.001 * (0 + 0.5), 0);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1F);
-            {
-                t.getBuffer().pos(1, 0, 1).tex(0, 0).endVertex();
-                t.getBuffer().pos(1, 0, 0).tex(0, 1).endVertex();
-
-                t.getBuffer().pos(0, 0, 0).tex(1, 1).endVertex();
-                t.getBuffer().pos(0, 0, 1).tex(1, 0).endVertex();
-            }
-
-            t.draw();
-            GL11.glPopMatrix();
-
-            drawLiftGui(monitor);
-
-            GL11.glPopMatrix();
-
-            if (light) GL11.glEnable(GL11.GL_LIGHTING);
-            if (!blend) GL11.glDisable(GL11.GL_BLEND);
-            GL11.glBlendFunc(src, dst);
-            if (oldLight[0] != -1 && oldLight[1] != -1)
-            {
-                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldLight[0], oldLight[1]);
-            }
             return;
         }
 

@@ -14,6 +14,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
@@ -98,6 +99,7 @@ public interface IBlockEntity
             int xMin = toRevert.getMin().getX();
             int zMin = toRevert.getMin().getZ();
             int yMin = toRevert.getMin().getY();
+            if (toRevert.getBlocks() == null) return;
             int sizeX = toRevert.getBlocks().length;
             int sizeY = toRevert.getBlocks()[0].length;
             int sizeZ = toRevert.getBlocks()[0][0].length;
@@ -216,6 +218,11 @@ public interface IBlockEntity
             }
             if (!(ret instanceof IBlockEntity))
                 throw new ClassCastException("Cannot cast " + clas + " to IBlockEntity");
+
+            // This enforces that min is the lower corner, and max is the upper.
+            AxisAlignedBB box = new AxisAlignedBB(min, max);
+            min = new BlockPos(box.minX, box.minY, box.minZ);
+            max = new BlockPos(box.maxX, box.maxY, box.maxZ);
             IBlockEntity entity = (IBlockEntity) ret;
             ret.setPosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             entity.setBlocks(checkBlocks(worldObj, min, max, pos));
@@ -224,6 +231,7 @@ public interface IBlockEntity
             entity.setMax(max);
             removeBlocks(worldObj, min, max, pos);
             worldObj.spawnEntityInWorld(ret);
+            System.out.println(box + " " + ret + " " + worldObj);
             return ret;
         }
     }

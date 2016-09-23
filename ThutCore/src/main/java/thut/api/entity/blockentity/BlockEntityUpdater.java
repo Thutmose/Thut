@@ -58,7 +58,7 @@ public class BlockEntityUpdater
         {
             theEntity.setPosition(theEntity.posX, Math.round(theEntity.posY), theEntity.posZ);
         }
-        blockEntity.getFakeWorld().setTotalWorldTime(theEntity.worldObj.getTotalWorldTime());
+        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.worldObj.getTotalWorldTime());
         MutableBlockPos pos = new MutableBlockPos();
         int xMin = blockEntity.getMin().getX();
         int zMin = blockEntity.getMin().getZ();
@@ -75,7 +75,10 @@ public class BlockEntityUpdater
                     // TODO rotate here by entity rotation.
 
                     if (blockEntity.getTiles()[i][j][k] != null)
+                    {
                         blockEntity.getTiles()[i][j][k].setPos(pos.toImmutable());
+                        blockEntity.getTiles()[i][j][k].setWorldObj(blockEntity.getFakeWorld());
+                    }
                     if (blockEntity.getTiles()[i][j][k] instanceof ITickable)
                     {
                         if (erroredSet.contains(blockEntity.getTiles()[i][j][k])) continue;
@@ -96,8 +99,7 @@ public class BlockEntityUpdater
     @SuppressWarnings("deprecation")
     public void applyEntityCollision(Entity entity)
     {
-        if ((theEntity.rotationYaw + 360) % 90 > 5 || !theEntity.isPassenger(entity)) return;
-
+        if ((theEntity.rotationYaw + 360) % 90 > 5 || theEntity.isPassenger(entity)) return;
         blockBoxes.clear();
         int sizeX = blockEntity.getBlocks().length;
         int sizeY = blockEntity.getBlocks()[0].length;

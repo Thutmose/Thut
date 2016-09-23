@@ -16,7 +16,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -30,13 +29,11 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.api.ThutBlocks;
 import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 import thut.tech.common.entity.EntityLift;
-import thut.tech.common.handlers.ConfigHandler;
 
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
@@ -44,26 +41,15 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public int                          power        = 0;
     public int                          prevPower    = 1;
     public EntityLift                   lift;
-
     boolean                             listNull     = false;
     List<Entity>                        list         = new ArrayList<Entity>();
     Vector3                             here;
-
     public Vector3                      root         = Vector3.getNewVector();
     public TileEntityLiftAccess         rootNode;
     public Vector<TileEntityLiftAccess> connected    = new Vector<TileEntityLiftAccess>();
     EnumFacing                          sourceSide;
     public double                       energy;
-
-    boolean                             isLift       = false;
-    public Block                        blockID      = Blocks.AIR;
-
-    // public int[][] corners = new int[2][2];
-    public Vector3                      boundMin     = Vector3.getNewVector();
-    public Vector3                      boundMax     = Vector3.getNewVector();
-
     boolean                             loaded       = false;
-
     public int                          floor        = 0;
     public int                          calledYValue = -1;
     public int                          calledFloor  = 0;
@@ -72,11 +58,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     UUID                                empty        = new UUID(0, 0);
     private byte[]                      sides        = new byte[6];
     private byte[]                      sidePages    = new byte[6];
-
     int                                 tries        = 0;
-
     public boolean                      toClear      = false;
-
     public boolean                      first        = true;
     public boolean                      read         = false;
     public boolean                      redstone     = true;
@@ -133,7 +116,37 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (lift != null)
         {
-            lift.callYValue(args.checkInteger(0));
+            lift.setDestY(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Calls lift to specified Y value
+     */
+    @Callback(doc = "function(xValue:number) -- Calls the Lift to the specified X location")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callXValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.setDestX(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Calls lift to specified Y value
+     */
+    @Callback(doc = "function(zValue:number) -- Calls the Lift to the specified Z location")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callZValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.setDestZ(args.checkInteger(0));
             return new Object[] {};
         }
         throw new Exception("no connected lift");
@@ -153,19 +166,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
     }
 
-    public void callYValue(int yValue)
-    {
-        if (lift != null)
-        {
-            lift.callYValue(yValue);
-        }
-    }
-
-    public void checkPower()
-    {
-
-    }
-
     public boolean checkSides()
     {
         List<EntityLift> check = worldObj.getEntitiesWithinAABB(EntityLift.class,
@@ -177,11 +177,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             liftID = lift.getPersistentID();
         }
         return !(check == null || check.isEmpty());
-    }
-
-    public void clearConnections()
-    {
-
     }
 
     public String connectionInfo()
@@ -197,52 +192,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             lift = EntityLift.getLiftFromUUID(liftID, worldObj);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        if (isLift && blockID == ThutBlocks.lift)
-        {
-            if (button == 2)
-            {
-                boundMin.x = Math.max(-ConfigHandler.maxRadius, boundMin.x - 1);
-            }
-            else if (button == 3)
-            {
-                boundMin.x = Math.min(0, boundMin.x + 1);
-            }
-            else if (button == 6)
-            {
-                boundMin.z = Math.max(-ConfigHandler.maxRadius, boundMin.z - 1);
-            }
-            else if (button == 7)
-            {
-                boundMin.z = Math.min(0, boundMin.z + 1);
-            }
-            else if (button == 10)
-            {
-                boundMax.x = Math.max(0, boundMax.x - 1);
-            }
-            else if (button == 11)
-            {
-                boundMax.x = Math.min(ConfigHandler.maxRadius, boundMax.x + 1);
-            }
-            else if (button == 14)
-            {
-                boundMax.z = Math.max(0, boundMax.z - 1);
-            }
-            else if (button == 15)
-            {
-                boundMax.z = Math.min(ConfigHandler.maxRadius, boundMax.z + 1);
-            }
-            else
-            {
-                if (button == 4 || button == 8 || button == 12 || button == 16)
-                {
-                    boundMax.y = Math.max(0, boundMax.y - 1);
-                }
-                else if (button == 1 || button == 5 || button == 9 || button == 13)
-                {
-                    boundMax.y = Math.min(ConfigHandler.maxHeight, boundMax.y + 1);
-                }
-            }
-        }
         if (!worldObj.isRemote && lift != null)
         {
             if (isSideOn(side))
@@ -358,7 +307,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (rootNode != null) return rootNode;
 
         Block b = here.getBlock(worldObj, DOWN);
-        if (b == blockID)
+        if (b == getBlockType())
         {
             TileEntityLiftAccess te = (TileEntityLiftAccess) here.getTileEntity(worldObj, DOWN);
             if (te != null && te != this) { return rootNode = te.getRoot(); }
@@ -378,7 +327,31 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     @Optional.Method(modid = "OpenComputers")
     public Object[] getYValue(Context context, Arguments args) throws Exception
     {
-        if (lift != null) return new Object[] { (int) lift.posY };
+        if (lift != null) return new Object[] { (float) lift.posY };
+
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current X value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getXValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (float) lift.posX };
+
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current Z value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getZValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (float) lift.posZ };
 
         throw new Exception("no connected lift");
     }
@@ -409,7 +382,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public void invalidate()
     {
         super.invalidate();
-        clearConnections();
     }
 
     public boolean isSideOn(EnumFacing side)
@@ -436,7 +408,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public void readFromNBT(NBTTagCompound par1)
     {
         super.readFromNBT(par1);
-        blockID = Block.getBlockFromName(par1.getString("block id"));
         floor = par1.getInteger("floor");
         liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
         root = Vector3.getNewVector();
@@ -446,23 +417,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (sides.length != 6) sides = new byte[6];
         sidePages = par1.getByteArray("sidePages");
         if (sidePages.length != 6) sidePages = new byte[6];
-        if (par1.hasKey("corners"))
-        {
-            int[] read = par1.getIntArray("corners");
-            int xMin = read[0];
-            int zMin = read[1];
-            int xMax = read[2];
-            int zMax = read[3];
-            boundMin.x = xMin;
-            boundMin.z = zMin;
-            boundMax.x = xMax;
-            boundMax.z = zMax;
-        }
-        if (par1.hasKey("bounds"))
-        {
-            boundMin = Vector3.readFromNBT(par1.getCompoundTag("bounds"), "min");
-            boundMax = Vector3.readFromNBT(par1.getCompoundTag("bounds"), "max");
-        }
     }
 
     public void setEnergy(double energy)
@@ -530,7 +484,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (here == null) here = Vector3.getNewVector();
         here.set(this);
-        if (isLift || this.worldObj instanceof BlockEntityWorld) { return; }
+        if (this.worldObj instanceof BlockEntityWorld) { return; }
 
         if ((lift == null || lift.isDead))
         {
@@ -596,13 +550,13 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             lift = null;
             floor = 0;
         }
-        if (blockID == ThutBlocks.lift && lift == null)
+        if (lift == null)
         {
             for (EnumFacing side : EnumFacing.values())
             {
                 TileEntity t = here.getTileEntity(worldObj, side);
                 Block b = here.getBlock(worldObj, side);
-                if (b == blockID && t instanceof TileEntityLiftAccess)
+                if (b == getBlockType() && t instanceof TileEntityLiftAccess)
                 {
                     TileEntityLiftAccess te = (TileEntityLiftAccess) t;
                     if (te.lift != null)
@@ -642,10 +596,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             par1.setLong("idLess", liftID.getLeastSignificantBits());
             par1.setLong("idMost", liftID.getMostSignificantBits());
         }
-        NBTTagCompound vector = new NBTTagCompound();
-        boundMin.writeToNBT(vector, "min");
-        boundMax.writeToNBT(vector, "max");
-        par1.setTag("bounds", vector);
         return par1;
     }
 

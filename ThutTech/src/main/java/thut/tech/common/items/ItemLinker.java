@@ -8,6 +8,8 @@ import java.util.UUID;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -18,9 +20,14 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
@@ -32,10 +39,12 @@ import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.entity.EntityLift;
+import thut.tech.common.handlers.ConfigHandler;
 
 public class ItemLinker extends Item
 {
-    public static Item instance;
+    public static Item      instance;
+    public static ItemStack liftblocks;
 
     public ItemLinker()
     {
@@ -43,6 +52,7 @@ public class ItemLinker extends Item
         this.setHasSubtypes(true);
         this.setUnlocalizedName("devicelinker");
         this.setCreativeTab(TechCore.tabThut);
+        if (FMLCommonHandler.instance().getSide() == Side.CLIENT) MinecraftForge.EVENT_BUS.register(this);
         instance = this;
     }
 
@@ -52,6 +62,47 @@ public class ItemLinker extends Item
     public boolean getShareTag()
     {
         return true;
+    }
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void RenderBounds(DrawBlockHighlightEvent event)
+    {
+        ItemStack held;
+        EntityPlayer player = event.getPlayer();
+        if ((held = player.getHeldItemMainhand()) != null || (held = player.getHeldItemOffhand()) != null)
+        {
+            BlockPos pos = event.getTarget().getBlockPos();
+            if (pos == null || !player.worldObj.getBlockState(pos).getMaterial().isSolid()) return;
+
+            if (held.getItem() == this && held.getTagCompound() != null && held.getTagCompound().hasKey("min"))
+            {
+                BlockPos min = Vector3.readFromNBT(held.getTagCompound().getCompoundTag("min"), "").getPos();
+                BlockPos max = pos;
+                AxisAlignedBB box = new AxisAlignedBB(min, max);
+                min = new BlockPos(box.minX, box.minY, box.minZ);
+                max = new BlockPos(box.maxX, box.maxY, box.maxZ).add(1, 1, 1);
+                box = new AxisAlignedBB(min, max);
+                float partialTicks = event.getPartialTicks();
+                double d0 = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double) partialTicks;
+                double d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double) partialTicks;
+                double d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double) partialTicks;
+                box = box.offset(-d0, -d1, -d2);
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+                        GlStateManager.DestFactor.ZERO);
+                GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
+                GlStateManager.glLineWidth(2.0F);
+                GlStateManager.disableTexture2D();
+                GlStateManager.depthMask(false);
+                GlStateManager.color(1.0F, 0.0F, 0.0F, 1F);
+                RenderGlobal.drawSelectionBoundingBox(box);
+                GlStateManager.depthMask(true);
+                GlStateManager.enableTexture2D();
+                GlStateManager.disableBlend();
+            }
+        }
     }
 
     @Override
@@ -154,55 +205,73 @@ public class ItemLinker extends Item
     public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
             EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        String[] vals = stack.getDisplayName().split(",");
-        if (vals.length == 6 && !playerIn.isSneaking())
+        boolean hasLift = stack.getTagCompound() != null && stack.getTagCompound().hasKey("lift");
+
+        if (!playerIn.isSneaking() && !hasLift)
         {
-            // TODO check for lift block in inventory to consume, of not there,
-            // deny creation.
-            String[] arr = stack.getDisplayName().split(",");
-            BlockPos min = null;
-            BlockPos max = null;
-            if (arr.length == 6)
+            stack.setTagCompound(new NBTTagCompound());
+            NBTTagCompound min = new NBTTagCompound();
+            Vector3.getNewVector().set(pos).writeToNBT(min, "");
+            stack.getTagCompound().setTag("min", min);
+            String message = "msg.lift.setcorner";
+            if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, pos));
+            return EnumActionResult.SUCCESS;
+        }
+        else if (playerIn.isSneaking() && stack.hasTagCompound() && stack.getTagCompound().hasKey("min"))
+        {
+
+            NBTTagCompound minTag = stack.getTagCompound().getCompoundTag("min");
+            BlockPos min = pos;
+            BlockPos max = Vector3.readFromNBT(minTag, "").getPos();
+            AxisAlignedBB box = new AxisAlignedBB(min, max);
+            min = new BlockPos(box.minX, box.minY, box.minZ);
+            max = new BlockPos(box.maxX, box.maxY, box.maxZ);
+            BlockPos mid = min.add((max.getX() - min.getX()) / 2, 0, (max.getZ() - min.getZ()) / 2);
+            min = min.subtract(mid);
+            max = max.subtract(mid);
+            int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
+            if (max.getY() - min.getY() > ConfigHandler.maxHeight || dw > 2 * ConfigHandler.maxRadius + 1)
             {
-                try
+                String message = "msg.lift.toobig";
+                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                return EnumActionResult.FAIL;
+            }
+            int num = (dw + 1) * (max.getY() - min.getY() + 1);
+            int count = 0;
+            for (ItemStack item : playerIn.inventory.mainInventory)
+            {
+                if (item != null)
                 {
-                    min = new BlockPos(Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
-                    max = new BlockPos(Integer.parseInt(arr[3]), Integer.parseInt(arr[4]), Integer.parseInt(arr[5]));
-                }
-                catch (NumberFormatException e)
-                {
-                    String message = "msg.lift.badformat";
-                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                    ItemStack test = item.copy();
+                    test.stackSize = liftblocks.stackSize;
+                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += item.stackSize;
                 }
             }
-
-            if (min != null && max != null && !worldIn.isRemote)
+            if (!playerIn.capabilities.isCreativeMode && count < num)
             {
-                int lx = (max.getX() - min.getX());
-                int ly = (max.getY() - min.getY());
-                int lz = (max.getZ() - min.getZ());
-                int volume = lx * ly * lz;
-                if (volume == 0 || lx < 0 || ly < 0 || lz < 0)
-                {
-                    String message = "msg.lift.nosize";
-                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
-                    return EnumActionResult.FAIL;
-                }
-                EntityLift lift = IBlockEntity.BlockEntityFormer.makeBlockEntity(worldIn, min, max, pos,
+                String message = "msg.lift.noblock";
+                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, num));
+                return EnumActionResult.FAIL;
+            }
+            else if (!playerIn.capabilities.isCreativeMode)
+            {
+                playerIn.inventory.clearMatchingItems(liftblocks.getItem(), liftblocks.getItemDamage(), num,
+                        liftblocks.getTagCompound());
+            }
+            if (!worldIn.isRemote)
+            {
+                EntityLift lift = IBlockEntity.BlockEntityFormer.makeBlockEntity(worldIn, min, max, mid,
                         EntityLift.class);
                 lift.owner = playerIn.getUniqueID();
-                worldIn.spawnEntityInWorld(lift);
                 String message = "msg.lift.create";
                 playerIn.addChatMessage(new TextComponentTranslation(message));
             }
-            stack.setStackDisplayName("Device Linker");
+            stack.getTagCompound().removeTag("min");
             return EnumActionResult.SUCCESS;
         }
 
         if (stack.getTagCompound() == null)
         {
-            // tryBoom(stack, playerIn, worldIn, pos, hand, facing, hitX, hitY,
-            // hitZ);
             return EnumActionResult.PASS;
         }
         else
@@ -224,6 +293,9 @@ public class ItemLinker extends Item
             }
             catch (Exception e)
             {
+                stack.setTagCompound(new NBTTagCompound());
+                String message = "msg.linker.reset";
+                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
                 return EnumActionResult.FAIL;
             }
 
@@ -238,7 +310,7 @@ public class ItemLinker extends Item
                 {
                     te.callPanel = !te.callPanel;
                     String message = "msg.callPanel.name";
-                    if (worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
+                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
                 }
                 else
                 {
@@ -246,9 +318,15 @@ public class ItemLinker extends Item
                     int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
                     te.setFloor(floor);
                     String message = "msg.floorSet.name";
-                    if (worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
                 }
                 return EnumActionResult.SUCCESS;
+            }
+            else if (playerIn.isSneaking())
+            {
+                stack.setTagCompound(new NBTTagCompound());
+                String message = "msg.linker.reset";
+                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
             }
         }
         return EnumActionResult.PASS;

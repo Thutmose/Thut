@@ -35,6 +35,11 @@ public class BlockEntityWorld extends World
         int xMin = blockEntity.getMin().getX();
         int zMin = blockEntity.getMin().getZ();
         int yMin = blockEntity.getMin().getY();
+        if (blockEntity.getBlocks() == null)
+        {
+            entity.setDead();
+            return;
+        }
         int sizeX = blockEntity.getBlocks().length;
         int sizeY = blockEntity.getBlocks()[0].length;
         int sizeZ = blockEntity.getBlocks()[0][0].length;
@@ -200,7 +205,7 @@ public class BlockEntityWorld extends World
     {
         return world;
     }
-    
+
     public IBlockEntity getEntity()
     {
         return blockEntity;

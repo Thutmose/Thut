@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
@@ -53,48 +52,52 @@ import thut.tech.common.items.ItemLinker;
 
 public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IBlockEntity
 {
-    static final DataParameter<Integer>             DESTINATIONFLOORDW = EntityDataManager
-            .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
-    static final DataParameter<Integer>             DESTINATIONYDW     = EntityDataManager
-            .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
-    static final DataParameter<Integer>             CURRENTFLOORDW     = EntityDataManager
-            .<Integer> createKey(EntityLift.class, DataSerializers.VARINT);
-    static final DataParameter<Optional<ItemStack>> CAMOBLOCKDW        = EntityDataManager
-            .<Optional<ItemStack>> createKey(EntityLift.class, DataSerializers.OPTIONAL_ITEM_STACK);
+    static final DataParameter<Integer> DESTINATIONFLOORDW = EntityDataManager.<Integer> createKey(EntityLift.class,
+            DataSerializers.VARINT);
+    static final DataParameter<Float>   DESTINATIONYDW     = EntityDataManager.<Float> createKey(EntityLift.class,
+            DataSerializers.FLOAT);
+    static final DataParameter<Float>   DESTINATIONXDW     = EntityDataManager.<Float> createKey(EntityLift.class,
+            DataSerializers.FLOAT);
+    static final DataParameter<Float>   DESTINATIONZDW     = EntityDataManager.<Float> createKey(EntityLift.class,
+            DataSerializers.FLOAT);
+    static final DataParameter<Integer> CURRENTFLOORDW     = EntityDataManager.<Integer> createKey(EntityLift.class,
+            DataSerializers.VARINT);
+    static final DataParameter<Boolean> CALLEDDW           = EntityDataManager.<Boolean> createKey(EntityLift.class,
+            DataSerializers.BOOLEAN);
 
-    public static int                               ACCELERATIONTICKS  = 20;
+    public static int                   ACCELERATIONTICKS  = 20;
 
-    public static boolean                           ENERGYUSE          = false;
-    public static int                               ENERGYCOST         = 100;
+    public static boolean               ENERGYUSE          = false;
+    public static int                   ENERGYCOST         = 100;
 
-    public BlockPos                                 boundMin           = BlockPos.ORIGIN;
-    public BlockPos                                 boundMax           = BlockPos.ORIGIN;
+    public BlockPos                     boundMin           = BlockPos.ORIGIN;
+    public BlockPos                     boundMax           = BlockPos.ORIGIN;
 
-    int                                             energy             = 0;
-    private BlockEntityWorld                        world;
-    public double                                   speedUp            = ConfigHandler.LiftSpeedUp;
-    public double                                   speedDown          = -ConfigHandler.LiftSpeedDown;
-    public double                                   acceleration       = 0.05;
-    public boolean                                  up                 = true;
-    public boolean                                  toMoveY            = false;
-    public boolean                                  moved              = false;
-    public boolean                                  axis               = true;
-    public boolean                                  hasPassenger       = false;
-    int                                             n                  = 0;
-    int                                             passengertime      = 10;
-    boolean                                         first              = true;
-    Random                                          r                  = new Random();
-    public UUID                                     id                 = null;
-    public UUID                                     owner;
-    public double                                   prevFloorY         = 0;
-    public double                                   prevFloor          = 0;
-    public boolean                                  called             = false;
-    TileEntityLiftAccess                            current;
-    public List<AxisAlignedBB>                      blockBoxes         = Lists.newArrayList();
-    public int[]                                    floors             = new int[64];
-    public ItemStack[][][]                          blocks             = null;
-    public TileEntity[][][]                         tiles              = null;
-    BlockEntityUpdater                              collider;
+    int                                 energy             = 0;
+    private BlockEntityWorld            world;
+    public double                       speedUp            = ConfigHandler.LiftSpeedUp;
+    public double                       speedDown          = -ConfigHandler.LiftSpeedDown;
+    public double                       speedHoriz         = 0.5;
+    public double                       acceleration       = 0.05;
+    public boolean                      toMoveY            = false;
+    public boolean                      toMoveX            = false;
+    public boolean                      toMoveZ            = false;
+    public boolean                      axis               = true;
+    public boolean                      hasPassenger       = false;
+    int                                 n                  = 0;
+    int                                 passengertime      = 10;
+    boolean                             first              = true;
+    Random                              r                  = new Random();
+    public UUID                         id                 = null;
+    public UUID                         owner;
+    public double                       prevFloorY         = 0;
+    public double                       prevFloor          = 0;
+    TileEntityLiftAccess                current;
+    public List<AxisAlignedBB>          blockBoxes         = Lists.newArrayList();
+    public int[]                        floors             = new int[64];
+    public ItemStack[][][]              blocks             = null;
+    public TileEntity[][][]             tiles              = null;
+    BlockEntityUpdater                  collider;
 
     public EntityLift(World par1World)
     {
@@ -124,20 +127,70 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         r.setSeed(100);
     }
 
-    public void accelerate()
+    private double getSpeed(double pos, double destPos, double speed, double speedPos, double speedNeg)
+    {
+        double ds = speed;
+        if (destPos > pos)
+        {
+            boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
+            if (!tooFast)
+            {
+                ds = Math.min(speedPos, ds + acceleration * speedPos);
+            }
+            else while (ds >= 0 && tooFast)
+            {
+                ds = ds - acceleration * speedPos / 10;
+                tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
+            }
+        }
+        else
+        {
+            speedNeg = Math.abs(speedNeg);
+            boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
+            if (!tooFast)
+            {
+                ds = Math.max(-speedNeg, ds - acceleration * speedNeg);
+            }
+            else while (ds <= 0 && tooFast)
+            {
+                ds = ds + acceleration * speedNeg / 10;
+                tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
+            }
+        }
+        return ds;
+    }
+
+    private void accelerate()
     {
         if (isServerWorld() && !consumePower())
         {
-            toMoveY = false;
+            toMoveY = toMoveX = toMoveZ = false;
         }
 
-        motionX = 0;
-        motionZ = 0;
+        if (!toMoveX) motionX *= 0.5;
+        if (!toMoveZ) motionZ *= 0.5;
         if (!toMoveY) motionY *= 0.5;
-        else
+
+        if (getCalled())
         {
-            if (up) motionY = Math.min(speedUp, motionY + acceleration * speedUp);
-            else motionY = Math.max(speedDown, motionY + acceleration * speedDown);
+            if (toMoveY)
+            {
+                float destY = getDestY();
+                double dy = getSpeed(posY, destY, motionY, speedUp, speedDown);
+                motionY = dy;
+            }
+            if (toMoveX)
+            {
+                float destX = getDestX();
+                double dx = getSpeed(posX, destX, motionX, speedHoriz, speedHoriz);
+                motionX = dx;
+            }
+            if (toMoveZ)
+            {
+                float destZ = getDestZ();
+                double dz = getSpeed(posZ, destZ, motionZ, speedHoriz, speedHoriz);
+                motionZ = dz;
+            }
         }
     }
 
@@ -146,6 +199,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void applyEntityCollision(Entity entity)
     {
+        if (collider == null)
+        {
+            collider = new BlockEntityUpdater(this);
+            collider.onSetPosition();
+        }
         try
         {
             collider.applyEntityCollision(entity);
@@ -208,7 +266,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
         List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
                 posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
-
         if (list != null && !list.isEmpty())
         {
             if (list.size() == 1 && this.getRecursivePassengers() != null
@@ -222,47 +279,21 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    public boolean checkBlocks(double dir)
-    {
-        boolean ret = true;
-        Vector3 thisloc = Vector3.getNewVector().set(this).addTo(0, dir, 0);
-
-        if (called)
-        {
-            if (dir > 0 && thisloc.y > getDestY()) { return false; }
-            if (dir < 0 && thisloc.y < getDestY()) { return false; }
-        }
-
-        int xMin = boundMin.getX();
-        int zMin = boundMin.getZ();
-        int xMax = boundMax.getX();
-        int zMax = boundMax.getZ();
-
-        Vector3 v = Vector3.getNewVector();
-        for (int i = xMin; i <= xMax; i++)
-            for (int j = zMin; j <= zMax; j++)
-            {
-                ret = ret && (v.set(thisloc).addTo(i, 0, j)).clearOfBlocks(worldObj);
-            }
-        return ret;
-    }
-
     private boolean consumePower()
     {
-        if (!ENERGYUSE || !toMoveY) return true;
+        if (!ENERGYUSE || !getCalled()) return true;
         boolean power = false;
         Vector3 bounds = Vector3.getNewVector().set(boundMax.subtract(boundMin));
         double volume = bounds.x * bounds.y * bounds.z;
         double energyCost = Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01;
         energyCost = Math.max(energyCost, 1);
-        if (energyCost <= 0) return true;
         power = (energy = (int) (energy - energyCost)) > 0;
         if (energy < 0) energy = 0;
         MinecraftForge.EVENT_BUS.post(new EventLiftConsumePower(this, (long) energyCost));
         if (!power)
         {
             this.setDestinationFloor(-1);
-            this.setDestY(0);
+            this.setDestY((float) posY);
             toMoveY = false;
         }
         return power;
@@ -280,81 +311,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void doMotion()
     {
-        if (up)
-        {
-            if (checkBlocks(motionY * (ACCELERATIONTICKS + 1)))
-            {
-                setPosition(posX, posY + motionY, posZ);
-                moved = true;
-                return;
-            }
-            else
-            {
-                while (motionY >= 0 && !checkBlocks((motionY - acceleration * speedUp / 10) * (ACCELERATIONTICKS + 1)))
-                {
-                    motionY = motionY - acceleration * speedUp / 10;
-                }
-
-                if (checkBlocks(motionY))
-                {
-                    setPosition(posX, posY + motionY, posZ);
-                    moved = true;
-                    return;
-                }
-                else
-                {
-                    setPosition(posX, Math.abs(posY - getDestY()) < 0.5 ? getDestY() : Math.floor(posY), posZ);
-                    called = false;
-                    prevFloor = getDestinationFloor();
-                    prevFloorY = getDestY();
-                    setDestY(-1);
-                    setDestinationFloor(0);
-                    current = null;
-                    motionY = 0;
-                    toMoveY = false;
-                    moved = false;
-                }
-            }
-        }
-        else
-        {
-            if (checkBlocks(motionY * (ACCELERATIONTICKS + 1)))
-            {
-                setPosition(posX, posY + motionY, posZ);
-                moved = true;
-                return;
-            }
-            else
-            {
-                while (motionY <= 0
-                        && !checkBlocks((motionY - acceleration * speedDown / 10) * (ACCELERATIONTICKS + 1)))
-                {
-                    motionY = motionY - acceleration * speedDown / 10;
-                }
-
-                if (checkBlocks(motionY))
-                {
-                    setPosition(posX, posY + motionY, posZ);
-                    moved = true;
-                    return;
-                }
-                else
-                {
-                    setPosition(posX, Math.abs(posY - getDestY()) < 0.5 ? getDestY() : Math.floor(posY), posZ);
-                    called = false;
-                    prevFloor = getDestinationFloor();
-                    prevFloorY = getDestY();
-                    setDestY(-1);
-                    setDestinationFloor(0);
-                    current = null;
-                    motionY = 0;
-                    toMoveY = false;
-                    moved = false;
-                }
-            }
-        }
-        toMoveY = false;
-        moved = false;
+        if (!toMoveX) motionX = 0;
+        if (!toMoveY) motionY = 0;
+        if (!toMoveZ) motionZ = 0;
+        if (getCalled()) this.moveEntity(motionX, motionY, motionZ);
     }
 
     @Override
@@ -362,9 +322,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         super.entityInit();
         this.dataManager.register(DESTINATIONFLOORDW, Integer.valueOf(0));
-        this.dataManager.register(DESTINATIONYDW, Integer.valueOf(0));
+        this.dataManager.register(DESTINATIONYDW, Float.valueOf(0));
+        this.dataManager.register(DESTINATIONXDW, Float.valueOf(0));
+        this.dataManager.register(DESTINATIONZDW, Float.valueOf(0));
         this.dataManager.register(CURRENTFLOORDW, Integer.valueOf(-1));
-        this.dataManager.register(CAMOBLOCKDW, Optional.<ItemStack> absent());
+        this.dataManager.register(CALLEDDW, Boolean.FALSE);
     }
 
     /** returns the bounding box for this entity */
@@ -380,6 +342,16 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return false;
     }
 
+    private boolean getCalled()
+    {
+        return dataManager.get(CALLEDDW);
+    }
+
+    private void setCalled(boolean called)
+    {
+        dataManager.set(CALLEDDW, called);
+    }
+
     /** @return the destinationFloor */
     public int getCurrentFloor()
     {
@@ -393,9 +365,21 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     }
 
     /** @return the destinationFloor */
-    public int getDestY()
+    public float getDestX()
+    {
+        return dataManager.get(DESTINATIONXDW);
+    }
+
+    /** @return the destinationFloor */
+    public float getDestY()
     {
         return dataManager.get(DESTINATIONYDW);
+    }
+
+    /** @return the destinationFloor */
+    public float getDestZ()
+    {
+        return dataManager.get(DESTINATIONZDW);
     }
 
     @Override
@@ -455,24 +439,56 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
-        ItemStack item = player.getHeldItem(hand);
         if (hand != EnumHand.MAIN_HAND) return false;
+        if (stack != null && stack.getItem() == Items.STICK)
+        {
+            if (stack.getDisplayName().equals("x"))
+            {
+                this.setDestX((float) (posX + 10));
+                return true;
+            }
+            else if (stack.getDisplayName().equals("-x"))
+            {
+                this.setDestX((float) (posX - 10));
+                return true;
+            }
+            else if (stack.getDisplayName().equals("z"))
+            {
+                this.setDestZ((float) (posZ + 10));
+                return true;
+            }
+            else if (stack.getDisplayName().equals("-z"))
+            {
+                this.setDestZ((float) (posZ - 10));
+                return true;
+            }
+            else if (stack.getDisplayName().equals("y"))
+            {
+                this.setDestY((float) (posY + 10));
+                return true;
+            }
+            else if (stack.getDisplayName().equals("-y"))
+            {
+                this.setDestY((float) (posY - 10));
+                return true;
+            }
+        }
 
-        if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker
+        if (player.isSneaking() && stack != null && stack.getItem() instanceof ItemLinker
                 && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
         {
-            if (item.getTagCompound() == null)
+            if (stack.getTagCompound() == null)
             {
-                item.setTagCompound(new NBTTagCompound());
+                stack.setTagCompound(new NBTTagCompound());
             }
-            item.getTagCompound().setString("lift", getCachedUniqueIdString());
+            stack.getTagCompound().setString("lift", getCachedUniqueIdString());
 
             String message = "msg.liftSet.name";
 
             if (worldObj.isRemote) player.addChatMessage(new TextComponentTranslation(message));
             return true;
         }
-        else if (item != null && item.getItem() instanceof ItemLinker
+        else if (stack != null && stack.getItem() instanceof ItemLinker
                 && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
         {
             if (!worldObj.isRemote && owner != null)
@@ -484,7 +500,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             }
             return true;
         }
-        if ((player.isSneaking() && item != null
+        if ((player.isSneaking() && stack != null
                 && (player.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
                         || player.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                         || player.getHeldItem(hand).getItem().getUnlocalizedName()
@@ -500,14 +516,14 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             }
             return true;
         }
-        else if (player.isSneaking() && item != null && Block.getBlockFromItem(item.getItem()) != null
+        else if (player.isSneaking() && stack != null && Block.getBlockFromItem(stack.getItem()) != null
                 && (owner == null || owner.equals(player.getUniqueID())))
         {
             System.out.println("Test");
-            Block block = Block.getBlockFromItem(item.getItem());
+            Block block = Block.getBlockFromItem(stack.getItem());
             if (!(block instanceof ITileEntityProvider))
             {
-                ItemStack item2 = item.splitStack(1);
+                ItemStack item2 = stack.splitStack(1);
                 if (getHeldItem(null) != null && !worldObj.isRemote)
                 {
                     this.entityDropItem(getHeldItem(null), 1);
@@ -515,13 +531,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 if (!worldObj.isRemote)
                 {
                     String message = "msg.lift.camo";
-                    player.addChatMessage(new TextComponentTranslation(message, item.getDisplayName()));
+                    player.addChatMessage(new TextComponentTranslation(message, stack.getDisplayName()));
                     setHeldItem(null, item2);
                 }
             }
             return true;
         }
-        else if (player.isSneaking() && item == null && (owner == null || owner.equals(player.getUniqueID())))
+        else if (player.isSneaking() && stack == null && (owner == null || owner.equals(player.getUniqueID())))
         {
             if (getHeldItem(null) != null && !worldObj.isRemote)
             {
@@ -543,26 +559,33 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void onUpdate()
     {
         if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
-        this.rotationYaw = 0;
         if (collider == null)
         {
             this.collider = new BlockEntityUpdater(this);
             this.collider.onSetPosition();
         }
-        this.prevPosY = posY;
+        this.prevPosY = this.posY;
+        this.prevPosX = this.posX;
+        this.prevPosZ = this.posZ;
         collider.onUpdate();
-        if (!checkBlocks(0)) toMoveY = false;
-        toMoveY = called = getDestY() > 0;
-        up = getDestY() > posY;
+        int dy = (int) ((getDestY() - posY) * 16);
+        int dx = (int) ((getDestX() - posX) * 16);
+        int dz = (int) ((getDestZ() - posZ) * 16);
+        toMoveZ = 0 != dz;
+        toMoveY = 0 != dy;
+        toMoveX = 0 != dx;
         accelerate();
-        if (toMoveY)
+        if (toMoveY || toMoveX || toMoveZ)
         {
             doMotion();
         }
-        else if (!worldObj.isRemote)
+        else// if (!worldObj.isRemote)
         {
-            setPosition(posX, Math.round(posY), posZ);
+            setCalled(false);
+            BlockPos pos = getPosition();
+            setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
         }
+        this.rotationYaw = 0;
         checkCollision();
         passengertime = hasPassenger ? 20 : passengertime - 1;
         n++;
@@ -723,9 +746,32 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     /** @param dest
      *            the destinationFloor to set */
-    public void setDestY(int dest)
+    public void setDestX(float dest)
     {
-        dataManager.set(DESTINATIONYDW, Integer.valueOf(dest));
+        dataManager.set(DESTINATIONXDW, Float.valueOf(dest));
+        dataManager.set(DESTINATIONYDW, Float.valueOf((float) posY));
+        dataManager.set(DESTINATIONZDW, Float.valueOf((float) posZ));
+        setCalled(true);
+    }
+
+    /** @param dest
+     *            the destinationFloor to set */
+    public void setDestY(float dest)
+    {
+        dataManager.set(DESTINATIONYDW, Float.valueOf(dest));
+        dataManager.set(DESTINATIONXDW, Float.valueOf((float) posX));
+        dataManager.set(DESTINATIONZDW, Float.valueOf((float) posZ));
+        setCalled(true);
+    }
+
+    /** @param dest
+     *            the destinationFloor to set */
+    public void setDestZ(float dest)
+    {
+        dataManager.set(DESTINATIONZDW, Float.valueOf(dest));
+        dataManager.set(DESTINATIONYDW, Float.valueOf((float) posY));
+        dataManager.set(DESTINATIONXDW, Float.valueOf((float) posX));
+        setCalled(true);
     }
 
     public void setFoor(TileEntityLiftAccess te, int floor)
@@ -860,20 +906,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public ItemStack getHeldItem(EnumHand hand)
     {
-        return dataManager.get(CAMOBLOCKDW).orNull();
+        return null;
     }
 
     @Override
     public void setHeldItem(EnumHand hand, @Nullable ItemStack stack)
     {
-        if (stack != null)
-        {
-            dataManager.set(CAMOBLOCKDW, Optional.of(stack));
-        }
-        else
-        {
-            dataManager.set(CAMOBLOCKDW, Optional.<ItemStack> absent());
-        }
+
     }
 
     @Override
