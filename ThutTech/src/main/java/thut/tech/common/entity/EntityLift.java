@@ -146,7 +146,14 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void applyEntityCollision(Entity entity)
     {
-        collider.applyEntityCollision(entity);
+        try
+        {
+            collider.applyEntityCollision(entity);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /** Called when the entity is attacked. */

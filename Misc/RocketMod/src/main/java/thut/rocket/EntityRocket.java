@@ -93,7 +93,14 @@ public class EntityRocket extends EntityLivingBase
     @Override
     public void applyEntityCollision(Entity entity)
     {
-        if (!isPassenger(entity)) collider.applyEntityCollision(entity);
+        try
+        {
+            collider.applyEntityCollision(entity);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /** Called when the entity is attacked. */

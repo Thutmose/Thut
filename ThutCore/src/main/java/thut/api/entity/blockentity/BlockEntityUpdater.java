@@ -96,7 +96,7 @@ public class BlockEntityUpdater
     @SuppressWarnings("deprecation")
     public void applyEntityCollision(Entity entity)
     {
-        if ((theEntity.rotationYaw + 360) % 90 > 5) return;
+        if ((theEntity.rotationYaw + 360) % 90 > 5 || !theEntity.isPassenger(entity)) return;
 
         blockBoxes.clear();
         int sizeX = blockEntity.getBlocks().length;
