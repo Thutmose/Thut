@@ -30,6 +30,7 @@ import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
@@ -163,7 +164,7 @@ public class BlockLift extends Block implements ITileEntityProvider
      * @return A instance of a class extending TileEntity */
     public TileEntity createTileEntity(World world, int metadata)
     {
-        if (metadata == 1) { return new TileEntityLiftAccess(); }
+        if (getStateFromMeta(metadata).getValue(VARIANT) == EnumType.LIFT) { return null; }
         return new TileEntityLiftAccess();
     }
 
@@ -276,7 +277,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                     if (!worldIn.isRemote)
                     {
                         te.setSide(side, !te.isSideOn(side));
-                        if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);
+                        if (worldIn instanceof WorldServer) te.sendUpdate((EntityPlayerMP) playerIn);
                     }
                     return true;
                 }

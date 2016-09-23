@@ -74,7 +74,8 @@ public class PacketHandler
                         NBTTagCompound nbt = buffer.readNBTTagCompoundFromBuffer();
                         BlockPos pos = new BlockPos(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
                         TileEntity tile = player.worldObj.getTileEntity(pos);
-                        tile.readFromNBT(nbt);
+                        if (tile != null) tile.readFromNBT(nbt);
+//                        else System.err.println("No Tile Entity found at " + pos);
                     }
                     catch (IOException e)
                     {

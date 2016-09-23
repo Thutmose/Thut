@@ -31,6 +31,8 @@ import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
+import thut.api.entity.blockentity.BlockEntityWorld;
+import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 import thut.tech.common.entity.EntityLift;
@@ -135,6 +137,20 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             return new Object[] {};
         }
         throw new Exception("no connected lift");
+    }
+
+    /** Sets the worldObj for this tileEntity. */
+    public void setWorldObj(World worldIn)
+    {
+        this.worldObj = worldIn;
+        if (worldIn instanceof BlockEntityWorld)
+        {
+            IBlockEntity blockEntity = ((BlockEntityWorld) worldIn).getEntity();
+            if (blockEntity instanceof EntityLift)
+            {
+                this.setLift((EntityLift) blockEntity);
+            }
+        }
     }
 
     public void callYValue(int yValue)
@@ -514,7 +530,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (here == null) here = Vector3.getNewVector();
         here.set(this);
-        if (isLift) { return; }
+        if (isLift || this.worldObj instanceof BlockEntityWorld) { return; }
 
         if ((lift == null || lift.isDead))
         {
@@ -642,6 +658,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public void sendUpdate(EntityPlayerMP player)
     {
+        if (worldObj instanceof BlockEntityWorld) return;
         player.connection.sendPacket(getUpdatePacket());
     }
 

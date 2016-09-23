@@ -68,8 +68,8 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             int zMin = MathHelper.floor_double(blockEntity.getMin().getZ() + entity.posZ);
             int xMax = MathHelper.floor_double(blockEntity.getMax().getX() + entity.posX);
             int zMax = MathHelper.floor_double(blockEntity.getMax().getZ() + entity.posZ);
-            int yMin = MathHelper.floor_double(blockEntity.getMin().getY() + entity.posY);
-            int yMax = MathHelper.floor_double(blockEntity.getMax().getY() + entity.posY);
+            int yMin = (int) Math.round(blockEntity.getMin().getY() + entity.posY);
+            int yMax = (int) Math.round(blockEntity.getMax().getY() + entity.posY);
 
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)

@@ -52,9 +52,9 @@ public class ConfigManager extends ConfigBase
     public boolean              prefix            = true;
 
     @Configure(category = LAND)
-    public boolean              landEnabled       = true;
+    public boolean              landEnabled       = false;
     @Configure(category = LAND)
-    public boolean              denyExplosions    = true;
+    public boolean              denyExplosions    = false;
     @Configure(category = LAND)
     public int                  teamLandPerPlayer = 125;
     @Configure(category = LAND)

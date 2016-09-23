@@ -5,6 +5,10 @@ import java.util.List;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.PlayerNotFoundException;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraftforge.common.MinecraftForge;
 import thut.essentials.commands.CommandManager;
 
@@ -23,6 +27,26 @@ public abstract class BaseCommand extends CommandBase
     public int getRequiredPermissionLevel()
     {
         return perm;
+    }
+
+    /** Check if the given ICommandSender has permission to execute this
+     * command */
+    @Override
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender)
+    {
+        if (!(sender instanceof EntityPlayer)) return true;
+        EntityPlayer player = null;
+        try
+        {
+            player = getCommandSenderAsPlayer(sender);
+        }
+        catch (PlayerNotFoundException e)
+        {
+            return false;
+        }
+        UserListOpsEntry userlistopsentry = (UserListOpsEntry) server.getPlayerList().getOppedPlayers()
+                .getEntry(player.getGameProfile());
+        return userlistopsentry != null ? userlistopsentry.getPermissionLevel() >= perm : perm <= 0;
     }
 
     @Override

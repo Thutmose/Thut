@@ -38,6 +38,18 @@ public class BlockEntityUpdater
         this.theEntity = (Entity) rocket;
     }
 
+    public void onSetPosition()
+    {
+        double xMin, yMin, zMin, xMax, yMax, zMax;
+        xMin = theEntity.posX + blockEntity.getMin().getX() - 0.5;
+        yMin = theEntity.posY + blockEntity.getMin().getY();
+        zMin = theEntity.posZ + blockEntity.getMin().getZ() - 0.5;
+        xMax = theEntity.posX + blockEntity.getMax().getX() + 0.5;
+        yMax = theEntity.posY + blockEntity.getMax().getY() + 1;
+        zMax = theEntity.posZ + blockEntity.getMax().getZ() + 0.5;
+        theEntity.setEntityBoundingBox(new AxisAlignedBB(xMin, yMin, zMin, xMax, yMax, zMax));
+    }
+
     public void onUpdate()
     {
         theEntity.height = blockEntity.getMax().getY();
@@ -84,7 +96,7 @@ public class BlockEntityUpdater
     @SuppressWarnings("deprecation")
     public void applyEntityCollision(Entity entity)
     {
-        if ((theEntity.rotationYaw+360)%90 > 5) return;
+        if ((theEntity.rotationYaw + 360) % 90 > 5) return;
 
         blockBoxes.clear();
         int sizeX = blockEntity.getBlocks().length;

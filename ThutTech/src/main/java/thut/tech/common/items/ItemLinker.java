@@ -61,18 +61,100 @@ public class ItemLinker extends Item
         return super.onItemRightClick(itemstack, world, player, hand);
     }
 
+    public void tryBoom(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand,
+            EnumFacing facing, float hitX, float hitY, float hitZ)
+    {
+        int dy = -0;
+        if (!playerIn.isSneaking())// && !worldIn.isRemote)
+        {
+            float strength = 0.5f * 1f;
+            ExplosionCustom.MAX_RADIUS = 255;
+            ExplosionCustom.MINBLASTDAMAGE = 0.5f;
+            ExplosionCustom.AFFECTINAIR = false;
+            ExplosionCustom boom = new ExplosionCustom(worldIn, playerIn, pos.getX() + 0.5, pos.getY() + 0.5 + dy,
+                    pos.getZ() + 0.5, strength);
+            // boom.maxPerTick[0] = 1000;
+            // boom.maxPerTick[1] = 10000;
+            // boom.doExplosion();
+
+            HashMap<BlockPos, Float> resists = new HashMap<BlockPos, Float>();
+            // used to speed up the checking of if a resist exists in the
+            // map
+            Set<BlockPos> blocked = Sets.newHashSet();
+            Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(),
+                    rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(),
+                    rTestAbs = Vector3.getNewVector();
+
+            Vector3 centre = Vector3.getNewVector().set(pos.getX() + 0.5, pos.getY() + 0.5 + dy, pos.getZ() + 0.5);
+            int ind = 0;
+            BlockPos index;
+            BlockPos index2;
+            double scaleFactor = 1500;
+            double rMag;
+            float resist;
+            double str;
+            int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));
+            int max = 4 * 2 + 1;
+            num = Math.min(num, max);
+            num = Math.min(num, 1000);
+            int numCubed = num * num * num;
+            double radSq = num * num / 4;
+            int maxIndex = numCubed;
+            for (int currentIndex = ind; currentIndex < maxIndex; currentIndex++)
+            {
+                Cruncher.indexToVals(currentIndex, r);
+                if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;
+                double rSq = r.magSq();
+                if (rSq > radSq) continue;
+                rMag = Math.sqrt(rSq);
+                str = strength * scaleFactor / rSq;
+                if (str <= 0.5)
+                {
+                    System.out.println("Terminating at distance " + rMag);
+                    break;
+                }
+                rAbs.set(r).addTo(centre);
+                rHat.set(r).norm();
+                resist = rAbs.getExplosionResistance(boom, worldIn);
+                rTestPrev.set(r);
+                if (rMag >= 1)
+                {
+                    double dj = 1 - ((rMag - 1) / rMag);
+                    for (double scale = 1; scale >= (rMag - 1) / rMag; scale -= dj)
+                    {
+                        rTest.set(r).scalarMultBy(scale);
+                        if (rTestPrev.sameBlock(rTest)) continue;
+                        rTestAbs.set(rTest).addTo(centre);
+                        index2 = new BlockPos(rTest.getPos());
+                        if (blocked.contains(index2))
+                        {
+                            resist = -1;
+                        }
+                        resist += resists.get(index2);
+                        rTestPrev.set(rTest);
+                        break;
+                    }
+                }
+                index = new BlockPos(r.getPos());
+                if (resist < str && resist >= 0)
+                {
+                    resists.put(index.toImmutable(), resist);
+                    if (!rAbs.isAir(worldIn)) rAbs.setBlock(worldIn, Blocks.AIR.getDefaultState());
+                }
+                else
+                {
+                    blocked.add(index.toImmutable());
+                }
+            }
+            System.out.println("Done");
+        }
+    }
+
     @Override
     public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
             EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
         String[] vals = stack.getDisplayName().split(",");
-//
-//        if (playerIn.isSneaking())
-//        {
-//            for (int i = 0; i < 200; i++)
-//                worldIn.setBlockState(pos.up(i), worldIn.getBlockState(pos.down()));
-//        }
-
         if (vals.length == 6 && !playerIn.isSneaking())
         {
             // TODO check for lift block in inventory to consume, of not there,
@@ -93,8 +175,19 @@ public class ItemLinker extends Item
                     if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
                 }
             }
+
             if (min != null && max != null && !worldIn.isRemote)
             {
+                int lx = (max.getX() - min.getX());
+                int ly = (max.getY() - min.getY());
+                int lz = (max.getZ() - min.getZ());
+                int volume = lx * ly * lz;
+                if (volume == 0 || lx < 0 || ly < 0 || lz < 0)
+                {
+                    String message = "msg.lift.nosize";
+                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                    return EnumActionResult.FAIL;
+                }
                 EntityLift lift = IBlockEntity.BlockEntityFormer.makeBlockEntity(worldIn, min, max, pos,
                         EntityLift.class);
                 lift.owner = playerIn.getUniqueID();
@@ -108,89 +201,8 @@ public class ItemLinker extends Item
 
         if (stack.getTagCompound() == null)
         {
-            int dy = -0;
-            if (!playerIn.isSneaking())// && !worldIn.isRemote)
-            {
-                float strength = 0.5f * 1f;
-                ExplosionCustom.MAX_RADIUS = 255;
-                ExplosionCustom.MINBLASTDAMAGE = 0.5f;
-                ExplosionCustom.AFFECTINAIR = false;
-                ExplosionCustom boom = new ExplosionCustom(worldIn, playerIn, pos.getX() + 0.5, pos.getY() + 0.5 + dy,
-                        pos.getZ() + 0.5, strength);
-                // boom.maxPerTick[0] = 1000;
-                // boom.maxPerTick[1] = 10000;
-                // boom.doExplosion();
-
-                HashMap<BlockPos, Float> resists = new HashMap<BlockPos, Float>();
-                // used to speed up the checking of if a resist exists in the
-                // map
-                Set<BlockPos> blocked = Sets.newHashSet();
-                Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(),
-                        rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(),
-                        rTestAbs = Vector3.getNewVector();
-
-                Vector3 centre = Vector3.getNewVector().set(pos.getX() + 0.5, pos.getY() + 0.5 + dy, pos.getZ() + 0.5);
-                int ind = 0;
-                BlockPos index;
-                BlockPos index2;
-                double scaleFactor = 1500;
-                double rMag;
-                float resist;
-                double str;
-                int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));
-                int max = 4 * 2 + 1;
-                num = Math.min(num, max);
-                num = Math.min(num, 1000);
-                int numCubed = num * num * num;
-                double radSq = num * num / 4;
-                int maxIndex = numCubed;
-                for (int currentIndex = ind; currentIndex < maxIndex; currentIndex++)
-                {
-                    Cruncher.indexToVals(currentIndex, r);
-                    if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;
-                    double rSq = r.magSq();
-                    if (rSq > radSq) continue;
-                    rMag = Math.sqrt(rSq);
-                    str = strength * scaleFactor / rSq;
-                    if (str <= 0.5)
-                    {
-                        System.out.println("Terminating at distance " + rMag);
-                        break;
-                    }
-                    rAbs.set(r).addTo(centre);
-                    rHat.set(r).norm();
-                    resist = rAbs.getExplosionResistance(boom, worldIn);
-                    rTestPrev.set(r);
-                    if (rMag >= 1)
-                    {
-                        double dj = 1 - ((rMag - 1) / rMag);
-                        for (double scale = 1; scale >= (rMag - 1) / rMag; scale -= dj)
-                        {
-                            rTest.set(r).scalarMultBy(scale);
-                            if (rTestPrev.sameBlock(rTest)) continue;
-                            rTestAbs.set(rTest).addTo(centre);
-                            index2 = new BlockPos(rTest.getPos());
-                            if (blocked.contains(index2))
-                            {
-                                resist = -1;
-                            }
-                            rTestPrev.set(rTest);
-                            break;
-                        }
-                    }
-                    if (resist < str && resist >= 0)
-                    {
-                        if (!rAbs.isAir(worldIn)) rAbs.setBlock(worldIn, Blocks.AIR.getDefaultState());
-                    }
-                    else
-                    {
-                        index = new BlockPos(r.getPos());
-                        blocked.add(index);
-                    }
-                }
-                System.out.println("Done");
-
-            }
+            // tryBoom(stack, playerIn, worldIn, pos, hand, facing, hitX, hitY,
+            // hitZ);
             return EnumActionResult.PASS;
         }
         else

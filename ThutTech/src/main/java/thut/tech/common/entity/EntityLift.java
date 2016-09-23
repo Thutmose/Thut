@@ -106,7 +106,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             floors[i] = -1;
         }
-        this.collider = new BlockEntityUpdater(this);
     }
 
     public BlockEntityWorld getFakeWorld()
@@ -397,22 +396,33 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
             EnumHand hand)
     {
-        if (player.isSneaking()) return EnumActionResult.PASS;
-
         if (hand == EnumHand.MAIN_HAND)
         {
             vec = vec.addVector(vec.xCoord > 0 ? -0.01 : 0.01, vec.yCoord > 0 ? -0.01 : 0.01,
                     vec.zCoord > 0 ? -0.01 : 0.01);
             Vec3d playerPos = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
-            BlockPos pos = IBlockEntity.BlockEntityFormer.rayTraceInternal(playerPos.subtract(getPositionVector()), vec,
-                    this);
-            IBlockState state = getFakeWorld().getBlockState(pos);
-            // Ray trace to a litte more than vec, and look for solid blocks.
-            // TODO hit x, y, and z.
+            Vec3d start = playerPos.subtract(getPositionVector());
+            RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal2(start.add(getPositionVector()),
+                    vec.add(getPositionVector()), this);
+            BlockPos pos;
             float hitX, hitY, hitZ;
-            hitX = hitY = hitZ = 0;
-            boolean activate = state.getBlock().onBlockActivated(getFakeWorld(), pos, state, player, hand, stack,
-                    EnumFacing.DOWN, hitX, hitY, hitZ);
+            EnumFacing side = EnumFacing.DOWN;
+            if (trace == null)
+            {
+                pos = new BlockPos(0, 0, 0);
+                hitX = hitY = hitZ = 0;
+            }
+            else
+            {
+                pos = trace.getBlockPos();
+                hitX = (float) (trace.hitVec.xCoord - pos.getX());
+                hitY = (float) (trace.hitVec.yCoord - pos.getY());
+                hitZ = (float) (trace.hitVec.zCoord - pos.getZ());
+                side = trace.sideHit;
+            }
+            IBlockState state = getFakeWorld().getBlockState(pos);
+            boolean activate = state.getBlock().onBlockActivated(getFakeWorld(), pos, state, player, hand, stack, side,
+                    hitX, hitY, hitZ);
             if (activate) return EnumActionResult.SUCCESS;
             else if (!state.getMaterial().isSolid())
             {
@@ -439,7 +449,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
         ItemStack item = player.getHeldItem(hand);
-        System.out.println("Test " + hand);
         if (hand != EnumHand.MAIN_HAND) return false;
 
         if (player.isSneaking() && item != null && item.getItem() instanceof ItemLinker
@@ -527,6 +536,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void onUpdate()
     {
         if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
+        this.rotationYaw = 0;
+        if (collider == null)
+        {
+            this.collider = new BlockEntityUpdater(this);
+            this.collider.onSetPosition();
+        }
         this.prevPosY = posY;
         collider.onUpdate();
         if (!checkBlocks(0)) toMoveY = false;
@@ -683,6 +698,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }
         super.setDead();
+    }
+
+    @Override
+    public void setPosition(double x, double y, double z)
+    {
+        super.setPosition(x, y, z);
+        if (collider != null) collider.onSetPosition();
     }
 
     /** @param destinationFloor
@@ -910,6 +932,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public static EntityLift getLiftFromUUID(final UUID liftID, World world)
     {
         EntityLift ret = null;
+        if (world instanceof BlockEntityWorld)
+        {
+            world = ((BlockEntityWorld) world).getWorld();
+        }
         if (world instanceof WorldServer)
         {
             WorldServer worlds = (WorldServer) world;

@@ -16,6 +16,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -46,6 +47,11 @@ public interface IBlockEntity
             int yMin = MathHelper.floor_double(end.yCoord + entity.posY);
             int zMin = MathHelper.floor_double(end.zCoord + entity.posZ);
             return new BlockPos(xMin, yMin, zMin);
+        }
+
+        public static RayTraceResult rayTraceInternal2(Vec3d start, Vec3d end, IBlockEntity toTrace)
+        {
+            return toTrace.getFakeWorld().rayTraceBlocks(start, end, false, true, false);
         }
 
         public static void removeBlocks(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
@@ -205,6 +211,7 @@ public interface IBlockEntity
             catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException e)
             {
+                e.printStackTrace();
                 return null;
             }
             if (!(ret instanceof IBlockEntity))
