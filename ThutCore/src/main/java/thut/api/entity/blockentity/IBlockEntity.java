@@ -16,7 +16,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -28,29 +27,7 @@ public interface IBlockEntity
     {
         private static final Logger LOGGER = LogManager.getLogger();
 
-        public static BlockPos rayTraceInternal(Vec3d start, Vec3d end, IBlockEntity toTrace)
-        {
-            Entity entity = (Entity) toTrace;
-            Vec3d direction = end.subtract(start).normalize();
-            double distance = 4;
-            for (int i = 0; i < distance; i++)
-            {
-                Vec3d temp = start.add(direction.scale(i));
-                int xMin = MathHelper.floor_double(temp.xCoord + entity.posX);
-                int yMin = MathHelper.floor_double(temp.yCoord + entity.posY);
-                int zMin = MathHelper.floor_double(temp.zCoord + entity.posZ);
-                BlockPos pos = new BlockPos(xMin, yMin, zMin);
-                IBlockState state = toTrace.getFakeWorld().getBlockState(pos);
-                // TODO ray trace against the state's boxes instead.
-                if (state.getMaterial().isSolid()) return pos;
-            }
-            int xMin = MathHelper.floor_double(end.xCoord + entity.posX);
-            int yMin = MathHelper.floor_double(end.yCoord + entity.posY);
-            int zMin = MathHelper.floor_double(end.zCoord + entity.posZ);
-            return new BlockPos(xMin, yMin, zMin);
-        }
-
-        public static RayTraceResult rayTraceInternal2(Vec3d start, Vec3d end, IBlockEntity toTrace)
+        public static RayTraceResult rayTraceInternal(Vec3d start, Vec3d end, IBlockEntity toTrace)
         {
             return toTrace.getFakeWorld().rayTraceBlocks(start, end, false, true, false);
         }

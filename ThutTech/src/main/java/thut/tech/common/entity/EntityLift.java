@@ -393,7 +393,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                     vec.zCoord > 0 ? -0.01 : 0.01);
             Vec3d playerPos = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
             Vec3d start = playerPos.subtract(getPositionVector());
-            RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal2(start.add(getPositionVector()),
+            RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start.add(getPositionVector()),
                     vec.add(getPositionVector()), this);
             BlockPos pos;
             float hitX, hitY, hitZ;
@@ -642,7 +642,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                             try
                             {
                                 NBTTagCompound tag = blockTag.getCompoundTag("T" + i + "," + k + "," + j);
-                                tiles[i][k][j] = TileEntity.create(tag);
+                                tiles[i][k][j] = IBlockEntity.BlockEntityFormer.makeTile(tag);
                             }
                             catch (Exception e)
                             {

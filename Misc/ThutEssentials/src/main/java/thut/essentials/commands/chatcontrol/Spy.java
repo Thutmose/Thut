@@ -23,8 +23,9 @@ import thut.essentials.util.BaseCommand;
 
 public class Spy extends BaseCommand
 {
-    UUID      serverID = new UUID(0, 0);
-    Set<UUID> spies    = Sets.newHashSet();
+    UUID                serverID      = new UUID(0, 0);
+    Set<UUID>           spies         = Sets.newHashSet();
+    Set<ICommandSender> customSenders = Sets.newHashSet();
 
     public Spy()
     {
@@ -62,7 +63,11 @@ public class Spy extends BaseCommand
                     .appendSibling(new TextComponentString(values));
             for (UUID id : spies)
             {
-                if (id == serverID) event.getSender().getServer().addChatMessage(message);
+                if (id == serverID)
+                {
+                    for (ICommandSender sender2 : customSenders)
+                        sender2.addChatMessage(message);
+                }
                 else if (!(id.equals(target.getUniqueID()) || id.equals(sayer.getUniqueID())))
                 {
                     EntityPlayerMP spy = event.getSender().getServer().getPlayerList().getPlayerByUUID(id);
@@ -86,11 +91,13 @@ public class Spy extends BaseCommand
         }
         if (spies.remove(id))
         {
+            customSenders.remove(sender);
             sender.addChatMessage(new TextComponentString("Spying turned off."));
         }
         else
         {
             spies.add(id);
+            if (id == serverID) customSenders.add(sender);
             sender.addChatMessage(new TextComponentString("Spying turned on."));
         }
     }

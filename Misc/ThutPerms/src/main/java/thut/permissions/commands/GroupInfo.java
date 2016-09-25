@@ -32,7 +32,7 @@ public class GroupInfo extends CommandBase
     @Override
     public String getCommandUsage(ICommandSender sender)
     {
-        return "/groupInfo <player|exists|hasPerms|members|groups|listCommands|perms>";
+        return "/groupInfo <player|exists|hasPerms|members|groups|listCommands|perms> <arguments>";
     }
 
     @Override

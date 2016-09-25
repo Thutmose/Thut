@@ -1,7 +1,6 @@
 package pokecube.alternative;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -10,10 +9,9 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import pokecube.alternative.client.gui.GuiEvents;
-import pokecube.alternative.client.gui.GuiPlayerPokemon;
 import pokecube.alternative.client.gui.GuiPokemonBar;
 import pokecube.alternative.client.keybindings.KeyHandler;
-import pokecube.alternative.event.PokemonOverlayEventHandler;
+import pokecube.alternative.event.BeltOverlayEventHandler;
 
 public class ClientProxy extends CommonProxy
 {
@@ -31,7 +29,7 @@ public class ClientProxy extends CommonProxy
         super.init(event);
         MinecraftForge.EVENT_BUS.register(new GuiEvents());
         MinecraftForge.EVENT_BUS.register(new KeyHandler());
-        MinecraftForge.EVENT_BUS.register(new PokemonOverlayEventHandler());
+        MinecraftForge.EVENT_BUS.register(new BeltOverlayEventHandler());
     }
 
     @Override
@@ -44,14 +42,6 @@ public class ClientProxy extends CommonProxy
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
     {
-        if (world instanceof WorldClient)
-        {
-            switch (ID)
-            {
-            case PokecubeAlternative.GUI:
-                return new GuiPlayerPokemon(player);
-            }
-        }
         return null;
     }
 

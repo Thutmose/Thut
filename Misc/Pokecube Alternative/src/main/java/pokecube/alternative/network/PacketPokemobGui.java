@@ -11,15 +11,15 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import pokecube.alternative.capabilities.IBeltCapability;
-import pokecube.alternative.event.EventHandlerCommon;
+import pokecube.alternative.container.BeltPlayerData;
+import pokecube.alternative.container.IPokemobBelt;
 import pokecube.core.items.pokecubes.PokecubeManager;
 
-public class PacketClickPokemobSlot implements IMessage, IMessageHandler<PacketClickPokemobSlot, IMessage>
+public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemobGui, IMessage>
 {
     public NBTTagCompound data;
 
-    public PacketClickPokemobSlot()
+    public PacketPokemobGui()
     {
         data = new NBTTagCompound();
     }
@@ -41,13 +41,12 @@ public class PacketClickPokemobSlot implements IMessage, IMessageHandler<PacketC
         }
         catch (IOException e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
     @Override
-    public IMessage onMessage(final PacketClickPokemobSlot message, final MessageContext ctx)
+    public IMessage onMessage(final PacketPokemobGui message, final MessageContext ctx)
     {
         FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(new Runnable()
         {
@@ -59,24 +58,36 @@ public class PacketClickPokemobSlot implements IMessage, IMessageHandler<PacketC
         return null;
     }
 
-    void processMessage(EntityPlayerMP player, PacketClickPokemobSlot message)
+    void processMessage(EntityPlayerMP player, PacketPokemobGui message)
     {
-        IBeltCapability cap = player.getCapability(EventHandlerCommon.BELTAI_CAP, null);
-        int index = message.data.getInteger("S");
-        ItemStack stack = cap.getCube(index);
-        System.out.println(message.data + " " + stack);
-        if (stack != null && player.inventory.getItemStack() == null)
+        IPokemobBelt cap = BeltPlayerData.getBelt(player);
+        boolean heal = message.data.getBoolean("H");
+        if (heal)
         {
-            cap.setCube(index, null);
-            player.inventory.setItemStack(stack);
-            player.updateHeldItem();
+            for (int i = 0; i < 6; i++)
+            {
+                ItemStack stack = cap.getCube(i);
+                PokecubeManager.heal(stack);
+            }
         }
-        else if (stack == null && player.inventory.getItemStack() != null
-                && PokecubeManager.isFilled(player.inventory.getItemStack()))
+        else
         {
-            cap.setCube(index, player.inventory.getItemStack());
-            player.inventory.setItemStack(null);
-            player.updateHeldItem();
+            int index = message.data.getInteger("S");
+            ItemStack stack = cap.getCube(index);
+            System.out.println(message.data + " " + stack);
+            if (stack != null && player.inventory.getItemStack() == null)
+            {
+                cap.setCube(index, null);
+                player.inventory.setItemStack(stack);
+                player.updateHeldItem();
+            }
+            else if (stack == null && player.inventory.getItemStack() != null
+                    && PokecubeManager.isFilled(player.inventory.getItemStack()))
+            {
+                cap.setCube(index, player.inventory.getItemStack());
+                player.inventory.setItemStack(null);
+                player.updateHeldItem();
+            }
         }
         PacketSyncBelt packet = new PacketSyncBelt(cap, player.getEntityId());
         PacketHandler.INSTANCE.sendToAll(packet);

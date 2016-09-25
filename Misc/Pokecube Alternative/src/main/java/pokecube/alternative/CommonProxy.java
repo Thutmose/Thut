@@ -7,7 +7,6 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
-import pokecube.alternative.container.ContainerPlayerPokemon;
 import pokecube.alternative.event.EventHandlerCommon;
 
 public class CommonProxy implements IGuiHandler {
@@ -31,9 +30,6 @@ public class CommonProxy implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        switch (ID) {
-            case PokecubeAlternative.GUI: return new ContainerPlayerPokemon(player.inventory, !world.isRemote, player);
-        }
         return null;
     }
 

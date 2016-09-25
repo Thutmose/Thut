@@ -12,7 +12,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pokecube.alternative.client.render.BeltRenderer;
 
-public class PokemonOverlayEventHandler
+public class BeltOverlayEventHandler
 {
 
     private Set<RenderPlayer> addedBaubles = Sets.newHashSet();

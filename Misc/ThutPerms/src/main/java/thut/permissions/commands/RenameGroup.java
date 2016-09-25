@@ -56,6 +56,7 @@ public class RenameGroup extends CommandBase
         {
             ThutPerms.addToGroup(id, newName);
         }
+        ThutPerms.savePerms();
         sender.addChatMessage(new TextComponentString("Renamed group " + groupName + " to " + newName));
     }
 }

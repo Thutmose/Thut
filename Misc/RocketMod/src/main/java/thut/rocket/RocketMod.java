@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
@@ -33,6 +34,7 @@ public class RocketMod
     {
         MinecraftForge.EVENT_BUS.register(this);
         EntityRegistry.registerModEntity(EntityRocket.class, "thuttechlift", 1, this, 32, 1, true);
+        DataSerializers.registerSerializer(EntityRocket.SEATSERIALIZER);
     }
 
     @SideOnly(Side.CLIENT)

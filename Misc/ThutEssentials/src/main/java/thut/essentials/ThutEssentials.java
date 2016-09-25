@@ -4,15 +4,16 @@ import net.minecraft.command.CommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import thut.essentials.commands.CommandManager;
+import thut.essentials.itemcontrol.ItemControl;
 import thut.essentials.land.LandEventsHandler;
 import thut.essentials.land.LandManager;
 import thut.essentials.land.LandSaveHandler;
@@ -40,6 +41,7 @@ public class ThutEssentials
         config = new ConfigManager(e.getSuggestedConfigurationFile());
         LandEventsHandler teams = new LandEventsHandler();
         MinecraftForge.EVENT_BUS.register(teams);
+        new ItemControl();
     }
 
     @Optional.Method(modid = "pokecube")

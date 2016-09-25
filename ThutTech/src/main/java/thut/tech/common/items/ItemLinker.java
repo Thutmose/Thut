@@ -9,7 +9,9 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -22,6 +24,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
@@ -73,7 +76,13 @@ public class ItemLinker extends Item
         if ((held = player.getHeldItemMainhand()) != null || (held = player.getHeldItemOffhand()) != null)
         {
             BlockPos pos = event.getTarget().getBlockPos();
-            if (pos == null || !player.worldObj.getBlockState(pos).getMaterial().isSolid()) return;
+            if (pos == null) return;
+            if (!player.worldObj.getBlockState(pos).getMaterial().isSolid())
+            {
+                Vec3d loc = player.getPositionVector().addVector(0, player.getEyeHeight(), 0)
+                        .add(player.getLookVec().scale(2));
+                pos = new BlockPos(loc);
+            }
 
             if (held.getItem() == this && held.getTagCompound() != null && held.getTagCompound().hasKey("min"))
             {
@@ -97,7 +106,32 @@ public class ItemLinker extends Item
                 GlStateManager.disableTexture2D();
                 GlStateManager.depthMask(false);
                 GlStateManager.color(1.0F, 0.0F, 0.0F, 1F);
-                RenderGlobal.drawSelectionBoundingBox(box);
+                Tessellator tessellator = Tessellator.getInstance();
+                VertexBuffer vertexbuffer = tessellator.getBuffer();
+                vertexbuffer.begin(3, DefaultVertexFormats.POSITION);
+                vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
+                tessellator.draw();
+                vertexbuffer.begin(3, DefaultVertexFormats.POSITION);
+                vertexbuffer.pos(box.minX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.minZ).endVertex();
+                tessellator.draw();
+                vertexbuffer.begin(1, DefaultVertexFormats.POSITION);
+                vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.maxZ).endVertex();
+                tessellator.draw();
                 GlStateManager.depthMask(true);
                 GlStateManager.enableTexture2D();
                 GlStateManager.disableBlend();
@@ -106,10 +140,63 @@ public class ItemLinker extends Item
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World world, EntityPlayer player,
+    public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World worldIn, EntityPlayer playerIn,
             EnumHand hand)
     {
-        return super.onItemRightClick(itemstack, world, player, hand);
+        if (playerIn.isSneaking() && itemstack.getTagCompound().hasKey("min"))
+        {
+            NBTTagCompound minTag = itemstack.getTagCompound().getCompoundTag("min");
+            Vec3d loc = playerIn.getPositionVector().addVector(0, playerIn.getEyeHeight(), 0)
+                    .add(playerIn.getLookVec().scale(2));
+            BlockPos pos = new BlockPos(loc);
+            BlockPos min = pos;
+            BlockPos max = Vector3.readFromNBT(minTag, "").getPos();
+            AxisAlignedBB box = new AxisAlignedBB(min, max);
+            min = new BlockPos(box.minX, box.minY, box.minZ);
+            max = new BlockPos(box.maxX, box.maxY, box.maxZ);
+            BlockPos mid = min.add((max.getX() - min.getX()) / 2, 0, (max.getZ() - min.getZ()) / 2);
+            min = min.subtract(mid);
+            max = max.subtract(mid);
+            int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
+            if (max.getY() - min.getY() > ConfigHandler.maxHeight || dw > 2 * ConfigHandler.maxRadius + 1)
+            {
+                String message = "msg.lift.toobig";
+                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                return super.onItemRightClick(itemstack, worldIn, playerIn, hand);
+            }
+            int num = (dw + 1) * (max.getY() - min.getY() + 1);
+            int count = 0;
+            for (ItemStack item : playerIn.inventory.mainInventory)
+            {
+                if (item != null)
+                {
+                    ItemStack test = item.copy();
+                    test.stackSize = liftblocks.stackSize;
+                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += item.stackSize;
+                }
+            }
+            if (!playerIn.capabilities.isCreativeMode && count < num)
+            {
+                String message = "msg.lift.noblock";
+                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, num));
+                return super.onItemRightClick(itemstack, worldIn, playerIn, hand);
+            }
+            else if (!playerIn.capabilities.isCreativeMode)
+            {
+                playerIn.inventory.clearMatchingItems(liftblocks.getItem(), liftblocks.getItemDamage(), num,
+                        liftblocks.getTagCompound());
+            }
+            if (!worldIn.isRemote)
+            {
+                EntityLift lift = IBlockEntity.BlockEntityFormer.makeBlockEntity(worldIn, min, max, mid,
+                        EntityLift.class);
+                lift.owner = playerIn.getUniqueID();
+                String message = "msg.lift.create";
+                playerIn.addChatMessage(new TextComponentTranslation(message));
+            }
+            itemstack.getTagCompound().removeTag("min");
+        }
+        return super.onItemRightClick(itemstack, worldIn, playerIn, hand);
     }
 
     public void tryBoom(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand,

@@ -372,11 +372,11 @@ public class Vector3
                     v.set(v2);
                 }
                 boolean step = true;
-                if (n < 3)
+                if (n < 2)
                 {
                     v.offset(EnumFacing.UP);
                 }
-                else if (n < 6)
+                else if (n < 4)
                 {
                     if (step)
                     {
@@ -385,7 +385,7 @@ public class Vector3
                     }
                     v.offsetBy(EnumFacing.NORTH);
                 }
-                else if (n < 9)
+                else if (n < 6)
                 {
                     if (!step)
                     {
@@ -394,7 +394,7 @@ public class Vector3
                     }
                     v.offsetBy(EnumFacing.SOUTH);
                 }
-                else if (n < 12)
+                else if (n < 8)
                 {
                     if (step)
                     {
@@ -403,7 +403,7 @@ public class Vector3
                     }
                     v.offsetBy(EnumFacing.EAST);
                 }
-                else if (n < 15)
+                else if (n < 10)
                 {
                     if (!step)
                     {
@@ -412,7 +412,7 @@ public class Vector3
                     }
                     v.offsetBy(EnumFacing.WEST);
                 }
-                else if (n < 18)
+                else if (n < 12)
                 {
                     if (step)
                     {
@@ -422,7 +422,7 @@ public class Vector3
                     v.offsetBy(EnumFacing.DOWN);
                 }
                 n++;
-                if (n > 24) break;
+                if (n >= 12) break;
             }
 
             long end = System.nanoTime() - start;
@@ -436,7 +436,6 @@ public class Vector3
             }
             else
             {
-                // System.out.println("Cannot find Clear Location " + v);
                 return false;
             }
         }

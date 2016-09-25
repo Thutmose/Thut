@@ -249,6 +249,7 @@ public class LandEventsHandler
         boolean b = true;
         Team playerTeam = LandManager.getTeam(evt.getEntityPlayer());
         String team = playerTeam.getRegisteredName();
+        boolean shouldPass = true;
         if (owner.equals(team) && !evt.getWorld().isRemote)
         {
             if (evt.getItemStack() != null && evt.getItemStack().getDisplayName().equals("Public Toggle")
@@ -274,13 +275,14 @@ public class LandEventsHandler
         }
         else if (block != null && !(block.hasTileEntity(state)) && evt.getWorld().isRemote)
         {
-            b = block.onBlockActivated(evt.getWorld(), evt.getPos(), state, evt.getEntityPlayer(), evt.getHand(), null,
-                    evt.getFace(), (float) evt.getHitVec().xCoord, (float) evt.getHitVec().yCoord,
+            shouldPass = MinecraftForge.EVENT_BUS
+                    .post(new DenyItemUseEvent(evt.getEntity(), evt.getItemStack(), UseType.RIGHTCLICKBLOCK));
+
+            if (shouldPass) b = block.onBlockActivated(evt.getWorld(), evt.getPos(), state, evt.getEntityPlayer(),
+                    evt.getHand(), null, evt.getFace(), (float) evt.getHitVec().xCoord, (float) evt.getHitVec().yCoord,
                     (float) evt.getHitVec().zCoord);
         }
-        if (!b && (MinecraftForge.EVENT_BUS
-                .post(new DenyItemUseEvent(evt.getEntity(), evt.getItemStack(), UseType.RIGHTCLICKBLOCK))))
-            return;
+        if (!b && shouldPass) return;
 
         LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);

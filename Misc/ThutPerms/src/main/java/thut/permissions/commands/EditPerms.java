@@ -46,6 +46,7 @@ public class EditPerms extends CommandBase
             {
                 g.all = enable;
                 sender.addChatMessage(new TextComponentString("Set all Permission for " + groupName + " to " + enable));
+                ThutPerms.savePerms();
                 return;
             }
             else
@@ -68,6 +69,7 @@ public class EditPerms extends CommandBase
                     g.allowedCommands.remove(command);
                 }
                 sender.addChatMessage(new TextComponentString("Set Permission for " + groupName + " " + enable));
+                ThutPerms.savePerms();
                 return;
             }
         }
@@ -93,6 +95,7 @@ public class EditPerms extends CommandBase
                 }
                 sender.addChatMessage(new TextComponentString(
                         "Set players able to use all commands allowed for their group to " + enable));
+                ThutPerms.savePerms();
                 return;
             }
             else

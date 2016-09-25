@@ -14,8 +14,8 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import pokecube.alternative.capabilities.IBeltCapability;
-import pokecube.alternative.event.EventHandlerCommon;
+import pokecube.alternative.container.BeltPlayerData;
+import pokecube.alternative.container.IPokemobBelt;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
 
@@ -40,7 +40,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
             float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale)
     {
         EntityPlayer player = (EntityPlayer) entitylivingbaseIn;
-        IBeltCapability cap = player.getCapability(EventHandlerCommon.BELTAI_CAP, null);
+        IPokemobBelt cap = BeltPlayerData.getBelt(player);
         int brightness = entitylivingbaseIn.getBrightnessForRender(partialTicks);
         // First pass of render
         GL11.glPushMatrix();

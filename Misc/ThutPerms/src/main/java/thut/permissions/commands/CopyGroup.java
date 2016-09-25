@@ -41,6 +41,7 @@ public class CopyGroup extends CommandBase
         if (replace) gTo.allowedCommands.clear();
         gTo.all = gFrom.all;
         gTo.allowedCommands.addAll(gFrom.allowedCommands);
+        ThutPerms.savePerms();
         sender.addChatMessage(new TextComponentString("Copied from " + groupFrom + " to " + groupTo));
     }
 

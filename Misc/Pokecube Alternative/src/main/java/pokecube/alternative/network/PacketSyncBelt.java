@@ -13,8 +13,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pokecube.alternative.PokecubeAlternative;
-import pokecube.alternative.capabilities.IBeltCapability;
-import pokecube.alternative.event.EventHandlerCommon;
+import pokecube.alternative.container.BeltPlayerData;
+import pokecube.alternative.container.IPokemobBelt;
 
 public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt, IMessage>
 {
@@ -27,7 +27,7 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
     {
     }
 
-    public PacketSyncBelt(IBeltCapability belt, int playerId)
+    public PacketSyncBelt(IPokemobBelt belt, int playerId)
     {
         this.selectedSlot = (byte) belt.getSlot();
         for (int i = 0; i < 6; i++)
@@ -72,7 +72,7 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
         Entity p = world.getEntityByID(message.playerId);
         if (p != null && p instanceof EntityPlayer)
         {
-            IBeltCapability cap = p.getCapability(EventHandlerCommon.BELTAI_CAP, null);
+            IPokemobBelt cap = BeltPlayerData.getBelt(p);
             for(int i = 0; i<6; i++)
             {
                 cap.setCube(i, message.pokemon[i]);

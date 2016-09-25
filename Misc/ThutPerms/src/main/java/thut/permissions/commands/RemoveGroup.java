@@ -36,6 +36,7 @@ public class RemoveGroup extends CommandBase
         if (g == null) { throw new CommandException("Error, specified Group does not exist."); }
         GroupManager.instance.groups.remove(g);
         GroupManager.instance.groupNameMap.remove(groupName);
+        ThutPerms.savePerms();
         sender.addChatMessage(new TextComponentString("Removed group " + groupName));
     }
 

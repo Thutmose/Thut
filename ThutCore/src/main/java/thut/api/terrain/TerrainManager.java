@@ -13,7 +13,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
-import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
@@ -31,6 +30,7 @@ public class TerrainManager
 
     public static void clear()
     {
+        if (terrain != null) MinecraftForge.EVENT_BUS.unregister(terrain);
         terrain = null;
     }
 
@@ -161,14 +161,9 @@ public class TerrainManager
         TerrainManager.getInstance().getTerrain(evt.getWorld());
     }
 
-    @SubscribeEvent
-    public void WorldUnloadEvent(Unload evt)
+    public void onServerStop()
     {
-        if (evt.getWorld().provider.getDimension() == 0
-                && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
-        {
-            TerrainManager.clear();
-        }
+        TerrainManager.clear();
     }
 
 }

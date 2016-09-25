@@ -1,10 +1,10 @@
 package pokecube.alternative.client.gui;
 
-import java.util.Set;
+import java.util.Map;
 
 import org.lwjgl.input.Mouse;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -20,10 +20,19 @@ import net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import pokecube.alternative.network.PacketHandler;
+import pokecube.alternative.network.PacketPokemobGui;
 
 public class GuiEvents
 {
-    public static Set<String> whitelistedGuis = Sets.newHashSet();
+    public static Map<String, int[]> whitelistedGuis = Maps.newHashMap();
+
+    static
+    {
+        whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiHealTable", new int[2]);
+        whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiPC", new int[] { 45, 0 });
+        whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiTradingTable", new int[2]);
+    }
 
     @SideOnly(value = Side.CLIENT)
     @SubscribeEvent
@@ -65,21 +74,18 @@ public class GuiEvents
     {
         if (event.getGui() == gui) return;
         // if (event.getGui() != null) return;
-
-        if (!whitelistedGuis.contains("pokecube.core.client.gui.blocks.GuiHealTable"))
-        {
-            whitelistedGuis.add("pokecube.core.client.gui.blocks.GuiHealTable");
-            whitelistedGuis.add("pokecube.core.client.gui.blocks.GuiPC");
-            whitelistedGuis.add("pokecube.core.client.gui.blocks.GuiTradingTable");
-        }
-
-        if (event.getGui() instanceof GuiContainer && whitelistedGuis.contains(event.getGui().getClass().getName()))
+        String guiClass;
+        if (event.getGui() instanceof GuiContainer
+                && whitelistedGuis.containsKey(guiClass = event.getGui().getClass().getName()))
         {
             if (event.getGui() != lastcontainer)
             {
-                gui = new GuiPlayerPokemon(Minecraft.getMinecraft().thePlayer);
+                int[] offset = whitelistedGuis.get(event.getGui().getClass().getName());
+                gui = new GuiPlayerPokemon(Minecraft.getMinecraft().thePlayer, event.getGui());
                 lastcontainer = event.getGui();
                 gui.initToOther(lastcontainer);
+                gui.guiTop += offset[0];
+                gui.guiLeft += offset[1];
             }
             if (event instanceof InitGuiEvent.Post)
             {
@@ -99,7 +105,12 @@ public class GuiEvents
             }
             if (event instanceof ActionPerformedEvent.Post)
             {
-
+                if (guiClass.equals("pokecube.core.client.gui.blocks.GuiHealTable"))
+                {
+                    PacketPokemobGui packet = new PacketPokemobGui();
+                    packet.data.setBoolean("H", true);
+                    PacketHandler.INSTANCE.sendToServer(packet);
+                }
             }
             if (event instanceof MouseInputEvent.Post)
             {

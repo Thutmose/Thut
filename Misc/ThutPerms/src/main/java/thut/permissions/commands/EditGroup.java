@@ -105,6 +105,7 @@ public class EditGroup extends CommandBase
             GroupManager.instance.groupIDMap.remove(profile.getId());
             ThutPerms.addToGroup(profile.getId(), groupName);
             sender.addChatMessage(new TextComponentString("Added " + playerName + " to " + groupName));
+            ThutPerms.savePerms();
             return;
         }
         else if (args.length == 2 && args[1].equals("reset"))
@@ -127,6 +128,7 @@ public class EditGroup extends CommandBase
                 }
             }
             sender.addChatMessage(new TextComponentString("Reset Permissions for " + groupName));
+            ThutPerms.savePerms();
             return;
         }
         if (args.length >= 2 && (args[0].equals("suffix")))
@@ -153,6 +155,7 @@ public class EditGroup extends CommandBase
                     player.refreshDisplayName();
                 }
             }
+            ThutPerms.savePerms();
             return;
         }
         if (args.length >= 2 && (args[0].equals("prefix")))
@@ -179,6 +182,7 @@ public class EditGroup extends CommandBase
                     player.refreshDisplayName();
                 }
             }
+            ThutPerms.savePerms();
             return;
         }
         throw new CommandException("invalid arguments");

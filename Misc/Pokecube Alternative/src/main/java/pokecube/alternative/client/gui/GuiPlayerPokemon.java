@@ -2,16 +2,19 @@ package pokecube.alternative.client.gui;
 
 import java.io.IOException;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.InventoryEffectRenderer;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.util.ResourceLocation;
 import pokecube.alternative.Reference;
 import pokecube.alternative.container.ContainerPlayerPokemon;
-import pokecube.alternative.network.PacketClickPokemobSlot;
+import pokecube.alternative.network.PacketPokemobGui;
 import pokecube.alternative.network.PacketHandler;
 
 public class GuiPlayerPokemon extends InventoryEffectRenderer
@@ -20,9 +23,12 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
     public static final ResourceLocation background = new ResourceLocation(Reference.MODID,
             "textures/gui/pokemon_inventory.png");
 
-    public GuiPlayerPokemon(EntityPlayer player)
+    final GuiScreen                      baseGui;
+
+    public GuiPlayerPokemon(EntityPlayer player, GuiScreen base)
     {
         super(new ContainerPlayerPokemon(player.inventory, !player.worldObj.isRemote, player));
+        this.baseGui = base;
         this.allowUserInput = true;
     }
 
@@ -63,8 +69,7 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
     @Override
     protected void drawGuiContainerForegroundLayer(int p_146979_1_, int p_146979_2_)
     {
-        // this.fontRendererObj.drawString(I18n.format("container.crafting", new
-        // Object[0]), 97, 8, 4210752);
+        // No foreground layer
     }
 
     /** Draws the screen and all the components in it. */
@@ -79,19 +84,27 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
     @Override
     public void drawDefaultBackground()
     {
+        // No background either
     }
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float p_146976_1_, int p_146976_2_, int p_146976_3_)
     {
+        GL11.glPushMatrix();
+        GL11.glEnable(GL11.GL_BLEND);
+        GlStateManager.disableRescaleNormal();
+        RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(background);
         int k = this.guiLeft;
         int l = this.guiTop;
         this.drawTexturedModalRect(k - 32, l, 0, 0, this.xSize + 32, this.ySize + 32);
-        // drawPlayerModel(k + 51, l + 75, 30, (float) (k + 51) -
-        // this.xSizeFloat, (float) (l + 75 - 50) - this.ySizeFloat,
-        // this.mc.thePlayer);
+        RenderHelper.enableGUIStandardItemLighting();
+        GlStateManager.enableRescaleNormal();
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glPopMatrix();
     }
 
     /** Called when the mouse is clicked. Args : mouseX, mouseY,
@@ -102,7 +115,7 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
         Slot slot = getSlotAtPosition(mouseX, mouseY);
         if (slot != null)
         {
-            PacketClickPokemobSlot packet = new PacketClickPokemobSlot();
+            PacketPokemobGui packet = new PacketPokemobGui();
             packet.data.setInteger("S", slot.slotNumber);
             PacketHandler.INSTANCE.sendToServer(packet);
         }
@@ -125,10 +138,8 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
         for (int i = 0; i < this.inventorySlots.inventorySlots.size(); ++i)
         {
             Slot slot = (Slot) this.inventorySlots.inventorySlots.get(i);
-
             if (this.isMouseOverSlot(slot, x, y)) { return slot; }
         }
-
         return null;
     }
 }

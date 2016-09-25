@@ -24,13 +24,15 @@ public interface IMultiplePassengerEntity
             float sinPitch = MathHelper.sin(pitch);
             float cosPitch = MathHelper.cos(pitch);
             Matrix3f matrixYaw = new Matrix3f(cosYaw, 0, sinYaw, 0, 1, 0, -sinYaw, 0, cosYaw);
-            // Matrix3f matrixPitch = new Matrix3f(1, 0, 0, 0, cosPitch,
-            // -sinPitch, 0, sinPitch, cosPitch);
             Matrix3f matrixPitch = new Matrix3f(cosPitch, -sinPitch, 0, sinPitch, cosPitch, 0, 0, 0, 1);
             Matrix3f transform = new Matrix3f();
             transform.mul(matrixYaw, matrixPitch);
-            // transform.mul(matrixPitch, matrixYaw);
-            transform.transform(v);
+            if (v == null) v = new Vector3f();
+            else
+            {
+                v = (Vector3f) v.clone();
+                transform.transform(v);
+            }
             passenger.setPosition(entity.posX + v.x, entity.posY + passenger.getYOffset() + v.y, entity.posZ + v.z);
         }
     }

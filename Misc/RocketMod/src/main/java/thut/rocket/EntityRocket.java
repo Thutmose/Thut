@@ -1,14 +1,13 @@
 package thut.rocket;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.BlockStairs;
@@ -23,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
@@ -34,6 +34,9 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
@@ -45,17 +48,75 @@ import thut.api.entity.blockentity.IBlockEntity;
 public class EntityRocket extends EntityLivingBase
         implements IEntityAdditionalSpawnData, IBlockEntity, IMultiplePassengerEntity
 {
-    static final DataParameter<BlockPos> SEAT                 = EntityDataManager
-            .<BlockPos> createKey(EntityRocket.class, DataSerializers.BLOCK_POS);
+    public static class Seat
+    {
+        private static final UUID BLANK = new UUID(0, 0);
+        Vector3f                  seat;
+        UUID                      entityId;
 
-    private BlockPos                     boundMin             = BlockPos.ORIGIN;
-    private BlockPos                     boundMax             = BlockPos.ORIGIN;
-    private BlockEntityWorld             world;
-    public UUID                          owner;
-    private ItemStack[][][]              blocks               = null;
-    private TileEntity[][][]             tiles                = null;
-    final BlockEntityUpdater             collider;
-    Map<Entity, BlockPos>                locationsByPassenger = Maps.newHashMap();
+        public Seat(Vector3f vector3f, UUID readInt)
+        {
+            seat = vector3f;
+            entityId = readInt != null ? readInt : BLANK;
+        }
+
+        public Seat(PacketBuffer buf)
+        {
+            seat = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            entityId = new UUID(buf.readLong(), buf.readLong());
+        }
+
+        public void writeToBuf(PacketBuffer buf)
+        {
+            buf.writeFloat(seat.x);
+            buf.writeFloat(seat.y);
+            buf.writeFloat(seat.z);
+            buf.writeLong(entityId.getMostSignificantBits());
+            buf.writeLong(entityId.getLeastSignificantBits());
+        }
+    }
+
+    static final DataSerializer<Seat>   SEATSERIALIZER = new DataSerializer<EntityRocket.Seat>()
+                                                       {
+                                                           @Override
+                                                           public void write(PacketBuffer buf, Seat value)
+                                                           {
+                                                               value.writeToBuf(buf);
+                                                           }
+
+                                                           @Override
+                                                           public Seat read(PacketBuffer buf) throws IOException
+                                                           {
+                                                               return new Seat(buf);
+                                                           }
+
+                                                           @Override
+                                                           public DataParameter<Seat> createKey(int id)
+                                                           {
+                                                               return new DataParameter<>(id, this);
+                                                           }
+                                                       };
+
+    @SuppressWarnings("unchecked")
+    static final DataParameter<Seat>[]  SEAT           = new DataParameter[10];
+    static final DataParameter<Integer> SEATCOUNT      = EntityDataManager.<Integer> createKey(EntityRocket.class,
+            DataSerializers.VARINT);
+
+    static
+    {
+        for (int i = 0; i < SEAT.length; i++)
+        {
+            SEAT[i] = EntityDataManager.<Seat> createKey(EntityRocket.class, SEATSERIALIZER);
+        }
+    }
+
+    private BlockPos         boundMin = BlockPos.ORIGIN;
+    private BlockPos         boundMax = BlockPos.ORIGIN;
+    private BlockEntityWorld world;
+    public UUID              owner;
+    private ItemStack[][][]  blocks   = null;
+    private TileEntity[][][] tiles    = null;
+    final BlockEntityUpdater collider;
 
     public EntityRocket(World par1World)
     {
@@ -64,6 +125,33 @@ public class EntityRocket extends EntityLivingBase
         this.hurtResistantTime = 0;
         this.isImmuneToFire = true;
         this.collider = new BlockEntityUpdater(this);
+    }
+
+    public void addSeat(Vector3f seat)
+    {
+        Seat toSet = this.getSeat(getSeatCount());
+        toSet.seat.set(seat);
+        this.dataManager.set(SEAT[getSeatCount()], toSet);
+        this.dataManager.setDirty(SEAT[getSeatCount()]);
+        setSeatCount(getSeatCount() + 1);
+    }
+
+    private void setSeatID(int index, UUID id)
+    {
+        Seat toSet = this.getSeat(index);
+        UUID old = toSet.entityId;
+        if (!old.equals(id))
+        {
+            toSet.entityId = id;
+            this.dataManager.set(SEAT[index], toSet);
+            this.dataManager.setDirty(SEAT[index]);
+        }
+        System.out.println(id + " " + old);
+    }
+
+    private Seat getSeat(int index)
+    {
+        return this.dataManager.get(SEAT[index]);
     }
 
     public BlockEntityWorld getFakeWorld()
@@ -85,7 +173,9 @@ public class EntityRocket extends EntityLivingBase
     protected void entityInit()
     {
         super.entityInit();
-        dataManager.register(SEAT, BlockPos.ORIGIN);
+        for (int i = 0; i < 10; i++)
+            dataManager.register(SEAT[i], new Seat(new Vector3f(), null));
+        dataManager.register(SEATCOUNT, 0);
     }
 
     /** Applies a velocity to each of the entities pushing them away from each
@@ -109,11 +199,6 @@ public class EntityRocket extends EntityLivingBase
         return false;
     }
 
-    private BlockPos getSeat()
-    {
-        return dataManager.get(SEAT);
-    }
-
     @Override
     public void updatePassenger(Entity passenger)
     {
@@ -131,25 +216,27 @@ public class EntityRocket extends EntityLivingBase
     protected void addPassenger(Entity passenger)
     {
         super.addPassenger(passenger);
-        // Added location elsewhere (probably when mounting)
-        if (locationsByPassenger.containsKey(passenger)) return;
-
-        // TODO here we look for a seat to put them in
-        locationsByPassenger.put(passenger, getSeat());
     }
 
     @Override
     protected void removePassenger(Entity passenger)
     {
-        locationsByPassenger.remove(passenger);
         super.removePassenger(passenger);
+        if (!worldObj.isRemote) for (int i = 0; i < getSeatCount(); i++)
+        {
+            if (getSeat(i).entityId.equals(passenger.getUniqueID()))
+            {
+                setSeatID(i, Seat.BLANK);
+                break;
+            }
+        }
     }
 
     @Override
     protected boolean canFitPassenger(Entity passenger)
     {
-        // TODO check for seats here.
-        return this.getPassengers().size() < 10;
+        System.out.println(this.getPassengers().size() + " " + getSeatCount());
+        return this.getPassengers().size() < getSeatCount();
     }
 
     /** If a rider of this entity can interact with this entity. Should return
@@ -234,37 +321,106 @@ public class EntityRocket extends EntityLivingBase
             EnumHand hand)
     {
         if (player.isSneaking()) return EnumActionResult.PASS;
-
         if (hand == EnumHand.MAIN_HAND)
         {
             vec = vec.addVector(vec.xCoord > 0 ? -0.01 : 0.01, vec.yCoord > 0 ? -0.01 : 0.01,
                     vec.zCoord > 0 ? -0.01 : 0.01);
-            BlockPos pos = IBlockEntity.BlockEntityFormer.rayTraceInternal(
-                    player.getPositionVector().addVector(0, player.getEyeHeight(), 0).subtract(getPositionVector()),
-                    vec, this);
-            IBlockState state = getFakeWorld().getBlockState(pos);
-            // Ray trace to a litte more than vec, and look for solid blocks.
-            // TODO hit x, y, and z.
+            Vec3d playerPos = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
+            Vec3d start = playerPos.subtract(getPositionVector());
+            RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start.add(getPositionVector()),
+                    vec.add(getPositionVector()), this);
+            BlockPos pos;
             float hitX, hitY, hitZ;
-            hitX = hitY = hitZ = 0;
-
-            if (state.getBlock() instanceof BlockStairs && !isPassenger(player))
+            EnumFacing side = EnumFacing.DOWN;
+            if (trace == null)
             {
-                pos = pos.subtract(this.getPosition());
-                System.out.println(player + " " + pos);
-                System.out.println(locationsByPassenger);
-                locationsByPassenger.put(player, pos);
-                dataManager.set(SEAT, pos);
-                if (!player.startRiding(this)) locationsByPassenger.remove(player);
+                pos = new BlockPos(0, 0, 0);
+                hitX = hitY = hitZ = 0;
+            }
+            else
+            {
+                pos = trace.getBlockPos();
+                hitX = (float) (trace.hitVec.xCoord - pos.getX());
+                hitY = (float) (trace.hitVec.yCoord - pos.getY());
+                hitZ = (float) (trace.hitVec.zCoord - pos.getZ());
+                side = trace.sideHit;
+            }
+            IBlockState state = getFakeWorld().getBlockState(pos);
+            if (!worldObj.isRemote)
+            {
+                for (int i = 0; i < getSeatCount(); i++)
+                {
+                    System.out.println(getSeat(i).seat + " " + getSeat(i).entityId);
+                }
+            }
+            boolean activate = state.getBlock().onBlockActivated(getFakeWorld(), pos, state, player, hand, stack, side,
+                    hitX, hitY, hitZ);
+            if (activate) return EnumActionResult.SUCCESS;
+            else if (!state.getMaterial().isSolid())
+            {
+                Vec3d playerLook = playerPos.add(player.getLookVec().scale(4));
+                RayTraceResult result = worldObj.rayTraceBlocks(playerPos, playerLook, false, true, false);
+                if (result != null && result.typeOfHit == Type.BLOCK)
+                {
+                    pos = result.getBlockPos();
+                    state = worldObj.getBlockState(pos);
+                    hitX = (float) (result.hitVec.xCoord - pos.getX());
+                    hitY = (float) (result.hitVec.yCoord - pos.getY());
+                    hitZ = (float) (result.hitVec.zCoord - pos.getZ());
+                    activate = state.getBlock().onBlockActivated(getEntityWorld(), pos, state, player, hand, stack,
+                            result.sideHit, hitX, hitY, hitZ);
+                }
                 return EnumActionResult.SUCCESS;
             }
-
-            boolean activate = state.getBlock().onBlockActivated(getFakeWorld(), pos, state, player, hand, stack,
-                    EnumFacing.DOWN, hitX, hitY, hitZ);
-            if (activate) return EnumActionResult.SUCCESS;
-
+            else if (state.getBlock() instanceof BlockStairs)
+            {
+                System.out.println(getSeatCount());
+                if (getSeatCount() == 0)
+                {
+                    MutableBlockPos pos1 = new MutableBlockPos();
+                    int xMin = getMin().getX();
+                    int zMin = getMin().getZ();
+                    int yMin = getMin().getY();
+                    int sizeX = getTiles().length;
+                    int sizeY = getTiles()[0].length;
+                    int sizeZ = getTiles()[0][0].length;
+                    for (int i = 0; i < sizeX; i++)
+                        for (int j = 0; j < sizeY; j++)
+                            for (int k = 0; k < sizeZ; k++)
+                            {
+                                pos1.setPos(i + xMin + posX, j + yMin + posY, k + zMin + posZ);
+                                IBlockState state1 = getFakeWorld().getBlockState(pos1);
+                                if (state1.getBlock() instanceof BlockStairs)
+                                {
+                                    Vector3f seat = new Vector3f(i + xMin, j + yMin + 0.5f, k + zMin);
+                                    this.addSeat(seat);
+                                }
+                            }
+                }
+                {
+                    pos = new BlockPos(this.getPositionVector());
+                    pos = trace.getBlockPos().subtract(pos);
+                    System.out.println(pos);
+                    for (int i = 0; i < getSeatCount(); i++)
+                    {
+                        Seat seat = getSeat(i);
+                        Vector3f seatPos = seat.seat;
+                        BlockPos pos1 = new BlockPos(seatPos.x, seatPos.y, seatPos.z);
+                        if (pos1.equals(pos))
+                        {
+                            if (!worldObj.isRemote)
+                            {
+                                setSeatID(i, player.getUniqueID());
+                                player.startRiding(this);
+                            }
+                            System.out.println(pos1 + " " + pos + " " + i);
+                            break;
+                        }
+                    }
+                }
+            }
         }
-        return EnumActionResult.FAIL;
+        return EnumActionResult.PASS;
     }
 
     /** First layer of player interaction */
@@ -272,6 +428,7 @@ public class EntityRocket extends EntityLivingBase
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
         if (hand != EnumHand.MAIN_HAND) return false;
+        System.out.println("Interact " + getSeatCount());
         if (stack != null && !worldObj.isRemote)
         {
             System.out.println("interact " + stack.getDisplayName());
@@ -330,18 +487,17 @@ public class EntityRocket extends EntityLivingBase
     {
         if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
         collider.onUpdate();
-        // this.motionY -= 0.007;
-        this.setPosition(this.posX, 10, this.posZ);
+        // this.motionY -= 0.07;
         // super.onUpdate();
+        // this.setPosition(posX, 80, posZ);
         this.prevRotationYaw = rotationYaw;
         this.rotationYaw += 1;
-
         float pitchTime = this.ticksExisted * 0.01f;
         this.prevRotationPitch = this.rotationPitch;
         this.rotationPitch = -90 + (float) Math.toDegrees(Math.acos(Math.cos(pitchTime)));
 
-      this.rotationYaw = 0;
-          this.rotationPitch = 0;
+        this.rotationYaw = 0;
+        this.rotationPitch = 0;
         doMotion();
         checkCollision();
     }
@@ -594,23 +750,46 @@ public class EntityRocket extends EntityLivingBase
     @Override
     public Vector3f getSeat(Entity passenger)
     {
-        Vector3f ret = new Vector3f();
-        BlockPos pos = getSeat();
-        if (pos != null) ret.set(pos.getX(), pos.getY() + 0.5f, pos.getZ());
+        Vector3f ret = null;
+        for (int i = 0; i < getSeatCount(); i++)
+        {
+            Seat seat;
+            if ((seat = getSeat(i)).entityId.equals(passenger.getUniqueID())) { return seat.seat; }
+        }
         return ret;
     }
 
     @Override
-    public Entity getPassenger(Vector3f seat)
+    public Entity getPassenger(Vector3f seatl)
     {
-        // TODO Auto-generated method stub
+        UUID id = null;
+        for (int i = 0; i < getSeatCount(); i++)
+        {
+            Seat seat;
+            if ((seat = getSeat(i)).seat.equals(seatl))
+            {
+                id = seat.entityId;
+            }
+        }
+        if (id != null)
+        {
+            for (Entity e : getPassengers())
+            {
+                if (e.getUniqueID().equals(id)) return e;
+            }
+        }
         return null;
     }
 
     @Override
     public List<Vector3f> getSeats()
     {
-        // TODO Auto-generated method stub
+        List<Vector3f> ret = Lists.newArrayList();
+        for (int i = 0; i < getSeatCount(); i++)
+        {
+            Seat seat = getSeat(i);
+            ret.add(seat.seat);
+        }
         return null;
     }
 
@@ -639,4 +818,13 @@ public class EntityRocket extends EntityLivingBase
         return prevRotationPitch;
     }
 
+    int getSeatCount()
+    {
+        return dataManager.get(SEATCOUNT);
+    }
+
+    void setSeatCount(int count)
+    {
+        dataManager.set(SEATCOUNT, count);
+    }
 }

@@ -22,6 +22,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
@@ -88,6 +89,12 @@ public class ThutCore
     public void serverLoad(FMLServerStartingEvent event)
     {
         event.registerServerCommand(new ConfigCommand());
+    }
+
+    @EventHandler
+    public void serverLoad(FMLServerStoppedEvent event)
+    {
+        TerrainManager.clear();
     }
 
     @SubscribeEvent

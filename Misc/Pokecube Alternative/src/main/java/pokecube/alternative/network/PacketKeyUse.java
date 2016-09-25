@@ -8,8 +8,8 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import pokecube.alternative.capabilities.IBeltCapability;
-import pokecube.alternative.event.EventHandlerCommon;
+import pokecube.alternative.container.BeltPlayerData;
+import pokecube.alternative.container.IPokemobBelt;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokemob;
 
@@ -67,7 +67,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
 
     void processMessage(EntityPlayer player, PacketKeyUse message)
     {
-        IBeltCapability cap = player.getCapability(EventHandlerCommon.BELTAI_CAP, null);
+        IPokemobBelt cap = BeltPlayerData.getBelt(player);
         if (message.messageId == SENDOUT)
         {
             ItemStack cube = cap.getCube(cap.getSlot());

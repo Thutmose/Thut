@@ -258,7 +258,7 @@ public class ThutPerms
 
     }
 
-    static void savePerms()
+    public static void savePerms()
     {
         String folder = FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName();
         File file = FMLCommonHandler.instance().getSavesDirectory();
