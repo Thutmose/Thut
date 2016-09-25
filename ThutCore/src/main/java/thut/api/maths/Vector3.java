@@ -434,10 +434,7 @@ public class Vector3
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
         return true;
     }
@@ -997,7 +994,7 @@ public class Vector3
                             ret.add(e);
                         }
                     }
-                    if (ret != null && ret.size() > 0) return ret.get(0);
+                    if (ret.size() > 0) return ret.get(0);
                 }
             }
             yprev = ytest;
@@ -1043,7 +1040,7 @@ public class Vector3
                         ret.add(e);
                     }
                 }
-                if (ret != null && ret.size() > 0) return ret;
+                if ( ret.size() > 0) return ret;
             }
 
         }
@@ -1783,10 +1780,7 @@ public class Vector3
             worldObj.setBlockState(getPos(), id.getStateFromMeta(meta), flag);
             return true;
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     public void setBlock(World world, IBlockState defaultState)
@@ -1872,5 +1866,12 @@ public class Vector3
         nbt.setDouble(tag + "x", x);
         nbt.setDouble(tag + "y", y);
         nbt.setDouble(tag + "z", z);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        // TODO Auto-generated method stub
+        return super.hashCode();
     }
 }

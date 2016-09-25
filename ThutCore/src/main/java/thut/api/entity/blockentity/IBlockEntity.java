@@ -145,7 +145,7 @@ public interface IBlockEntity
 
                 if (oclass != null)
                 {
-                    tileentity = (TileEntity) oclass.newInstance();
+                    tileentity = oclass.newInstance();
                 }
             }
             catch (Throwable throwable1)

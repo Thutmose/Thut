@@ -2,7 +2,6 @@ package thut.core.client.render.x3d;
 
 import static java.lang.Math.toDegrees;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -93,7 +92,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
                 material = new Material(matName, texName, mat.getDiffuse(), mat.getSpecular(), mat.getEmissive(),
                         mat.ambientIntensity, mat.shininess, mat.transparency);
             }
-            if (material != null && isDef)
+            if (isDef)
             {
                 if (material.texture == null) material.texture = texName;
                 material.ambientIntensity = mat.ambientIntensity;
@@ -120,8 +119,8 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         try
         {
             IResource res = Minecraft.getMinecraft().getResourceManager().getResource(model);
-            InputStream stream = res.getInputStream();
-            X3dXML xml = new X3dXML(stream);
+            X3dXML xml = new X3dXML(res.getInputStream());
+            res.close();
             makeObjects(xml);
         }
         catch (Exception e)

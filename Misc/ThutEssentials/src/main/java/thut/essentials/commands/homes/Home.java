@@ -54,7 +54,7 @@ public class Home extends BaseCommand
             tptag.setLong("homeDelay", time + ConfigManager.INSTANCE.homeDelay);
             tag.setTag("tp", tptag);
             PlayerDataHandler.saveCustomData(player);
-            new PlayerMover(player, home[3], new BlockPos(home[0], home[1], home[2]), teleMess);
+            PlayerMover.setMove(player, home[3], new BlockPos(home[0], home[1], home[2]), teleMess);
         }
         else
         {

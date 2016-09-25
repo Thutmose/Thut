@@ -19,7 +19,6 @@ import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
-import thut.api.WorldCache.ChunkCache;
 import thut.api.block.IOwnableTE;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -73,6 +72,13 @@ public class TickHandler
         public String toString()
         {
             return blockTo + " " + dimension + " " + location;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            // TODO Auto-generated method stub
+            return super.hashCode();
         }
 
     }
@@ -132,13 +138,10 @@ public class TickHandler
             return ret;
 
         }
-        else
-        {
-            ArrayList<BlockChange> ret;
-            ret = Lists.newArrayList();
-            lists.put(thread, ret);
-            return ret;
-        }
+        ArrayList<BlockChange> ret;
+        ret = Lists.newArrayList();
+        lists.put(thread, ret);
+        return ret;
     }
 
     public static Vector<BlockChange> getListForDimension(int dim)
@@ -231,25 +234,6 @@ public class TickHandler
     @SubscribeEvent
     public void worldTickEvent(WorldTickEvent evt)
     {
-        // At the start of the phase, once per second, check to see if any of
-        // the vectorpools should be removed.
-        if (evt.phase == Phase.START)
-        {
-            if (evt.world.getTotalWorldTime() % 20 == 0)
-            {
-                if (evt.world.getTotalWorldTime() % 40 == 0)
-                {
-                    WorldCache world = worldCaches.get(evt.world.provider.getDimension());
-                    if (world != null)
-                    {
-                        for (ChunkCache chunk : world.cache)
-                        {
-                            chunk.update();
-                        }
-                    }
-                }
-            }
-        }
         if (evt.phase != Phase.END || !blocks.containsKey(evt.world.provider.getDimension())
                 || blocks.get(evt.world.provider.getDimension()).size() == 0 || evt.world.isRemote)
             return;

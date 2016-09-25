@@ -45,7 +45,7 @@ public abstract class BaseCommand extends CommandBase
         {
             return false;
         }
-        UserListOpsEntry userlistopsentry = (UserListOpsEntry) server.getPlayerList().getOppedPlayers()
+        UserListOpsEntry userlistopsentry = server.getPlayerList().getOppedPlayers()
                 .getEntry(player.getGameProfile());
         return userlistopsentry != null ? userlistopsentry.getPermissionLevel() >= perm : perm <= 0;
     }

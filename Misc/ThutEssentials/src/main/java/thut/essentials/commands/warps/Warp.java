@@ -53,7 +53,7 @@ public class Warp extends BaseCommand
         {
             ITextComponent teleMess = CommandManager.makeFormattedComponent("Warped to " + warpName,
                     TextFormatting.GREEN);
-            new PlayerMover(player, warp[3], new BlockPos(warp[0], warp[1], warp[2]), teleMess);
+            PlayerMover.setMove(player, warp[3], new BlockPos(warp[0], warp[1], warp[2]), teleMess);
             tptag.setLong("warpDelay", time + ConfigManager.INSTANCE.warpDelay);
             tag.setTag("tp", tptag);
             PlayerDataHandler.saveCustomData(player);

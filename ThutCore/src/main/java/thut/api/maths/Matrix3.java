@@ -112,7 +112,7 @@ public class Matrix3
                 if (minX0 == minX1)
                 {
                     if (minZ0 == minZ1) return minY0 - minY1;
-                    else return minZ0 - minZ1;
+                    return minZ0 - minZ1;
                 }
                 return minX0 - minX1;
             }
@@ -733,7 +733,7 @@ public class Matrix3
                 if (minX0 == minX1)
                 {
                     if (minZ0 == minZ1) return minY0 - minY1;
-                    else return minZ0 - minZ1;
+                    return minZ0 - minZ1;
                 }
                 return minX0 - minX1;
             }

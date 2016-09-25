@@ -194,9 +194,8 @@ public class TabulaModelBase extends ModelBase {
     public float moveBox(float speed, float degree, boolean bounce, float f, float f1) {
         if (bounce) {
             return -MathHelper.abs((MathHelper.sin(f * speed) * f1 * degree));
-        } else {
-            return MathHelper.sin(f * speed) * f1 * degree - f1 * degree;
         }
+        return MathHelper.sin(f * speed) * f1 * degree - f1 * degree;
     }
 
     /**
@@ -215,9 +214,8 @@ public class TabulaModelBase extends ModelBase {
     public float rotateBox(float speed, float degree, boolean invert, float offset, float weight, float f, float f1) {
         if (invert) {
             return -MathHelper.cos(f * speed + offset) * degree * f1 + weight * f1;
-        } else {
-            return MathHelper.cos(f * speed + offset) * degree * f1 + weight * f1;
         }
+        return MathHelper.cos(f * speed + offset) * degree * f1 + weight * f1;
     }
 
     /**

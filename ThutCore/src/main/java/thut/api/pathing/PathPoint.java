@@ -103,11 +103,8 @@ public class PathPoint extends net.minecraft.pathfinding.PathPoint{
         {
             return false;
         }
-        else
-        {
-            PathPoint pathpoint = (PathPoint)o;
-            return this.hash == pathpoint.hash && this.xCoord == pathpoint.xCoord && this.yCoord == pathpoint.yCoord && this.zCoord == pathpoint.zCoord;
-        }
+        PathPoint pathpoint = (PathPoint)o;
+        return this.hash == pathpoint.hash && this.xCoord == pathpoint.xCoord && this.yCoord == pathpoint.yCoord && this.zCoord == pathpoint.zCoord;
     }
 
     @Override

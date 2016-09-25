@@ -45,10 +45,12 @@ public class PlayerDataHandler
 
     public static abstract class PlayerData implements IPlayerData
     {
+        @Override
         public void readSync(ByteBuf data)
         {
         }
 
+        @Override
         public void writeSync(ByteBuf data)
         {
         }
@@ -146,14 +148,9 @@ public class PlayerDataHandler
 
     public static PlayerDataHandler getInstance()
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
-        {
-            return INSTANCECLIENT != null ? INSTANCECLIENT : (INSTANCECLIENT = new PlayerDataHandler());
-        }
-        else
-        {
-            return INSTANCESERVER != null ? INSTANCESERVER : (INSTANCESERVER = new PlayerDataHandler());
-        }
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) { return INSTANCECLIENT != null
+                ? INSTANCECLIENT : (INSTANCECLIENT = new PlayerDataHandler()); }
+        return INSTANCESERVER != null ? INSTANCESERVER : (INSTANCESERVER = new PlayerDataHandler());
     }
 
     public static void clear()
@@ -162,10 +159,10 @@ public class PlayerDataHandler
         if (INSTANCESERVER != null) MinecraftForge.EVENT_BUS.unregister(INSTANCESERVER);
         INSTANCECLIENT = INSTANCESERVER = null;
     }
-    
+
     public static void saveAll()
     {
-        
+
     }
 
     public static NBTTagCompound getCustomDataTag(EntityPlayer player)
@@ -199,7 +196,7 @@ public class PlayerDataHandler
         String seperator = System.getProperty("file.separator");
         File file = saveHandler.getMapFileFromName(uuid + seperator + fileName);
         File dir = new File(file.getParentFile().getAbsolutePath());
-        if (file != null && !file.exists())
+        if (!file.exists())
         {
             dir.mkdirs();
         }

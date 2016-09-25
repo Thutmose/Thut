@@ -29,10 +29,7 @@ public class Invites extends BaseCommand
             sender.addChatMessage(new TextComponentString("You have no team invites"));
             return;
         }
-        else
-        {
-            sender.addChatMessage(new TextComponentString("List of Team Invites, You can click one to join."));
-        }
+        sender.addChatMessage(new TextComponentString("List of Team Invites, You can click one to join."));
         String links = "";
         String cmd = "joinTeam";
         String command = "/" + cmd + " " + c.get(0);

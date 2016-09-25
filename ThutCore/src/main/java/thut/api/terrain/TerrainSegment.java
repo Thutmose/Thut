@@ -579,4 +579,10 @@ public class TerrainSegment
 
         return ret;
     }
+
+    @Override
+    public int hashCode()
+    {
+        return (this.chunkX + this.chunkZ << 8) << 8 + this.chunkY;
+    }
 }

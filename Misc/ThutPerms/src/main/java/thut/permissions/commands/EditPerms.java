@@ -49,29 +49,26 @@ public class EditPerms extends CommandBase
                 ThutPerms.savePerms();
                 return;
             }
+            try
+            {
+                Class<?> cmd = Class.forName(command);
+                if (cmd == null) { throw new CommandException("Error, Command not found."); }
+            }
+            catch (Exception e)
+            {
+                throw new CommandException("Error, Command not found.");
+            }
+            if (enable)
+            {
+                g.allowedCommands.add(command);
+            }
             else
             {
-                try
-                {
-                    Class<?> cmd = Class.forName(command);
-                    if (cmd == null) { throw new CommandException("Error, Command not found."); }
-                }
-                catch (Exception e)
-                {
-                    throw new CommandException("Error, Command not found.");
-                }
-                if (enable)
-                {
-                    g.allowedCommands.add(command);
-                }
-                else
-                {
-                    g.allowedCommands.remove(command);
-                }
-                sender.addChatMessage(new TextComponentString("Set Permission for " + groupName + " " + enable));
-                ThutPerms.savePerms();
-                return;
+                g.allowedCommands.remove(command);
             }
+            sender.addChatMessage(new TextComponentString("Set Permission for " + groupName + " " + enable));
+            ThutPerms.savePerms();
+            return;
         }
         else if (args[0].equals("allowUse"))
         {
@@ -98,12 +95,9 @@ public class EditPerms extends CommandBase
                 ThutPerms.savePerms();
                 return;
             }
-            else
-            {
-                sender.addChatMessage(new TextComponentString(
-                        "Players allowed to use all commands for group: " + ThutPerms.allCommandUse));
-                return;
-            }
+            sender.addChatMessage(new TextComponentString(
+                    "Players allowed to use all commands for group: " + ThutPerms.allCommandUse));
+            return;
         }
     }
 

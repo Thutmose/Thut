@@ -16,20 +16,17 @@ public class ThutPath {
         {
             throw new IllegalStateException("OW KNOWS!");
         }
-        else
+        if (this.count == this.pathPoints.length)
         {
-            if (this.count == this.pathPoints.length)
-            {
-                PathPoint[] apathpoint = new PathPoint[this.count << 1];
-                System.arraycopy(this.pathPoints, 0, apathpoint, 0, this.count);
-                this.pathPoints = apathpoint;
-            }
-
-            this.pathPoints[this.count] = toAdd;
-            toAdd.index = this.count;
-            this.sortBack(this.count++);
-            return toAdd;
+            PathPoint[] apathpoint = new PathPoint[this.count << 1];
+            System.arraycopy(this.pathPoints, 0, apathpoint, 0, this.count);
+            this.pathPoints = apathpoint;
         }
+
+        this.pathPoints[this.count] = toAdd;
+        toAdd.index = this.count;
+        this.sortBack(this.count++);
+        return toAdd;
     }
 
     /**

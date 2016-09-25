@@ -44,11 +44,8 @@ public class LandChunk implements Comparable<LandChunk>
         {
             return false;
         }
-        else
-        {
-            LandChunk BlockPos = (LandChunk) obj;
-            return x == BlockPos.x && y == BlockPos.y && this.z == BlockPos.z && this.dim == BlockPos.dim;
-        }
+        LandChunk BlockPos = (LandChunk) obj;
+        return x == BlockPos.x && y == BlockPos.y && this.z == BlockPos.z && this.dim == BlockPos.dim;
     }
 
     @Override
@@ -57,6 +54,7 @@ public class LandChunk implements Comparable<LandChunk>
         return x + z << 8 + y << 16 + this.dim << 24;
     }
 
+    @Override
     public int compareTo(LandChunk p_compareTo_1_)
     {
         return y == p_compareTo_1_.y

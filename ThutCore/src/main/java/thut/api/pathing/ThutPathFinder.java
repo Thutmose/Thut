@@ -129,10 +129,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         {
             return null;
         }
-        else
-        {
-            return this.createEntityPath(pathpoint3);
-        }
+        return this.createEntityPath(pathpoint3);
     }
 
     private boolean canFit(Vector3 e, IBlockState b)

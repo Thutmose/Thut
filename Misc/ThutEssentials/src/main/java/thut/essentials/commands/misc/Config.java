@@ -79,43 +79,40 @@ public class Config extends CommandBase
                 sender.addChatMessage(mess);
                 return;
             }
+            if (!op) { throw new CommandException("No permission to do that"); }
+            try
+            {
+                String val = args[1];
+                if (args.length > 2)
+                {
+                    for (int i = 2; i < args.length; i++)
+                    {
+                        val = val + " " + args[i];
+                    }
+                }
+                ThutEssentials.instance.config.updateField(field, val);
+            }
+            catch (Exception e)
+            {
+                throw new CommandException("invalid options");
+            }
+            text = "";
+            o = field.get(ThutEssentials.instance.config);
+            if (o instanceof String[])
+            {
+                text += Arrays.toString((Object[]) o);
+            }
+            else if (o instanceof int[])
+            {
+                text += Arrays.toString((int[]) o);
+            }
             else
             {
-                if (!op) { throw new CommandException("No permission to do that"); }
-                try
-                {
-                    String val = args[1];
-                    if (args.length > 2)
-                    {
-                        for (int i = 2; i < args.length; i++)
-                        {
-                            val = val + " " + args[i];
-                        }
-                    }
-                    ThutEssentials.instance.config.updateField(field, val);
-                }
-                catch (Exception e)
-                {
-                    throw new CommandException("invalid options");
-                }
-                text = "";
-                o = field.get(ThutEssentials.instance.config);
-                if (o instanceof String[])
-                {
-                    text += Arrays.toString((Object[]) o);
-                }
-                else if (o instanceof int[])
-                {
-                    text += Arrays.toString((int[]) o);
-                }
-                else
-                {
-                    text += o;
-                }
-                mess = new TextComponentTranslation("thutcore.command.settings.set", args[0], text);
-                sender.addChatMessage(mess);
-                return;
+                text += o;
             }
+            mess = new TextComponentTranslation("thutcore.command.settings.set", args[0], text);
+            sender.addChatMessage(mess);
+            return;
         }
         catch (Exception e)
         {

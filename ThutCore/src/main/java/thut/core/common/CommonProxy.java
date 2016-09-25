@@ -25,10 +25,7 @@ public class CommonProxy implements IPlayerProvider
         {
             return getWorld().getPlayerEntityByName(playerName);
         }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 	
     public World getWorld()

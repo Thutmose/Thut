@@ -7,11 +7,8 @@ import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.crash.CrashReport;
-import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IBlockAccess;
@@ -20,7 +17,6 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.Chunk.EnumCreateEntityType;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 /** This class is used for thread-safe world access.
  * 
@@ -30,73 +26,32 @@ public class WorldCache implements IBlockAccess
     public static class ChunkCache
     {
         Chunk                          chunk;
-        private ExtendedBlockStorage[] storageArrays;
-
         public ChunkCache(Chunk chunk)
         {
             this.chunk = chunk;
-            update();
         }
-
         public IBlockState getBlockState(final BlockPos pos)
         {
-            try
+            IBlockState ret = null;
+            synchronized (chunk)
             {
-                if (pos.getY() >= 0 && pos.getY() >> 4 < this.storageArrays.length)
-                {
-                    ExtendedBlockStorage extendedblockstorage = this.storageArrays[pos.getY() >> 4];
-
-                    if (extendedblockstorage != null)
-                    {
-                        int j = pos.getX() & 15;
-                        int k = pos.getY() & 15;
-                        int i = pos.getZ() & 15;
-                        return extendedblockstorage.get(j, k, i);
-                    }
-                }
-
-                return Blocks.AIR.getDefaultState();
+                ret = chunk.getBlockState(pos);
             }
-            catch (Throwable throwable)
-            {
-                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Getting block state");
-                throw new ReportedException(crashreport);
-            }
+            return ret;
         }
-
         public TileEntity getTileEntity(BlockPos pos, EnumCreateEntityType immediate)
         {
-            return chunk.getTileEntity(pos, immediate);
+            TileEntity ret = null;
+            synchronized (chunk)
+            {
+                ret = chunk.getTileEntity(pos, immediate);
+            }
+            return ret;
         }
-
         public boolean isEmpty()
         {
             return false;
         }
-
-        public synchronized void update()
-        {
-            if (storageArrays == null) storageArrays = new ExtendedBlockStorage[chunk.getBlockStorageArray().length];
-            for (int i = 0; i < storageArrays.length; i++)
-            {
-                if (chunk.getBlockStorageArray()[i] != null)
-                {
-                    if (storageArrays[i] == null)
-                    {
-                        storageArrays[i] = chunk.getBlockStorageArray()[i];// TODO
-                                                                           // figure
-                                                                           // out
-                                                                           // copying
-                                                                           // this.
-                    }
-                }
-                else
-                {
-                    storageArrays[i] = null;
-                }
-            }
-        }
-
     }
 
     public final World                       world;
@@ -117,7 +72,7 @@ public class WorldCache implements IBlockAccess
         cache.add(chunkcache);
     }
 
-//    @Override
+    // @Override
     public boolean extendedLevelsInChunkCache()
     {
         return false;

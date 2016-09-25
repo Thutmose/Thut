@@ -64,10 +64,7 @@ public class TabulaModelParser implements IModelParser<TabulaModel>
             modelMap.put(tabulaModel, new ModelJson(tabulaModel));
             return tabulaModel;
         }
-        else
-        {
-            new NullPointerException("Cannot load model").printStackTrace();
-        }
+        new NullPointerException("Cannot load model").printStackTrace();
         return null;
     }
 

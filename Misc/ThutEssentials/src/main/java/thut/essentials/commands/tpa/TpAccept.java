@@ -9,7 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextFormatting;
 import thut.essentials.commands.CommandManager;
-import thut.essentials.commands.misc.Spawn;
+import thut.essentials.commands.misc.Spawn.PlayerMover;
 import thut.essentials.util.BaseCommand;
 import thut.essentials.util.PlayerDataHandler;
 
@@ -37,7 +37,7 @@ public class TpAccept extends BaseCommand
         {
             target.addChatMessage(
                     CommandManager.makeFormattedComponent("Your TPA request was accepted", TextFormatting.GREEN, true));
-            new Spawn.PlayerMover(target, player.dimension, player.getPosition(), null);
+            PlayerMover.setMove(target, player.dimension, player.getPosition(), null);
         }
         else if (args[0].equals("deny"))
         {

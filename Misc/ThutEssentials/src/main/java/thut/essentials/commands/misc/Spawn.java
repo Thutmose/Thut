@@ -23,18 +23,9 @@ public class Spawn extends CommandBase
 {
     public static class PlayerMover
     {
-        final EntityPlayer   player;
-        final BlockPos       moveTo;
-        final int            dimension;
-        final ITextComponent message;
-
-        public PlayerMover(EntityPlayer toMove, int dim, BlockPos pos, ITextComponent mess)
+        public static void setMove(final EntityPlayer player, final int dimension, final BlockPos moveTo, final ITextComponent message)
         {
-            moveTo = pos;
-            player = toMove;
-            dimension = dim;
-            message = mess;
-            toMove.getServer().addScheduledTask(new Runnable()
+            player.getServer().addScheduledTask(new Runnable()
             {
                 @Override
                 public void run()
@@ -88,7 +79,7 @@ public class Spawn extends CommandBase
             BlockPos spawn = server.worldServerForDimension(ThutEssentials.instance.config.spawnDimension)
                     .getSpawnPoint();
             ITextComponent teleMess = CommandManager.makeFormattedComponent("Warped to Spawn", TextFormatting.GREEN);
-            new PlayerMover(player, ThutEssentials.instance.config.spawnDimension, spawn, teleMess);
+            PlayerMover.setMove(player, ThutEssentials.instance.config.spawnDimension, spawn, teleMess);
             tptag.setLong("spawnDelay", time + ConfigManager.INSTANCE.spawnDelay);
             tag.setTag("tp", tptag);
             PlayerDataHandler.saveCustomData(player);
@@ -100,7 +91,7 @@ public class Spawn extends CommandBase
             {
                 ITextComponent teleMess = CommandManager.makeFormattedComponent("Warped to Bed location",
                         TextFormatting.GREEN);
-                new PlayerMover(player, player.dimension, spawn, teleMess);
+                PlayerMover.setMove(player, player.dimension, spawn, teleMess);
                 tptag.setLong("spawnDelay", time + ConfigManager.INSTANCE.spawnDelay);
                 tag.setTag("tp", tptag);
             }

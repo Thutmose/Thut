@@ -86,15 +86,9 @@ public class ClientProxy extends CommonProxy
             {
                 return getWorld().getPlayerEntityByName(playerName);
             }
-            else
-            {
-                return Minecraft.getMinecraft().thePlayer;
-            }
+            return Minecraft.getMinecraft().thePlayer;
         }
-        else
-        {
-            return super.getPlayer(playerName);
-        }
+        return super.getPlayer(playerName);
     }
 
     @Override
@@ -104,10 +98,7 @@ public class ClientProxy extends CommonProxy
         {
             return Minecraft.getMinecraft().theWorld;
         }
-        else
-        {
-            return super.getWorld();
-        }
+        return super.getWorld();
     }
 
     @Override

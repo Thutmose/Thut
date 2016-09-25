@@ -128,13 +128,10 @@ public class BlockEntityWorld extends World
         {
             return b.getDefaultState();// world.getBlockState(pos);
         }
-        else
-        {
-            ItemStack stack = blockEntity.getBlocks()[i][j][k];
-            if (stack == null || stack.getItem() == null) return world.getBlockState(pos);
-            b = Block.getBlockFromItem(stack.getItem());
-            meta = stack.getItemDamage();
-        }
+        ItemStack stack = blockEntity.getBlocks()[i][j][k];
+        if (stack == null || stack.getItem() == null) return world.getBlockState(pos);
+        b = Block.getBlockFromItem(stack.getItem());
+        meta = stack.getItemDamage();
         @SuppressWarnings("deprecation")
         IBlockState iblockstate = b.getStateFromMeta(meta);
         return iblockstate;
