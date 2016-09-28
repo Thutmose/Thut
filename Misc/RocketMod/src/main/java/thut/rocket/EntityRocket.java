@@ -154,6 +154,7 @@ public class EntityRocket extends EntityLivingBase
         return this.dataManager.get(SEAT[index]);
     }
 
+    @Override
     public BlockEntityWorld getFakeWorld()
     {
         if (world == null)
@@ -235,7 +236,6 @@ public class EntityRocket extends EntityLivingBase
     @Override
     protected boolean canFitPassenger(Entity passenger)
     {
-        System.out.println(this.getPassengers().size() + " " + getSeatCount());
         return this.getPassengers().size() < getSeatCount();
     }
 
@@ -400,7 +400,6 @@ public class EntityRocket extends EntityLivingBase
                 {
                     pos = new BlockPos(this.getPositionVector());
                     pos = trace.getBlockPos().subtract(pos);
-                    System.out.println(pos);
                     for (int i = 0; i < getSeatCount(); i++)
                     {
                         Seat seat = getSeat(i);
@@ -428,11 +427,8 @@ public class EntityRocket extends EntityLivingBase
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
         if (hand != EnumHand.MAIN_HAND) return false;
-        System.out.println("Interact " + getSeatCount());
         if (stack != null && !worldObj.isRemote)
         {
-            System.out.println("interact " + stack.getDisplayName());
-
             if (stack.getDisplayName().equals("x"))
             {
                 this.motionX += 0.5;
@@ -469,9 +465,6 @@ public class EntityRocket extends EntityLivingBase
             {
                 this.setDead();
             }
-
-            System.out.println(motionX + " " + motionY + " " + motionZ);
-            // PacketHandler.sendEntityUpdate(this);
         }
         return false;
     }
@@ -590,6 +583,12 @@ public class EntityRocket extends EntityLivingBase
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }
         super.setDead();
+    }
+    
+    @Override
+    protected void collideWithNearbyEntities()
+    {
+        //This causes lag for large entities, and isn't really needed for a rocket.
     }
 
     public void writeBlocks(NBTTagCompound nbt)

@@ -8,6 +8,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import pokecube.alternative.client.gui.GuiPokemonBar;
@@ -30,26 +31,22 @@ public class KeyHandler
 
     public static void init()
     {
-        nextPoke = new KeyBinding(I18n.format("keybind.nextpoke"), Keyboard.KEY_DOWN,
-                I18n.format("key.categories.pokecube_alternative"));
-        prevPoke = new KeyBinding(I18n.format("keybind.prevpoke"), Keyboard.KEY_UP,
-                I18n.format("key.categories.pokecube_alternative"));
         toggleBarControl = new KeyBinding(I18n.format("keybind.togglebarcontrol"), Keyboard.KEY_LCONTROL,
                 I18n.format("key.categories.pokecube_alternative"));
         cycleGuiState = new KeyBinding(I18n.format("keybind.cycleGuiState"), Keyboard.KEY_O,
                 I18n.format("key.categories.pokecube_alternative"));
-        ClientRegistry.registerKeyBinding(nextPoke);
-        ClientRegistry.registerKeyBinding(prevPoke);
         ClientRegistry.registerKeyBinding(toggleBarControl);
         ClientRegistry.registerKeyBinding(cycleGuiState);
     }
 
     long ticks = 0;
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
         sendOutPoke = ClientProxyPokecube.mobBack;
+        nextPoke = ClientProxyPokecube.nextMove;
+        prevPoke = ClientProxyPokecube.previousMove;
         IPokemob mob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
         if (toggleBarControl.isKeyDown() || mob == null)
         {

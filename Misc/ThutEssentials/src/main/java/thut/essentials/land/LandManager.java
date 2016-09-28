@@ -46,9 +46,13 @@ public class LandManager
             return team;
         }
 
-        public TeamLand land   = new TeamLand();
+        public TeamLand land         = new TeamLand();
         String          teamName;
-        Set<String>     admins = Sets.newHashSet();
+        Set<String>     admins       = Sets.newHashSet();
+        public String   exitMessage  = "";
+        public String   enterMessage = "";
+        public String   denyMessage  = "";
+        public boolean  reserved     = false;
 
         public LandTeam()
         {
@@ -420,9 +424,7 @@ public class LandManager
             removeFromAdmins(toRemove, team);
             admin.getEntityWorld().getScoreboard().removePlayerFromTeam(toRemove, oldTeam);
         }
-        this.addToTeam(admin, ConfigManager.INSTANCE.defaultTeamName);
     }
-
     public void removeTeamLand(String team, LandChunk land)
     {
         LandTeam t = teamMap.get(team);

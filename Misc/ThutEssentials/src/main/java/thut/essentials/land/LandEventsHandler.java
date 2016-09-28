@@ -16,6 +16,7 @@ import net.minecraft.scoreboard.Team;
 import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,6 +32,7 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.essentials.events.DenyItemUseEvent;
 import thut.essentials.events.DenyItemUseEvent.UseType;
+import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.ConfigManager;
 
 public class LandEventsHandler
@@ -61,8 +63,7 @@ public class LandEventsHandler
             if (LandManager.getInstance().isOwned(c)
                     && !LandManager.getInstance().isTeamLand(c, player.getTeam().getRegisteredName()))
             {
-                player.addChatMessage(new TextComponentString("You may not remove blocks from land owned by Team "
-                        + LandManager.getInstance().getLandOwner(c)));
+                player.addChatMessage(getDenyMessage(LandManager.getInstance().getLandOwner(c)));
                 evt.setCanceled(true);
                 return;
             }
@@ -121,14 +122,14 @@ public class LandEventsHandler
                         long last = lastLeaveMessage.get(evt.getEntity().getUniqueID());
                         if (last < System.currentTimeMillis())
                         {
-                            evt.getEntity().addChatMessage(new TextComponentTranslation("msg.team.exitLand", team1));
+                            evt.getEntity().addChatMessage(getExitMessage(team1));
                             lastLeaveMessage.put(evt.getEntity().getUniqueID(), System.currentTimeMillis() + 100);
                         }
                     }
                     long last = lastEnterMessage.get(evt.getEntity().getUniqueID());
                     if (last < System.currentTimeMillis())
                     {
-                        evt.getEntity().addChatMessage(new TextComponentTranslation("msg.team.enterLand", team));
+                        evt.getEntity().addChatMessage(getEnterMessage(team));
                         lastLeaveMessage.put(evt.getEntity().getUniqueID(), System.currentTimeMillis() + 100);
                     }
                 }
@@ -137,7 +138,7 @@ public class LandEventsHandler
                     long last = lastLeaveMessage.get(evt.getEntity().getUniqueID());
                     if (last < System.currentTimeMillis())
                     {
-                        evt.getEntity().addChatMessage(new TextComponentTranslation("msg.team.exitLand", team1));
+                        evt.getEntity().addChatMessage(getExitMessage(team1));
                         lastLeaveMessage.put(evt.getEntity().getUniqueID(), System.currentTimeMillis() + 100);
                     }
                 }
@@ -196,8 +197,7 @@ public class LandEventsHandler
             {
                 evt.setUseBlock(Result.DENY);
                 evt.setCanceled(true);
-                if (!evt.getWorld().isRemote)
-                    evt.getEntity().addChatMessage(new TextComponentTranslation("msg.team.deny", owner));
+                if (!evt.getWorld().isRemote) evt.getEntity().addChatMessage(getDenyMessage(owner));
             }
             evt.setUseItem(Result.DENY);
         }
@@ -294,7 +294,7 @@ public class LandEventsHandler
                 evt.setCanceled(true);
                 if (!evt.getWorld().isRemote && evt.getHand() == EnumHand.MAIN_HAND)
                 {
-                    evt.getEntity().addChatMessage(new TextComponentTranslation("msg.team.deny", owner));
+                    evt.getEntity().addChatMessage(getDenyMessage(owner));
                 }
             }
             evt.setUseItem(Result.DENY);
@@ -309,5 +309,26 @@ public class LandEventsHandler
     public void onServerStopped()
     {
         LandManager.clearInstance();
+    }
+
+    private static ITextComponent getDenyMessage(String theteam)
+    {
+        LandTeam team = LandManager.getInstance().getTeam(theteam, false);
+        if (team != null && !team.denyMessage.isEmpty()) { return new TextComponentString(team.denyMessage); }
+        return new TextComponentTranslation("msg.team.deny", theteam);
+    }
+
+    private static ITextComponent getEnterMessage(String theteam)
+    {
+        LandTeam team = LandManager.getInstance().getTeam(theteam, false);
+        if (team != null && !team.enterMessage.isEmpty()) { return new TextComponentString(team.enterMessage); }
+        return new TextComponentTranslation("msg.team.enterLand", theteam);
+    }
+
+    private static ITextComponent getExitMessage(String theteam)
+    {
+        LandTeam team = LandManager.getInstance().getTeam(theteam, false);
+        if (team != null && !team.exitMessage.isEmpty()) { return new TextComponentString(team.exitMessage); }
+        return new TextComponentTranslation("msg.team.exitLand", theteam);
     }
 }

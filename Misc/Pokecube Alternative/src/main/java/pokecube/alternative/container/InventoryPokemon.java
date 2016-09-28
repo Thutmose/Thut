@@ -78,10 +78,7 @@ public class InventoryPokemon implements IInventory
             cap.setCube(slotIndex, null);
             return itemStack;
         }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 
     @Override
@@ -98,28 +95,22 @@ public class InventoryPokemon implements IInventory
                 this.markDirty();
                 return itemstack;
             }
+            itemstack = this.getStackInSlot(index).splitStack(count);
+
+            if (this.getStackInSlot(index).stackSize <= 0)
+            {
+                this.setInventorySlotContents(index, null);
+            }
             else
             {
-                itemstack = this.getStackInSlot(index).splitStack(count);
-
-                if (this.getStackInSlot(index).stackSize <= 0)
-                {
-                    this.setInventorySlotContents(index, null);
-                }
-                else
-                {
-                    // Just to show that changes happened
-                    this.setInventorySlotContents(index, this.getStackInSlot(index));
-                }
-
-                this.markDirty();
-                return itemstack;
+                // Just to show that changes happened
+                this.setInventorySlotContents(index, this.getStackInSlot(index));
             }
+
+            this.markDirty();
+            return itemstack;
         }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 
     @Override
@@ -231,8 +222,8 @@ public class InventoryPokemon implements IInventory
                 ei.setPickupDelay(40);
                 float f1 = player.get().worldObj.rand.nextFloat() * 0.5F;
                 float f2 = player.get().worldObj.rand.nextFloat() * (float) Math.PI * 2.0F;
-                ei.motionX = (double) (-MathHelper.sin(f2) * f1);
-                ei.motionZ = (double) (MathHelper.cos(f2) * f1);
+                ei.motionX = -MathHelper.sin(f2) * f1;
+                ei.motionZ = MathHelper.cos(f2) * f1;
                 ei.motionY = 0.20000000298023224D;
                 drops.add(ei);
                 cap.setCube(i, null);
@@ -252,8 +243,8 @@ public class InventoryPokemon implements IInventory
                 ei.setPickupDelay(40);
                 float f1 = e.worldObj.rand.nextFloat() * 0.5F;
                 float f2 = e.worldObj.rand.nextFloat() * (float) Math.PI * 2.0F;
-                ei.motionX = (double) (-MathHelper.sin(f2) * f1);
-                ei.motionZ = (double) (MathHelper.cos(f2) * f1);
+                ei.motionX = -MathHelper.sin(f2) * f1;
+                ei.motionZ = MathHelper.cos(f2) * f1;
                 ei.motionY = 0.20000000298023224D;
                 drops.add(ei);
                 cap.setCube(i, null);

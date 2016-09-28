@@ -71,11 +71,10 @@ public class Autoclaim extends BaseCommand
                 if (all) y = i;
                 int z = MathHelper.floor_double(evt.getEntityLiving().getPosition().getZ() / 16f);
                 int dim = evt.getEntityLiving().getEntityWorld().provider.getDimension();
-                if (y < 0 || y > 15) return;
+                if (y < 0 || y > 15) continue;
                 String owner = LandManager.getInstance().getLandOwner(new LandChunk(x, y, z, dim));
                 if (owner != null)
                 {
-                    if (owner.equals(team.getRegisteredName())) continue;
                     continue;
                 }
                 n++;

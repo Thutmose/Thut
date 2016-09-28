@@ -60,7 +60,14 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
     @Override
     public IMessage onMessage(final PacketSyncBelt message, MessageContext ctx)
     {
-        Minecraft.getMinecraft().addScheduledTask(new Runnable(){public void run(){processMessage(message);}});
+        Minecraft.getMinecraft().addScheduledTask(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                processMessage(message);
+            }
+        });
         return null;
     }
 
@@ -73,7 +80,7 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
         if (p != null && p instanceof EntityPlayer)
         {
             IPokemobBelt cap = BeltPlayerData.getBelt(p);
-            for(int i = 0; i<6; i++)
+            for (int i = 0; i < 6; i++)
             {
                 cap.setCube(i, message.pokemon[i]);
             }

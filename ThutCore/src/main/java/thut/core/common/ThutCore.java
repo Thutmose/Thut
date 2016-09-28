@@ -79,7 +79,6 @@ public class ThutCore
         proxy.preinit(e);
         config = new ConfigHandler(e.getSuggestedConfigurationFile());
         proxy.loadSounds();
-        TerrainManager.getInstance();
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new TickHandler());
         new Cruncher();
@@ -89,6 +88,7 @@ public class ThutCore
     public void serverLoad(FMLServerStartingEvent event)
     {
         event.registerServerCommand(new ConfigCommand());
+        TerrainManager.getInstance();
     }
 
     @EventHandler

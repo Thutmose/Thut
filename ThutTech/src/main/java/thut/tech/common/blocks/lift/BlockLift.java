@@ -2,6 +2,7 @@ package thut.tech.common.blocks.lift;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -28,6 +29,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -36,6 +38,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.network.PacketHandler;
 import thut.tech.common.TechCore;
+import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
 
 public class BlockLift extends Block implements ITileEntityProvider
@@ -288,6 +291,36 @@ public class BlockLift extends Block implements ITileEntityProvider
                         || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                         || heldItem.getItem() instanceof ItemLinker))
                 {
+                    if (heldItem.getItem() instanceof ItemLinker && playerIn.isSneaking() && heldItem.hasTagCompound())
+                    {
+                        UUID liftID;
+                        try
+                        {
+                            liftID = UUID.fromString(heldItem.getTagCompound().getString("lift"));
+                            EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
+                            if (lift != null)
+                            {
+                                if (side == EnumFacing.UP)
+                                {
+                                    te.callPanel = !te.callPanel;
+                                    String message = "msg.callPanel.name";
+                                    if (!worldIn.isRemote)
+                                        playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
+                                    return true;
+                                }
+                                te.setLift(lift);
+                                int floor = te.getButtonFromClick(side, hitX, hitY, hitZ);
+                                te.setFloor(floor);
+                                String message = "msg.floorSet.name";
+                                if (!worldIn.isRemote)
+                                    playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                                return true;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
                     if (!worldIn.isRemote)
                     {
                         te.setSidePage(side, (te.getSidePage(side) + 1) % 4);

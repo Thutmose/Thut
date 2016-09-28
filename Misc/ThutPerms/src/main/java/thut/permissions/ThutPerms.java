@@ -56,7 +56,8 @@ public class ThutPerms
                                                  public boolean shouldSkipField(FieldAttributes f)
                                                  {
                                                      String name = f.getName();
-                                                     return name.equals("groupIDMap") || name.equals("groupNameMap");
+                                                     return name.equals("groupIDMap") || name.equals("groupNameMap")
+                                                             || name.equals("playerIDMap");
                                                  }
 
                                                  @Override
@@ -269,7 +270,7 @@ public class ThutPerms
         try
         {
             Gson gson = new GsonBuilder().addSerializationExclusionStrategy(exclusion).setPrettyPrinting().create();
-            FileUtils.writeStringToFile(permsFile, gson.toJson(GroupManager.instance));
+            FileUtils.writeStringToFile(permsFile, gson.toJson(GroupManager.instance), "UTF-8");
         }
         catch (Exception e)
         {
@@ -303,6 +304,7 @@ public class ThutPerms
     {
         UUID id = sender.getUniqueID();
         Group g = GroupManager.instance.groupIDMap.get(id);
-        return g.canUse(command);
+        Player player = GroupManager.instance.playerIDMap.get(sender.getUniqueID());
+        return g.canUse(command) || player != null ? player.canUse(command) : false;
     }
 }

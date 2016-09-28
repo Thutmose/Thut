@@ -61,7 +61,7 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
     @Override
     public void readFromNBT(NBTTagCompound nbt)
     {
-        NBTTagCompound compound = (NBTTagCompound) nbt;
+        NBTTagCompound compound = nbt;
         for (int n = 0; n < 6; n++)
         {
             NBTBase temp = compound.getTag("slot" + n);

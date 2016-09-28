@@ -63,7 +63,7 @@ public class ContainerPlayerPokemon extends Container
     @Override
     public ItemStack transferStackInSlot(EntityPlayer par1EntityPlayer, int par2)
     {
-        Slot slot = (Slot) this.inventorySlots.get(par2);
+        Slot slot = this.inventorySlots.get(par2);
         return slot.getStack();
     }
 

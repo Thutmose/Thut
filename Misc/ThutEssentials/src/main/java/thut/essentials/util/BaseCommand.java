@@ -3,6 +3,8 @@ package thut.essentials.util;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.PlayerNotFoundException;
@@ -17,10 +19,17 @@ public abstract class BaseCommand extends CommandBase
     final String key;
     final int    perm;
 
-    public BaseCommand(String key, int perms)
+    public BaseCommand(String key, int perms, String... aliases)
     {
         this.key = key;
         perm = perms;
+        if (aliases.length > 0)
+        {
+            List<String> alii = CommandManager.commands.get(key);
+            if (alii == null) CommandManager.commands.put(key, alii = Lists.newArrayList(key));
+            for (String s : aliases)
+                alii.add(s);
+        }
     }
 
     @Override
@@ -45,8 +54,7 @@ public abstract class BaseCommand extends CommandBase
         {
             return false;
         }
-        UserListOpsEntry userlistopsentry = server.getPlayerList().getOppedPlayers()
-                .getEntry(player.getGameProfile());
+        UserListOpsEntry userlistopsentry = server.getPlayerList().getOppedPlayers().getEntry(player.getGameProfile());
         return userlistopsentry != null ? userlistopsentry.getPermissionLevel() >= perm : perm <= 0;
     }
 

@@ -34,6 +34,7 @@ public class Join extends BaseCommand
             {
                 empty = teamtojoin.getMembershipCollection() == null
                         || teamtojoin.getMembershipCollection().size() == 0;
+                empty = empty && !LandManager.getInstance().getTeam(teamname, false).reserved;
             }
             if (empty || isOp)
             {

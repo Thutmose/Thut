@@ -13,8 +13,10 @@ public class GroupManager
     public static GroupManager instance;
 
     public Map<UUID, Group>    groupIDMap   = Maps.newHashMap();
+    public Map<UUID, Player>   playerIDMap  = Maps.newHashMap();
     public Map<String, Group>  groupNameMap = Maps.newHashMap();
     public HashSet<Group>      groups       = Sets.newHashSet();
+    public HashSet<Player>     players      = Sets.newHashSet();
 
     public Group               initial;
     public Group               mods;
@@ -34,6 +36,19 @@ public class GroupManager
                 groupIDMap.put(id, g);
             }
         }
+        for (Player player : players)
+        {
+            playerIDMap.put(player.id, player);
+        }
+    }
+
+    public Player createPlayer(UUID id)
+    {
+        Player player = new Player();
+        player.id = id;
+        players.add(player);
+        playerIDMap.put(id, player);
+        return player;
     }
 
 }

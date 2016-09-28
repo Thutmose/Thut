@@ -50,6 +50,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
     {
         FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(new Runnable()
         {
+            @Override
             public void run()
             {
                 processMessage(ctx.getServerHandler().playerEntity, message);

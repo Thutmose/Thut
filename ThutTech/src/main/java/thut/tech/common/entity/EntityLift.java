@@ -10,13 +10,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.block.Block;
-import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,15 +25,11 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
@@ -48,7 +40,6 @@ import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
-import thut.tech.common.items.ItemLinker;
 
 public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IBlockEntity
 {
@@ -98,6 +89,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public ItemStack[][][]              blocks             = null;
     public TileEntity[][][]             tiles              = null;
     BlockEntityUpdater                  collider;
+    LiftInteractHandler                 interacter;
 
     public EntityLift(World par1World)
     {
@@ -125,6 +117,20 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this(world);
         this.setPosition(x, y, z);
         r.setSeed(100);
+    }
+
+    @Override
+    /** Called when the entity is attacked. */
+    public boolean attackEntityFrom(DamageSource source, float amount)
+    {
+        return false;
+    }
+
+    @Override
+    /** knocks back this entity */
+    public void knockBack(Entity entityIn, float strenght, double xRatio, double zRatio)
+    {
+
     }
 
     private double getSpeed(double pos, double destPos, double speed, double speedPos, double speedNeg)
@@ -212,12 +218,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             e.printStackTrace();
         }
-    }
-
-    /** Called when the entity is attacked. */
-    public boolean attackEntityFrom(DamageSource source, int damage)
-    {
-        return false;
     }
 
     public void call(int floor)
@@ -387,166 +387,15 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
             EnumHand hand)
     {
-        if (hand == EnumHand.MAIN_HAND)
-        {
-            vec = vec.addVector(vec.xCoord > 0 ? -0.01 : 0.01, vec.yCoord > 0 ? -0.01 : 0.01,
-                    vec.zCoord > 0 ? -0.01 : 0.01);
-            Vec3d playerPos = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
-            Vec3d start = playerPos.subtract(getPositionVector());
-            RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start.add(getPositionVector()),
-                    vec.add(getPositionVector()), this);
-            BlockPos pos;
-            float hitX, hitY, hitZ;
-            EnumFacing side = EnumFacing.DOWN;
-            if (trace == null)
-            {
-                pos = new BlockPos(0, 0, 0);
-                hitX = hitY = hitZ = 0;
-            }
-            else
-            {
-                pos = trace.getBlockPos();
-                hitX = (float) (trace.hitVec.xCoord - pos.getX());
-                hitY = (float) (trace.hitVec.yCoord - pos.getY());
-                hitZ = (float) (trace.hitVec.zCoord - pos.getZ());
-                side = trace.sideHit;
-            }
-            IBlockState state = getFakeWorld().getBlockState(pos);
-            boolean activate = state.getBlock().onBlockActivated(getFakeWorld(), pos, state, player, hand, stack, side,
-                    hitX, hitY, hitZ);
-            if (activate) return EnumActionResult.SUCCESS;
-            else if (!state.getMaterial().isSolid())
-            {
-                Vec3d playerLook = playerPos.add(player.getLookVec().scale(4));
-                RayTraceResult result = worldObj.rayTraceBlocks(playerPos, playerLook, false, true, false);
-                if (result != null && result.typeOfHit == Type.BLOCK)
-                {
-                    pos = result.getBlockPos();
-                    state = worldObj.getBlockState(pos);
-                    hitX = (float) (result.hitVec.xCoord - pos.getX());
-                    hitY = (float) (result.hitVec.yCoord - pos.getY());
-                    hitZ = (float) (result.hitVec.zCoord - pos.getZ());
-                    activate = state.getBlock().onBlockActivated(getEntityWorld(), pos, state, player, hand, stack,
-                            result.sideHit, hitX, hitY, hitZ);
-                }
-                return EnumActionResult.SUCCESS;
-            }
-        }
-        return EnumActionResult.PASS;
+        if (interacter == null) interacter = new LiftInteractHandler(this);
+        return interacter.applyPlayerInteraction(player, vec, stack, hand);
     }
 
     /** First layer of player interaction */
     @Override
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
-        if (hand != EnumHand.MAIN_HAND) return false;
-        if (stack != null && stack.getItem() == Items.STICK)
-        {
-            if (stack.getDisplayName().equals("x"))
-            {
-                this.setDestX((float) (posX + 10));
-                return true;
-            }
-            else if (stack.getDisplayName().equals("-x"))
-            {
-                this.setDestX((float) (posX - 10));
-                return true;
-            }
-            else if (stack.getDisplayName().equals("z"))
-            {
-                this.setDestZ((float) (posZ + 10));
-                return true;
-            }
-            else if (stack.getDisplayName().equals("-z"))
-            {
-                this.setDestZ((float) (posZ - 10));
-                return true;
-            }
-            else if (stack.getDisplayName().equals("y"))
-            {
-                this.setDestY((float) (posY + 10));
-                return true;
-            }
-            else if (stack.getDisplayName().equals("-y"))
-            {
-                this.setDestY((float) (posY - 10));
-                return true;
-            }
-        }
-
-        if (player.isSneaking() && stack != null && stack.getItem() instanceof ItemLinker
-                && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
-        {
-            if (stack.getTagCompound() == null)
-            {
-                stack.setTagCompound(new NBTTagCompound());
-            }
-            stack.getTagCompound().setString("lift", getCachedUniqueIdString());
-
-            String message = "msg.liftSet.name";
-
-            if (worldObj.isRemote) player.addChatMessage(new TextComponentTranslation(message));
-            return true;
-        }
-        else if (stack != null && stack.getItem() instanceof ItemLinker
-                && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
-        {
-            if (!worldObj.isRemote && owner != null)
-            {
-                Entity ownerentity = worldObj.getPlayerEntityByUUID(owner);
-                String message = "msg.lift.owner";
-
-                player.addChatMessage(new TextComponentTranslation(message, ownerentity.getName()));
-            }
-            return true;
-        }
-        if ((player.isSneaking() && stack != null
-                && (player.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("wrench")
-                        || player.getHeldItem(hand).getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
-                        || player.getHeldItem(hand).getItem().getUnlocalizedName()
-                                .equals(Items.STICK.getUnlocalizedName())))
-                && ((owner != null && player.getUniqueID().equals(owner)) || player.capabilities.isCreativeMode))
-        {
-            if (!worldObj.isRemote)
-            {
-                String message = "msg.lift.killed";
-                player.addChatMessage(new TextComponentTranslation(message));
-                this.setHealth(0);
-                setDead();
-            }
-            return true;
-        }
-        else if (player.isSneaking() && stack != null && Block.getBlockFromItem(stack.getItem()) != null
-                && (owner == null || owner.equals(player.getUniqueID())))
-        {
-            System.out.println("Test");
-            Block block = Block.getBlockFromItem(stack.getItem());
-            if (!(block instanceof ITileEntityProvider))
-            {
-                ItemStack item2 = stack.splitStack(1);
-                if (getHeldItem(null) != null && !worldObj.isRemote)
-                {
-                    this.entityDropItem(getHeldItem(null), 1);
-                }
-                if (!worldObj.isRemote)
-                {
-                    String message = "msg.lift.camo";
-                    player.addChatMessage(new TextComponentTranslation(message, stack.getDisplayName()));
-                    setHeldItem(null, item2);
-                }
-            }
-            return true;
-        }
-        else if (player.isSneaking() && stack == null && (owner == null || owner.equals(player.getUniqueID())))
-        {
-            if (getHeldItem(null) != null && !worldObj.isRemote)
-            {
-                this.entityDropItem(getHeldItem(null), 1);
-            }
-            if (!worldObj.isRemote) setHeldItem(null, null);
-            return true;
-        }
-        return false;
+        return interacter.processInitialInteract(player, stack, hand);
     }
 
     @Override

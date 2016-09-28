@@ -53,7 +53,6 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkLoadEvent(ChunkDataEvent.Load evt)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
         try
         {
             NBTTagCompound nbt = evt.getData();
@@ -159,11 +158,6 @@ public class TerrainManager
     public void WorldLoadEvent(Load evt)
     {
         TerrainManager.getInstance().getTerrain(evt.getWorld());
-    }
-
-    public void onServerStop()
-    {
-        TerrainManager.clear();
     }
 
 }

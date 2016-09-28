@@ -61,6 +61,15 @@ public class Claim extends BaseCommand
                 // e.printStackTrace();
             }
         }
+        else if (args.length > 0)
+        {
+            if (args[0].equalsIgnoreCase("all"))
+            {
+                all = true;
+                up = true;
+                num = 16;
+            }
+        }
         for (int i = 0; i < num; i++)
         {
             if (count < teamCount * ConfigManager.INSTANCE.teamLandPerPlayer || isOp)
@@ -68,7 +77,6 @@ public class Claim extends BaseCommand
                 int dir = up ? 1 : -1;
                 teamCount = team.getMembershipCollection().size();
                 count = LandManager.getInstance().countLand(team.getRegisteredName());
-
                 int x = MathHelper.floor_double(sender.getPosition().getX() / 16f);
                 int y = MathHelper.floor_double(sender.getPosition().getY() / 16f) + i * dir;
                 if (all) y = i * dir;
@@ -77,21 +85,18 @@ public class Claim extends BaseCommand
                 if (y < 0 || y > 15) continue;
                 LandChunk chunk = new LandChunk(x, y, z, dim);
                 String owner = LandManager.getInstance().getLandOwner(chunk);
-
                 if (owner != null)
                 {
                     if (owner.equals(team.getRegisteredName())) continue;
-
                     sender.addChatMessage(new TextComponentString("This land is already claimed by " + owner));
-                    return;
+                    continue;
                 }
                 sender.addChatMessage(new TextComponentString("Claimed This land for Team" + team.getRegisteredName()));
                 LandManager.getInstance().addTeamLand(team.getRegisteredName(), chunk, true);
-                num--;
             }
             else
             {
-                num = 0;
+                break;
             }
         }
     }

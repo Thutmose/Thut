@@ -105,7 +105,7 @@ public class LandSaveHandler
         File teamsFile = new File(getGlobalFolder(), "landData.json");
         try
         {
-            FileUtils.writeStringToFile(teamsFile, json);
+            FileUtils.writeStringToFile(teamsFile, json, "UTF-8");
         }
         catch (IOException e)
         {
@@ -170,7 +170,7 @@ public class LandSaveHandler
             String json = gson.toJson(land);
             try
             {
-                FileUtils.writeStringToFile(teamFile, json);
+                FileUtils.writeStringToFile(teamFile, json, "UTF-8");
             }
             catch (IOException e)
             {

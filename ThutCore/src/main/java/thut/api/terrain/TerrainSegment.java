@@ -220,13 +220,9 @@ public class TerrainSegment
         return ret;
     }
 
-    public static TerrainSegment readFromNBT(NBTTagCompound nbt)
+    public static void readFromNBT(TerrainSegment t, NBTTagCompound nbt)
     {
-        TerrainSegment t = null;
         int[] biomes = nbt.getIntArray("biomes");
-        int x = nbt.getInteger("x");
-        int y = nbt.getInteger("y");
-        int z = nbt.getInteger("z");
         if (nbt.hasKey("ids"))
         {
             NBTTagList tags = (NBTTagList) nbt.getTag("ids");
@@ -252,11 +248,9 @@ public class TerrainSegment
                 }
             }
         }
-
-        t = new TerrainSegment(x, y, z);
+        t.toSave = nbt.getBoolean("toSave");
         t.init = false;
         t.setBiome(biomes);
-        return t;
     }
 
     public final int                chunkX;
@@ -489,7 +483,7 @@ public class TerrainSegment
                     biomes[i + GRIDSIZE * j + GRIDSIZE * GRIDSIZE * k] = biome;
                 }
         double dt = (System.nanoTime() - time) / 10e9;
-        if (dt > 0.01) System.out.println("subBiome check took " + dt);
+        if (dt > 0.01) System.out.println("subBiome refresh took " + dt);
     }
 
     public void saveToNBT(NBTTagCompound nbt)
@@ -499,7 +493,7 @@ public class TerrainSegment
         nbt.setInteger("x", chunkX);
         nbt.setInteger("y", chunkY);
         nbt.setInteger("z", chunkZ);
-
+        nbt.setBoolean("toSave", toSave);
         NBTTagList biomeList = new NBTTagList();
         for (BiomeType t : BiomeType.values())
         {
@@ -509,7 +503,6 @@ public class TerrainSegment
             biomeList.appendTag(tag);
         }
         nbt.setTag("ids", biomeList);
-        // TODO save terraineffects including class for constructing.
     }
 
     public void setBiome(BlockPos p, int type)

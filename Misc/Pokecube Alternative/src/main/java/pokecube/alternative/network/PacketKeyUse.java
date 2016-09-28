@@ -57,6 +57,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
     {
         FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(new Runnable()
         {
+            @Override
             public void run()
             {
                 processMessage(ctx.getServerHandler().playerEntity, message);

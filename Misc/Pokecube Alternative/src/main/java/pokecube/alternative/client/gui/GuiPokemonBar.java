@@ -74,17 +74,17 @@ public class GuiPokemonBar extends Gui
             --scaleFactor2;
         }
         scaleFactor2 *= 0.8f;
-        // scaleFactor2 *= 2.5;
+//         scaleFactor2 *= 2.5;
         GL11.glScaled(scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor);
         ResourceLocation bar = new ResourceLocation(Reference.MODID, "textures/gui/pokemon_hotbar.png");
         this.mc.renderEngine.bindTexture(bar);
-        int texW = 24;
-        int texH = 129;
+        int texW = 25;
+        int texH = 130;
         // Render the bar
         int xPos = 0; // Distance from left to start
-        int yPos = (int) (70); // Distance from top to start
+        int yPos = 70; // Distance from top to start
 
-        // yPos = 0;
+//         yPos = 0;
 
         this.drawTexturedModalRect(xPos, yPos, 0, 0, texW, texH);
         // Render the arrow
@@ -101,17 +101,21 @@ public class GuiPokemonBar extends Gui
         // Render the pokemon
         for (int pokemonNumber = 0; pokemonNumber < 6; pokemonNumber++)
         {
+            // Set the amount to shift by for the mob's index
+            i = 12 + xPos;
+            j = (yPos - 1) + (21 + selectorSize * pokemonNumber);
+
             ItemStack pokemonItemstack = capability.getCube(pokemonNumber);
             if (pokemonItemstack == null)
             {
+                this.mc.renderEngine.bindTexture(bar);
+                selectorXPos = i + 12;
+                selectorYPos = j - 16;
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 3, 157, 1, 17);
                 continue;
             }
             IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.theWorld);
             if (pokemob == null) continue;
-
-            // Set the amount to shift by for the mob's index
-            i = 12 + xPos;
-            j = (yPos - 1) + (21 + selectorSize * pokemonNumber);
             EntityLiving entity = (EntityLiving) pokemob;
 
             // Set the mob's stance and rotation
@@ -154,12 +158,12 @@ public class GuiPokemonBar extends Gui
                 selectorYPos = j - 20;
                 ITextComponent nameComp = pokemob.getPokemonDisplayName();
                 float s = 0.75F;
-                float plateSize = 32;
+                float plateSize = 31;
                 int secondRow = 10;
                 this.drawTexturedModalRect(selectorXPos, selectorYPos, 25, 0, 71, 25);
                 GL11.glPushMatrix();
                 // translate to start, then scale.
-                GL11.glTranslatef(i + 11 + 0.5f, j - 13, 0);
+                GL11.glTranslatef(i + 11 + 0.5f, j - 14, 0);
                 GL11.glScaled(s, s, s);
                 // Draw name
                 String name = I18n.format(nameComp.getFormattedText());
@@ -189,6 +193,13 @@ public class GuiPokemonBar extends Gui
                         0xFFFFFF);
 
                 GL11.glPopMatrix();
+            }
+            else
+            {
+                this.mc.renderEngine.bindTexture(bar);
+                selectorXPos = i + 12;
+                selectorYPos = j - 16;
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 3, 157, 1, 17);
             }
 
         }

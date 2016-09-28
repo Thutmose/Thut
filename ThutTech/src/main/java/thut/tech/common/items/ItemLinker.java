@@ -143,7 +143,7 @@ public class ItemLinker extends Item
     public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World worldIn, EntityPlayer playerIn,
             EnumHand hand)
     {
-        if (playerIn.isSneaking() && itemstack.getTagCompound().hasKey("min"))
+        if (itemstack.hasTagCompound() && playerIn.isSneaking() && itemstack.getTagCompound().hasKey("min"))
         {
             NBTTagCompound minTag = itemstack.getTagCompound().getCompoundTag("min");
             Vec3d loc = playerIn.getPositionVector().addVector(0, playerIn.getEyeHeight(), 0)
@@ -157,6 +157,7 @@ public class ItemLinker extends Item
             BlockPos mid = min.add((max.getX() - min.getX()) / 2, 0, (max.getZ() - min.getZ()) / 2);
             min = min.subtract(mid);
             max = max.subtract(mid);
+
             int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
             if (max.getY() - min.getY() > ConfigHandler.maxHeight || dw > 2 * ConfigHandler.maxRadius + 1)
             {
@@ -385,14 +386,11 @@ public class ItemLinker extends Item
                 if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
                 return EnumActionResult.FAIL;
             }
-
             EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
-
             if (playerIn.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
             {
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-
                 if (facing == EnumFacing.UP)
                 {
                     te.callPanel = !te.callPanel;

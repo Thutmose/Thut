@@ -1,8 +1,20 @@
 package thut.api.terrain;
 
+import java.io.DataInputStream;
+import java.io.File;
 import java.util.HashMap;
 
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.datafix.DataFixer;
+import net.minecraft.util.datafix.FixTypes;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.storage.RegionFileCache;
+import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.SaveHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class WorldTerrain
 {
@@ -41,6 +53,7 @@ public class WorldTerrain
         }
     }
 
+    final World        world;
     public final int   dimID;
 
     private TerrainMap terrainMap = new TerrainMap();
@@ -48,6 +61,9 @@ public class WorldTerrain
     public WorldTerrain(int dimID)
     {
         this.dimID = dimID;
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        if (server != null) this.world = server.worldServerForDimension(dimID);
+        else this.world = null;
     }
 
     public void addTerrain(TerrainSegment terrain)
@@ -70,7 +86,59 @@ public class WorldTerrain
         ret = terrainMap.getSegment(chunkX, chunkY, chunkZ);
         if (ret == null && !saving)
         {
-            ret = new TerrainSegment(chunkX, chunkY, chunkZ);
+            // TODO here we need to check the appropriate mca file for data, and
+            // if it is there, use that.
+            load:
+            if (world != null && world.provider != null)
+            {
+                ISaveHandler saveHandler = world.getSaveHandler();
+                File file = saveHandler.getWorldDirectory();
+                if (file == null || !file.exists()) break load;
+                if (world.provider.getSaveFolder() != null) file = new File(file, world.provider.getSaveFolder());
+                if (file.exists())
+                {
+                    try
+                    {
+                        DataFixer dataFixer = ReflectionHelper.getPrivateValue(SaveHandler.class,
+                                (SaveHandler) saveHandler, "field_186341_a", "a", "dataFixer");
+                        DataInputStream datainputstream = RegionFileCache.getChunkInputStream(file, chunkX, chunkZ);
+
+                        if (datainputstream != null)
+                        {
+
+                            NBTTagCompound tag = dataFixer.process(FixTypes.CHUNK,
+                                    CompressedStreamTools.read(datainputstream));
+                            try
+                            {
+                                NBTTagCompound nbt = tag.getCompoundTag(TerrainManager.TERRAIN);
+                                tag = nbt
+                                        .getCompoundTag("terrain" + chunkX + "," + chunkY + "," + chunkZ + "," + dimID);
+                                if (tag != null && !tag.hasNoTags())
+                                {
+                                    ret = new TerrainSegment(chunkX, chunkY, chunkZ);
+                                    TerrainSegment.readFromNBT(ret, tag);
+                                    System.out.println(ret.chunkX + " " + ret.chunkY + " " + ret.chunkZ + "->" + chunkX
+                                            + " " + chunkY + " " + chunkZ);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+
+                            }
+                            datainputstream.close();
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (ret == null)
+            {
+                ret = new TerrainSegment(chunkX, chunkY, chunkZ);
+            }
             terrainMap.setSegment(ret, chunkX, chunkY, chunkZ);
         }
         return ret;
@@ -100,15 +168,13 @@ public class WorldTerrain
             TerrainSegment t = null;
             if (terrainTag != null && !terrainTag.hasNoTags())
             {
-                t = TerrainSegment.readFromNBT(terrainTag);
-                if (t != null)
-                {
-                    addTerrain(t);
-                }
+                t = new TerrainSegment(x, i, z);
+                TerrainSegment.readFromNBT(t, terrainTag);
+                addTerrain(t);
             }
             if (t == null)
             {
-                getTerrain(x, i, x);
+                getTerrain(x, i, z);
             }
         }
     }

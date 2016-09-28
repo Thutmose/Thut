@@ -153,22 +153,6 @@ public class BlockEntityUpdater
         // Add AABBS for blocks around under the base, to stop sending into
         // floor.
         pos.setPos(theEntity.getPosition());
-        int mx = sizeX;
-        int mz = sizeZ;
-        if (sizeY > 1) for (int i = -1 - mx; i <= 1 + mx; i++)
-            for (int j = -1 - mz; j <= 1 + mz; j++)
-            {
-                pos.setPos(theEntity.getPosition().down());
-                pos.setPos(pos.getX() + i, pos.getY(), pos.getZ() + j);
-                IBlockState state = theEntity.worldObj.getBlockState(pos);
-                AxisAlignedBB blockBox = state.getActualState(theEntity.worldObj, pos)
-                        .getCollisionBoundingBox(theEntity.worldObj, pos);
-                if (blockBox != null)
-                {
-                    AxisAlignedBB box = blockBox.offset(pos);
-                    blockBoxes.add(box);
-                }
-            }
         Vector3f temp1 = new Vector3f();
         Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
                 (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionY - entity.motionY));

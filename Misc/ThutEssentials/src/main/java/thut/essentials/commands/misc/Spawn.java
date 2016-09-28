@@ -1,6 +1,5 @@
 package thut.essentials.commands.misc;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
@@ -14,16 +13,18 @@ import net.minecraftforge.common.MinecraftForge;
 import thut.essentials.ThutEssentials;
 import thut.essentials.commands.CommandManager;
 import thut.essentials.events.MoveEvent;
+import thut.essentials.util.BaseCommand;
 import thut.essentials.util.ConfigManager;
 import thut.essentials.util.PlayerDataHandler;
 import thut.essentials.util.Transporter;
 import thut.essentials.util.Transporter.Vector3;
 
-public class Spawn extends CommandBase
+public class Spawn extends BaseCommand
 {
     public static class PlayerMover
     {
-        public static void setMove(final EntityPlayer player, final int dimension, final BlockPos moveTo, final ITextComponent message)
+        public static void setMove(final EntityPlayer player, final int dimension, final BlockPos moveTo,
+                final ITextComponent message)
         {
             player.getServer().addScheduledTask(new Runnable()
             {
@@ -40,18 +41,7 @@ public class Spawn extends CommandBase
 
     public Spawn()
     {
-    }
-
-    @Override
-    public int getRequiredPermissionLevel()
-    {
-        return 0;
-    }
-
-    @Override
-    public String getCommandName()
-    {
-        return CommandManager.commands.get("spawn").get(0);
+        super("spawn", 0);
     }
 
     @Override

@@ -66,6 +66,11 @@ public class Group
         if (tag.hasKey("all")) all = tag.getBoolean("all");
     }
 
+    public boolean hasPermission(String permission)
+    {
+        return all || allowedCommands.contains(permission);
+    }
+
     public boolean canUse(ICommand command)
     {
         System.out.println(
