@@ -12,16 +12,15 @@ import javax.vecmath.Vector3f;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import thut.api.maths.Matrix3;
 
@@ -96,7 +95,6 @@ public class BlockEntityUpdater
                 }
     }
 
-    @SuppressWarnings("deprecation")
     public void applyEntityCollision(Entity entity)
     {
         if ((theEntity.rotationYaw + 360) % 90 > 5 || theEntity.isPassenger(entity)) return;
@@ -107,21 +105,18 @@ public class BlockEntityUpdater
         Set<Double> topY = Sets.newHashSet();
         MutableBlockPos pos = new MutableBlockPos();
         int xMin = blockEntity.getMin().getX();
-        int zMin = blockEntity.getMin().getZ();
         int yMin = blockEntity.getMin().getY();
+        int zMin = blockEntity.getMin().getZ();
         // Expand by velociteis as well.
         // Adds AABBS for contained blocks
+        BlockPos origin = theEntity.getPosition();
         for (int i = 0; i < sizeX; i++)
-            for (int k = 0; k < sizeY; k++)
-                for (int j = 0; j < sizeZ; j++)
+            for (int j = 0; j < sizeY; j++)
+                for (int k = 0; k < sizeZ; k++)
                 {
-                    ItemStack stack = blockEntity.getBlocks()[i][k][j];
-                    if (stack == null || stack.getItem() == null) continue;
                     List<AxisAlignedBB> toAdd = Lists.newArrayList();
-                    pos.setPos(i + xMin, j + yMin, k + zMin);
-                    Block block = Block.getBlockFromItem(stack.getItem());
-                    IBlockState state = block.getStateFromMeta(stack.getItemDamage())
-                            .getActualState(blockEntity.getFakeWorld(), pos);
+                    pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
+                    IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
                     try
                     {
                         toAdd.add(state.getCollisionBoundingBox(blockEntity.getFakeWorld(), pos));
@@ -140,18 +135,17 @@ public class BlockEntityUpdater
                             float dz = 0.5f;
                             AxisAlignedBB box = Matrix3.getAABB(
                                     theEntity.posX + blockBox.minX - dx + blockEntity.getMin().getX() + i,
-                                    theEntity.posY + blockBox.minY + k,
-                                    theEntity.posZ + blockBox.minZ - dz + blockEntity.getMin().getZ() + j,
+                                    theEntity.posY + blockBox.minY + j,
+                                    theEntity.posZ + blockBox.minZ - dz + blockEntity.getMin().getZ() + k,
                                     theEntity.posX + blockBox.maxX - dx + blockEntity.getMin().getX() + i,
-                                    theEntity.posY + blockBox.maxY + k,
-                                    theEntity.posZ + blockBox.maxZ - dz + blockEntity.getMin().getZ() + j);
+                                    theEntity.posY + blockBox.maxY + j,
+                                    theEntity.posZ + blockBox.maxZ - dz + blockEntity.getMin().getZ() + k);
                             blockBoxes.add(box);
                             topY.add(box.maxY);
                         }
                     }
                 }
-        // Add AABBS for blocks around under the base, to stop sending into
-        // floor.
+
         pos.setPos(theEntity.getPosition());
         Vector3f temp1 = new Vector3f();
         Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
@@ -175,9 +169,9 @@ public class BlockEntityUpdater
         // shared faces and merging them.
         if (merge)
         {
-            double dx1 = maxX - minX;
-            double dy1 = maxY - minY;
-            double dz1 = maxZ - minZ;
+            double dx1 = 0;// maxX - minX;
+            double dy1 = 0;// maxY - minY;
+            double dz1 = 0;// maxZ - minZ;
             Comparator<AxisAlignedBB> comparator = new Comparator<AxisAlignedBB>()
             {
                 @Override
@@ -398,8 +392,10 @@ public class BlockEntityUpdater
             if (temp1.y != 0) entity.motionY = theEntity.motionY;
             if (temp1.z != 0) entity.motionZ = theEntity.motionZ;
             if (temp1.y != 0) collidedY = true;
-            temp1.add(new Vector3f((float) entity.posX, (float) entity.posY, (float) entity.posZ));
-            entity.setPosition(temp1.x, temp1.y, temp1.z);
+            // temp1.add(new Vector3f((float) entity.posX, (float) entity.posY,
+            // (float) entity.posZ));
+            // entity.setPosition(temp1.x, temp1.y, temp1.z);
+            entity.moveEntity(temp1.x, temp1.y, temp1.z);
         }
         // Extra stuff to do with players.
         if (entity instanceof EntityPlayer)
@@ -411,7 +407,6 @@ public class BlockEntityUpdater
                 // This fixes jitter, need a better way to handle this.
                 Minecraft.getMinecraft().gameSettings.viewBobbing = false;
             }
-
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
                 entity.onGround = true;
@@ -422,6 +417,15 @@ public class BlockEntityUpdater
             {
                 EntityPlayerMP entityplayer = (EntityPlayerMP) player;
                 if (collidedY) entityplayer.connection.floatingTickCount = 0;
+            }
+            else if (player.worldObj.isRemote)
+            {
+                // PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(12));
+                // MessageServer packet = new MessageServer(buffer);
+                // buffer.writeFloat((float) player.posX);
+                // buffer.writeFloat((float) player.posY);
+                // buffer.writeFloat((float) player.posZ);
+                // PacketHandler.packetPipeline.sendToServer(packet);
             }
         }
     }

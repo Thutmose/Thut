@@ -150,6 +150,7 @@ public class TerrainSegment
 
                                                         };
     public static List<ISubBiomeChecker> biomeCheckers  = Lists.newArrayList();
+    public static boolean                noLoad         = false;
     static Map<Integer, Integer>         idReplacements = Maps.newHashMap();
 
     public static int count(World world, Block b, Vector3 v, int range)
@@ -222,9 +223,11 @@ public class TerrainSegment
 
     public static void readFromNBT(TerrainSegment t, NBTTagCompound nbt)
     {
+        if (noLoad) return;
         int[] biomes = nbt.getIntArray("biomes");
         if (nbt.hasKey("ids"))
         {
+            idReplacements.clear();
             NBTTagList tags = (NBTTagList) nbt.getTag("ids");
             for (int i = 0; i < tags.tagCount(); i++)
             {
@@ -232,21 +235,22 @@ public class TerrainSegment
                 String name = tag.getString("name");
                 int id = tag.getInteger("id");
                 BiomeType type = BiomeType.getBiome(name, false);
-                if (type.getType() != id && !idReplacements.containsKey(id))
+                if (type.getType() != id)
                 {
                     idReplacements.put(id, type.getType());
                 }
             }
-        }
-        if (!idReplacements.isEmpty())
-        {
+            boolean replacements = false;
             for (int i = 0; i < biomes.length; i++)
             {
                 if (idReplacements.containsKey(biomes[i]))
                 {
                     biomes[i] = idReplacements.get(biomes[i]);
+                    replacements = true;
                 }
             }
+            if (replacements)
+                System.out.println("Replacement subbiomes found for " + t.chunkX + " " + t.chunkY + " " + t.chunkZ);
         }
         t.toSave = nbt.getBoolean("toSave");
         t.init = false;

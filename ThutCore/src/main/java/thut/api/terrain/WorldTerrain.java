@@ -89,7 +89,7 @@ public class WorldTerrain
             // TODO here we need to check the appropriate mca file for data, and
             // if it is there, use that.
             load:
-            if (world != null && world.provider != null)
+            if (world != null && world.provider != null && !TerrainSegment.noLoad)
             {
                 ISaveHandler saveHandler = world.getSaveHandler();
                 File file = saveHandler.getWorldDirectory();
@@ -117,8 +117,6 @@ public class WorldTerrain
                                 {
                                     ret = new TerrainSegment(chunkX, chunkY, chunkZ);
                                     TerrainSegment.readFromNBT(ret, tag);
-                                    System.out.println(ret.chunkX + " " + ret.chunkY + " " + ret.chunkZ + "->" + chunkX
-                                            + " " + chunkY + " " + chunkZ);
                                 }
                             }
                             catch (Exception e)
@@ -166,7 +164,7 @@ public class WorldTerrain
 
             }
             TerrainSegment t = null;
-            if (terrainTag != null && !terrainTag.hasNoTags())
+            if (terrainTag != null && !terrainTag.hasNoTags() && !TerrainSegment.noLoad)
             {
                 t = new TerrainSegment(x, i, z);
                 TerrainSegment.readFromNBT(t, terrainTag);

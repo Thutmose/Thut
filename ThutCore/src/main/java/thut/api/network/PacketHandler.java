@@ -3,13 +3,16 @@ package thut.api.network;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -30,6 +33,7 @@ import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler.MessageClient.MessageHandlerClient;
 import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
+import thut.api.terrain.BiomeType;
 import thut.api.terrain.TerrainManager;
 
 public class PacketHandler
@@ -61,13 +65,15 @@ public class PacketHandler
                     {
                         e.printStackTrace();
                     }
+                    return;
                 }
                 if (channel == TELEPORTID)
                 {
                     int id = buffer.readInt();
                     if (player.worldObj.getEntityByID(id) != null) player.worldObj.getEntityByID(id).setDead();
+                    return;
                 }
-                else if (channel == TILEUPDATE)
+                if (channel == TILEUPDATE)
                 {
                     try
                     {
@@ -75,26 +81,47 @@ public class PacketHandler
                         BlockPos pos = new BlockPos(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
                         TileEntity tile = player.worldObj.getTileEntity(pos);
                         if (tile != null) tile.readFromNBT(nbt);
-//                        else System.err.println("No Tile Entity found at " + pos);
+                        // else System.err.println("No Tile Entity found at " +
+                        // pos);
                     }
                     catch (IOException e)
                     {
                         e.printStackTrace();
                     }
+                    return;
                 }
-                else if (channel == TERRAINSYNC)
+                if (channel == TERRAINVALUES)
+                {
+                    try
+                    {
+                        NBTTagCompound nbt = buffer.readNBTTagCompoundFromBuffer();
+                        Map<Integer, String> map = Maps.newHashMap();
+                        for (String s : nbt.getKeySet())
+                        {
+                            map.put(nbt.getInteger(s), s);
+                        }
+                        BiomeType.setMap(map);
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                    return;
+                }
+                if (channel == TERRAINSYNC)
                 {
                     try
                     {
                         NBTTagCompound nbt = buffer.readNBTTagCompoundFromBuffer();
                         TerrainManager.getInstance().getTerrain(player.worldObj).loadTerrain(nbt);
                     }
-                    catch (IOException e)
+                    catch (Exception e)
                     {
                         e.printStackTrace();
                     }
+                    return;
                 }
-                else if (channel == ENTITYUPDATE)
+                if (channel == ENTITYUPDATE)
                 {
                     try
                     {
@@ -108,6 +135,7 @@ public class PacketHandler
                         e.printStackTrace();
                     }
                 }
+                return;
             }
 
             @Override
@@ -121,8 +149,9 @@ public class PacketHandler
         public static final byte BLASTAFFECTED = 1;
         public static final byte TELEPORTID    = 2;
         public static final byte TILEUPDATE    = 3;
-        public static final byte TERRAINSYNC   = 4;
-        public static final byte ENTITYUPDATE  = 5;
+        public static final byte TERRAINVALUES = 4;
+        public static final byte TERRAINSYNC   = 5;
+        public static final byte ENTITYUPDATE  = 6;
 
         PacketBuffer             buffer;
 
@@ -175,7 +204,6 @@ public class PacketHandler
         {
             public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
             {
-
             }
 
             @Override
@@ -185,7 +213,6 @@ public class PacketHandler
                 handleServerSide(player, message.buffer);
                 return null;
             }
-
         }
 
         PacketBuffer buffer;;
@@ -328,6 +355,18 @@ public class PacketHandler
         buffer.writeNBTTagCompoundToBuffer(nbt);
         MessageClient message = new MessageClient(buffer);
         sendToAllNear(message, Vector3.getNewVector().set(tile), tile.getWorld().provider.getDimension(), 64);
+    }
+
+    public static void sentTerrainValues(EntityPlayerMP player)
+    {
+        Map<Integer, String> values = BiomeType.getMap();
+        NBTTagCompound tag = new NBTTagCompound();
+        for (Integer i : values.keySet())
+        {
+            tag.setInteger(values.get(i), i);
+        }
+        MessageClient message = new MessageClient(MessageClient.TERRAINVALUES, tag);
+        packetPipeline.sendTo(message, player);
     }
 
     public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)

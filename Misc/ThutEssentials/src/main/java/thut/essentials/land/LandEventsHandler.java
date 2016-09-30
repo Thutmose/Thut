@@ -157,7 +157,7 @@ public class LandEventsHandler
             {
                 LandChunk c = LandChunk.getChunkCoordFromWorldCoord(pos, dimension);
                 String owner = LandManager.getInstance().getLandOwner(c);
-                if (evt.getExplosion().getExplosivePlacedBy() instanceof EntityPlayer)
+                if (evt.getExplosion().getExplosivePlacedBy() instanceof EntityPlayerMP)
                 {
                     Team playerTeam = LandManager.getTeam((EntityPlayer) evt.getExplosion().getExplosivePlacedBy());
                     if (playerTeam != null)

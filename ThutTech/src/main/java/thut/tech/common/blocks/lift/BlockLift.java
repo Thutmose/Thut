@@ -331,7 +331,10 @@ public class BlockLift extends Block implements ITileEntityProvider
                 }
                 else
                 {
-                    if (te != null) te.doButtonClick(playerIn, side, hitX, hitY, hitZ);
+                    if (te != null)
+                    {
+                        te.doButtonClick(playerIn, side, hitX, hitY, hitZ);
+                    }
                     return true;
                 }
             }

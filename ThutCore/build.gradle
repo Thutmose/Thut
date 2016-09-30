@@ -80,6 +80,5 @@ task deobfJar(type: Jar) {
 }
 
 artifacts {
-    archives srcJar
     archives deobfJar
 }

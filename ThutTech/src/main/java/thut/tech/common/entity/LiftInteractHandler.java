@@ -2,12 +2,14 @@ package thut.tech.common.entity;
 
 import javax.annotation.Nullable;
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -18,6 +20,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.tech.common.items.ItemLinker;
+import thut.tech.common.network.PacketPipeline;
 
 public class LiftInteractHandler
 {
@@ -57,7 +60,7 @@ public class LiftInteractHandler
         boolean activate = state.getBlock().onBlockActivated(lift.getFakeWorld(), pos, state, player, hand, stack, side,
                 hitX, hitY, hitZ);
         if (activate) return EnumActionResult.SUCCESS;
-        else if (!state.getMaterial().isSolid())
+        else if (trace == null || !state.getMaterial().isSolid())
         {
             Vec3d playerLook = playerPos.add(player.getLookVec().scale(4));
             RayTraceResult result = lift.worldObj.rayTraceBlocks(playerPos, playerLook, false, true, false);
@@ -70,8 +73,19 @@ public class LiftInteractHandler
                 hitZ = (float) (result.hitVec.zCoord - pos.getZ());
                 activate = state.getBlock().onBlockActivated(lift.getEntityWorld(), pos, state, player, hand, stack,
                         result.sideHit, hitX, hitY, hitZ);
+                if (activate && lift.worldObj.isRemote)
+                {
+                    PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(25));
+                    buffer.writeFloat(hitX);
+                    buffer.writeFloat(hitY);
+                    buffer.writeFloat(hitZ);
+                    buffer.writeByte(result.sideHit.ordinal());
+                    buffer.writeBlockPos(pos);
+                    PacketPipeline.sendToServer(new PacketPipeline.ServerPacket(buffer));
+                    return EnumActionResult.SUCCESS;
+                }
             }
-            return EnumActionResult.SUCCESS;
+            return EnumActionResult.PASS;
         }
         return EnumActionResult.PASS;
     }

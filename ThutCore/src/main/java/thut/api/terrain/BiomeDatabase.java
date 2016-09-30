@@ -10,16 +10,11 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
-import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
-import net.minecraftforge.fml.common.registry.PersistentRegistryManager;
 import thut.api.maths.Vector3;
 
 public class BiomeDatabase
 {
-    public static HashMap<Biome, Type[]>                    biomeTypes        = new HashMap<Biome, Type[]>();
-
-    public static final FMLControlledNamespacedRegistry<BiomeType> biomeTypeRegistry = PersistentRegistryManager
-            .createRegistry(new ResourceLocation("thutcore:biometypes"), BiomeType.class, null, 256, 1024, true, null, null, null);
+    public static HashMap<Biome, Type[]> biomeTypes = new HashMap<Biome, Type[]>();
 
     public static boolean contains(Biome b, Type type)
     {
@@ -99,14 +94,14 @@ public class BiomeDatabase
 
     public static String getNameFromType(int type)
     {
-        if (type > 255) return biomeTypeRegistry.getObjectById(type).name;
+        if (type > 255) return BiomeType.getType(type).name;
         else if (Biome.getBiome(type) != null) return Biome.getBiome(type).getBiomeName();
         else return "none";
     }
 
     public static String getReadableNameFromType(int type)
     {
-        if (type > 255) return biomeTypeRegistry.getObjectById(type).readableName;
+        if (type > 255) return BiomeType.getType(type).readableName;
         else if (Biome.getBiome(type) != null) return Biome.getBiome(type).getBiomeName();
         else return "None " + type;
     }

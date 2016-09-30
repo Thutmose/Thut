@@ -2,10 +2,8 @@ package thut.api.terrain;
 
 import java.util.HashMap;
 
-import io.netty.buffer.Unpooled;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -95,10 +93,8 @@ public class TerrainManager
         NBTTagCompound terrainData = new NBTTagCompound();
         TerrainManager.getInstance().getTerrain(evt.getPlayer().worldObj).saveTerrain(terrainData,
                 evt.getChunk().chunkXPos, evt.getChunk().chunkZPos);
-        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
-        buffer.writeNBTTagCompoundToBuffer(terrainData);
-        MessageClient message = new MessageClient(buffer);
-        PacketHandler.packetPipeline.sendToAll(message);
+        MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
+        PacketHandler.packetPipeline.sendTo(message, evt.getPlayer());
     }
 
     public WorldTerrain getTerrain(int id)

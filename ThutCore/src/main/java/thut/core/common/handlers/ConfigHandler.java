@@ -4,12 +4,14 @@ import java.io.File;
 
 import net.minecraftforge.common.MinecraftForge;
 import thut.api.boom.ExplosionCustom;
+import thut.api.terrain.TerrainSegment;
 import thut.core.common.config.ConfigBase;
 import thut.core.common.config.Configure;
 
 public class ConfigHandler extends ConfigBase
 {
     private static final String BOOMS           = "explosions";
+    private static final String BIOMES          = "biomes";
 
     // @Configure(category = "items")
     // private boolean spout = false;
@@ -23,6 +25,8 @@ public class ConfigHandler extends ConfigBase
     private boolean             affectAir       = true;
     @Configure(category = BOOMS)
     private double              minBlastEffect  = 0.25;
+    @Configure(category = BIOMES)
+    public boolean              resetAllTerrain = false;
 
     public ConfigHandler()
     {
@@ -45,5 +49,6 @@ public class ConfigHandler extends ConfigBase
         ExplosionCustom.AFFECTINAIR = affectAir;
         if (explosionRate.length == 2) ExplosionCustom.MAXPERTICK = explosionRate;
         ExplosionCustom.MINBLASTDAMAGE = (float) minBlastEffect;
+        TerrainSegment.noLoad = resetAllTerrain;
     }
 }

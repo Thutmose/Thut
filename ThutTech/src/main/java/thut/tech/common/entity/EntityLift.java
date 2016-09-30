@@ -311,10 +311,26 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void doMotion()
     {
+        if (motionX != 0 || motionZ != 0) System.out.println(motionX + " " + motionY + " " + motionZ);
         if (!toMoveX) motionX = 0;
         if (!toMoveY) motionY = 0;
         if (!toMoveZ) motionZ = 0;
         if (getCalled()) this.moveEntity(motionX, motionY, motionZ);
+    }
+
+    @Override
+    public void resetPositionToBB()
+    {
+        BlockPos min = getMin();
+        BlockPos max = getMax();
+        float xDiff = (max.getX() - min.getX()) / 2f;
+        float zDiff = (max.getZ() - min.getZ()) / 2f;
+        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+        if ((xDiff % 1) != 0) this.posX = (axisalignedbb.minX + xDiff);
+        else this.posX = (axisalignedbb.minX + axisalignedbb.maxX) / 2.0D;
+        this.posY = axisalignedbb.minY;
+        if (zDiff % 1 != 0) this.posZ = (axisalignedbb.minZ + zDiff);
+        else this.posZ = (axisalignedbb.minZ + axisalignedbb.maxZ) / 2.0D;
     }
 
     @Override

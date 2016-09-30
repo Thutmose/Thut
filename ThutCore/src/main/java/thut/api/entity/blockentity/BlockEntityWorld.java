@@ -126,7 +126,7 @@ public class BlockEntityWorld extends World
         if (i >= blockEntity.getBlocks().length || j >= blockEntity.getBlocks()[0].length
                 || k >= blockEntity.getBlocks()[0][0].length || i < 0 || j < 0 || k < 0)
         {
-            return b.getDefaultState();// world.getBlockState(pos);
+            return  world.getBlockState(pos);
         }
         ItemStack stack = blockEntity.getBlocks()[i][j][k];
         if (stack == null || stack.getItem() == null) return world.getBlockState(pos);
