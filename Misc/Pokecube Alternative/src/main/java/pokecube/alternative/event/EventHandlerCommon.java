@@ -231,7 +231,7 @@ public class EventHandlerCommon
             }
             syncPokemon(player);
             ((Entity) pokemon).setDead();
-            pokemon.setPokemonOwner(null);
+            pokemon.setPokemonOwner((UUID) null);
             event.setCanceled(true);
         }
     }

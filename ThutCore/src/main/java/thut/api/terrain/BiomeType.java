@@ -89,6 +89,7 @@ public class BiomeType
         this.readableName = readableName;
         id = MAXID++;
         typeMap.put(id, this);
+        typeMapClient.put(id, this);
         System.out.println("Creating a subbiome called " + name);
     }
 

@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -139,9 +140,16 @@ public class PacketHandler
             }
 
             @Override
-            public MessageServer onMessage(MessageClient message, MessageContext ctx)
+            public MessageServer onMessage(final MessageClient message, MessageContext ctx)
             {
-                handleClientSide(provider.getPlayer(), message.buffer);
+                Minecraft.getMinecraft().addScheduledTask(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        handleClientSide(provider.getPlayer(), message.buffer);
+                    }
+                });
                 return null;
             }
         }

@@ -25,6 +25,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
 import thut.api.maths.Vector3;
 
 public class TerrainSegment
@@ -225,7 +227,7 @@ public class TerrainSegment
     {
         if (noLoad) return;
         int[] biomes = nbt.getIntArray("biomes");
-        if (nbt.hasKey("ids"))
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) if (nbt.hasKey("ids"))
         {
             idReplacements.clear();
             NBTTagList tags = (NBTTagList) nbt.getTag("ids");
