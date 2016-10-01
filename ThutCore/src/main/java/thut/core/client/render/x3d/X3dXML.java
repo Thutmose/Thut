@@ -1,18 +1,28 @@
 package thut.core.client.render.x3d;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import javax.vecmath.Vector3f;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
+
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -62,6 +72,7 @@ public class X3dXML
                 return parseVertices(point);
             }
         }
+
         @XmlRootElement(name = "Normal")
         public static class Normal
         {
@@ -73,6 +84,7 @@ public class X3dXML
                 return parseVertices(vector);
             }
         }
+
         @XmlRootElement(name = "TextureCoordinate")
         public static class TextureCoordinate
         {
@@ -112,13 +124,13 @@ public class X3dXML
         }
 
         @XmlAttribute(name = "solid")
-        boolean solid;
+        boolean           solid;
 
         @XmlAttribute(name = "normalPerVertex")
-        boolean normalPerVertex;
+        boolean           normalPerVertex;
 
         @XmlAttribute(name = "index")
-        String  index;
+        String            index;
 
         @XmlElement(name = "Coordinate")
         Coordinate        points;
@@ -304,8 +316,28 @@ public class X3dXML
 
     public X3dXML(InputStream stream) throws JAXBException
     {
-        JAXBContext jaxbContext = JAXBContext.newInstance(X3D.class);
-        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        model = (X3D) unmarshaller.unmarshal(new InputStreamReader(stream));
+        JAXBContext jc = JAXBContext.newInstance(X3D.class);
+        try
+        {
+            SAXParserFactory spf = SAXParserFactory.newInstance();
+            spf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            XMLReader xmlReader = spf.newSAXParser().getXMLReader();
+            xmlReader.setEntityResolver(new EntityResolver()
+            {
+                @Override
+                public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
+                {
+                    return new InputSource(new StringReader(""));
+                }
+            });
+            InputSource inputSource = new InputSource(new InputStreamReader(stream));
+            SAXSource source = new SAXSource(xmlReader, inputSource);
+            Unmarshaller unmarshaller = jc.createUnmarshaller();
+            model = (X3D) unmarshaller.unmarshal(source);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 }

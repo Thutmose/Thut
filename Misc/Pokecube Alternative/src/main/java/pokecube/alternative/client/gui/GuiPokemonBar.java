@@ -21,6 +21,7 @@ import pokecube.core.events.handlers.EventsHandlerClient;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
+import pokecube.core.utils.Tools;
 
 public class GuiPokemonBar extends Gui
 {
@@ -74,7 +75,7 @@ public class GuiPokemonBar extends Gui
             --scaleFactor2;
         }
         scaleFactor2 *= 0.8f;
-//         scaleFactor2 *= 2.5;
+//        scaleFactor2 *= 2.5;
         GL11.glScaled(scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor);
         ResourceLocation bar = new ResourceLocation(Reference.MODID, "textures/gui/pokemon_hotbar.png");
         this.mc.renderEngine.bindTexture(bar);
@@ -84,7 +85,7 @@ public class GuiPokemonBar extends Gui
         int xPos = 0; // Distance from left to start
         int yPos = 70; // Distance from top to start
 
-//         yPos = 0;
+//        yPos = 0;
 
         this.drawTexturedModalRect(xPos, yPos, 0, 0, texW, texH);
         // Render the arrow
@@ -106,14 +107,7 @@ public class GuiPokemonBar extends Gui
             j = (yPos - 1) + (21 + selectorSize * pokemonNumber);
 
             ItemStack pokemonItemstack = capability.getCube(pokemonNumber);
-            if (pokemonItemstack == null)
-            {
-                this.mc.renderEngine.bindTexture(bar);
-                selectorXPos = i + 12;
-                selectorYPos = j - 16;
-                this.drawTexturedModalRect(selectorXPos, selectorYPos, 3, 157, 1, 17);
-                continue;
-            }
+            if (pokemonItemstack == null) continue;
             IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.theWorld);
             if (pokemob == null) continue;
             EntityLiving entity = (EntityLiving) pokemob;
@@ -154,54 +148,52 @@ public class GuiPokemonBar extends Gui
             {
                 pokemob = PokecubeManager.itemToPokemob(pokemonItemstack, mc.theWorld);
                 this.mc.renderEngine.bindTexture(bar);
-                selectorXPos = i + 11;
+                selectorXPos = i + 12;
                 selectorYPos = j - 20;
                 ITextComponent nameComp = pokemob.getPokemonDisplayName();
                 float s = 0.75F;
                 float plateSize = 31;
-                int secondRow = 10;
                 this.drawTexturedModalRect(selectorXPos, selectorYPos, 25, 0, 71, 25);
                 GL11.glPushMatrix();
                 // translate to start, then scale.
-                GL11.glTranslatef(i + 11 + 0.5f, j - 14, 0);
+                GL11.glTranslatef(i + 12 + 0.5f, j - 14, 0);
                 GL11.glScaled(s, s, s);
                 // Draw name
                 String name = I18n.format(nameComp.getFormattedText());
-                name = mc.fontRendererObj.trimStringToWidth(name, 100);
+                name = mc.fontRendererObj.trimStringToWidth(name, 55);
                 mc.fontRendererObj.drawString(name, 2, 0, 0xFFFFFF);
                 // Draw gender
                 int colour = pokemob.getSexe() == IPokemob.MALE ? 0x0011CC : 0xCC5555;
                 String gender = pokemob.getSexe() == IPokemob.MALE ? "\u2642"
                         : pokemob.getSexe() == IPokemob.FEMALE ? "\u2640" : "";
-
                 mc.fontRendererObj.drawString(gender,
-                        (int) (plateSize / (s * 1) * 2) - 2 - mc.fontRendererObj.getStringWidth(gender), 0, colour);
+                        (int) (plateSize / (s * 1) * 2) - 2 - mc.fontRendererObj.getStringWidth(gender), 8, colour);
 
                 // Draw Level
+                GL11.glScaled(1 / s, 1 / s, 1 / s);
+                s = 0.5f;
+                GL11.glScaled(s, s, s);
+                GL11.glTranslatef(0, 0.5f, 0);
                 String lvlStr = "L." + pokemob.getLevel();
-                mc.fontRendererObj.drawString(lvlStr, 2, secondRow, 0xFFFFFF);
+                int lvlLength = mc.fontRendererObj.getStringWidth(lvlStr);
+                mc.fontRendererObj.drawString(lvlStr, (int) (plateSize / (s * 1) * 2) - 3 - lvlLength, 3, 0xFFFFFF);
+                GL11.glPopMatrix();
 
                 // Draw health
-                entity = (EntityLiving) pokemob;
-                float maxHealth = entity.getMaxHealth();
-                float health = Math.min(maxHealth, entity.getHealth());
-                String maxHpStr = "" + (int) (Math.round(maxHealth * 100.0) / 100.0);
-                String hpStr = "" + (int) (Math.round(health * 100.0) / 100.0);
-                String healthStr = hpStr + "/" + maxHpStr;
-                mc.fontRendererObj.drawString(healthStr,
-                        (int) (plateSize / (s * 1) * 2) - 2 - mc.fontRendererObj.getStringWidth(healthStr), secondRow,
-                        0xFFFFFF);
-
-                GL11.glPopMatrix();
-            }
-            else
-            {
+                selectorXPos = i + 13;
+                selectorYPos = j - 7;
                 this.mc.renderEngine.bindTexture(bar);
-                selectorXPos = i + 12;
-                selectorYPos = j - 16;
-                this.drawTexturedModalRect(selectorXPos, selectorYPos, 3, 157, 1, 17);
-            }
+                float relHp = entity.getHealth() / entity.getMaxHealth();
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 159, (int) (56 * relHp), 3);
 
+                // Draw EXP
+                int exp = pokemob.getExp() - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
+                float maxExp = Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel() + 1)
+                        - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
+                if (pokemob.getLevel() == 100) maxExp = exp = 1;
+                float expSize = exp / maxExp;
+                this.drawTexturedModalRect(selectorXPos, selectorYPos + 3, 2, 167, (int) (53 * expSize), 2);
+            }
         }
         GL11.glPopMatrix();
     }
