@@ -10,6 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.PooledMutableBlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.RegionFileCache;
 import net.minecraft.world.storage.ISaveHandler;
@@ -63,7 +64,10 @@ public class WorldTerrain
 
     public TerrainSegment getTerrain(int chunkX, int chunkY, int chunkZ)
     {
-        return getTerrain(new BlockPos(chunkX, chunkY, chunkZ), false);
+        PooledMutableBlockPos pos = PooledMutableBlockPos.retain(chunkX, chunkY, chunkZ);
+        TerrainSegment segment = getTerrain(pos, false);
+        pos.release();
+        return segment;
     }
 
     public TerrainSegment getTerrain(BlockPos pos)
@@ -129,7 +133,7 @@ public class WorldTerrain
             {
                 ret = new TerrainSegment(pos.getX(), pos.getY(), pos.getZ());
             }
-            terrainMap.setSegment(ret, pos);
+            terrainMap.setSegment(ret, pos.toImmutable());
         }
         return ret;
     }

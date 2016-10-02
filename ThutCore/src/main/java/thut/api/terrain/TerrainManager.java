@@ -125,7 +125,7 @@ public class TerrainManager
         int k = MathHelper.floor_double(z / 16.0D);
 
         TerrainSegment ret = getTerrain(worldObj).getTerrain(i, j, k);
-        ret.initBiomes(worldObj);
+        if (!worldObj.isRemote) ret.initBiomes(worldObj);
         return ret;
     }
 
