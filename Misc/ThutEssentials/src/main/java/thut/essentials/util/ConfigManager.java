@@ -53,6 +53,9 @@ public class ConfigManager extends ConfigBase
     @Configure(category = MISC)
     public int                  maxHomes           = 2;
 
+    @Configure(category = MISC)
+    public String[]             disabledCommands   = {};
+
     @Configure(category = NAMES)
     public boolean              name               = true;
     @Configure(category = NAMES)

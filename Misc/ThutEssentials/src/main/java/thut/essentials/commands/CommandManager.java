@@ -31,6 +31,7 @@ import net.minecraft.util.text.event.ClickEvent.Action;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import thut.essentials.util.BaseCommand;
+import thut.essentials.util.ConfigManager;
 
 public class CommandManager
 {
@@ -140,7 +141,7 @@ public class CommandManager
         return new TextComponentString(text).setStyle(
                 new Style().setBold(bold).setColor(colour).setClickEvent(new ClickEvent(Action.RUN_COMMAND, command)));
     }
-    
+
     public static boolean isOp(ICommandSender sender)
     {
         if (FMLCommonHandler.instance().getMinecraftServerInstance() != null
@@ -193,6 +194,7 @@ public class CommandManager
 
     public CommandManager(FMLServerStartingEvent event)
     {
+        Set<String> blacklist = Sets.newHashSet(ConfigManager.INSTANCE.disabledCommands);
         List<Class<?>> foundClasses;
         // Register moves.
         try
@@ -213,6 +215,18 @@ public class CommandManager
                     }
                     if (move != null && move.getCommandName() != null)
                     {
+                        if (blacklist.contains(candidateClass.getName()))
+                        {
+                            System.out.println("Skipping Blacklisted " + candidateClass);
+                            continue;
+                        }
+                        if (!ConfigManager.INSTANCE.landEnabled
+                                && candidateClass.getName().startsWith("thut.essentials.commands.land"))
+                        {
+                            System.out.println("Skipping Disabled " + candidateClass);
+                            continue;
+                        }
+
                         event.registerServerCommand(move);
                         if (move instanceof BaseCommand)
                         {

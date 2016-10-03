@@ -148,9 +148,11 @@ public class WorldTerrain
         int x = nbt.getInteger("xCoord");
         int z = nbt.getInteger("zCoord");
         max = Math.min(16, max + 1);
+        PooledMutableBlockPos pos = PooledMutableBlockPos.retain();
         for (int i = 0; i < max; i++)
         {
             NBTTagCompound terrainTag = null;
+            pos.set(x, i, z);
             try
             {
                 terrainTag = nbt.getCompoundTag("terrain" + x + "," + i + "," + z + "," + dimID);
@@ -168,9 +170,15 @@ public class WorldTerrain
             }
             if (t == null)
             {
-                getTerrain(x, i, z);
+                t = getTerrain(pos, true);
+                if (t == null)
+                {
+                    t = new TerrainSegment(x, i, z);
+                    addTerrain(t);
+                }
             }
         }
+        pos.release();
     }
 
     public void removeTerrain(int chunkX, int chunkZ)
