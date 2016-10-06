@@ -81,14 +81,21 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
         else if (message.messageId == RECALL)
         {
             int id = message.ticks;
-            Entity mob = player.worldObj.getEntityByID(id);
-            if (mob instanceof IPokemob)
+            if (id == -1)
             {
-                ((IPokemob) mob).returnToPokecube();
+                PCEventsHandler.recallAllPokemobs(player);
             }
             else
             {
-                PCEventsHandler.recallAllPokemobs(player);
+                Entity mob = player.worldObj.getEntityByID(id);
+                if (mob instanceof IPokemob)
+                {
+                    ((IPokemob) mob).returnToPokecube();
+                }
+                else
+                {
+                    PCEventsHandler.recallAllPokemobs(player);
+                }
             }
         }
         else if (message.messageId == SLOTUP)

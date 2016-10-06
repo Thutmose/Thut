@@ -40,7 +40,7 @@ public class Blacklist extends BaseCommand
         }
         else
         {
-            String itemname = args[0];
+            String itemname = args[1];
             String message = "";
             if (arg.equalsIgnoreCase("add"))
             {

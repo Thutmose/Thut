@@ -70,11 +70,13 @@ public class EventHandlerCommon
                     }
                     if (toBelt)
                     {
-                        player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.tobelt"));
+                        player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.tobelt",
+                                item.getDisplayName()));
                     }
                     else
                     {
-                        player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.useBelt"));
+                        player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.useBelt",
+                                item.getDisplayName()));
                         EntityItem entityitem = player.dropItem(item, false);
                         if (entityitem != null)
                         {
@@ -104,7 +106,6 @@ public class EventHandlerCommon
     {
         if (event.getEntityLiving() instanceof EntityPlayer && event.getSource().getEntity() instanceof IPokemob)
         {
-            System.out.println(PCEventsHandler.getOutMobs(event.getEntityLiving()));
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(event.getEntityLiving());
@@ -179,9 +180,11 @@ public class EventHandlerCommon
     public void recallPokemon(RecallEvent event)
     {
         IPokemob pokemon = event.recalled;
-        ItemStack pokemonStack = PokecubeManager.pokemobToItem(pokemon);
         if (pokemon.getPokemonOwner() instanceof EntityPlayer)
         {
+            if (pokemon.getPokemonAIState(IPokemob.MEGAFORME))
+                pokemon = pokemon.megaEvolve(pokemon.getPokedexEntry().getBaseForme());
+            ItemStack pokemonStack = PokecubeManager.pokemobToItem(pokemon);
             EntityPlayer player = (EntityPlayer) pokemon.getPokemonOwner();
             IPokemobBelt cap = BeltPlayerData.getBelt(player);
             boolean added = true;

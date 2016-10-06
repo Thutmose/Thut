@@ -73,16 +73,24 @@ public class KeyHandler
         }
         if (sendOutPoke.isPressed())
         {
-            IPokemobBelt cap = BeltPlayerData.getBelt(Minecraft.getMinecraft().thePlayer);
-            if (cap.getCube(cap.getSlot()) != null) ticks = Minecraft.getSystemTime();
+            if (toggleBarControl.isKeyDown())
+            {
+                PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.RECALL, -1);
+                PacketHandler.INSTANCE.sendToServer(packet);
+            }
             else
             {
-                if (mob != null)
+                IPokemobBelt cap = BeltPlayerData.getBelt(Minecraft.getMinecraft().thePlayer);
+                if (cap.getCube(cap.getSlot()) != null) ticks = Minecraft.getSystemTime();
+                else
                 {
-                    PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.RECALL, ((Entity) mob).getEntityId());
-                    PacketHandler.INSTANCE.sendToServer(packet);
+                    if (mob != null)
+                    {
+                        PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.RECALL, ((Entity) mob).getEntityId());
+                        PacketHandler.INSTANCE.sendToServer(packet);
+                    }
+                    ticks = 0;
                 }
-                ticks = 0;
             }
         }
         else if (ticks != 0)

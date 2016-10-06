@@ -125,10 +125,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
         if (pathpoint3 == start || pathpoint3 == null) { return null; }
 
-        if (pathpoint3 == start)
-        {
-            return null;
-        }
+        if (pathpoint3 == start) { return null; }
         return this.createEntityPath(pathpoint3);
     }
 
@@ -274,14 +271,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             {
                 EnumFacing side = EnumFacing.values()[(i + num) % 6];
                 if (side == getDirFromPoint(current)) continue;
-
+                Vector3 opp = getOpposite(side, check);
                 int x = current.xCoord + side.getFrontOffsetX() * (l + 1);
                 int y = current.yCoord + side.getFrontOffsetY() * (l + 1);
                 int z = current.zCoord + side.getFrontOffsetZ() * (l + 1);
 
                 boolean safe = false;
                 PathPoint point = openPoint(x, y, z);
-                if (isSafe(pokemob, x, y, z, getOpposite(side, check)))
+                if (isSafe(pokemob, x, y, z, opp))
                 {
                     PathPoint point1 = openPoint(x, y - 1, z);
                     if (!point.isFirst)
@@ -312,7 +309,8 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 }
                 if (!safe && !(side == EnumFacing.DOWN || side == EnumFacing.UP))
                 {
-                    if (isSafe(pokemob, x, y + 1, z, getOpposite(side, check)))
+                    boolean up = isEmpty(pokemob, x, y + 1, z, opp);
+                    if (isSafe(pokemob, x, y + 1, z, opp))
                     {
                         PathPoint point1 = openPoint(x, y + 1, z);
                         if (!point.isFirst)
@@ -340,7 +338,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                             }
                         }
                     }
-                    if (isSafe(pokemob, x, y - 1, z, getOpposite(side, check)))
+                    if (up && isSafe(pokemob, x, y - 1, z, opp))
                     {
                         point = openPoint(x, y - 1, z);
                         PathPoint point1 = openPoint(x, y - 2, z);
@@ -518,27 +516,24 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     private boolean isEmpty(Vector3 e, int x, int y, int z, Vector3 from)
     {
         Vector3 v = v0.set(x + 0.5, y, z + 0.5);
-
         boolean clear = false;
         IBlockState state = v.getBlockState(worldMap);
         Block b = state.getBlock();
         if (mob.getBlockPathWeight(worldMap, e) < 0) { return false; }
+        Material m = state.getMaterial();
         if (b instanceof BlockDoor)
         {
-            if (state.getMaterial() == Material.WOOD) { return canFit(e, state); }
+            if (m == Material.WOOD) { return canFit(e, state); }
         }
-        if (state.getMaterial() == Material.LAVA) return false;
-        if (state.isNormalCube() || state.getMaterial().blocksMovement()) return false;
-        if (b.isLadder(state, worldMap, v.getPos(), (EntityLivingBase) mob)) return true;
-
+        if (state.isNormalCube() || m.blocksMovement()) return false;
+//        if (b.isLadder(state, worldMap, v.getPos(), (EntityLivingBase) mob)) return true;
         if (e.x > 1 || e.z > 1)
         {
             clear = mob.fits(worldMap, v, from);
             return clear;
         }
-        else if (!(clear = v.clearOfBlocks(worldMap)
+        if (!(clear = v.clearOfBlocks(worldMap)
                 || v.add(0, ((EntityLiving) mob).stepHeight, 0).isClearOfBlocks(worldMap))) { return false; }
-
         return clear;
     }
 
@@ -546,13 +541,11 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     {
         IBlockState state = worldMap.getBlockState(new BlockPos(x, y - 1, z));
         Material mDown = state.getMaterial();
-
         boolean water = mob.swims();
         boolean air = mob.flys() || mob.floats();
         BlockPos pos;
         boolean ladder = (state = worldMap.getBlockState(pos = new BlockPos(x, y, z))).getBlock().isLadder(state,
                 worldMap, pos, (EntityLivingBase) mob);
-        // System.out.println("test");
         if (air || ladder) { return isEmpty(e, x, y, z, from); }
         if (water)
         {

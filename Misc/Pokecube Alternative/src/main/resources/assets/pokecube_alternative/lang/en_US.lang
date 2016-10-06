@@ -1,7 +1,7 @@
 #
 # Messages
-pokecube_alternative.pokebelt.toBelt=Added to Belt.
-pokecube_alternative.pokebelt.useBelt=Please use the pokebelt to manage your pokemobs!
+pokecube_alternative.pokebelt.tobelt=%1$s was added to your Pokebelt.
+pokecube_alternative.pokebelt.useBelt=Your Pokebelt was full!
 
 #
 # Keys

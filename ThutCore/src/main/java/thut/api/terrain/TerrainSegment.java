@@ -202,6 +202,7 @@ public class TerrainSegment
         return ret;
     }
 
+    @Deprecated
     static boolean isIndustrial(Vector3 v, World world)
     {
         boolean ret = false;
@@ -310,6 +311,7 @@ public class TerrainSegment
         return getBiome(world, v, false);
     }
 
+    @Deprecated
     public boolean checkIndustrial(World world)
     {
         boolean industrial = false;

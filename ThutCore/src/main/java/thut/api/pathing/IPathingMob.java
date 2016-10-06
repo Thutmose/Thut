@@ -11,6 +11,14 @@ public interface IPathingMob
 
     boolean flys();
 
+    /** This should return values in the following ranges: -1 for blocks that
+     * cannot be pathed over no matter what, 1-20 for blocks that are preferred
+     * paths, 21-50 for blocks that are valid paths, but not preferred, and over
+     * 50 for unfavourable, but still valid paths
+     * 
+     * @param world
+     * @param location
+     * @return */
     float getBlockPathWeight(IBlockAccess world, Vector3 location);
 
     double getFloatHeight();

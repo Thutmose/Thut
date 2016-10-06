@@ -430,10 +430,7 @@ public class Vector3
             double time = (end / (1000000000D));
             if (time > 0.001) System.out.println("Took " + time + "s to check");
 
-            if (v.clearOfBlocks(world))
-            {
-                return true;
-            }
+            if (v.clearOfBlocks(world)) { return true; }
             return false;
         }
         return true;
@@ -829,6 +826,7 @@ public class Vector3
         if (predicate) matcher = (Predicate<Object>) matching;
         boolean isInterface = false;
         boolean blockList = false;
+        boolean predicateList = false;
         Vector3 temp = getNewVector();
         if (matching instanceof Block)
         {
@@ -845,6 +843,11 @@ public class Vector3
         if (matching instanceof Collection<?> && ((Collection<?>) matching).toArray()[0] instanceof Block)
         {
             blockList = true;
+            list.addAll((Collection<?>) matching);
+        }
+        if (matching instanceof Collection<?> && ((Collection<?>) matching).toArray()[0] instanceof Predicate<?>)
+        {
+            predicateList = true;
             list.addAll((Collection<?>) matching);
         }
         double rMag;
@@ -879,6 +882,17 @@ public class Vector3
                     IBlockState state = rTestAbs.getBlockState(world);
                     if (state == null) continue loop;
                     Block b = state.getBlock();
+                    if (predicateList)
+                    {
+                        for (Object o : list)
+                        {
+                            if (((Predicate<IBlockState>) o).apply(state))
+                            {
+                                ret.set(rTestAbs);
+                                return ret;
+                            }
+                        }
+                    }
                     if (isInterface)
                     {
                         List<Object> tempList;
@@ -1040,7 +1054,7 @@ public class Vector3
                         ret.add(e);
                     }
                 }
-                if ( ret.size() > 0) return ret;
+                if (ret.size() > 0) return ret;
             }
 
         }

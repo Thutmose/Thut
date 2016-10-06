@@ -152,7 +152,7 @@ public class WorldTerrain
         for (int i = 0; i < max; i++)
         {
             NBTTagCompound terrainTag = null;
-            pos.set(x, i, z);
+            pos.setPos(x, i, z);
             try
             {
                 terrainTag = nbt.getCompoundTag("terrain" + x + "," + i + "," + z + "," + dimID);

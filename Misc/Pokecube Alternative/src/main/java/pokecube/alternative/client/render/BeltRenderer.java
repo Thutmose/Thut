@@ -22,9 +22,7 @@ import thut.core.client.render.x3d.X3dModel;
 public class BeltRenderer implements LayerRenderer<EntityLivingBase>
 {
     X3dModel                          model;
-    X3dModel                          model2;
-    ResourceLocation                  belt_1 = new ResourceLocation("pokecube_compat:textures/items/belt1.png");
-    ResourceLocation                  belt_2 = new ResourceLocation("pokecube_compat:textures/items/belt2.png");
+    ResourceLocation                  belt = new ResourceLocation("pokecube_alternative:textures/belt.png");
 
     private final RenderLivingBase<?> livingEntityRenderer;
 
@@ -32,7 +30,6 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
     {
         this.livingEntityRenderer = livingEntityRendererIn;
         model = new X3dModel(new ResourceLocation("pokecube_compat:models/item/belt.x3d"));
-        model2 = new X3dModel(new ResourceLocation("pokecube_compat:models/item/belt.x3d"));
     }
 
     @Override
@@ -52,35 +49,27 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
                 GlStateManager.DestFactor.ZERO);
         GlStateManager.pushMatrix();
-        GL11.glPushMatrix();
         float dx = 0, dy = -.0f, dz = -0.6f;
-        GL11.glRotated(90, 1, 0, 0);
-        GL11.glRotated(180, 0, 0, 1);
-        GL11.glTranslatef(dx, dy, dz);
         float s = 0.52f;
         if (entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS) == null)
         {
             s = 0.46f;
         }
-        GL11.glScalef(s, s, s);
-        this.livingEntityRenderer.bindTexture(belt_1);
-        model.renderAll();
-        GL11.glPopMatrix();
         // Second pass with colour.
         GL11.glPushMatrix();
         GL11.glRotated(90, 1, 0, 0);
         GL11.glRotated(180, 0, 0, 1);
         GL11.glTranslatef(dx, dy, dz);
-        GL11.glScalef(s, s, s);
-        this.livingEntityRenderer.bindTexture(belt_2);
+        GL11.glScalef(s*1.01f, s, s);
+        this.livingEntityRenderer.bindTexture(belt);
         EnumDyeColor ret = EnumDyeColor.GRAY;
         Color colour = new Color(ret.getMapColor().colorValue + 0xFF000000);
         int[] col = { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
-        for (IExtendedModelPart part : model2.getParts().values())
+        for (IExtendedModelPart part : model.getParts().values())
         {
             part.setRGBAB(col);
         }
-        model2.renderAll();
+        model.renderAll();
         GlStateManager.pushMatrix();
         GlStateManager.rotate(90, 0, 1, 0);
         GlStateManager.rotate(90, 0, 0, 1);
