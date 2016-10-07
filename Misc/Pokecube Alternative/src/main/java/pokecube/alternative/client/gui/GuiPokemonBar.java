@@ -198,21 +198,3 @@ public class GuiPokemonBar extends Gui
         GL11.glPopMatrix();
     }
 }
-// glPushMatrix();
-// GL11.glPushAttrib(GL11.GL_BLEND);
-// GL11.glEnable(GL11.GL_BLEND);
-// GL11.glTranslatef(i - 1, j - 8.5f, 9F);
-// glPushMatrix();
-// glTranslatef(0.5F, 1.0f, 0.5F);
-// glRotatef(-180, 1.0F, 0.0F, 0.0F);
-// float scale = 28f;
-// glScalef(scale, scale, scale);
-// GL11.glRotatef(-45, 0.0F, 1.0F, 0.0F);
-// GL11.glRotatef(-30, 1.0F, 0.0F, 0.0F);
-// RenderHelper.disableStandardItemLighting();
-// Minecraft.getMinecraft().getItemRenderer().renderItem(mc.thePlayer,
-// pokemonItemstack, TransformType.GUI);
-// glPopMatrix();
-// GL11.glDisable(GL11.GL_BLEND);
-// GL11.glPopAttrib();
-// glPopMatrix();

@@ -36,6 +36,7 @@ import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
 import thut.core.common.commands.ConfigCommand;
 import thut.core.common.handlers.ConfigHandler;
+import thut.core.common.handlers.PlayerDataHandler;
 import thut.reference.ThutCoreReference;
 
 @Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
@@ -100,7 +101,9 @@ public class ThutCore
     public void serverLoad(FMLServerStoppedEvent event)
     {
         TerrainManager.clear();
+        PlayerDataHandler.clear();
     }
+
     @SubscribeEvent
     public void PlayerLoggedInEvent(PlayerLoggedInEvent event)
     {

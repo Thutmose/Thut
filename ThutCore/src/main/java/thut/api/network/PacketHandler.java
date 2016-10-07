@@ -312,10 +312,17 @@ public class PacketHandler
 
     public static IPlayerProvider      provider;
 
+    private static int                 id             = 1;
+
+    public static int getMessageID()
+    {
+        return id++;
+    }
+
     static
     {
-        packetPipeline.registerMessage(MessageHandlerClient.class, MessageClient.class, 1, Side.CLIENT);
-        packetPipeline.registerMessage(MessageHandlerServer.class, MessageServer.class, 2, Side.SERVER);
+        packetPipeline.registerMessage(MessageHandlerClient.class, MessageClient.class, getMessageID(), Side.CLIENT);
+        packetPipeline.registerMessage(MessageHandlerServer.class, MessageServer.class, getMessageID(), Side.SERVER);
     }
 
     public static MessageClient makeClientPacket(byte channel, byte[] data)

@@ -24,7 +24,6 @@ import pokecube.alternative.container.IPokemobBelt;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
 import pokecube.core.blocks.pc.InventoryPC;
-import pokecube.core.commands.CommandTools;
 import pokecube.core.database.stats.StatsCollector;
 import pokecube.core.events.RecallEvent;
 import pokecube.core.events.handlers.PCEventsHandler;
@@ -219,7 +218,7 @@ public class EventHandlerCommon
             }
             if (added)
             {
-                ITextComponent mess = CommandTools.makeTranslatedMessage("pokemob.action.return", "green",
+                ITextComponent mess = new TextComponentTranslation("pokemob.action.return",
                         pokemon.getPokemonDisplayName().getFormattedText());
                 pokemon.displayMessageToOwner(mess);
             }

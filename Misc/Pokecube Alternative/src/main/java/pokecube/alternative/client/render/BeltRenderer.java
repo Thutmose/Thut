@@ -29,7 +29,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
     public BeltRenderer(RenderLivingBase<?> livingEntityRendererIn)
     {
         this.livingEntityRenderer = livingEntityRendererIn;
-        model = new X3dModel(new ResourceLocation("pokecube_compat:models/item/belt.x3d"));
+        model = new X3dModel(new ResourceLocation("pokecube:models/worn/belt.x3d"));
     }
 
     @Override
@@ -49,6 +49,10 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
                 GlStateManager.DestFactor.ZERO);
         GlStateManager.pushMatrix();
+        if (player.isSneaking())
+        {
+            GlStateManager.translate(0.0F, 0.13125F, -0.105F);
+        }
         float dx = 0, dy = -.0f, dz = -0.6f;
         float s = 0.52f;
         if (entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS) == null)
@@ -60,7 +64,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         GL11.glRotated(90, 1, 0, 0);
         GL11.glRotated(180, 0, 0, 1);
         GL11.glTranslatef(dx, dy, dz);
-        GL11.glScalef(s*1.01f, s, s);
+        GL11.glScalef(s * 1.01f, s, s);
         this.livingEntityRenderer.bindTexture(belt);
         EnumDyeColor ret = EnumDyeColor.GRAY;
         Color colour = new Color(ret.getMapColor().colorValue + 0xFF000000);

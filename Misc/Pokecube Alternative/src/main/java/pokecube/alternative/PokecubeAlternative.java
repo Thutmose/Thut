@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import pokecube.alternative.container.BeltPlayerData;
 import pokecube.alternative.network.PacketHandler;
-import pokecube.core.handlers.PlayerDataHandler;
+import pokecube.core.handlers.PokecubePlayerDataHandler;
 
 @Mod(modid = Reference.MODID, name = Reference.MODNAME, version = Reference.VERSION)
 public class PokecubeAlternative
@@ -24,7 +24,7 @@ public class PokecubeAlternative
     {
         PokecubeAlternative.proxy.preInit(event);
         PacketHandler.init();
-        PlayerDataHandler.dataMap.add(BeltPlayerData.class);
+        PokecubePlayerDataHandler.dataMap.add(BeltPlayerData.class);
     }
 
     @Mod.EventHandler

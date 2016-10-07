@@ -4,20 +4,20 @@ import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import pokecube.core.handlers.PlayerDataHandler;
-import pokecube.core.handlers.PlayerDataHandler.PlayerData;
+import pokecube.core.handlers.PokecubePlayerDataHandler;
+import thut.core.common.handlers.PlayerDataHandler.PlayerData;
 
 public class BeltPlayerData extends PlayerData implements IPokemobBelt
 {
     public static BeltPlayerData getBelt(Entity player)
     {
-        return PlayerDataHandler.getInstance().getPlayerData(player.getCachedUniqueIdString())
+        return PokecubePlayerDataHandler.getInstance().getPlayerData(player.getCachedUniqueIdString())
                 .getData(BeltPlayerData.class);
     }
 
     public static void save(Entity player)
     {
-        PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), "pokealternative-belt");
+        PokecubePlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), "pokealternative-belt");
     }
 
     public BeltPlayerData()

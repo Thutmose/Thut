@@ -36,23 +36,6 @@ public class GuiEvents
 
     @SideOnly(value = Side.CLIENT)
     @SubscribeEvent
-    public void guiPostInit(GuiScreenEvent.InitGuiEvent event)
-    {
-        if (event.getGui() instanceof GuiInventory || event.getGui() instanceof GuiPlayerPokemon)
-        {
-            // GuiContainer gui = (GuiContainer) event.getGui();
-            // event.getButtonList()
-            // .add(new GuiPokemonButton(42, gui.guiLeft, gui.guiTop, 64, 21,
-            // 10, 10,
-            // I18n.format((event.getGui() instanceof GuiInventory)
-            // ? Reference.MODID + ".pokebelt.inventoryButton"
-            // : Reference.MODID + ".pokebelt.normalInventoryButton", new
-            // Object[0])));
-        }
-    }
-
-    @SideOnly(value = Side.CLIENT)
-    @SubscribeEvent
     public void guiPostAction(GuiScreenEvent.ActionPerformedEvent.Post event)
     {
         if (event.getGui() instanceof GuiInventory)
