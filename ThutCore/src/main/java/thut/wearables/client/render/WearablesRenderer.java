@@ -6,7 +6,6 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
-import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -32,33 +31,49 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
         ItemStack beltStack = null;
         ItemStack leftRing = null;
         ItemStack rightRing = null;
+        ItemStack leftBrace = null;
+        ItemStack rightBrace = null;
+        ItemStack leftEar = null;
+        ItemStack rightEar = null;
         ItemStack bag = null;
         ItemStack hat = null;
+        ItemStack leftLeg = null;
+        ItemStack rightLeg = null;
+        ItemStack neck = null;
+        ItemStack eyes = null;
         PlayerWearables worn = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
-        boolean left = (leftRing = worn.getWearable(EnumWearable.FINGER, 1)) != null;
-        boolean right = (rightRing = worn.getWearable(EnumWearable.FINGER, 0)) != null;
-        boolean belt = (beltStack = worn.getWearable(EnumWearable.WAIST)) != null;
-        boolean back = (bag = worn.getWearable(EnumWearable.BACK)) != null;
-        boolean top = (hat = worn.getWearable(EnumWearable.HAT)) != null;
-        boolean thin = ((AbstractClientPlayer) player).getSkinType().equals("slim");
-        if (!(this.livingEntityRenderer.getMainModel() instanceof ModelBiped)) return;
+        leftRing = worn.getWearable(EnumWearable.FINGER, 1);
+        rightRing = worn.getWearable(EnumWearable.FINGER, 0);
+        leftBrace = worn.getWearable(EnumWearable.WRIST, 1);
+        rightBrace = worn.getWearable(EnumWearable.WRIST, 0);
+        beltStack = worn.getWearable(EnumWearable.WAIST);
+        bag = worn.getWearable(EnumWearable.BACK);
+        hat = worn.getWearable(EnumWearable.HAT);
+        leftEar = worn.getWearable(EnumWearable.EAR, 1);
+        rightEar = worn.getWearable(EnumWearable.EAR, 0);
+        leftLeg = worn.getWearable(EnumWearable.ANKLE, 1);
+        rightLeg = worn.getWearable(EnumWearable.ANKLE, 0);
+        neck = worn.getWearable(EnumWearable.NECK);
+        eyes = worn.getWearable(EnumWearable.EYE);
 
-        if (left)
+        if (!(this.livingEntityRenderer.getMainModel() instanceof ModelBiped)) return;
+        boolean thin = ((AbstractClientPlayer) player).getSkinType().equals("slim");
+
+        GlStateManager.pushMatrix();
+
+        if (leftRing != null)
         {
             GlStateManager.pushMatrix();
-            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedLeftArm.postRender(0.0625f);
-            GlStateManager.translate(0.1, -0.01, 0);
-            GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
-
             if (player.isSneaking())
             {
-                GlStateManager.translate(0.0F, 0.203125F, -0.07F);
+                GlStateManager.translate(0.0F, 0.23125F, 0.01F);
             }
-            if (thin) GlStateManager.scale(0.75, 1, 0.75);
-            else
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedLeftArm.postRender(0.0625f);
+            GlStateManager.translate(0.0625F, 0.59F, 0.0625F);
+            if (thin)
             {
-                GlStateManager.scale(0.85, 1, 0.85);
-                GL11.glTranslated(0.02, 0, 0.01);
+                GlStateManager.translate(-0.025, 0, 0);
+                GlStateManager.scale(0.75, 1, 1);
             }
             if (leftRing.getItem() instanceof IWearable)
             {
@@ -66,20 +81,19 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             }
             GlStateManager.popMatrix();
         }
-        if (right)
+        if (rightRing != null)
         {
             GlStateManager.pushMatrix();
-            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedRightArm.postRender(0.0625F);
-            GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
-
             if (player.isSneaking())
             {
-                GlStateManager.translate(0.0F, 0.203125F, -0.07F);
+                GlStateManager.translate(0.0F, 0.23125F, 0.01F);
             }
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedRightArm.postRender(0.0625f);
+            GlStateManager.translate(-0.0625F, 0.59F, 0.0625F);
             if (thin)
             {
-                GlStateManager.scale(0.75, 1, 0.75);
-                GL11.glTranslated(0.02, 0, 0.01);
+                GlStateManager.translate(0.025, 0, 0);
+                GlStateManager.scale(0.75, 1, 1);
             }
             else GlStateManager.scale(0.85, 1, 0.85);
             if (rightRing.getItem() instanceof IWearable)
@@ -88,19 +102,81 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             }
             GlStateManager.popMatrix();
         }
-        if (belt)
+        if (leftBrace != null)
+        {
+            GlStateManager.pushMatrix();
+            if (player.isSneaking())
+            {
+                GlStateManager.translate(0.0F, 0.23125F, 0.01F);
+            }
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedLeftArm.postRender(0.0625f);
+            GlStateManager.translate(0.0625F, 0.4375F, 0.0625F);
+            if (thin)
+            {
+                GlStateManager.translate(-0.025, 0, 0);
+                GlStateManager.scale(0.75, 1, 1);
+            }
+            if (leftBrace.getItem() instanceof IWearable)
+            {
+                ((IWearable) leftBrace.getItem()).renderWearable(EnumWearable.WRIST, player, leftBrace, partialTicks);
+            }
+            GlStateManager.popMatrix();
+        }
+        if (rightBrace != null)
+        {
+            GlStateManager.pushMatrix();
+            if (player.isSneaking())
+            {
+                GlStateManager.translate(0.0F, 0.23125F, 0.01F);
+            }
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedRightArm.postRender(0.0625f);
+            GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
+            if (thin)
+            {
+                GlStateManager.translate(0.025, 0, 0);
+                GlStateManager.scale(0.75, 1, 1);
+            }
+            if (rightBrace.getItem() instanceof IWearable)
+            {
+                ((IWearable) rightBrace.getItem()).renderWearable(EnumWearable.WRIST, player, rightBrace, partialTicks);
+            }
+            GlStateManager.popMatrix();
+        }
+        if (leftLeg != null)
+        {
+            GlStateManager.pushMatrix();
+            if (player.isSneaking())
+            {
+                GlStateManager.translate(0.0F, 0.23125F, 0.01F);
+            }
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedLeftLeg.postRender(0.0625f);
+            GlStateManager.translate(0.0F, 0.4375F, 0.0625F);
+            if (leftLeg.getItem() instanceof IWearable)
+            {
+                ((IWearable) leftLeg.getItem()).renderWearable(EnumWearable.WRIST, player, leftLeg, partialTicks);
+            }
+            GlStateManager.popMatrix();
+        }
+        if (rightLeg != null)
+        {
+            GlStateManager.pushMatrix();
+            if (player.isSneaking())
+            {
+                GlStateManager.translate(0.0F, 0.23125F, 0.01F);
+            }
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedRightLeg.postRender(0.0625f);
+            GlStateManager.translate(0.0F, 0.4375F, 0.0625F);
+            if (rightLeg.getItem() instanceof IWearable)
+            {
+                ((IWearable) rightLeg.getItem()).renderWearable(EnumWearable.WRIST, player, rightLeg, partialTicks);
+            }
+            GlStateManager.popMatrix();
+        }
+        if (beltStack != null)
         {
             // First pass of render
             GL11.glPushMatrix();
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GlStateManager.enableRescaleNormal();
-            GlStateManager.alphaFunc(516, 0.1F);
-            GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
-                    GlStateManager.DestFactor.ZERO);
-            GlStateManager.pushMatrix();
             if (player.isSneaking())
             {
                 GlStateManager.translate(0.0F, 0.13125F, -0.105F);
@@ -109,13 +185,9 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             {
                 ((IWearable) beltStack.getItem()).renderWearable(EnumWearable.WAIST, player, beltStack, partialTicks);
             }
-            GlStateManager.cullFace(GlStateManager.CullFace.BACK);
-            GlStateManager.popMatrix();
-            GlStateManager.disableRescaleNormal();
-            GlStateManager.disableBlend();
             GL11.glPopMatrix();
         }
-        if (back)
+        if (bag != null)
         {
             GL11.glPushMatrix();
             if (player.isSneaking())
@@ -129,7 +201,21 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             }
             GL11.glPopMatrix();
         }
-        if (top && livingEntityRenderer instanceof RenderPlayer)
+        if (neck != null)
+        {
+            GL11.glPushMatrix();
+            if (player.isSneaking())
+            {
+                GlStateManager.translate(0.0F, 0.23125F, -0.0F);
+            }
+            ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
+            if (neck.getItem() instanceof IWearable)
+            {
+                ((IWearable) neck.getItem()).renderWearable(EnumWearable.NECK, player, neck, partialTicks);
+            }
+            GL11.glPopMatrix();
+        }
+        if (hat != null || leftEar != null || rightEar != null || eyes != null)
         {
             GlStateManager.pushMatrix();
             if (player.isSneaking())
@@ -145,26 +231,56 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(0.0F, 16.0F * scale, 0.0F);
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedHead.postRender(0.0625F);
+            GlStateManager.translate(0, -0.25, 0);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             GlStateManager.pushMatrix();
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GlStateManager.enableRescaleNormal();
-            GlStateManager.alphaFunc(516, 0.1F);
-            GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
-                    GlStateManager.DestFactor.ZERO);
-            GL11.glTranslated(0, -0.25, 0);
-            if (hat.getItem() instanceof IWearable)
+            if (hat != null)
             {
-                ((IWearable) hat.getItem()).renderWearable(EnumWearable.HAT, player, hat, partialTicks);
+                GlStateManager.pushMatrix();
+                if (hat.getItem() instanceof IWearable)
+                {
+                    ((IWearable) hat.getItem()).renderWearable(EnumWearable.HAT, player, hat, partialTicks);
+                }
+                GlStateManager.popMatrix();
             }
-            GlStateManager.cullFace(GlStateManager.CullFace.BACK);
-            GlStateManager.disableRescaleNormal();
-            GlStateManager.disableBlend();
+            if (leftEar != null)
+            {
+                GlStateManager.pushMatrix();
+                GL11.glTranslated(0.25, -0.1, 0.0);
+                GL11.glRotated(90, 0, 1, 0);
+                GL11.glRotated(90, 1, 0, 0);
+                if (leftEar.getItem() instanceof IWearable)
+                {
+                    ((IWearable) leftEar.getItem()).renderWearable(EnumWearable.EAR, player, leftEar, partialTicks);
+                }
+                GlStateManager.popMatrix();
+            }
+            if (rightEar != null)
+            {
+                GlStateManager.pushMatrix();
+                GL11.glTranslated(-0.25, -0.1, 0.0);
+                GL11.glRotated(90, 0, 1, 0);
+                GL11.glRotated(90, 1, 0, 0);
+                if (rightEar.getItem() instanceof IWearable)
+                {
+                    ((IWearable) rightEar.getItem()).renderWearable(EnumWearable.EAR, player, rightEar, partialTicks);
+                }
+                GlStateManager.popMatrix();
+            }
+            if (eyes != null)
+            {
+                GlStateManager.pushMatrix();
+                if (eyes.getItem() instanceof IWearable)
+                {
+                    ((IWearable) eyes.getItem()).renderWearable(EnumWearable.EYE, player, eyes, partialTicks);
+                }
+                GlStateManager.popMatrix();
+            }
             GlStateManager.popMatrix();
             GlStateManager.popMatrix();
         }
+        GlStateManager.popMatrix();
     }
 
     @Override

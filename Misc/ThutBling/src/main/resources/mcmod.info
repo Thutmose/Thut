@@ -1,0 +1,15 @@
+[
+{
+  "modid": "thut_bling",
+  "name": "Thut's Bling",
+  "description": "Fancy Jewelry for Thut Wearables",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Thutmose"],
+  "credits": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

@@ -92,7 +92,7 @@ public class GuiWearables extends InventoryEffectRenderer
         this.mc.getTextureManager().bindTexture(background);
         int k = this.guiLeft;
         int l = this.guiTop;
-        this.drawTexturedModalRect(k - 32, l, 0, 0, 60, 100);
+        this.drawTexturedModalRect(k - 32, l, 0, 0, 61, 103);
         RenderHelper.enableGUIStandardItemLighting();
         GlStateManager.enableRescaleNormal();
         GL11.glDisable(GL11.GL_BLEND);
