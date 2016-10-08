@@ -40,7 +40,8 @@ public class WearableEventHandler
             {
                 name = name + " " + slot + " " + subIndex;
             }
-            keys[i] = new KeyBinding(name, Keyboard.KEY_NONE, "Wearables");
+            int key = slot == EnumWearable.BACK ? Keyboard.KEY_B : Keyboard.KEY_NONE;
+            keys[i] = new KeyBinding(name, key, "Wearables");
             ClientRegistry.registerKeyBinding(keys[i]);
         }
     }
