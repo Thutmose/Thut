@@ -61,6 +61,7 @@ public class ContainerBag extends ContainerChest
         ThutWearables.syncWearables(playerIn);
     }
 
+    @Override
     public void onContainerClosed(EntityPlayer playerIn)
     {
         super.onContainerClosed(playerIn);

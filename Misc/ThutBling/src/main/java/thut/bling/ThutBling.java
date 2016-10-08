@@ -47,7 +47,7 @@ import thut.core.common.handlers.PlayerDataHandler;
 import thut.wearables.EnumWearable;
 import thut.wearables.inventory.PlayerWearables;
 
-@Mod(modid = ThutBling.MODID, name = "Thut's Bling", version = ThutBling.VERSION)
+@Mod(modid = ThutBling.MODID, name = "Thut's Bling", dependencies = "required-after:thutcore", version = ThutBling.VERSION)
 public class ThutBling
 {
     public static final String MODID   = "thut_bling";
