@@ -13,6 +13,10 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.wearables.EnumWearable;
@@ -20,8 +24,8 @@ import thut.wearables.IWearable;
 
 public class ItemBling extends Item implements IWearable
 {
-    public static Map<String, EnumWearable> wearables = Maps.newHashMap();
-
+    public static Map<String, EnumWearable>    wearables = Maps.newHashMap();
+    public static Map<EnumWearable, ItemStack> defaults  = Maps.newHashMap();
     static
     {
         wearables.put("ring", EnumWearable.FINGER);
@@ -33,6 +37,17 @@ public class ItemBling extends Item implements IWearable
         wearables.put("waist", EnumWearable.WAIST);
         wearables.put("hat", EnumWearable.HAT);
         wearables.put("bag", EnumWearable.BACK);
+    }
+
+    public void initDefaults()
+    {
+        for (String s : wearables.keySet())
+        {
+            ItemStack stack = new ItemStack(this);
+            stack.setTagCompound(new NBTTagCompound());
+            stack.getTagCompound().setString("type", s);
+            defaults.put(wearables.get(s), stack.copy());
+        }
     }
 
     public ItemBling()
@@ -56,6 +71,18 @@ public class ItemBling extends Item implements IWearable
             String s = I18n.format(colour.getUnlocalizedName());
             list.add(s);
         }
+    }
+
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn,
+            EnumHand hand)
+    {
+        if (getSlot(itemStackIn) == EnumWearable.BACK)
+        {
+            if (!worldIn.isRemote) playerIn.openGui(ThutBling.instance, 0, worldIn, 0, 0, 0);
+            return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, itemStackIn);
+        }
+        return super.onItemRightClick(itemStackIn, worldIn, playerIn, hand);
     }
 
     @Override

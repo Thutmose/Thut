@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 
 public enum EnumWearable
 {
@@ -67,6 +68,16 @@ public enum EnumWearable
                 else if (itemstack != null)
                     itemstack.getItem().onUpdate(itemstack, player.worldObj, player, slot.index + subIndex, false);
             }
+
+            @Override
+            public void onInteract(EntityLivingBase player, ItemStack itemstack, EnumWearable slot, int subIndex)
+            {
+                if (itemstack != null && player instanceof EntityPlayer)
+                {
+                    itemstack.getItem().onItemRightClick(itemstack, player.worldObj, (EntityPlayer) player,
+                            EnumHand.MAIN_HAND);
+                }
+            }
         });
     }
 
@@ -106,5 +117,15 @@ public enum EnumWearable
             if (ret != null) return ret;
         }
         return null;
+    }
+
+    public static void interact(EntityPlayer player, ItemStack item, int index)
+    {
+        EnumWearable slot = getWearable(index);
+        int subIndex = getSubIndex(index);
+        for (IWearableChecker checker : checkers)
+        {
+            checker.onInteract(player, item, slot, subIndex);
+        }
     }
 }

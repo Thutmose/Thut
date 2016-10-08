@@ -44,4 +44,5 @@ public interface IWearableInventory
      * @param stack
      * @return */
     boolean setWearable(EnumWearable type, ItemStack stack);
+
 }

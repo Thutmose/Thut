@@ -4,12 +4,14 @@ import java.io.IOException;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import thut.wearables.EnumWearable;
 import thut.wearables.ThutWearables;
 
 public class PacketGui implements IMessage, IMessageHandler<PacketGui, IMessage>
@@ -56,13 +58,15 @@ public class PacketGui implements IMessage, IMessageHandler<PacketGui, IMessage>
         return null;
     }
 
-    void processMessage(EntityPlayerMP player, PacketGui message)
+    static void processMessage(EntityPlayerMP player, PacketGui message)
     {
         if (message.data.hasNoTags())
         {
             player.openGui(ThutWearables.instance, 0, player.worldObj, 0, 0, 0);
             return;
         }
-        return;
+        byte slot = message.data.getByte("S");
+        ItemStack stack = ThutWearables.getWearables(player).getStackInSlot(slot);
+        if (stack != null) EnumWearable.interact(player, stack, slot);
     }
 }

@@ -3,7 +3,6 @@ package thut.bling;
 import java.awt.Color;
 import java.util.Map;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Maps;
@@ -14,9 +13,10 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
@@ -24,22 +24,21 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import thut.api.network.PacketHandler;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 import thut.bling.bag.ContainerBag;
 import thut.bling.client.item.TextureHandler;
-import thut.bling.network.PacketGui;
+import thut.bling.recipe.RecipeBling;
+import thut.bling.recipe.RecipeLoader;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
 import thut.core.common.ThutCore;
@@ -62,14 +61,40 @@ public class ThutBling
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
+        RecipeLoader.instance = new RecipeLoader(e);
         bling = new ItemBling().setRegistryName(MODID, "bling");
         bling.setCreativeTab(ThutCore.tabThut);
         GameRegistry.register(bling);
+        ((ItemBling) bling).initDefaults();
         MinecraftForge.EVENT_BUS.register(this);
         proxy.preInit(e);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, proxy);
-        PacketHandler.packetPipeline.registerMessage(PacketGui.class, PacketGui.class, PacketHandler.getMessageID(),
-                Side.SERVER);
+    }
+
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent e)
+    {
+        RecipeLoader.instance.init();
+        GameRegistry.addRecipe(new RecipeBling());
+        GameRegistry.addRecipe(new ShapedOreRecipe(ItemBling.defaults.get(EnumWearable.WAIST),
+                new Object[] { "   ", "LLL", "   ", 'L', Items.LEATHER }));
+        GameRegistry.addRecipe(new ShapedOreRecipe(ItemBling.defaults.get(EnumWearable.FINGER),
+                new Object[] { " L ", "L L", " L ", 'L', Items.GOLD_NUGGET }));
+        GameRegistry.addRecipe(new ShapedOreRecipe(ItemBling.defaults.get(EnumWearable.WRIST),
+                new Object[] { " L ", "L L", " L ", 'L', Items.LEATHER }));
+        GameRegistry.addRecipe(new ShapedOreRecipe(ItemBling.defaults.get(EnumWearable.EAR),
+                new Object[] { "SLS", "L L", " L ", 'L', Items.GOLD_NUGGET, 'S', Items.STRING }));
+        GameRegistry.addRecipe(new ShapedOreRecipe(ItemBling.defaults.get(EnumWearable.EYE),
+                new Object[] { "SSS", "G G", "   ", 'G', Items.GLASS_BOTTLE, 'S', Items.STICK }));
+        GameRegistry.addRecipe(new ShapedOreRecipe(ItemBling.defaults.get(EnumWearable.BACK),
+                new Object[] { "SLS", "LCL", " L ", 'L', Items.LEATHER, 'S', Items.STRING, 'C', Blocks.CHEST }));
+        GameRegistry.addRecipe(new ShapelessOreRecipe(ItemBling.defaults.get(EnumWearable.HAT), Items.LEATHER_HELMET));
+        GameRegistry.addRecipe(new ShapelessOreRecipe(ItemBling.defaults.get(EnumWearable.NECK),
+                ItemBling.defaults.get(EnumWearable.FINGER), Items.STRING));
+        GameRegistry.addRecipe(new ShapelessOreRecipe(ItemBling.defaults.get(EnumWearable.ANKLE),
+                ItemBling.defaults.get(EnumWearable.WRIST)));
+        GameRegistry.addRecipe(new ShapelessOreRecipe(ItemBling.defaults.get(EnumWearable.WRIST),
+                ItemBling.defaults.get(EnumWearable.ANKLE)));
     }
 
     public static class CommonProxy implements IGuiHandler
@@ -106,7 +131,6 @@ public class ThutBling
     {
         Map<EnumWearable, X3dModel[]>         models   = Maps.newHashMap();
         Map<EnumWearable, ResourceLocation[]> textures = Maps.newHashMap();
-        public static KeyBinding              keyBag;
 
         @Override
         public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
@@ -137,20 +161,6 @@ public class ThutBling
         {
             TextureHandler.registerItemModels();
             MinecraftForge.EVENT_BUS.register(this);
-            ClientRegistry.registerKeyBinding(keyBag = new KeyBinding("Open Bag", Keyboard.KEY_B, "Bling"));
-        }
-
-        @SubscribeEvent
-        public void keyPressed(KeyInputEvent evt)
-        {
-            if (keyBag.isPressed())
-            {
-                PlayerWearables cap = ThutWearables.getWearables(Minecraft.getMinecraft().thePlayer);
-                ItemStack bag = cap.getWearable(EnumWearable.BACK);
-                if (bag == null || !(bag.getItem() instanceof ItemBling)) return;
-                PacketGui packet = new PacketGui();
-                PacketHandler.packetPipeline.sendToServer(packet);
-            }
         }
 
         @Override
