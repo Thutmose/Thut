@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -27,7 +28,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.Optional.Method;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
@@ -41,12 +44,11 @@ import thut.bling.recipe.RecipeBling;
 import thut.bling.recipe.RecipeLoader;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
-import thut.core.common.ThutCore;
 import thut.wearables.EnumWearable;
 import thut.wearables.ThutWearables;
 import thut.wearables.inventory.PlayerWearables;
 
-@Mod(modid = ThutBling.MODID, name = "Thut's Bling", dependencies = "required-after:thutcore", version = ThutBling.VERSION)
+@Mod(modid = ThutBling.MODID, name = "Thut's Bling", dependencies = "required-after:thut_wearables;required-after:thutcore", version = ThutBling.VERSION)
 public class ThutBling
 {
     public static final String MODID   = "thut_bling";
@@ -58,13 +60,20 @@ public class ThutBling
     public static ThutBling    instance;
     public static Item         bling;
 
+    @Method(modid = "thutcore")
+    @EventHandler
+    public void Init(FMLInitializationEvent e)
+    {
+        bling.setCreativeTab(thut.core.common.ThutCore.tabThut);
+    }
+
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
         RecipeLoader.instance = new RecipeLoader(e);
         bling = new ItemBling().setRegistryName(MODID, "bling");
-        bling.setCreativeTab(ThutCore.tabThut);
         GameRegistry.register(bling);
+        bling.setCreativeTab(CreativeTabs.TOOLS);
         ((ItemBling) bling).initDefaults();
         MinecraftForge.EVENT_BUS.register(this);
         proxy.preInit(e);
