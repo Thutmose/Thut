@@ -34,6 +34,12 @@ public class ContainerWearables extends Container
             super(inventoryIn, index, xPosition, yPosition);
             this.slot = EnumWearable.getWearable(index);
             this.slots = inventoryIn;
+        }
+        
+        @Override
+        @SideOnly(Side.CLIENT)
+        public net.minecraft.client.renderer.texture.TextureAtlasSprite getBackgroundSprite()
+        {
             String tex = null;
             switch (slot)
             {
@@ -83,12 +89,6 @@ public class ContainerWearables extends Container
                     sprite = getBackgroundMap().getTextureExtry(getSlotTexture());
                 }
             }
-        }
-        
-        @Override
-        @SideOnly(Side.CLIENT)
-        public net.minecraft.client.renderer.texture.TextureAtlasSprite getBackgroundSprite()
-        {
             TextureAtlasSprite sprite = super.getBackgroundSprite();
             sprite.initSprite(16, 16, 0, 0, false);
             return sprite;
