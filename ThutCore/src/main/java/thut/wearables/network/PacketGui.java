@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -13,6 +12,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import thut.api.network.PacketHandler;
 import thut.core.common.handlers.PlayerDataHandler;
+import thut.wearables.ThutWearables;
 import thut.wearables.inventory.PlayerWearables;
 
 public class PacketGui implements IMessage, IMessageHandler<PacketGui, IMessage>
@@ -62,25 +62,14 @@ public class PacketGui implements IMessage, IMessageHandler<PacketGui, IMessage>
     void processMessage(EntityPlayerMP player, PacketGui message)
     {
         PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
-        int index = message.data.getInteger("S");
-        ItemStack stack = cap.getStackInSlot(index);
-        if (stack != null && player.inventory.getItemStack() == null)
+        if (message.data.hasNoTags())
         {
-            cap.removeStackFromSlot(index);
-            player.inventory.setItemStack(stack);
-            player.updateHeldItem();
-        }
-        else if (stack == null && player.inventory.getItemStack() != null
-                && cap.isItemValidForSlot(index, player.inventory.getItemStack()))
-        {
-            cap.setInventorySlotContents(index, player.inventory.getItemStack());
-            player.inventory.setItemStack(null);
-            player.updateHeldItem();
+            player.openGui(ThutWearables.instance, 0, player.worldObj, 0, 0, 0);
+            return;
         }
         PacketSyncWearables packet = new PacketSyncWearables(player);
         PacketHandler.packetPipeline.sendToAll(packet);
         PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), cap.getIdentifier());
         return;
     }
-
 }

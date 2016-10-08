@@ -95,7 +95,6 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(0.025, 0, 0);
                 GlStateManager.scale(0.75, 1, 1);
             }
-            else GlStateManager.scale(0.85, 1, 0.85);
             if (rightRing.getItem() instanceof IWearable)
             {
                 ((IWearable) rightRing.getItem()).renderWearable(EnumWearable.FINGER, player, rightRing, partialTicks);

@@ -46,11 +46,11 @@ public class GuiWearableButton extends GuiButton
 
             if (k == 1)
             {
-                this.drawTexturedModalRect(this.xPosition + potionShift + 1, this.yPosition, 0, 103, 9, 9);
+                this.drawTexturedModalRect(this.xPosition + potionShift + 1, this.yPosition, 0, 247, 9, 9);
             }
             else
             {
-                this.drawTexturedModalRect(this.xPosition + potionShift + 1, this.yPosition, 9, 103, 9, 9);
+                this.drawTexturedModalRect(this.xPosition + potionShift + 1, this.yPosition, 9, 247, 9, 9);
                 this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + 5 + potionShift,
                         this.yPosition + this.height, 0xffffff);
             }
