@@ -90,7 +90,6 @@ public class BiomeType
         id = MAXID++;
         typeMap.put(id, this);
         typeMapClient.put(id, this);
-        System.out.println("Creating a subbiome called " + name);
     }
 
     public int getType()

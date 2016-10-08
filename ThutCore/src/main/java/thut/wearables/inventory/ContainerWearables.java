@@ -17,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.core.common.handlers.PlayerDataHandler;
 import thut.wearables.EnumWearable;
 import thut.wearables.ThutWearables;
 
@@ -114,7 +113,7 @@ public class ContainerWearables extends Container
     public ContainerWearables(EntityPlayer player)
     {
         this.thePlayer = player;
-        slots = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+        slots = ThutWearables.getWearables(player);
         int xOffset = 116;
         int yOffset = 8;
         int xWidth = 18;
@@ -158,6 +157,7 @@ public class ContainerWearables extends Container
                  * Returns the maximum stack size for a given slot (usually the same as getInventoryStackLimit(), but 1
                  * in the case of armor slots)
                  */
+                @Override
                 public int getSlotStackLimit()
                 {
                     return 1;
@@ -165,17 +165,16 @@ public class ContainerWearables extends Container
                 /**
                  * Check if the stack is a valid item for this slot. Always true beside for the armor slots.
                  */
+                @Override
                 public boolean isItemValid(@Nullable ItemStack stack)
                 {
                     if (stack == null)
                     {
                         return false;
                     }
-                    else
-                    {
-                        return stack.getItem().isValidArmor(stack, entityequipmentslot, thePlayer);
-                    }
+                    return stack.getItem().isValidArmor(stack, entityequipmentslot, thePlayer);
                 }
+                @Override
                 @Nullable
                 @SideOnly(Side.CLIENT)
                 public String getSlotTexture()
@@ -203,10 +202,12 @@ public class ContainerWearables extends Container
             /**
              * Check if the stack is a valid item for this slot. Always true beside for the armor slots.
              */
+            @Override
             public boolean isItemValid(@Nullable ItemStack stack)
             {
                 return super.isItemValid(stack);
             }
+            @Override
             @Nullable
             @SideOnly(Side.CLIENT)
             public String getSlotTexture()

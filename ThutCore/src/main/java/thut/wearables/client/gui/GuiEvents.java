@@ -12,7 +12,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.api.network.PacketHandler;
+import thut.wearables.ThutWearables;
 import thut.wearables.network.PacketGui;
 
 public class GuiEvents
@@ -64,7 +64,7 @@ public class GuiEvents
                 else
                 {
                     PacketGui packet = new PacketGui();
-                    PacketHandler.packetPipeline.sendToServer(packet);
+                    ThutWearables.packetPipeline.sendToServer(packet);
                 }
                 active = !active;
                 event.getButton().displayString = I18n.format(active ? "button.wearables.off" : "button.wearables.on",

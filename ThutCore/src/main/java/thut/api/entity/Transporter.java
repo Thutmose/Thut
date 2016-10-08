@@ -2,7 +2,6 @@ package thut.api.entity;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -10,8 +9,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.api.maths.Vector3;
+import thut.api.network.PacketHandler;
 
 public class Transporter
 {
@@ -86,47 +89,99 @@ public class Transporter
 
     }
 
-    public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
+    public static class ReMounter
     {
-        if (dimension != entity.dimension)
+        final Entity theEntity;
+        final Entity theMount;
+        final int    tick;
+
+        public ReMounter(Entity entity, Entity mount)
         {
-            entity = teleportToDimension(entity, t2, dimension);
+            theEntity = entity;
+            theMount = mount;
+            tick = entity.ticksExisted;
         }
-        else if (entity instanceof EntityPlayer)
+
+        @SubscribeEvent
+        public void tick(LivingUpdateEvent evt)
         {
-            entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
-        }
-        if (entity instanceof EntityPlayerMP)
-        {
-            EntityPlayerMP playerIn = (EntityPlayerMP) entity;
-            WorldServer world = entity.getServer().worldServerForDimension(dimension);
-            EntityTracker tracker = world.getEntityTracker();
-            if(tracker.getTrackingPlayers(playerIn).getClass().getSimpleName().equals("EmptySet"))
+            int diff = theEntity.ticksExisted - tick;
+            if (theEntity.isDead) MinecraftForge.EVENT_BUS.unregister(this);
+            if (evt.getEntity().getUniqueID().equals(theEntity.getUniqueID()) && diff > 10)
             {
-                tracker.trackEntity(playerIn);
-                tracker.updateVisibility(playerIn);
-                System.err.println("Readded "+playerIn);
+                // TODO fix this remounter.
+                MinecraftForge.EVENT_BUS.unregister(this);
             }
         }
+    }
+
+    public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
+    {
+        if (entity.isRiding())
+        {
+            Entity mount = entity.getRidingEntity();
+            entity.dismountRidingEntity();
+            entity = teleportEntity(entity, t2, dimension, false);
+            mount = teleportEntity(mount, t2, dimension, false);
+            MinecraftForge.EVENT_BUS.register(new ReMounter(entity, mount));
+            return entity;
+        }
+        if (dimension != entity.dimension)
+        {
+            entity = transferToDimension(entity, t2, dimension);
+            for (Entity e : entity.getRecursivePassengers())
+            {
+                transferToDimension(e, t2, dimension);
+            }
+        }
+        int x = t2.intX() >> 4;
+        int z = t2.intZ() >> 4;
+        for (int i = x - 1; i <= x + 1; i++)
+            for (int j = z - 1; j <= z + 1; j++)
+            {
+                entity.worldObj.getChunkFromChunkCoords(x, z);
+            }
+        entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
+        System.out.println("teleport " + entity);
+        WorldServer world = entity.getServer().worldServerForDimension(dimension);
+        EntityTracker tracker = world.getEntityTracker();
+        if (tracker.getTrackingPlayers(entity).getClass().getSimpleName().equals("EmptySet"))
+        {
+            System.out.println("track");
+            tracker.trackEntity(entity);
+            if (entity instanceof EntityPlayerMP)
+            {
+                EntityPlayerMP playerIn = (EntityPlayerMP) entity;
+                tracker.updateVisibility(playerIn);
+            }
+        }
+        PacketHandler.sendEntityUpdate(entity);
         return entity;
     }
 
     // From RFTools.
-    private static Entity teleportToDimension(Entity entity, Vector3 t2, int dimension)
+    private static Entity transferToDimension(Entity entity, Vector3 t2, int dimension)
     {
         int oldDimension = entity.worldObj.provider.getDimension();
-        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
-        MinecraftServer server = ((EntityPlayerMP) entity).worldObj.getMinecraftServer();
-        WorldServer worldServer = server.worldServerForDimension(dimension);
-        entityPlayerMP.addExperienceLevel(0);
 
+        if (oldDimension == dimension) return entity;
+
+        MinecraftServer server = entity.worldObj.getMinecraftServer();
+        WorldServer worldServer = server.worldServerForDimension(dimension);
+        Teleporter teleporter = new TTeleporter(worldServer, t2.x, t2.y, t2.z);
+        if (!(entity instanceof EntityPlayerMP))
+        {
+            server.getPlayerList().transferEntityToWorld(entity, dimension, (WorldServer) entity.worldObj, worldServer,
+                    teleporter);
+            return entity;
+        }
+        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
+        entityPlayerMP.addExperienceLevel(0);
         worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(entityPlayerMP, dimension,
-                new TTeleporter(worldServer, t2.x, t2.y, t2.z));
-        entityPlayerMP.setPositionAndUpdate(t2.x, t2.y, t2.z);
+                teleporter);
         if (oldDimension == 1)
         {
             // For some reason teleporting out of the end does weird things.
-            entityPlayerMP.setPositionAndUpdate(t2.x, t2.y, t2.z);
             worldServer.spawnEntityInWorld(entityPlayerMP);
             worldServer.updateEntityWithOptionalForce(entityPlayerMP, false);
         }

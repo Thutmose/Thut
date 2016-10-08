@@ -47,7 +47,6 @@ public class GuiWearables extends InventoryEffectRenderer
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
     {
         super.drawGuiContainerForegroundLayer(mouseX, mouseY);
-        // No foreground layer
     }
 
     /** Draws the screen and all the components in it. */
@@ -55,8 +54,8 @@ public class GuiWearables extends InventoryEffectRenderer
     public void drawScreen(int mouseX, int mouseY, float partialTicks)
     {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        this.oldMouseX = (float) mouseX;
-        this.oldMouseY = (float) mouseY;
+        this.oldMouseX = mouseX;
+        this.oldMouseY = mouseY;
     }
 
     /** Draws either a gradient over the background screen (when it exists) or a
@@ -75,8 +74,8 @@ public class GuiWearables extends InventoryEffectRenderer
         int i = this.guiLeft;
         int j = this.guiTop;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
-        GuiInventory.drawEntityOnScreen(i + 51, j + 75, 30, (float) (i + 51) - this.oldMouseX,
-                (float) (j + 75 - 50) - this.oldMouseY, this.mc.thePlayer);
+        GuiInventory.drawEntityOnScreen(i + 51, j + 75, 30, i + 51 - this.oldMouseX,
+                j + 75 - 50 - this.oldMouseY, this.mc.thePlayer);
     }
 
     /** Called when the mouse is clicked. Args : mouseX, mouseY,
@@ -85,13 +84,6 @@ public class GuiWearables extends InventoryEffectRenderer
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
     {
         super.mouseClicked(mouseX, mouseY, mouseButton);
-        // Slot slot = getSlotAtPosition(mouseX, mouseY);
-        // if (slot != null)
-        // {
-        // PacketGui packet = new PacketGui();
-        // packet.data.setInteger("S", slot.getSlotIndex());
-        // PacketHandler.packetPipeline.sendToServer(packet);
-        // }
     }
 
     @Override

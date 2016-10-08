@@ -13,10 +13,9 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
-import thut.core.common.handlers.PlayerDataHandler.PlayerData;
 import thut.wearables.EnumWearable;
 
-public class PlayerWearables extends PlayerData implements IWearableInventory, IInventory
+public class PlayerWearables implements IWearableInventory, IInventory
 {
     private static class WearableSlot
     {
@@ -173,25 +172,11 @@ public class PlayerWearables extends PlayerData implements IWearableInventory, I
         return wSlot.addStack(stack);
     }
 
-    @Override
-    public String getIdentifier()
-    {
-        return "pokecube-wearables";
-    }
-
-    @Override
     public String dataFileName()
     {
         return "wearables";
     }
 
-    @Override
-    public boolean shouldSync()
-    {
-        return true;
-    }
-
-    @Override
     public void writeToNBT(NBTTagCompound tag)
     {
         for (EnumWearable slot : slots.keySet())
@@ -201,7 +186,6 @@ public class PlayerWearables extends PlayerData implements IWearableInventory, I
         }
     }
 
-    @Override
     public void readFromNBT(NBTTagCompound tag)
     {
         for (EnumWearable type : EnumWearable.values())
@@ -270,7 +254,6 @@ public class PlayerWearables extends PlayerData implements IWearableInventory, I
     @Override
     public void markDirty()
     {
-        // TODO send update packet here?
     }
 
     @Override

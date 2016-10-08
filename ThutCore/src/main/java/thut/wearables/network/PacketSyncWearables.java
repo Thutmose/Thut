@@ -5,6 +5,7 @@ import java.io.IOException;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -14,7 +15,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.core.common.handlers.PlayerDataHandler;
+import thut.wearables.ThutWearables;
 import thut.wearables.inventory.PlayerWearables;
 
 public class PacketSyncWearables implements IMessage, IMessageHandler<PacketSyncWearables, IMessage>
@@ -30,7 +31,7 @@ public class PacketSyncWearables implements IMessage, IMessageHandler<PacketSync
     {
         this();
         data.setInteger("I", player.getEntityId());
-        PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+        PlayerWearables cap = ThutWearables.getWearables(player);
         cap.writeToNBT(data);
     }
 
@@ -76,8 +77,7 @@ public class PacketSyncWearables implements IMessage, IMessageHandler<PacketSync
         Entity p = world.getEntityByID(message.data.getInteger("I"));
         if (p != null && p instanceof EntityPlayer)
         {
-            PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData((EntityPlayer) p)
-                    .getData(PlayerWearables.class);
+            PlayerWearables cap = ThutWearables.getWearables((EntityLivingBase) p);
             cap.readFromNBT(message.data);
         }
         return;

@@ -3,6 +3,7 @@ package thut.wearables;
 import java.util.HashSet;
 import java.util.UUID;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -17,7 +18,6 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -25,54 +25,53 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
-import thut.api.network.PacketHandler;
-import thut.core.common.handlers.PlayerDataHandler;
-import thut.reference.ThutCoreReference;
 import thut.wearables.client.gui.GuiEvents;
 import thut.wearables.client.gui.GuiWearables;
 import thut.wearables.client.render.WearableEventHandler;
 import thut.wearables.inventory.ContainerWearables;
 import thut.wearables.inventory.PlayerWearables;
+import thut.wearables.inventory.WearableHandler;
 import thut.wearables.network.PacketGui;
 import thut.wearables.network.PacketSyncWearables;
 
 @Mod(modid = ThutWearables.MODID, name = "Thut Wearables", version = ThutWearables.VERSION)
 public class ThutWearables
 {
-    public static final String  MODID          = "thut_wearables";
-    public static final String  VERSION        = "1.0.0";
+    public static final String MODID   = "thut_wearables";
+    public static final String VERSION = "1.0.0";
+
+    public static PlayerWearables getWearables(EntityLivingBase wearer)
+    {
+        return WearableHandler.getInstance().getPlayerData(wearer.getCachedUniqueIdString());
+    }
+
+    public static void saveWearables(EntityLivingBase wearer)
+    {
+        WearableHandler.getInstance().save(wearer.getCachedUniqueIdString());
+    }
+
+    public static SimpleNetworkWrapper packetPipeline = new SimpleNetworkWrapper(MODID);
 
     @SidedProxy
-    public static CommonProxy   proxy;
+    public static CommonProxy          proxy;
     @Instance(value = MODID)
-    public static ThutWearables instance;
+    public static ThutWearables        instance;
 
-    private boolean             overworldRules = true;
-
-    private void doMetastuff()
-    {
-        ModMetadata meta = FMLCommonHandler.instance().findContainerFor(this).getMetadata();
-        meta.parent = ThutCoreReference.MOD_ID;
-    }
+    private boolean                    overworldRules = true;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
-        doMetastuff();
         proxy.preInit(e);
-
         Configuration config = new Configuration(e.getSuggestedConfigurationFile());
         config.load();
         overworldRules = config.getBoolean("overworldGamerules", "general", overworldRules,
                 "whether to use overworld gamerules for keep inventory");
         config.save();
-
-        PlayerDataHandler.dataMap.add(PlayerWearables.class);
-        PacketHandler.packetPipeline.registerMessage(PacketGui.class, PacketGui.class, PacketHandler.getMessageID(),
-                Side.SERVER);
-        PacketHandler.packetPipeline.registerMessage(PacketSyncWearables.class, PacketSyncWearables.class,
-                PacketHandler.getMessageID(), Side.CLIENT);
+        packetPipeline.registerMessage(PacketGui.class, PacketGui.class, 1, Side.SERVER);
+        packetPipeline.registerMessage(PacketSyncWearables.class, PacketSyncWearables.class, 2, Side.CLIENT);
         MinecraftForge.EVENT_BUS.register(this);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, proxy);
     }
@@ -94,7 +93,7 @@ public class ThutWearables
     {
         if (event.getTarget() instanceof EntityPlayer && event.getEntityPlayer().isServerWorld())
         {
-            PacketHandler.packetPipeline.sendTo(new PacketSyncWearables((EntityPlayer) event.getTarget()),
+            packetPipeline.sendTo(new PacketSyncWearables((EntityPlayer) event.getTarget()),
                     (EntityPlayerMP) event.getEntityPlayer());
         }
     }
@@ -106,7 +105,7 @@ public class ThutWearables
         GameRules rules = overworldRules ? player.getServer().worldServerForDimension(0).getGameRules()
                 : player.getEntityWorld().getGameRules();
         if (rules.getBoolean("keepInventory")) return;
-        PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+        PlayerWearables cap = ThutWearables.getWearables(player);
         for (int i = 0; i < 13; i++)
         {
             ItemStack stack = cap.getStackInSlot(i);
@@ -132,7 +131,7 @@ public class ThutWearables
                 syncWearables(player);
                 for (EntityPlayer player2 : event.getEntity().worldObj.playerEntities)
                 {
-                    PacketHandler.packetPipeline.sendTo(new PacketSyncWearables(player2), (EntityPlayerMP) player);
+                    packetPipeline.sendTo(new PacketSyncWearables(player2), (EntityPlayerMP) player);
                 }
                 syncSchedule.remove(player.getUniqueID());
             }
@@ -146,9 +145,8 @@ public class ThutWearables
             Thread.dumpStack();
             return;
         }
-        PacketHandler.packetPipeline.sendToAll(new PacketSyncWearables(player));
-        PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
-        PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), cap.getIdentifier());
+        packetPipeline.sendToAll(new PacketSyncWearables(player));
+        saveWearables(player);
     }
 
     public static class CommonProxy implements IGuiHandler

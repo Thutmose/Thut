@@ -43,7 +43,6 @@ public abstract class BaseCommand extends CommandBase
     @Override
     public boolean checkPermission(MinecraftServer server, ICommandSender sender)
     {
-        System.out.println(server);
         if (!(sender instanceof EntityPlayer) || !server.isDedicatedServer()) return true;
         EntityPlayer player = null;
         try

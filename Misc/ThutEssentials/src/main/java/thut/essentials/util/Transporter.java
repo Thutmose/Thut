@@ -4,7 +4,6 @@ import javax.vecmath.Vector3f;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -13,7 +12,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class Transporter
 {
@@ -123,24 +125,62 @@ public class Transporter
 
     }
 
+    public static class ReMounter
+    {
+        final Entity theEntity;
+        final Entity theMount;
+        final int    tick;
+
+        public ReMounter(Entity entity, Entity mount)
+        {
+            theEntity = entity;
+            theMount = mount;
+            tick = entity.ticksExisted;
+        }
+
+        @SubscribeEvent
+        public void tick(LivingUpdateEvent evt)
+        {
+            int diff = theEntity.ticksExisted - tick;
+            if (theEntity.isDead) MinecraftForge.EVENT_BUS.unregister(this);
+            if (evt.getEntity().getUniqueID().equals(theEntity.getUniqueID()) && diff > 10)
+            {
+                // TODO fix this remounter.
+                MinecraftForge.EVENT_BUS.unregister(this);
+            }
+        }
+    }
+
     public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension)
     {
+        if (entity.isRiding())
+        {
+            entity.dismountRidingEntity();
+        }
         if (dimension != entity.dimension)
         {
-            entity = teleportToDimension(entity, t2, dimension);
-        }
-        else if (entity instanceof EntityPlayer)
-        {
-            entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
-        }
-        if (entity instanceof EntityPlayerMP)
-        {
-            EntityPlayerMP playerIn = (EntityPlayerMP) entity;
-            WorldServer world = entity.getServer().worldServerForDimension(dimension);
-            EntityTracker tracker = world.getEntityTracker();
-            if(tracker.getTrackingPlayers(playerIn).getClass().getSimpleName().equals("EmptySet"))
+            entity = transferToDimension(entity, t2, dimension);
+            for (Entity e : entity.getRecursivePassengers())
             {
-                tracker.trackEntity(playerIn);
+                transferToDimension(e, t2, dimension);
+            }
+        }
+        int x = t2.intX() >> 4;
+        int z = t2.intZ() >> 4;
+        for (int i = x - 1; i <= x + 1; i++)
+            for (int j = z - 1; j <= z + 1; j++)
+            {
+                entity.worldObj.getChunkFromChunkCoords(x, z);
+            }
+        entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
+        WorldServer world = entity.getServer().worldServerForDimension(dimension);
+        EntityTracker tracker = world.getEntityTracker();
+        if (tracker.getTrackingPlayers(entity).getClass().getSimpleName().equals("EmptySet"))
+        {
+            tracker.trackEntity(entity);
+            if (entity instanceof EntityPlayerMP)
+            {
+                EntityPlayerMP playerIn = (EntityPlayerMP) entity;
                 tracker.updateVisibility(playerIn);
             }
         }
@@ -148,21 +188,28 @@ public class Transporter
     }
 
     // From RFTools.
-    private static Entity teleportToDimension(Entity entity, Vector3 t2, int dimension)
+    private static Entity transferToDimension(Entity entity, Vector3 t2, int dimension)
     {
         int oldDimension = entity.worldObj.provider.getDimension();
-        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
-        MinecraftServer server = ((EntityPlayerMP) entity).worldObj.getMinecraftServer();
+
+        if (oldDimension == dimension) return entity;
+
+        MinecraftServer server = entity.worldObj.getMinecraftServer();
         WorldServer worldServer = server.worldServerForDimension(dimension);
         Teleporter teleporter = new TTeleporter(worldServer, t2.x, t2.y, t2.z);
+        if (!(entity instanceof EntityPlayerMP))
+        {
+            server.getPlayerList().transferEntityToWorld(entity, dimension, (WorldServer) entity.worldObj, worldServer,
+                    teleporter);
+            return entity;
+        }
+        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
         entityPlayerMP.addExperienceLevel(0);
         worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(entityPlayerMP, dimension,
                 teleporter);
-        entityPlayerMP.setPositionAndUpdate(t2.x, t2.y, t2.z);
         if (oldDimension == 1)
         {
             // For some reason teleporting out of the end does weird things.
-            entityPlayerMP.setPositionAndUpdate(t2.x, t2.y, t2.z);
             worldServer.spawnEntityInWorld(entityPlayerMP);
             worldServer.updateEntityWithOptionalForce(entityPlayerMP, false);
         }

@@ -43,8 +43,8 @@ import thut.bling.network.PacketGui;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
 import thut.core.common.ThutCore;
-import thut.core.common.handlers.PlayerDataHandler;
 import thut.wearables.EnumWearable;
+import thut.wearables.ThutWearables;
 import thut.wearables.inventory.PlayerWearables;
 
 @Mod(modid = ThutBling.MODID, name = "Thut's Bling", dependencies = "required-after:thutcore", version = ThutBling.VERSION)
@@ -85,7 +85,7 @@ public class ThutBling
         @Override
         public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
         {
-            PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+            PlayerWearables cap = ThutWearables.getWearables(player);
             ItemStack bag = cap.getWearable(EnumWearable.BACK);
             if (bag == null || !(bag.getItem() instanceof ItemBling)) return null;
             return new ContainerBag(player, ContainerBag.init(bag), bag);
@@ -111,7 +111,7 @@ public class ThutBling
         @Override
         public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
         {
-            PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+            PlayerWearables cap = ThutWearables.getWearables(player);
             ItemStack bag = cap.getWearable(EnumWearable.BACK);
             if (bag == null || !(bag.getItem() instanceof ItemBling)) return null;
             return new GuiContainer(new ContainerBag(player, ContainerBag.init(bag), bag))
@@ -145,8 +145,7 @@ public class ThutBling
         {
             if (keyBag.isPressed())
             {
-                PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(Minecraft.getMinecraft().thePlayer)
-                        .getData(PlayerWearables.class);
+                PlayerWearables cap = ThutWearables.getWearables(Minecraft.getMinecraft().thePlayer);
                 ItemStack bag = cap.getWearable(EnumWearable.BACK);
                 if (bag == null || !(bag.getItem() instanceof ItemBling)) return;
                 PacketGui packet = new PacketGui();

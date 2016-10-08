@@ -30,7 +30,8 @@ public class Back extends BaseCommand
     @SubscribeEvent
     public void move(MoveEvent event)
     {
-        event.getEntityPlayer().getEntityData().setIntArray("prevPos", event.getPos());
+        PlayerDataHandler.getCustomDataTag(event.getEntityLiving().getCachedUniqueIdString()).setIntArray("prevPos",
+                event.getPos());
     }
 
     @SubscribeEvent

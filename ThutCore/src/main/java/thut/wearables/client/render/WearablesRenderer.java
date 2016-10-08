@@ -9,9 +9,9 @@ import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import thut.core.common.handlers.PlayerDataHandler;
 import thut.wearables.EnumWearable;
 import thut.wearables.IWearable;
+import thut.wearables.ThutWearables;
 import thut.wearables.inventory.PlayerWearables;
 
 public class WearablesRenderer implements LayerRenderer<EntityPlayer>
@@ -41,7 +41,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
         ItemStack rightLeg = null;
         ItemStack neck = null;
         ItemStack eyes = null;
-        PlayerWearables worn = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+        PlayerWearables worn = ThutWearables.getWearables(player);
         leftRing = worn.getWearable(EnumWearable.FINGER, 1);
         rightRing = worn.getWearable(EnumWearable.FINGER, 0);
         leftBrace = worn.getWearable(EnumWearable.WRIST, 1);

@@ -10,10 +10,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import thut.api.network.PacketHandler;
-import thut.core.common.handlers.PlayerDataHandler;
 import thut.wearables.ThutWearables;
-import thut.wearables.inventory.PlayerWearables;
 
 public class PacketGui implements IMessage, IMessageHandler<PacketGui, IMessage>
 {
@@ -61,15 +58,11 @@ public class PacketGui implements IMessage, IMessageHandler<PacketGui, IMessage>
 
     void processMessage(EntityPlayerMP player, PacketGui message)
     {
-        PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
         if (message.data.hasNoTags())
         {
             player.openGui(ThutWearables.instance, 0, player.worldObj, 0, 0, 0);
             return;
         }
-        PacketSyncWearables packet = new PacketSyncWearables(player);
-        PacketHandler.packetPipeline.sendToAll(packet);
-        PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), cap.getIdentifier());
         return;
     }
 }
