@@ -470,6 +470,7 @@ public class ThutBling
                 {
                     Minecraft.getMinecraft().renderEngine.bindTexture(tex[0]);
                     GlStateManager.scale(1, 1, 10);
+                    GlStateManager.translate(0, 0.01, -0.075);
                     model[0].renderPart(itempart);
                 }
                 GL11.glPopMatrix();

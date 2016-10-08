@@ -22,6 +22,7 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -165,6 +166,15 @@ public class RecipeLoader
                 || b.getItemDamage() == OreDictionary.WILDCARD_VALUE))
             check = false;
         if (check) return false;
+        NBTBase tag;
+        if (a.hasTagCompound() && ((tag = a.getTagCompound().getTag("ForgeCaps")) != null) && tag.hasNoTags())
+        {
+            a.getTagCompound().removeTag("ForgeCaps");
+        }
+        if (b.hasTagCompound() && ((tag = b.getTagCompound().getTag("ForgeCaps")) != null) && tag.hasNoTags())
+        {
+            b.getTagCompound().removeTag("ForgeCaps");
+        }
         return ItemStack.areItemStackTagsEqual(a, b);
     }
 
@@ -205,7 +215,7 @@ public class RecipeLoader
         }
         if (item == null) return null;
         if (meta == -1) meta = 0;
-        if (stack == null) stack = new ItemStack(item, 1, meta);
+        stack = new ItemStack(item, 1, meta);
         stack.stackSize = size;
         if (!tag.isEmpty())
         {

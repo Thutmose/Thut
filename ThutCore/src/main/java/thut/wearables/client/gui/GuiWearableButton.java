@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.GlStateManager;
 
 public class GuiWearableButton extends GuiButton
 {
-
     private final int guiLeft;
 
     public GuiWearableButton(int buttonId, int guiLeft, int guiTop, int x, int y, int width, int height,

@@ -1,7 +1,6 @@
 package thut.api.terrain;
 
 import static thut.api.terrain.BiomeDatabase.contains;
-import static thut.api.terrain.BiomeType.INDUSTRIAL;
 import static thut.api.terrain.BiomeType.LAKE;
 import static thut.api.terrain.BiomeType.VILLAGE;
 
@@ -202,18 +201,6 @@ public class TerrainSegment
         return ret;
     }
 
-    @Deprecated
-    static boolean isIndustrial(Vector3 v, World world)
-    {
-        boolean ret = false;
-
-        int count = v.blockCount2(world, Blocks.REDSTONE_BLOCK, 16);
-
-        ret = count >= 2;
-
-        return ret;
-    }
-
     public static boolean isInTerrainColumn(Vector3 t, Vector3 point)
     {
         boolean ret = true;
@@ -309,26 +296,6 @@ public class TerrainSegment
     public int adjustedNonCaveBiome(World world, Vector3 v)
     {
         return getBiome(world, v, false);
-    }
-
-    @Deprecated
-    public boolean checkIndustrial(World world)
-    {
-        boolean industrial = false;
-
-        for (int i = 0; i < GRIDSIZE; i++)
-            for (int j = 0; j < GRIDSIZE; j++)
-                for (int k = 0; k < GRIDSIZE; k++)
-                {
-                    temp.set(chunkX * 16 + i * 4, chunkY * 16 + j * 4, chunkZ * 16 + k * 4);
-                    if (isIndustrial(temp, world))
-                    {
-                        industrial = true;
-                        biomes[i + GRIDSIZE * j + GRIDSIZE * GRIDSIZE * k] = INDUSTRIAL.getType();
-                    }
-                }
-
-        return industrial;
     }
 
     void checkToSave()

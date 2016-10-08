@@ -7,12 +7,16 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
@@ -74,6 +78,47 @@ public class ThutWearables
         packetPipeline.registerMessage(PacketSyncWearables.class, PacketSyncWearables.class, 2, Side.CLIENT);
         MinecraftForge.EVENT_BUS.register(this);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, proxy);
+        CapabilityManager.INSTANCE.register(IActiveWearable.class, new Capability.IStorage<IActiveWearable>()
+        {
+            @Override
+            public NBTBase writeNBT(Capability<IActiveWearable> capability, IActiveWearable instance, EnumFacing side)
+            {
+                return null;
+            }
+
+            @Override
+            public void readNBT(Capability<IActiveWearable> capability, IActiveWearable instance, EnumFacing side,
+                    NBTBase nbt)
+            {
+            }
+        }, new IActiveWearable()
+        {
+            @Override
+            public void renderWearable(EnumWearable slot, EntityLivingBase wearer, ItemStack stack, float partialTicks)
+            {
+            }
+
+            @Override
+            public EnumWearable getSlot(ItemStack stack)
+            {
+                return null;
+            }
+
+            @Override
+            public void onUpdate(EntityLivingBase player, ItemStack itemstack, EnumWearable slot, int subIndex)
+            {
+            }
+
+            @Override
+            public void onTakeOff(EntityLivingBase player, ItemStack itemstack, EnumWearable slot, int subIndex)
+            {
+            }
+
+            @Override
+            public void onPutOn(EntityLivingBase player, ItemStack itemstack, EnumWearable slot, int subIndex)
+            {
+            }
+        }.getClass());
     }
 
     static HashSet<UUID> syncSchedule = new HashSet<UUID>();
@@ -119,8 +164,17 @@ public class ThutWearables
     }
 
     @SubscribeEvent
-    public void playerTick(PlayerEvent.LivingUpdateEvent event)
+    public void playerTick(LivingUpdateEvent event)
     {
+        if (event.getEntity() instanceof EntityPlayer)
+        {
+            EntityPlayer wearer = (EntityPlayer) event.getEntity();
+            PlayerWearables wearables = getWearables(wearer);
+            for (int i = 0; i < 13; i++)
+            {
+                EnumWearable.tick(wearer, wearables.getStackInSlot(i), i);
+            }
+        }
         if (event.getEntityLiving().worldObj.isRemote) return;
         if (event.getEntity() instanceof EntityPlayer)
         {

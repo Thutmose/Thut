@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import thut.wearables.EnumWearable;
+import thut.wearables.IActiveWearable;
 import thut.wearables.IWearable;
 import thut.wearables.ThutWearables;
 import thut.wearables.inventory.PlayerWearables;
@@ -73,10 +74,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(-0.025, 0, 0);
                 GlStateManager.scale(0.75, 1, 1);
             }
-            if (leftRing.getItem() instanceof IWearable)
-            {
-                ((IWearable) leftRing.getItem()).renderWearable(EnumWearable.FINGER, player, leftRing, partialTicks);
-            }
+            render(leftRing, player, EnumWearable.FINGER, partialTicks);
             GlStateManager.popMatrix();
         }
         if (rightRing != null)
@@ -93,10 +91,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(0.025, 0, 0);
                 GlStateManager.scale(0.75, 1, 1);
             }
-            if (rightRing.getItem() instanceof IWearable)
-            {
-                ((IWearable) rightRing.getItem()).renderWearable(EnumWearable.FINGER, player, rightRing, partialTicks);
-            }
+            render(rightRing, player, EnumWearable.FINGER, partialTicks);
             GlStateManager.popMatrix();
         }
         if (leftBrace != null)
@@ -113,10 +108,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(-0.025, 0, 0);
                 GlStateManager.scale(0.75, 1, 1);
             }
-            if (leftBrace.getItem() instanceof IWearable)
-            {
-                ((IWearable) leftBrace.getItem()).renderWearable(EnumWearable.WRIST, player, leftBrace, partialTicks);
-            }
+            render(leftBrace, player, EnumWearable.WRIST, partialTicks);
             GlStateManager.popMatrix();
         }
         if (rightBrace != null)
@@ -133,10 +125,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(0.025, 0, 0);
                 GlStateManager.scale(0.75, 1, 1);
             }
-            if (rightBrace.getItem() instanceof IWearable)
-            {
-                ((IWearable) rightBrace.getItem()).renderWearable(EnumWearable.WRIST, player, rightBrace, partialTicks);
-            }
+            render(rightBrace, player, EnumWearable.WRIST, partialTicks);
             GlStateManager.popMatrix();
         }
         if (leftLeg != null)
@@ -148,10 +137,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedLeftLeg.postRender(0.0625f);
             GlStateManager.translate(0.0F, 0.4375F, 0.0625F);
-            if (leftLeg.getItem() instanceof IWearable)
-            {
-                ((IWearable) leftLeg.getItem()).renderWearable(EnumWearable.WRIST, player, leftLeg, partialTicks);
-            }
+            render(leftLeg, player, EnumWearable.ANKLE, partialTicks);
             GlStateManager.popMatrix();
         }
         if (rightLeg != null)
@@ -163,10 +149,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedRightLeg.postRender(0.0625f);
             GlStateManager.translate(0.0F, 0.4375F, 0.0625F);
-            if (rightLeg.getItem() instanceof IWearable)
-            {
-                ((IWearable) rightLeg.getItem()).renderWearable(EnumWearable.WRIST, player, rightLeg, partialTicks);
-            }
+            render(rightLeg, player, EnumWearable.ANKLE, partialTicks);
             GlStateManager.popMatrix();
         }
         if (beltStack != null)
@@ -178,10 +161,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             {
                 GlStateManager.translate(0.0F, 0.13125F, -0.105F);
             }
-            if (beltStack.getItem() instanceof IWearable)
-            {
-                ((IWearable) beltStack.getItem()).renderWearable(EnumWearable.WAIST, player, beltStack, partialTicks);
-            }
+            render(beltStack, player, EnumWearable.WAIST, partialTicks);
             GL11.glPopMatrix();
         }
         if (bag != null)
@@ -192,10 +172,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(0.0F, 0.23125F, -0.0F);
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
-            if (bag.getItem() instanceof IWearable)
-            {
-                ((IWearable) bag.getItem()).renderWearable(EnumWearable.BACK, player, bag, partialTicks);
-            }
+            render(bag, player, EnumWearable.BACK, partialTicks);
             GL11.glPopMatrix();
         }
         if (neck != null)
@@ -206,10 +183,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GlStateManager.translate(0.0F, 0.23125F, -0.0F);
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
-            if (neck.getItem() instanceof IWearable)
-            {
-                ((IWearable) neck.getItem()).renderWearable(EnumWearable.NECK, player, neck, partialTicks);
-            }
+            render(neck, player, EnumWearable.NECK, partialTicks);
             GL11.glPopMatrix();
         }
         if (hat != null || leftEar != null || rightEar != null || eyes != null)
@@ -235,10 +209,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             if (hat != null)
             {
                 GlStateManager.pushMatrix();
-                if (hat.getItem() instanceof IWearable)
-                {
-                    ((IWearable) hat.getItem()).renderWearable(EnumWearable.HAT, player, hat, partialTicks);
-                }
+                render(hat, player, EnumWearable.HAT, partialTicks);
                 GlStateManager.popMatrix();
             }
             if (leftEar != null)
@@ -247,10 +218,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GL11.glTranslated(0.25, -0.1, 0.0);
                 GL11.glRotated(90, 0, 1, 0);
                 GL11.glRotated(90, 1, 0, 0);
-                if (leftEar.getItem() instanceof IWearable)
-                {
-                    ((IWearable) leftEar.getItem()).renderWearable(EnumWearable.EAR, player, leftEar, partialTicks);
-                }
+                render(leftEar, player, EnumWearable.EAR, partialTicks);
                 GlStateManager.popMatrix();
             }
             if (rightEar != null)
@@ -259,19 +227,13 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
                 GL11.glTranslated(-0.25, -0.1, 0.0);
                 GL11.glRotated(90, 0, 1, 0);
                 GL11.glRotated(90, 1, 0, 0);
-                if (rightEar.getItem() instanceof IWearable)
-                {
-                    ((IWearable) rightEar.getItem()).renderWearable(EnumWearable.EAR, player, rightEar, partialTicks);
-                }
+                render(rightEar, player, EnumWearable.EAR, partialTicks);
                 GlStateManager.popMatrix();
             }
             if (eyes != null)
             {
                 GlStateManager.pushMatrix();
-                if (eyes.getItem() instanceof IWearable)
-                {
-                    ((IWearable) eyes.getItem()).renderWearable(EnumWearable.EYE, player, eyes, partialTicks);
-                }
+                render(eyes, player, EnumWearable.EYE, partialTicks);
                 GlStateManager.popMatrix();
             }
             GlStateManager.popMatrix();
@@ -284,6 +246,20 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
     public boolean shouldCombineTextures()
     {
         return false;
+    }
+
+    private void render(ItemStack stack, EntityPlayer player, EnumWearable slot, float partialTicks)
+    {
+        if (stack.getItem() instanceof IWearable)
+        {
+            ((IWearable) stack.getItem()).renderWearable(slot, player, stack, partialTicks);
+            return;
+        }
+        IActiveWearable wearable;
+        if ((wearable = stack.getCapability(IActiveWearable.WEARABLE_CAP, null)) != null)
+        {
+            wearable.renderWearable(slot, player, stack, partialTicks);
+        }
     }
 
 }

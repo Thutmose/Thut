@@ -86,6 +86,7 @@ public class RecipeBling implements IRecipe
                 }
                 for (ItemStack key : RecipeLoader.instance.knownTextures.keySet())
                 {
+                    System.out.println(key.getTagCompound() + " " + stack.getTagCompound());
                     if (RecipeLoader.isSameStack(key, stack))
                     {
                         if (gem) return false;
@@ -134,6 +135,10 @@ public class RecipeBling implements IRecipe
                 return false;
             }
             String tex = RecipeLoader.instance.knownTextures.get(gemStack);
+            if (tex == null)
+            {
+                tex = "minecraft:textures/blocks/stone.png";
+            }
             output.getTagCompound().setString("gem", tex);
             NBTTagCompound tag = new NBTTagCompound();
             gemStack.writeToNBT(tag);
