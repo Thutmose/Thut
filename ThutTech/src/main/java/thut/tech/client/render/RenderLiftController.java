@@ -120,7 +120,6 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         GL11.glPopMatrix();
     }
 
-
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, EnumFacing side, boolean wide)
     {
         floor = floor - monitor.getSidePage(side) * 16;
@@ -141,7 +140,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             Tessellator t = Tessellator.getInstance();
             t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-            double amount = wide? 0.25:0;
+            double amount = wide ? 0.25 : 0;
             t.getBuffer().pos(0.25 + amount, 0.25, 0).tex(0, 0)
                     .color(colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()).endVertex();
             t.getBuffer().pos(0.25 + amount, 0, 0).tex(0, 1)
@@ -205,111 +204,112 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        if (monitor.getBlockMetadata() == 0 && monitor.getBlockType() == ThutBlocks.lift)
+        render:
         {
-            return;
-        }
-
-        for (int i = 0; i < 6; i++)
-        {
-            EnumFacing dir = EnumFacing.getFront(i);
-
-            if (!monitor.isSideOn(dir)) continue;
-
-            GL11.glPushMatrix();
-
-            GL11.glTranslatef((float) x, (float) y, (float) z);
-
-            if (dir == EnumFacing.EAST)
+            if (monitor.getBlockMetadata() == 0 && monitor.getBlockType() == ThutBlocks.lift)
             {
-                GL11.glTranslatef(1, 0, 0);
-                GL11.glRotatef(270, 0, 1, 0);
+                break render;
             }
-            else if (dir == EnumFacing.SOUTH)
+            for (int i = 0; i < 6; i++)
             {
-                GL11.glTranslatef(1, 0, 1);
-                GL11.glRotatef(180, 0, 1, 0);
-            }
-            else if (dir == EnumFacing.WEST)
-            {
-                GL11.glTranslatef(0, 0, 1);
-                GL11.glRotatef(90, 0, 1, 0);
-            }
+                EnumFacing dir = EnumFacing.getFront(i);
 
-            TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
+                if (!monitor.isSideOn(dir)) continue;
 
-            GL11.glPushMatrix();
-            if (renderengine != null)
-            {
-                ResourceLocation texture;
+                GL11.glPushMatrix();
+
+                GL11.glTranslatef((float) x, (float) y, (float) z);
+
+                if (dir == EnumFacing.EAST)
+                {
+                    GL11.glTranslatef(1, 0, 0);
+                    GL11.glRotatef(270, 0, 1, 0);
+                }
+                else if (dir == EnumFacing.SOUTH)
+                {
+                    GL11.glTranslatef(1, 0, 1);
+                    GL11.glRotatef(180, 0, 1, 0);
+                }
+                else if (dir == EnumFacing.WEST)
+                {
+                    GL11.glTranslatef(0, 0, 1);
+                    GL11.glRotatef(90, 0, 1, 0);
+                }
+
+                TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
+
+                GL11.glPushMatrix();
+                if (renderengine != null)
+                {
+                    ResourceLocation texture;
+                    if (monitor.callPanel)
+                    {
+                        texture = texture_2;
+                    }
+                    else
+                    {
+                        texture = texture_1;
+                    }
+                    renderengine.bindTexture(texture);
+                }
+
+                Tessellator t = Tessellator.getInstance();
+                t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+
+                GL11.glTranslated(0, 0, -0.001 * (0 + 0.5));
+                t.getBuffer().pos(1, 1, 0).tex(0, 0).endVertex();
+                t.getBuffer().pos(1, 0, 0).tex(0, 1).endVertex();
+
+                t.getBuffer().pos(0, 0, 0).tex(1, 1).endVertex();
+                t.getBuffer().pos(0, 1, 0).tex(1, 0).endVertex();
+
+                t.draw();
+                GL11.glPopMatrix();
+
                 if (monitor.callPanel)
                 {
-                    texture = texture_2;
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(-0.11, -0.1, 0);
+                    drawNumber(monitor.floor - 1, 1);
+                    GL11.glPopMatrix();
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(-0.5, -0.095, 0);
+                    if (monitor.calledFloor == monitor.floor)
+                    {
+                        Color colour = new Color(255, 255, 0, 255);
+                        drawOverLay(monitor, 1, colour, dir, true);
+                    }
+                    else if (monitor.currentFloor == monitor.floor)
+                    {
+                        Color colour = new Color(0, 128, 255, 255);
+                        drawOverLay(monitor, 1, colour, dir, true);
+                    }
+                    GL11.glPopMatrix();
                 }
                 else
                 {
-                    texture = texture_1;
-                }
-                renderengine.bindTexture(texture);
-            }
-
-            Tessellator t = Tessellator.getInstance();
-            t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-
-            GL11.glTranslated(0, 0, -0.001 * (0 + 0.5));
-            t.getBuffer().pos(1, 1, 0).tex(0, 0).endVertex();
-            t.getBuffer().pos(1, 0, 0).tex(0, 1).endVertex();
-
-            t.getBuffer().pos(0, 0, 0).tex(1, 1).endVertex();
-            t.getBuffer().pos(0, 1, 0).tex(1, 0).endVertex();
-
-            t.draw();
-            GL11.glPopMatrix();
-
-            if (monitor.callPanel)
-            {
-                GL11.glPushMatrix();
-                GL11.glTranslated(-0.11, -0.1, 0);
-                drawNumber(monitor.floor - 1, 1);
-                GL11.glPopMatrix();
-                GL11.glPushMatrix();
-                GL11.glTranslated(-0.5, -0.095, 0);
-                if (monitor.calledFloor == monitor.floor)
-                {
-                    Color colour = new Color(255, 255, 0, 255);
-                    drawOverLay(monitor, 1, colour, dir, true);
-                }
-                else if (monitor.currentFloor == monitor.floor)
-                {
-                    Color colour = new Color(0, 128, 255, 255);
-                    drawOverLay(monitor, 1, colour, dir, true);
-                }
-                GL11.glPopMatrix();
-            }
-            else
-            {
-                drawFloorNumbers(monitor.getSidePage(dir));
-                if (monitor.lift != null)
-                {
-                    Color colour = new Color(0, 255, 0, 255);
-                    drawOverLay(monitor, monitor.floor, colour, dir, false);
-                    colour = new Color(255, 255, 0, 255);
-                    drawOverLay(monitor, monitor.lift.getDestinationFloor(), colour, dir, false);
-                    colour = new Color(0, 128, 255, 255);
-                    drawOverLay(monitor, monitor.lift.getCurrentFloor(), colour, dir, false);
-                    for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
+                    drawFloorNumbers(monitor.getSidePage(dir));
+                    if (monitor.lift != null)
                     {
-                        colour = new Color(10, 10, 10, 255);
-                        if ((monitor.lift.floors[j] < 0))
+                        Color colour = new Color(0, 255, 0, 255);
+                        drawOverLay(monitor, monitor.floor, colour, dir, false);
+                        colour = new Color(255, 255, 0, 255);
+                        drawOverLay(monitor, monitor.lift.getDestinationFloor(), colour, dir, false);
+                        colour = new Color(0, 128, 255, 255);
+                        drawOverLay(monitor, monitor.lift.getCurrentFloor(), colour, dir, false);
+                        for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
                         {
-                            drawOverLay(monitor, j + 1, colour, dir, false);
+                            colour = new Color(10, 10, 10, 255);
+                            if ((monitor.lift.floors[j] < 0))
+                            {
+                                drawOverLay(monitor, j + 1, colour, dir, false);
+                            }
                         }
                     }
                 }
+                GL11.glPopMatrix();
             }
-            GL11.glPopMatrix();
         }
-
         if (light) GL11.glEnable(GL11.GL_LIGHTING);
         if (!blend) GL11.glDisable(GL11.GL_BLEND);
         GL11.glBlendFunc(src, dst);

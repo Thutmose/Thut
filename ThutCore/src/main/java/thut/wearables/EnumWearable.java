@@ -5,6 +5,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public enum EnumWearable
@@ -61,6 +62,10 @@ public enum EnumWearable
             {
                 if (itemstack != null && itemstack.getItem() instanceof IActiveWearable)
                     ((IActiveWearable) itemstack.getItem()).onUpdate(player, itemstack, slot, subIndex);
+                else if (itemstack != null && player instanceof EntityPlayer)
+                    itemstack.getItem().onArmorTick(player.worldObj, (EntityPlayer) player, itemstack);
+                else if (itemstack != null)
+                    itemstack.getItem().onUpdate(itemstack, player.worldObj, player, slot.index + subIndex, false);
             }
         });
     }

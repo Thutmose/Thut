@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.entity.player.EntityPlayer;
@@ -60,7 +61,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
         boolean thin = ((AbstractClientPlayer) player).getSkinType().equals("slim");
 
         GlStateManager.pushMatrix();
-
+        RenderHelper.disableStandardItemLighting();
         if (leftRing != null)
         {
             GlStateManager.pushMatrix();

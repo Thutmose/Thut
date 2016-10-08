@@ -147,6 +147,8 @@ public class ThutWearables
             return;
         }
         PacketHandler.packetPipeline.sendToAll(new PacketSyncWearables(player));
+        PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+        PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), cap.getIdentifier());
     }
 
     public static class CommonProxy implements IGuiHandler

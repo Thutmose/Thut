@@ -13,7 +13,8 @@
       "ankle": {"textures": {"layer0": "thut_bling:items/ankle"}},
       "ear": {"textures": {"layer0": "thut_bling:items/ear"}},
       "waist": {"textures": {"layer0": "thut_bling:items/waist"}},
-      "hat": {"textures": {"layer0": "thut_bling:items/hat"}}
+      "hat": {"textures": {"layer0": "thut_bling:items/hat"}},
+      "bag": {"textures": {"layer0": "thut_bling:items/bag"}}
     }
   }
 }

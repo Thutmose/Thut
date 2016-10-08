@@ -3,32 +3,49 @@ package thut.bling;
 import java.awt.Color;
 import java.util.Map;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Maps;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
+import net.minecraftforge.fml.common.network.IGuiHandler;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import thut.api.network.PacketHandler;
+import thut.bling.bag.ContainerBag;
 import thut.bling.client.item.TextureHandler;
+import thut.bling.network.PacketGui;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
 import thut.core.common.ThutCore;
+import thut.core.common.handlers.PlayerDataHandler;
 import thut.wearables.EnumWearable;
+import thut.wearables.inventory.PlayerWearables;
 
 @Mod(modid = ThutBling.MODID, name = "Thut's Bling", version = ThutBling.VERSION)
 public class ThutBling
@@ -48,10 +65,14 @@ public class ThutBling
         bling = new ItemBling().setRegistryName(MODID, "bling");
         bling.setCreativeTab(ThutCore.tabThut);
         GameRegistry.register(bling);
+        MinecraftForge.EVENT_BUS.register(this);
         proxy.preInit(e);
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, proxy);
+        PacketHandler.packetPipeline.registerMessage(PacketGui.class, PacketGui.class, PacketHandler.getMessageID(),
+                Side.SERVER);
     }
 
-    public static class CommonProxy
+    public static class CommonProxy implements IGuiHandler
     {
         public void preInit(FMLPreInitializationEvent event)
         {
@@ -59,6 +80,21 @@ public class ThutBling
 
         public void renderWearable(EnumWearable slot, EntityLivingBase wearer, ItemStack stack, float partialTicks)
         {
+        }
+
+        @Override
+        public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+        {
+            PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+            ItemStack bag = cap.getWearable(EnumWearable.BACK);
+            if (bag == null || !(bag.getItem() instanceof ItemBling)) return null;
+            return new ContainerBag(player, ContainerBag.init(bag), bag);
+        }
+
+        @Override
+        public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+        {
+            return null;
         }
     }
 
@@ -70,11 +106,52 @@ public class ThutBling
     {
         Map<EnumWearable, X3dModel[]>         models   = Maps.newHashMap();
         Map<EnumWearable, ResourceLocation[]> textures = Maps.newHashMap();
+        public static KeyBinding              keyBag;
+
+        @Override
+        public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+        {
+            PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(player).getData(PlayerWearables.class);
+            ItemStack bag = cap.getWearable(EnumWearable.BACK);
+            if (bag == null || !(bag.getItem() instanceof ItemBling)) return null;
+            return new GuiContainer(new ContainerBag(player, ContainerBag.init(bag), bag))
+            {
+                private final ResourceLocation CHEST_GUI_TEXTURE = new ResourceLocation(
+                        "textures/gui/container/generic_54.png");
+
+                @Override
+                protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY)
+                {
+                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                    this.mc.getTextureManager().bindTexture(CHEST_GUI_TEXTURE);
+                    int i = (this.width - this.xSize) / 2;
+                    int j = (this.height - this.ySize) / 2;
+                    this.drawTexturedModalRect(i, j, 0, 0, this.xSize, 3 * 18 + 17);
+                    this.drawTexturedModalRect(i, j + 3 * 18 + 17, 0, 126, this.xSize, 96);
+                }
+            };
+        }
 
         @Override
         public void preInit(FMLPreInitializationEvent event)
         {
             TextureHandler.registerItemModels();
+            MinecraftForge.EVENT_BUS.register(this);
+            ClientRegistry.registerKeyBinding(keyBag = new KeyBinding("Open Bag", Keyboard.KEY_B, "Bling"));
+        }
+
+        @SubscribeEvent
+        public void keyPressed(KeyInputEvent evt)
+        {
+            if (keyBag.isPressed())
+            {
+                PlayerWearables cap = PlayerDataHandler.getInstance().getPlayerData(Minecraft.getMinecraft().thePlayer)
+                        .getData(PlayerWearables.class);
+                ItemStack bag = cap.getWearable(EnumWearable.BACK);
+                if (bag == null || !(bag.getItem() instanceof ItemBling)) return;
+                PacketGui packet = new PacketGui();
+                PacketHandler.packetPipeline.sendToServer(packet);
+            }
         }
 
         @Override
@@ -166,6 +243,17 @@ public class ThutBling
                     models.put(slot, model);
                     textures.put(slot, tex);
                 }
+                if (slot == EnumWearable.BACK)
+                {
+                    model = new X3dModel[2];
+                    tex = new ResourceLocation[2];
+                    model[0] = new X3dModel(new ResourceLocation(ThutBling.MODID, "models/worn/bag.x3d"));
+                    model[1] = new X3dModel(new ResourceLocation(ThutBling.MODID, "models/worn/bag.x3d"));
+                    tex[0] = new ResourceLocation(ThutBling.MODID, "textures/worn/bag1.png");
+                    tex[1] = new ResourceLocation(ThutBling.MODID, "textures/worn/bag2.png");
+                    models.put(slot, model);
+                    textures.put(slot, tex);
+                }
                 if (slot == EnumWearable.NECK)
                 {
                     model = new X3dModel[1];
@@ -179,6 +267,8 @@ public class ThutBling
             }
             if (model == null) return;
             Color colour;
+            Minecraft minecraft = Minecraft.getMinecraft();
+            int[] col;
             float s, sy, sx, sz, dx, dy, dz;
             int brightness = wearer.getBrightnessForRender(partialTicks);
             EnumDyeColor ret;
@@ -210,6 +300,36 @@ public class ThutBling
                 GL11.glPopMatrix();
                 break;
             case BACK:
+                GlStateManager.pushMatrix();
+                s = 0.65f;
+                GL11.glScaled(s, -s, -s);
+                minecraft.renderEngine.bindTexture(tex[0]);
+                GlStateManager.rotate(90, 1, 0, 0);
+                GlStateManager.rotate(180, 0, 1, 0);
+                GlStateManager.translate(0, -.18, -0.85);
+                model[0].renderAll();
+                GlStateManager.popMatrix();
+                GlStateManager.pushMatrix();
+                GL11.glScaled(s, -s, -s);
+                minecraft.renderEngine.bindTexture(tex[1]);
+                ret = EnumDyeColor.RED;
+                if (stack.hasTagCompound() && stack.getTagCompound().hasKey("dyeColour"))
+                {
+                    int damage = stack.getTagCompound().getInteger("dyeColour");
+                    ret = EnumDyeColor.byDyeDamage(damage);
+                }
+                colour = new Color(ret.getMapColor().colorValue + 0xFF000000);
+                col = new int[] { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
+                for (IExtendedModelPart part1 : model[1].getParts().values())
+                {
+                    part1.setRGBAB(col);
+                }
+                GlStateManager.rotate(90, 1, 0, 0);
+                GlStateManager.rotate(180, 0, 1, 0);
+                GlStateManager.translate(0, -.18, -0.85);
+                model[1].renderAll();
+                GL11.glColor3f(1, 1, 1);
+                GlStateManager.popMatrix();
                 break;
             case EAR:
                 dx = 0.0f;
@@ -237,6 +357,7 @@ public class ThutBling
                 GL11.glPopMatrix();
                 break;
             case EYE:
+                // TODO eye by model instead of texture.
                 break;
             case FINGER:
                 dx = 0.0f;
@@ -265,7 +386,6 @@ public class ThutBling
                 GL11.glPopMatrix();
                 break;
             case HAT:
-                Minecraft minecraft = Minecraft.getMinecraft();
                 GlStateManager.pushMatrix();
                 s = 0.285f;
                 GL11.glScaled(s, -s, -s);
@@ -282,10 +402,10 @@ public class ThutBling
                     ret = EnumDyeColor.byDyeDamage(damage);
                 }
                 colour = new Color(ret.getMapColor().colorValue + 0xFF000000);
-                int[] col2 = { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
+                col = new int[] { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
                 for (IExtendedModelPart part1 : model[1].getParts().values())
                 {
-                    part1.setRGBAB(col2);
+                    part1.setRGBAB(col);
                 }
                 model[1].renderAll();
                 GL11.glColor3f(1, 1, 1);
@@ -322,7 +442,7 @@ public class ThutBling
                     ret = EnumDyeColor.byDyeDamage(damage);
                 }
                 colour = new Color(ret.getMapColor().colorValue + 0xFF000000);
-                int[] col = { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
+                col = new int[] { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
                 IExtendedModelPart part = model[0].getParts().get(colorpart);
                 if (part != null)
                 {
@@ -394,7 +514,6 @@ public class ThutBling
             default:
                 break;
             }
-            // TODO
         }
 
         private void renderModel(ItemStack stack, String colorpart, String itempart, X3dModel model,

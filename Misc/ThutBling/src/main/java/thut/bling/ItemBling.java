@@ -32,6 +32,7 @@ public class ItemBling extends Item implements IWearable
         wearables.put("ear", EnumWearable.EAR);
         wearables.put("waist", EnumWearable.WAIST);
         wearables.put("hat", EnumWearable.HAT);
+        wearables.put("bag", EnumWearable.BACK);
     }
 
     public ItemBling()
