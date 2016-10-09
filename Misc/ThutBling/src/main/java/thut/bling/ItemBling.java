@@ -28,7 +28,7 @@ public class ItemBling extends Item implements IWearable
 {
     public static Map<String, EnumWearable>    wearables = Maps.newHashMap();
     public static Map<EnumWearable, ItemStack> defaults  = Maps.newHashMap();
-    public static List<String>                names     = Lists.newArrayList();
+    public static List<String>                 names     = Lists.newArrayList();
     static
     {
         wearables.put("ring", EnumWearable.FINGER);
@@ -99,7 +99,7 @@ public class ItemBling extends Item implements IWearable
     {
         if (getSlot(itemStackIn) == EnumWearable.BACK)
         {
-            if (!worldIn.isRemote) playerIn.openGui(ThutBling.instance, 0, worldIn, 0, 0, 0);
+            playerIn.openGui(ThutBling.instance, 0, worldIn, 0, 0, 0);
             return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, itemStackIn);
         }
         return super.onItemRightClick(itemStackIn, worldIn, playerIn, hand);

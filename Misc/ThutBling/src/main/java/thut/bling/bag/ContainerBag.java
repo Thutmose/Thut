@@ -6,7 +6,6 @@ import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.text.TextComponentTranslation;
 import thut.wearables.ThutWearables;
 
 public class ContainerBag extends ContainerChest
@@ -23,7 +22,7 @@ public class ContainerBag extends ContainerChest
 
     public static InventoryBasic init(ItemStack bag)
     {
-        InventoryBasic inventory = new InventoryBasic(new TextComponentTranslation("bling.bag"), 27);
+        InventoryBasic inventory = new InventoryBasic("bling.bag", false, 27);
         if (bag.hasTagCompound())
         {
             NBTTagList nbttaglist = bag.getTagCompound().getTagList("Inventory", 10);
