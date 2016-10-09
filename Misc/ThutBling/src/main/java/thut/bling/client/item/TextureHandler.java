@@ -7,8 +7,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
-import thut.bling.ThutBling;
 import thut.bling.ItemBling;
+import thut.bling.ThutBling;
 
 public class TextureHandler
 {
@@ -18,12 +18,13 @@ public class TextureHandler
         public ModelResourceLocation getModelLocation(ItemStack stack)
         {
             NBTTagCompound tag = stack.getTagCompound();
-            String variant = "ring";
-            if (tag != null)
+            String variant = null;
+            if (tag != null && tag.hasKey("type"))
             {
                 String stackname = tag.getString("type");
                 variant = stackname.toLowerCase(java.util.Locale.ENGLISH);
             }
+            if (variant == null) variant = ItemBling.names.get(stack.getItemDamage() % ItemBling.names.size());
             return getLocation(variant);
         }
     }

@@ -10,6 +10,8 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
+import thut.bling.ItemBling;
+import thut.wearables.EnumWearable;
 import thut.wearables.IWearable;
 
 public class RecipeBling implements IRecipe
@@ -54,13 +56,15 @@ public class RecipeBling implements IRecipe
         ItemStack dyeStack = null;
         ItemStack worn = null;
         ItemStack gemStack = null;
+        int n = 0;
         craft:
         for (int i = 0; i < inv.getSizeInventory(); i++)
         {
             ItemStack stack = inv.getStackInSlot(i);
             if (stack != null)
             {
-                if (stack.getItem() instanceof IWearable)
+                n++;
+                if (stack.getItem() instanceof ItemBling)
                 {
                     if (wearable) return false;
                     wearable = true;
@@ -97,7 +101,8 @@ public class RecipeBling implements IRecipe
                 }
             }
         }
-        if (dye && wearable)
+        if (n > 2 || !wearable) return false;
+        if (dye)
         {
             output = worn.copy();
             System.out.println("test");
@@ -124,7 +129,7 @@ public class RecipeBling implements IRecipe
             }
             output.getTagCompound().setInteger("dyeColour", colour);
         }
-        else if (gem && wearable)
+        else if (gem)
         {
             output = worn.copy();
             System.out.println("test");
@@ -144,7 +149,7 @@ public class RecipeBling implements IRecipe
             gemStack.writeToNBT(tag);
             output.getTagCompound().setTag("gemTag", tag);
         }
-        else if (wearable && !(gem || dye) && worn.hasTagCompound() && worn.getTagCompound().hasKey("gem"))
+        else if (!(gem || dye) && worn.hasTagCompound() && worn.getTagCompound().hasKey("gem"))
         {
             output = worn.copy();
             output.getTagCompound().removeTag("gem");
@@ -154,6 +159,14 @@ public class RecipeBling implements IRecipe
                 toRemove = ItemStack.loadItemStackFromNBT(tag);
             }
             if (toRemove == null) output = null;
+        }
+        else
+        {
+            IWearable wear = (IWearable) worn.getItem();
+            EnumWearable slot = wear.getSlot(worn);
+            output = ItemBling.defaults.get(slot).copy();
+            System.out.println(ItemBling.defaults);
+            if (RecipeLoader.isSameStack(worn, output)) output = null;
         }
         return output != null;
     }

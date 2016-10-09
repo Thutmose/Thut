@@ -56,7 +56,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
         rightLeg = worn.getWearable(EnumWearable.ANKLE, 0);
         neck = worn.getWearable(EnumWearable.NECK);
         eyes = worn.getWearable(EnumWearable.EYE);
-
+        
         if (!(this.livingEntityRenderer.getMainModel() instanceof ModelBiped)) return;
         boolean thin = ((AbstractClientPlayer) player).getSkinType().equals("slim");
         GlStateManager.pushMatrix();
@@ -169,7 +169,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             GL11.glPushMatrix();
             if (player.isSneaking())
             {
-                GlStateManager.translate(0.0F, 0.23125F, -0.0F);
+                GlStateManager.translate(0.0F, 0.23125F, 0.0F);
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
             render(bag, player, EnumWearable.BACK, partialTicks);
@@ -180,7 +180,7 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             GL11.glPushMatrix();
             if (player.isSneaking())
             {
-                GlStateManager.translate(0.0F, 0.23125F, -0.0F);
+                GlStateManager.translate(0.0F, 0.23125F, 0.0F);
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
             render(neck, player, EnumWearable.NECK, partialTicks);
@@ -203,7 +203,6 @@ public class WearablesRenderer implements LayerRenderer<EntityPlayer>
             }
             ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedHead.postRender(0.0625F);
             GlStateManager.translate(0, -0.25, 0);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             GlStateManager.pushMatrix();
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             if (hat != null)

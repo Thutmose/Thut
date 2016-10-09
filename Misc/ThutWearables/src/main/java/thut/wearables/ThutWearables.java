@@ -22,6 +22,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.Optional.Method;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -64,6 +65,34 @@ public class ThutWearables
     public static ThutWearables        instance;
 
     private boolean                    overworldRules = true;
+
+    @Method(modid = "Baubles")
+    @EventHandler
+    public void baubles_old(FMLPreInitializationEvent e)
+    {
+        MinecraftForge.EVENT_BUS.register(new thut.wearables.baubles.BaublesCompat());
+    }
+
+    @Method(modid = "baubles")
+    @EventHandler
+    public void baubles(FMLPreInitializationEvent e)
+    {
+        MinecraftForge.EVENT_BUS.register(new thut.wearables.baubles.BaublesCompat());
+    }
+
+    @Method(modid = "Botania")
+    @EventHandler
+    public void botania_old(FMLPreInitializationEvent e)
+    {
+        MinecraftForge.EVENT_BUS.register(new thut.wearables.baubles.BotaniaCompat());
+    }
+
+    @Method(modid = "botania")
+    @EventHandler
+    public void botania(FMLPreInitializationEvent e)
+    {
+        MinecraftForge.EVENT_BUS.register(new thut.wearables.baubles.BotaniaCompat());
+    }
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)

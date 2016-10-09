@@ -1,8 +1,10 @@
 package thut.bling;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.client.resources.I18n;
@@ -26,6 +28,7 @@ public class ItemBling extends Item implements IWearable
 {
     public static Map<String, EnumWearable>    wearables = Maps.newHashMap();
     public static Map<EnumWearable, ItemStack> defaults  = Maps.newHashMap();
+    public static List<String>                names     = Lists.newArrayList();
     static
     {
         wearables.put("ring", EnumWearable.FINGER);
@@ -37,15 +40,17 @@ public class ItemBling extends Item implements IWearable
         wearables.put("waist", EnumWearable.WAIST);
         wearables.put("hat", EnumWearable.HAT);
         wearables.put("bag", EnumWearable.BACK);
+        names.addAll(wearables.keySet());
+        Collections.sort(names);
     }
 
     public void initDefaults()
     {
-        for (String s : wearables.keySet())
+        ItemStack stack;
+        for (int i = 0; i < names.size(); i++)
         {
-            ItemStack stack = new ItemStack(this);
-            stack.setTagCompound(new NBTTagCompound());
-            stack.getTagCompound().setString("type", s);
+            String s = names.get(i);
+            stack = new ItemStack(this, 1, i);
             defaults.put(wearables.get(s), stack.copy());
         }
     }
@@ -71,6 +76,21 @@ public class ItemBling extends Item implements IWearable
             String s = I18n.format(colour.getUnlocalizedName());
             list.add(s);
         }
+        if (stack.hasTagCompound() && stack.getTagCompound().hasKey("gemTag"))
+        {
+            ItemStack gem = ItemStack.loadItemStackFromNBT(stack.getTagCompound().getCompoundTag("gemTag"));
+            if (gem != null)
+            {
+                try
+                {
+                    list.add(gem.getDisplayName());
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
@@ -92,11 +112,9 @@ public class ItemBling extends Item implements IWearable
     public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems)
     {
         ItemStack stack;
-        for (String s : wearables.keySet())
+        for (int i = 0; i < names.size(); i++)
         {
-            stack = new ItemStack(itemIn);
-            stack.setTagCompound(new NBTTagCompound());
-            stack.getTagCompound().setString("type", s);
+            stack = new ItemStack(itemIn, 1, i);
             subItems.add(stack);
         }
     }
@@ -105,25 +123,30 @@ public class ItemBling extends Item implements IWearable
     public String getUnlocalizedName(ItemStack stack)
     {
         String name = super.getUnlocalizedName(stack);
+        String variant = null;
         if (stack.hasTagCompound())
         {
             NBTTagCompound tag = stack.getTagCompound();
-            String variant = "ring";
-            if (tag != null)
+            if (tag != null && tag.hasKey("type"))
             {
                 String stackname = tag.getString("type");
                 variant = stackname.toLowerCase(java.util.Locale.ENGLISH);
             }
-            name = "item.bling." + variant;
         }
+        if (variant == null) variant = names.get(stack.getItemDamage() % names.size());
+        name = "item.bling." + variant;
         return name;
     }
 
     @Override
     public EnumWearable getSlot(ItemStack stack)
     {
-        String name = getUnlocalizedName(stack).replace("item.bling.", "");
-        return wearables.get(name);
+        if (stack.hasTagCompound())
+        {
+            NBTTagCompound tag = stack.getTagCompound();
+            if (tag != null && tag.hasKey("type")) { return wearables.get(tag.getString("type")); }
+        }
+        return wearables.get(names.get(stack.getItemDamage() % names.size()));
     }
 
     @Override
