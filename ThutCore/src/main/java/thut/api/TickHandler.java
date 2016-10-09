@@ -186,11 +186,14 @@ public class TickHandler
     {
         if (evt.getWorld().isRemote) return;
         // Add the chunk to the corresponding world cache.
-        WorldCache world = worldCaches.get(evt.getWorld().provider.getDimension());
+        WorldCache world = getWorldCache(evt.getWorld().provider.getDimension());
         if (world == null)
         {
             world = new WorldCache(evt.getWorld());
-            worldCaches.put(evt.getWorld().provider.getDimension(), world);
+            synchronized (worldCaches)
+            {
+                worldCaches.put(evt.getWorld().provider.getDimension(), world);
+            }
         }
         world.addChunk(evt.getChunk());
     }
@@ -200,7 +203,7 @@ public class TickHandler
     {
         if (evt.getWorld().isRemote) return;
         // Remove the chunk from the cache
-        WorldCache world = worldCaches.get(evt.getWorld().provider.getDimension());
+        WorldCache world = getWorldCache(evt.getWorld().provider.getDimension());
         if (world != null)
         {
             world.removeChunk(evt.getChunk());
@@ -209,7 +212,10 @@ public class TickHandler
 
     public WorldCache getWorldCache(int dimension)
     {
-        return worldCaches.get(dimension);
+        synchronized (worldCaches)
+        {
+            return worldCaches.get(dimension);
+        }
     }
 
     @SubscribeEvent
@@ -227,8 +233,11 @@ public class TickHandler
     public void WorldLoadEvent(Load evt)
     {
         if (evt.getWorld().isRemote) return;
-        // Initialize a world cache for this dimension
-        worldCaches.put(evt.getWorld().provider.getDimension(), new WorldCache(evt.getWorld()));
+        synchronized (worldCaches)
+        {
+            // Initialize a world cache for this dimension
+            worldCaches.put(evt.getWorld().provider.getDimension(), new WorldCache(evt.getWorld()));
+        }
     }
 
     @SubscribeEvent
@@ -264,7 +273,10 @@ public class TickHandler
         {
             blocks.clear();
         }
-        // Remove world cache for dimension
-        worldCaches.remove(evt.getWorld().provider.getDimension());
+        synchronized (worldCaches)
+        {
+            // Remove world cache for dimension
+            worldCaches.remove(evt.getWorld().provider.getDimension());
+        }
     }
 }
