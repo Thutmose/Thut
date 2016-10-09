@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -25,20 +26,24 @@ public class WorldCache implements IBlockAccess
 {
     public static class ChunkCache
     {
-        Chunk                          chunk;
+        Chunk chunk;
+
         public ChunkCache(Chunk chunk)
         {
             this.chunk = chunk;
         }
+
         public IBlockState getBlockState(final BlockPos pos)
         {
             IBlockState ret = null;
             synchronized (chunk)
             {
                 ret = chunk.getBlockState(pos);
+                if (ret == null) return Blocks.AIR.getDefaultState();
             }
             return ret;
         }
+
         public TileEntity getTileEntity(BlockPos pos, EnumCreateEntityType immediate)
         {
             TileEntity ret = null;
@@ -48,6 +53,7 @@ public class WorldCache implements IBlockAccess
             }
             return ret;
         }
+
         public boolean isEmpty()
         {
             return false;
@@ -82,7 +88,7 @@ public class WorldCache implements IBlockAccess
     public Biome getBiomeGenForCoords(BlockPos pos)
     {
         Biome ret = null;
-        synchronized(world)
+        synchronized (world)
         {
             ret = world.getBiomeGenForCoords(pos);
         }
@@ -96,7 +102,7 @@ public class WorldCache implements IBlockAccess
         int i1 = (pos.getZ() >> 4);
         long key = ChunkPos.chunkXZ2Int(l, i1);
         ChunkCache chunk = map.get(key);
-        if (chunk == null) return null;
+        if (chunk == null) return Blocks.AIR.getDefaultState();
         return chunk.getBlockState(pos);
     }
 
