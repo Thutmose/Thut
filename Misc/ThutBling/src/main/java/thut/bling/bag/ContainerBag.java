@@ -1,8 +1,11 @@
 package thut.bling.bag;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -13,11 +16,78 @@ public class ContainerBag extends ContainerChest
     final ItemStack      bag;
     final InventoryBasic inventory;
 
-    public ContainerBag(EntityPlayer player, InventoryBasic bagInventory, ItemStack bag)
+    public ContainerBag(EntityPlayer player, InventoryBasic bagInventory, final ItemStack bag)
     {
         super(player.inventory, bagInventory, player);
         this.inventory = bagInventory;
         this.bag = bag;
+        this.inventorySlots.clear();
+        this.inventoryItemStacks.clear();
+
+        int i = (3 - 4) * 18;
+
+        for (int j = 0; j < 3; ++j)
+        {
+            for (int k = 0; k < 9; ++k)
+            {
+                this.addSlotToContainer(new Slot(bagInventory, k + j * 9, 8 + k * 18, 18 + j * 18)
+                {
+                    @Override
+                    public boolean isItemValid(@Nullable ItemStack stack)
+                    {
+                        System.out.println(stack + " " + bag+" "+(stack!=bag));
+                        return stack != bag;
+                    }
+                    
+                    @Override 
+                    public boolean canTakeStack(EntityPlayer playerIn)
+                    {
+                        return this.getStack() != bag;
+                    }
+                });
+            }
+        }
+
+        for (int l = 0; l < 3; ++l)
+        {
+            for (int j1 = 0; j1 < 9; ++j1)
+            {
+                this.addSlotToContainer(new Slot(player.inventory, j1 + l * 9 + 9, 8 + j1 * 18, 103 + l * 18 + i)
+                {
+                    @Override
+                    public boolean isItemValid(@Nullable ItemStack stack)
+                    {
+                        System.out.println(stack + " " + bag+" "+(stack!=bag));
+                        return stack != bag;
+                    }
+                    
+                    @Override 
+                    public boolean canTakeStack(EntityPlayer playerIn)
+                    {
+                        return this.getStack() != bag;
+                    }
+                });
+            }
+        }
+
+        for (int i1 = 0; i1 < 9; ++i1)
+        {
+            this.addSlotToContainer(new Slot(player.inventory, i1, 8 + i1 * 18, 161 + i)
+            {
+                @Override
+                public boolean isItemValid(@Nullable ItemStack stack)
+                {
+                    System.out.println(stack + " " + bag+" "+(stack!=bag));
+                    return stack != bag;
+                }
+                
+                @Override 
+                public boolean canTakeStack(EntityPlayer playerIn)
+                {
+                    return this.getStack() != bag;
+                }
+            });
+        }
     }
 
     public static InventoryBasic init(ItemStack bag)
