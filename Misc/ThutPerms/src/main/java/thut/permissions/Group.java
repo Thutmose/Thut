@@ -73,8 +73,6 @@ public class Group
 
     public boolean canUse(ICommand command)
     {
-        System.out.println(
-                command.getCommandName() + " " + all + " " + allowedCommands.contains(command.getClass().getName()));
         return all || allowedCommands.contains(command.getClass().getName());
     }
 }

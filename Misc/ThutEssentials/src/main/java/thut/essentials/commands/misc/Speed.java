@@ -27,8 +27,9 @@ public class Speed extends BaseCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        EntityPlayerMP player = getPlayer(server, sender, args[0]);
-        double value = Double.parseDouble(args[1]);
+        EntityPlayerMP player = args.length == 1 ? getCommandSenderAsPlayer(sender)
+                : getPlayer(server, sender, args[0]);
+        double value = args.length == 1 ? Double.parseDouble(args[0]) : Double.parseDouble(args[1]);
         value = Math.min(ConfigManager.INSTANCE.speedCap, value);
         NBTTagCompound tag = PlayerDataHandler.getCustomDataTag(player);
         NBTTagCompound speed = tag.getCompoundTag("speed");

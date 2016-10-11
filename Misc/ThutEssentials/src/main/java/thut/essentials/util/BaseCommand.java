@@ -3,6 +3,8 @@ package thut.essentials.util;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 
 import net.minecraft.command.CommandBase;
@@ -11,6 +13,7 @@ import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.UserListOpsEntry;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import thut.essentials.commands.CommandManager;
 
@@ -74,6 +77,16 @@ public abstract class BaseCommand extends CommandBase
     public List<String> getCommandAliases()
     {
         if (CommandManager.commands.get(key) != null) { return CommandManager.commands.get(key); }
+        return Collections.<String> emptyList();
+    }
+
+    @Override
+    public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args,
+            @Nullable BlockPos pos)
+    {
+        int last = args.length - 1;
+        if (last >= 0 && isUsernameIndex(args,
+                last)) { return getListOfStringsMatchingLastWord(args, server.getAllUsernames()); }
         return Collections.<String> emptyList();
     }
 
