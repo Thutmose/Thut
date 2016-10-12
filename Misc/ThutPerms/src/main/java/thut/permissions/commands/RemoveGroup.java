@@ -1,6 +1,5 @@
 package thut.permissions.commands;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -8,8 +7,9 @@ import net.minecraft.util.text.TextComponentString;
 import thut.permissions.Group;
 import thut.permissions.GroupManager;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class RemoveGroup extends CommandBase
+public class RemoveGroup extends BaseCommand
 {
 
     public RemoveGroup()

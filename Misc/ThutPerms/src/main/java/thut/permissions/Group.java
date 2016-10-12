@@ -7,8 +7,6 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommand;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class Group
@@ -37,35 +35,6 @@ public class Group
         }
     }
 
-    @Deprecated
-    public void readFromNBT(NBTTagCompound tag)
-    {
-        NBTTagList list = (NBTTagList) tag.getTag("commands");
-        allowedCommands.clear();
-        if (list != null) for (int i = 0; i < list.tagCount(); i++)
-        {
-            String command = list.getStringTagAt(i);
-            allowedCommands.add(command);
-        }
-        suffix = tag.getString("suffix");
-        prefix = tag.getString("prefix");
-        list = (NBTTagList) tag.getTag("members");
-        members.clear();
-        if (list != null) for (int i = 0; i < list.tagCount(); i++)
-        {
-            String id = list.getStringTagAt(i);
-            try
-            {
-                members.add(UUID.fromString(id));
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
-        if (tag.hasKey("all")) all = tag.getBoolean("all");
-    }
-
     public boolean hasPermission(String permission)
     {
         return all || allowedCommands.contains(permission);
@@ -73,6 +42,6 @@ public class Group
 
     public boolean canUse(ICommand command)
     {
-        return all || allowedCommands.contains(command.getClass().getName());
+        return hasPermission(command.getClass().getName());
     }
 }

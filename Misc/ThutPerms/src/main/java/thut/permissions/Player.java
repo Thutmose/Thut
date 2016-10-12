@@ -24,9 +24,7 @@ public class Player
 
     public boolean canUse(ICommand command)
     {
-        System.out.println(
-                command.getCommandName() + " " + all + " " + allowedCommands.contains(command.getClass().getName()));
-        return all || allowedCommands.contains(command.getClass().getName());
+        return hasPermission(command.getClass().getName());
     }
 
 }

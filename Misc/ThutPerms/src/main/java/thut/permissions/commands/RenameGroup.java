@@ -2,7 +2,6 @@ package thut.permissions.commands;
 
 import java.util.UUID;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -10,8 +9,9 @@ import net.minecraft.util.text.TextComponentString;
 import thut.permissions.Group;
 import thut.permissions.GroupManager;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class RenameGroup extends CommandBase
+public class RenameGroup extends BaseCommand
 {
     public RenameGroup()
     {

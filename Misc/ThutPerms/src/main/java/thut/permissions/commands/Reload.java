@@ -1,13 +1,13 @@
 package thut.permissions.commands;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class Reload extends CommandBase
+public class Reload extends BaseCommand
 {
 
     public Reload()

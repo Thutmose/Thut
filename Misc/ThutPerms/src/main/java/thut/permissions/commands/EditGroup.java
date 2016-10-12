@@ -21,8 +21,9 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.permissions.Group;
 import thut.permissions.GroupManager;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class EditGroup extends CommandBase
+public class EditGroup extends BaseCommand
 {
     Map<String, TextFormatting> charCodeMap = Maps.newHashMap();
 
@@ -86,6 +87,15 @@ public class EditGroup extends CommandBase
     public String getCommandUsage(ICommandSender sender)
     {
         return "/editGroup";
+    }
+
+    /** Return whether the specified command parameter index is a username
+     * parameter. */
+    @Override
+    public boolean isUsernameIndex(String[] args, int index)
+    {
+        if (args[0].equalsIgnoreCase("add")) return index == 1;
+        return false;
     }
 
     @Override

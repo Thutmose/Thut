@@ -2,7 +2,6 @@ package thut.permissions.commands;
 
 import java.lang.reflect.Field;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -12,8 +11,9 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.permissions.Group;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class EditPerms extends CommandBase
+public class EditPerms extends BaseCommand
 {
 
     public EditPerms()

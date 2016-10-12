@@ -1,14 +1,14 @@
 package thut.permissions.commands;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import thut.permissions.Group;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class AddGroup extends CommandBase
+public class AddGroup extends BaseCommand
 {
     public AddGroup()
     {

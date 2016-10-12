@@ -1,8 +1,6 @@
 package thut.permissions;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.UUID;
@@ -17,10 +15,6 @@ import com.google.gson.GsonBuilder;
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraft.util.text.TextComponentString;
@@ -191,72 +185,6 @@ public class ThutPerms
                 e.printStackTrace();
             }
         }
-        else
-        {
-            GroupManager.instance = new GroupManager();
-            loadPermsOld(FMLCommonHandler.instance().getMinecraftServerInstance());
-            savePerms();
-        }
-    }
-
-    @Deprecated
-    static void loadPermsOld(MinecraftServer server)
-    {
-        File file = server.getFile("thutperms.dat");
-
-        if (file != null && file.exists())
-        {
-            try
-            {
-                FileInputStream fileinputstream = new FileInputStream(file);
-                NBTTagCompound nbttagcompound = CompressedStreamTools.readCompressed(fileinputstream);
-                fileinputstream.close();
-                NBTTagCompound nbttagcompound1 = nbttagcompound.getCompoundTag("Data");
-                NBTTagList groupsTag = (NBTTagList) nbttagcompound1.getTag("groups");
-                for (int i = 0; i < groupsTag.tagCount(); i++)
-                {
-                    NBTTagCompound tag = groupsTag.getCompoundTagAt(i);
-                    String name = tag.getString("name");
-                    if (!name.isEmpty())
-                    {
-                        Group g = addGroup(name);
-                        g.readFromNBT(tag);
-                        for (UUID id : g.members)
-                        {
-                            GroupManager.instance.groupIDMap.put(id, g);
-                        }
-                        GroupManager.instance.groups.add(g);
-                    }
-                }
-                NBTTagCompound dflt = nbttagcompound1.getCompoundTag("default");
-                String name = dflt.getString("name");
-                GroupManager.instance.initial = addGroup(name);
-                GroupManager.instance.groups.remove(GroupManager.instance.initial);
-                GroupManager.instance.initial.readFromNBT(dflt);
-                for (UUID id : GroupManager.instance.initial.members)
-                {
-                    GroupManager.instance.groupIDMap.put(id, GroupManager.instance.initial);
-                }
-                dflt = nbttagcompound1.getCompoundTag("mods");
-                name = dflt.getString("name");
-                GroupManager.instance.mods = addGroup(name);
-                GroupManager.instance.groups.remove(GroupManager.instance.mods);
-                GroupManager.instance.mods.readFromNBT(dflt);
-                for (UUID id : GroupManager.instance.mods.members)
-                {
-                    GroupManager.instance.groupIDMap.put(id, GroupManager.instance.mods);
-                }
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     public static void savePerms()
@@ -304,7 +232,7 @@ public class ThutPerms
     {
         UUID id = sender.getUniqueID();
         Group g = GroupManager.instance.groupIDMap.get(id);
-        Player player = GroupManager.instance.playerIDMap.get(sender.getUniqueID());
-        return g.canUse(command) || player != null ? player.canUse(command) : false;
+        Player player = GroupManager.instance.playerIDMap.get(id);
+        return g.canUse(command) || (player != null ? player.canUse(command) : false);
     }
 }

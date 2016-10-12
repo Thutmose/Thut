@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
@@ -15,8 +14,9 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import thut.permissions.Group;
 import thut.permissions.GroupManager;
 import thut.permissions.ThutPerms;
+import thut.permissions.util.BaseCommand;
 
-public class GroupInfo extends CommandBase
+public class GroupInfo extends BaseCommand
 {
 
     public GroupInfo()
@@ -33,6 +33,15 @@ public class GroupInfo extends CommandBase
     public String getCommandUsage(ICommandSender sender)
     {
         return "/groupInfo <player|exists|hasPerms|members|groups|listCommands|perms> <arguments>";
+    }
+
+    /** Return whether the specified command parameter index is a username
+     * parameter. */
+    @Override
+    public boolean isUsernameIndex(String[] args, int index)
+    {
+        if (args[0].equalsIgnoreCase("player")) return index == 1;
+        return false;
     }
 
     @Override

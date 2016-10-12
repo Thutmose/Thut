@@ -2,7 +2,6 @@ package thut.permissions.commands;
 
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -10,8 +9,9 @@ import net.minecraft.tileentity.TileEntitySkull;
 import net.minecraft.util.text.TextComponentString;
 import thut.permissions.GroupManager;
 import thut.permissions.Player;
+import thut.permissions.util.BaseCommand;
 
-public class EditPlayer extends CommandBase
+public class EditPlayer extends BaseCommand
 {
 
     public EditPlayer()
@@ -28,6 +28,14 @@ public class EditPlayer extends CommandBase
     public String getCommandUsage(ICommandSender sender)
     {
         return "/editPlayer <playername> <permission> <value>";
+    }
+
+    /** Return whether the specified command parameter index is a username
+     * parameter. */
+    @Override
+    public boolean isUsernameIndex(String[] args, int index)
+    {
+        return index == 0;
     }
 
     @Override

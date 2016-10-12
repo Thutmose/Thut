@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 
 public class GroupManager
 {
-    public static GroupManager instance;
+    public static GroupManager instance     = new GroupManager();
 
     public Map<UUID, Group>    groupIDMap   = Maps.newHashMap();
     public Map<UUID, Player>   playerIDMap  = Maps.newHashMap();
