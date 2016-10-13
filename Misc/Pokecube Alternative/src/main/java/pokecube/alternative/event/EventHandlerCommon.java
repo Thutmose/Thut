@@ -8,6 +8,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -15,12 +16,15 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import pokecube.adventures.items.ItemBadge;
 import pokecube.alternative.Reference;
-import pokecube.alternative.container.BeltPlayerData;
-import pokecube.alternative.container.IPokemobBelt;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.IPokemobBelt;
+import pokecube.alternative.container.card.CardPlayerData;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
 import pokecube.core.blocks.pc.InventoryPC;
@@ -32,6 +36,7 @@ import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.api.maths.Vector3;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class EventHandlerCommon
 {
@@ -47,6 +52,49 @@ public class EventHandlerCommon
     {
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
+
+        if (item != null && item.getItem() instanceof ItemBadge && item.hasTagCompound())
+        {
+            CardPlayerData data = PlayerDataHandler.getInstance().getPlayerData(player).getData(CardPlayerData.class);
+            NBTTagCompound tag = item.getTagCompound();
+            String type = tag.getString("type");
+            int index = -1;
+            switch (type)
+            {
+            case "badgefighting":
+                index = 0;
+                break;
+            case "badgerock":
+                index = 1;
+                break;
+            case "badgegrass":
+                index = 2;
+                break;
+            case "badgenormal":
+                index = 3;
+                break;
+            case "badgefire":
+                index = 4;
+                break;
+            case "badgepsychic":
+                index = 5;
+                break;
+            case "badgedragon":
+                index = 6;
+                break;
+            case "badgewater":
+                index = 7;
+                break;
+            }
+            if (index == -1 || data.inventory.getStackInSlot(index) != null) return;
+            int slotIndex = event.getEntityPlayer().inventory.currentItem;
+            data.inventory.setInventorySlotContents(index, item.copy());
+            player.inventory.setInventorySlotContents(slotIndex, null);
+            PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), data.getIdentifier());
+            event.setCanceled(true);
+            return;
+        }
+
         int slotIndex = event.getEntityPlayer().inventory.currentItem;
         if (slotIndex != 0)
         {
@@ -175,10 +223,11 @@ public class EventHandlerCommon
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void recallPokemon(RecallEvent event)
     {
         IPokemob pokemon = event.recalled;
+        if (pokemon == null) return;
         if (pokemon.getPokemonOwner() instanceof EntityPlayer)
         {
             if (pokemon.getPokemonAIState(IPokemob.MEGAFORME))

@@ -14,8 +14,8 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import pokecube.alternative.container.BeltPlayerData;
-import pokecube.alternative.container.IPokemobBelt;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.IPokemobBelt;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
 

@@ -13,8 +13,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pokecube.alternative.PokecubeAlternative;
-import pokecube.alternative.container.BeltPlayerData;
-import pokecube.alternative.container.IPokemobBelt;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.IPokemobBelt;
 
 public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt, IMessage>
 {

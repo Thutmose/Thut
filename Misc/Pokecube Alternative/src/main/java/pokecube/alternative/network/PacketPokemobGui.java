@@ -11,8 +11,8 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import pokecube.alternative.container.BeltPlayerData;
-import pokecube.alternative.container.IPokemobBelt;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.items.pokecubes.PokecubeManager;
 
 public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemobGui, IMessage>

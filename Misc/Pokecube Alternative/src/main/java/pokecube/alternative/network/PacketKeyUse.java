@@ -8,8 +8,9 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import pokecube.alternative.container.BeltPlayerData;
-import pokecube.alternative.container.IPokemobBelt;
+import pokecube.alternative.PokecubeAlternative;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokemob;
 
@@ -19,6 +20,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
     public static final byte SLOTDOWN = 1;
     public static final byte SENDOUT  = 2;
     public static final byte RECALL   = 3;
+    public static final byte OPENCARD = 4;
 
     byte                     messageId;
     int                      ticks    = 0;
@@ -69,7 +71,12 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
     void processMessage(EntityPlayer player, PacketKeyUse message)
     {
         IPokemobBelt cap = BeltPlayerData.getBelt(player);
-        if (message.messageId == SENDOUT)
+        if (message.messageId == OPENCARD)
+        {
+            player.openGui(PokecubeAlternative.instance, 0, player.getEntityWorld(), 0, 0, 0);
+            return;
+        }
+        else if (message.messageId == SENDOUT)
         {
             ItemStack cube = cap.getCube(cap.getSlot());
             if (cube != null)

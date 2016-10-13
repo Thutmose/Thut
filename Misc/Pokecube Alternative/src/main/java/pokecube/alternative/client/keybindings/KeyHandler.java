@@ -7,13 +7,15 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import pokecube.alternative.client.gui.GuiPokemonBar;
-import pokecube.alternative.container.BeltPlayerData;
-import pokecube.alternative.container.IPokemobBelt;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketKeyUse;
 import pokecube.core.client.ClientProxyPokecube;
@@ -28,6 +30,7 @@ public class KeyHandler
     public static KeyBinding sendOutPoke;
     public static KeyBinding toggleBarControl;
     public static KeyBinding cycleGuiState;
+    public static KeyBinding openCard;
 
     public static void init()
     {
@@ -35,8 +38,11 @@ public class KeyHandler
                 I18n.format("key.categories.pokecube_alternative"));
         cycleGuiState = new KeyBinding(I18n.format("keybind.cycleGuiState"), Keyboard.KEY_O,
                 I18n.format("key.categories.pokecube_alternative"));
+        openCard = new KeyBinding(I18n.format("keybind.openCard"), KeyConflictContext.UNIVERSAL, KeyModifier.CONTROL,
+                Keyboard.KEY_E, I18n.format("key.categories.pokecube_alternative"));
         ClientRegistry.registerKeyBinding(toggleBarControl);
         ClientRegistry.registerKeyBinding(cycleGuiState);
+        ClientRegistry.registerKeyBinding(openCard);
     }
 
     long ticks = 0;
@@ -70,6 +76,11 @@ public class KeyHandler
             else state = (state + 1) % 3;
             GuiPokemonBar.showAllTags = (state & 2) > 0;
             GuiPokemonBar.showSelectedTag = (state & 1) > 0;
+        }
+        if (openCard.isPressed())
+        {
+            PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.OPENCARD, -1);
+            PacketHandler.INSTANCE.sendToServer(packet);
         }
         if (sendOutPoke.isPressed())
         {

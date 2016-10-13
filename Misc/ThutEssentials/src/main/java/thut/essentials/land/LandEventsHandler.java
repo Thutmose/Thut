@@ -13,7 +13,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemFood;
 import net.minecraft.scoreboard.Team;
-import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -52,14 +51,6 @@ public class LandEventsHandler
         {
             LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), player.dimension);
             if (!LandManager.getInstance().isOwned(c)) return;
-            if (!player.getEntityWorld().isRemote)
-            {
-                UserListOpsEntry userentry = ((EntityPlayerMP) player).mcServer.getPlayerList().getOppedPlayers()
-                        .getEntry(player.getGameProfile());
-
-                if (userentry != null
-                        || !FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer()) { return; }
-            }
             if (LandManager.getInstance().isOwned(c)
                     && !LandManager.getInstance().isTeamLand(c, player.getTeam().getRegisteredName()))
             {

@@ -1,4 +1,4 @@
-package pokecube.alternative.container;
+package pokecube.alternative.container.belt;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;

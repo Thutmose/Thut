@@ -6,7 +6,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
-import pokecube.alternative.container.BeltPlayerData;
+import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.card.CardPlayerData;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.core.handlers.PokecubePlayerDataHandler;
 
@@ -25,6 +26,7 @@ public class PokecubeAlternative
         PokecubeAlternative.proxy.preInit(event);
         PacketHandler.init();
         PokecubePlayerDataHandler.dataMap.add(BeltPlayerData.class);
+        PokecubePlayerDataHandler.dataMap.add(CardPlayerData.class);
     }
 
     @Mod.EventHandler

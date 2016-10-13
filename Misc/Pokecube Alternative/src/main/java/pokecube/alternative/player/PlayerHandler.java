@@ -3,7 +3,7 @@ package pokecube.alternative.player;
 import java.util.HashMap;
 
 import net.minecraft.entity.player.EntityPlayer;
-import pokecube.alternative.container.InventoryPokemon;
+import pokecube.alternative.container.belt.InventoryPokemon;
 
 public class PlayerHandler
 {

@@ -1,4 +1,4 @@
-package pokecube.alternative.container;
+package pokecube.alternative.container.belt;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
