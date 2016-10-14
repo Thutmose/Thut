@@ -1,13 +1,13 @@
 [
 {
-  "modid": "thutessentials",
-  "name": "Thut Essentials",
-  "description": "Essentials mod for Forge",
+  "modid": "pokecube_alternative",
+  "name": "Pokecube Alternative",
+  "description": "Restricts the player to having 6 Pokemobs, for a more Pokemon Game like feel.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["Thutmose"],
+  "authorList": ["Thutmose", "Karagra"],
   "credits": "",
   "screenshots": [],
   "dependencies": []

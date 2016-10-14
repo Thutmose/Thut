@@ -4,11 +4,11 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.stats.Achievement;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -35,6 +35,7 @@ import pokecube.core.interfaces.IPokecube;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.items.pokecubes.PokecubeManager;
+import pokecube.core.utils.Tools;
 import thut.api.maths.Vector3;
 import thut.core.common.handlers.PlayerDataHandler;
 
@@ -124,13 +125,7 @@ public class EventHandlerCommon
                     {
                         player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.useBelt",
                                 item.getDisplayName()));
-                        EntityItem entityitem = player.dropItem(item, false);
-                        if (entityitem != null)
-                        {
-                            entityitem.setNoPickupDelay();
-                            entityitem.setOwner(player.getName());
-                        }
-                        player.inventory.setInventorySlotContents(slotIndex, null);
+                        Tools.giveItem(player, item);
                     }
                     event.setCanceled(true);
                 }
@@ -274,7 +269,8 @@ public class EventHandlerCommon
             if (!player.isSneaking() && !((Entity) pokemon).isDead)
             {
                 boolean has = player.hasAchievement(PokecubeMod.catchAchievements.get(pokemon.getPokedexEntry()));
-                has = has || player.hasAchievement(PokecubeMod.hatchAchievements.get(pokemon.getPokedexEntry()));
+                Achievement hatch = PokecubeMod.hatchAchievements.get(pokemon.getPokedexEntry());
+                has = has || hatch != null && player.hasAchievement(hatch);
                 if (!has)
                 {
                     StatsCollector.addCapture(pokemon);
