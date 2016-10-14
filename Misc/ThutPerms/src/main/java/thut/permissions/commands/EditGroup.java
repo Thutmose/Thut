@@ -110,7 +110,7 @@ public class EditGroup extends BaseCommand
             GameProfile profile = new GameProfile(null, playerName);
             profile = TileEntitySkull.updateGameprofile(profile);
             if (profile.getId() == null) { throw new CommandException("Error, cannot find profile for " + playerName); }
-            Group old = GroupManager.instance.groupIDMap.get(profile.getId());
+            Group old = GroupManager.instance.getPlayerGroup(profile.getId());
             if (old != null) old.members.remove(profile.getId());
             GroupManager.instance.groupIDMap.remove(profile.getId());
             ThutPerms.addToGroup(profile.getId(), groupName);

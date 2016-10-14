@@ -51,16 +51,17 @@ public class MobCapper
             shouldCull = shouldCull || (evt.getEntity() instanceof IAnimals);
             shouldCull = shouldCull && !(evt.getEntity() instanceof IMerchant);
             shouldCull = shouldCull && (evt.getEntity().isNonBoss());
-            boolean tameable = evt.getEntity() instanceof EntityTameable;
+            boolean tameable = evt.getEntity() instanceof IEntityOwnable;
 
             if (tameable || !shouldCull)
             {
                 if (!tameable) return;
-                EntityTameable tame = (EntityTameable) evt.getEntity();
-                if (tame.isTamed()) { return; }
+                IEntityOwnable tame = (IEntityOwnable) evt.getEntity();
+                if (tame.getOwnerId() != null) { return; }
             }
             World world = evt.getWorld();
-            AxisAlignedBB box = new AxisAlignedBB(evt.getX(), evt.getY(), evt.getZ(), evt.getX(), evt.getY(), evt.getZ());
+            AxisAlignedBB box = new AxisAlignedBB(evt.getX(), evt.getY(), evt.getZ(), evt.getX(), evt.getY(),
+                    evt.getZ());
             List<Entity> l;
             List<EntityPlayer> l2 = world.getEntitiesWithinAABB(EntityPlayer.class,
                     box.expand(Config.number2, Config.number2, Config.number2));

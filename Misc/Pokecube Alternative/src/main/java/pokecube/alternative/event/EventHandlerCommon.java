@@ -53,7 +53,7 @@ public class EventHandlerCommon
     {
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
-
+        if (player.worldObj.isRemote) return;
         if (item != null && item.getItem() instanceof ItemBadge && item.hasTagCompound())
         {
             CardPlayerData data = PlayerDataHandler.getInstance().getPlayerData(player).getData(CardPlayerData.class);
@@ -62,7 +62,7 @@ public class EventHandlerCommon
             int index = -1;
             switch (type)
             {
-            case "badgefighting":
+            case "badgeelectric":
                 index = 0;
                 break;
             case "badgerock":

@@ -53,7 +53,7 @@ public class GroupInfo extends BaseCommand
             GameProfile profile = new GameProfile(null, playerName);
             profile = TileEntitySkull.updateGameprofile(profile);
             if (profile.getId() == null) { throw new CommandException("Error, cannot find profile for " + playerName); }
-            Group current = GroupManager.instance.groupIDMap.get(profile.getId());
+            Group current = GroupManager.instance.getPlayerGroup(profile.getId());
             if (current == null) sender.addChatMessage(new TextComponentString(playerName + " is not in a group"));
             else sender.addChatMessage(new TextComponentString(playerName + " is currently in " + current.name));
             return;

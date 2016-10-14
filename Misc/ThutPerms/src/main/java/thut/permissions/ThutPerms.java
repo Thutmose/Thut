@@ -130,7 +130,7 @@ public class ThutPerms
     @SubscribeEvent
     public void NameEvent(thut.essentials.events.NameEvent evt)
     {
-        Group g = GroupManager.instance.groupIDMap.get(evt.toName.getUniqueID());
+        Group g = GroupManager.instance.getPlayerGroup(evt.toName.getUniqueID());
         if (g == null) return;
         String name = evt.getName();
         if (!g.prefix.isEmpty()) name = g.prefix + " " + name;
@@ -179,11 +179,18 @@ public class ThutPerms
                 String json = FileUtils.readFileToString(permsFile, "UTF-8");
                 GroupManager.instance = gson.fromJson(json, GroupManager.class);
                 GroupManager.instance.init();
+                savePerms();
             }
             catch (IOException e)
             {
                 e.printStackTrace();
             }
+        }
+        else
+        {
+            GroupManager.instance = new GroupManager();
+            GroupManager.instance.init();
+            savePerms();
         }
     }
 
@@ -217,22 +224,22 @@ public class ThutPerms
     public static void addToGroup(UUID id, String name)
     {
         Group group = GroupManager.instance.groupNameMap.get(name);
+        if (group == null) group = GroupManager.instance.initial;
         group.members.add(id);
         GroupManager.instance.groupIDMap.put(id, group);
     }
 
     public static Group getGroup(String name)
     {
-        if (name.equals(GroupManager.instance.initial.name)) return GroupManager.instance.initial;
-        if (name.equals(GroupManager.instance.mods.name)) return GroupManager.instance.mods;
         return GroupManager.instance.groupNameMap.get(name);
     }
 
     private boolean canUse(ICommand command, EntityPlayer sender)
     {
         UUID id = sender.getUniqueID();
-        Group g = GroupManager.instance.groupIDMap.get(id);
+        Group g = GroupManager.instance.getPlayerGroup(id);
         Player player = GroupManager.instance.playerIDMap.get(id);
-        return g.canUse(command) || (player != null ? player.canUse(command) : false);
+        boolean canPlayerUse = (player != null ? player.canUse(command) : false);
+        return g.canUse(command) || canPlayerUse;
     }
 }
