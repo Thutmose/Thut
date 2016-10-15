@@ -24,7 +24,7 @@ public class ContainerPlayerPokemon extends Container
         pokemon.setEventHandler(this);
         for (int c = 0; c < 6; c++)
         {
-            this.addSlotToContainer(new SlotPokemon(pokemon, c, 8 - 32, 7 + c * 18));
+            this.addSlotToContainer(new SlotPokemon(pokemon, c, 8 - 32, 7 + 47 + c * 18));
         }
     }
 

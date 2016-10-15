@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent.Post;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent;
@@ -30,8 +31,13 @@ public class GuiEvents
     static
     {
         whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiHealTable", new int[2]);
-        whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiPC", new int[] { 45, 0 });
+        whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiPC", new int[] { 0, 0 });
         whitelistedGuis.put("pokecube.core.client.gui.blocks.GuiTradingTable", new int[2]);
+    }
+
+    public GuiEvents()
+    {
+        MinecraftForge.EVENT_BUS.register(new GuiBattleHandler());
     }
 
     @SideOnly(value = Side.CLIENT)
@@ -56,7 +62,6 @@ public class GuiEvents
     public void guiEvent(GuiScreenEvent event)
     {
         if (event.getGui() == gui) return;
-        // if (event.getGui() != null) return;
         String guiClass;
         if (event.getGui() instanceof GuiContainer
                 && whitelistedGuis.containsKey(guiClass = event.getGui().getClass().getName()))

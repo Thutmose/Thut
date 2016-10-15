@@ -5,6 +5,7 @@ import java.awt.Color;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
@@ -41,6 +42,11 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         int brightness = entitylivingbaseIn.getBrightnessForRender(partialTicks);
         // First pass of render
         GL11.glPushMatrix();
+        ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
+        if (player.isSneaking())
+        {
+            GlStateManager.translate(0.0F, 0.13125F, -0.105F);
+        }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableRescaleNormal();
         GlStateManager.alphaFunc(516, 0.1F);
@@ -49,10 +55,6 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
                 GlStateManager.DestFactor.ZERO);
         GlStateManager.pushMatrix();
-        if (player.isSneaking())
-        {
-            GlStateManager.translate(0.0F, 0.13125F, -0.105F);
-        }
         float dx = 0, dy = -.0f, dz = -0.6f;
         float s = 0.52f;
         if (entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS) == null)
@@ -84,7 +86,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         for (int i = 0; i < 6; i++)
         {
             ItemStack stack = cap.getCube(i);
-            if (stack != null)
+            if (stack != null && !cap.isOut(i))
             {
                 float amountX = 0.25f;
                 float amountZ = 0.15f;

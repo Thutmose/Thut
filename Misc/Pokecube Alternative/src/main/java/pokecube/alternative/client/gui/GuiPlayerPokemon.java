@@ -100,7 +100,7 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
         this.mc.getTextureManager().bindTexture(background);
         int k = this.guiLeft;
         int l = this.guiTop;
-        this.drawTexturedModalRect(k - 32, l, 0, 0, this.xSize + 32, this.ySize + 32);
+        this.drawTexturedModalRect(k - 32, l+46, 0, 0, this.xSize + 32, this.ySize + 32);
         RenderHelper.enableGUIStandardItemLighting();
         GlStateManager.enableRescaleNormal();
         GL11.glDisable(GL11.GL_BLEND);

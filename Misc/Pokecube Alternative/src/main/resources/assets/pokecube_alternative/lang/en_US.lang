@@ -5,7 +5,7 @@ pokecube_alternative.pokebelt.useBelt=Your Pokebelt was full!
 
 #
 # Keys
-keybind.nextpoke=Next Pokemon
-keybind.prevpoke=Previous Pokemon
+keybind.cycleGuiState=Cycle Health
+keybind.openCard=Open Trainer Card
 keybind.togglebarcontrol= Toggle Bar Control (Hold Down)
 key.categories.pokecube_alternative=Pokecube Extras

@@ -75,17 +75,25 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
         {
             int index = message.data.getInteger("S");
             ItemStack stack = cap.getCube(index);
-            System.out.println(message.data + " " + stack);
             if (stack != null && player.inventory.getItemStack() == null)
             {
-                cap.setCube(index, null);
-                player.inventory.setItemStack(stack);
-                player.updateHeldItem();
+                if (cap.isOut(index))
+                {
+                    // TODO recall it here?
+                }
+//                else
+                {
+                    cap.setCube(index, null);
+                    cap.setOut(index, false);
+                    player.inventory.setItemStack(stack);
+                    player.updateHeldItem();
+                }
             }
             else if (stack == null && player.inventory.getItemStack() != null
                     && PokecubeManager.isFilled(player.inventory.getItemStack()))
             {
                 cap.setCube(index, player.inventory.getItemStack());
+                cap.setOut(cap.getSlot(), false);
                 player.inventory.setItemStack(null);
                 player.updateHeldItem();
             }

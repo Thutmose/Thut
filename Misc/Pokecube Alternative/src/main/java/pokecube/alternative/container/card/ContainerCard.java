@@ -21,7 +21,7 @@ public class ContainerCard extends Container
                 @Override
                 public boolean canTakeStack(EntityPlayer playerIn)
                 {
-                    return false;
+                    return true;
                 }
             });
         }

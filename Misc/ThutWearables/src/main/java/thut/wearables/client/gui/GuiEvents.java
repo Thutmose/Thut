@@ -45,8 +45,10 @@ public class GuiEvents
         {
             active = event.getGui() instanceof GuiWearables;
             GuiContainer gui = (GuiContainer) event.getGui();
-            event.getButtonList().add(new GuiWearableButton(56, gui.guiLeft, gui.guiTop, 26, 9, 10, 10,
+            GuiWearableButton button;
+            event.getButtonList().add(button = new GuiWearableButton(56, gui.guiLeft, gui.guiTop, 26, 9, 10, 10,
                     I18n.format(active ? "button.wearables.off" : "button.wearables.on", new Object[0])));
+            button.packedFGColour = 0xFFFF00FF;
         }
     }
 

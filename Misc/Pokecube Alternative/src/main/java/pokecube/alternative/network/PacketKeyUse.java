@@ -79,10 +79,11 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
         else if (message.messageId == SENDOUT)
         {
             ItemStack cube = cap.getCube(cap.getSlot());
-            if (cube != null)
+            if (cube != null && !cap.isOut(cap.getSlot()))
             {
                 cube.getItem().onPlayerStoppedUsing(cube, player.worldObj, player, message.ticks);
-                cap.setCube(cap.getSlot(), null);
+                cube.stackSize = 1;
+                cap.setOut(cap.getSlot(), true);
             }
         }
         else if (message.messageId == RECALL)

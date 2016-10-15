@@ -8,6 +8,10 @@ public interface IPokemobBelt
 
     void setCube(int index, ItemStack stack);
 
+    boolean isOut(int index);
+
+    void setOut(int index, boolean bool);
+
     int getSlot();
 
     void setSlot(int index);

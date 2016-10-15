@@ -92,7 +92,8 @@ public class KeyHandler
             else
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(Minecraft.getMinecraft().thePlayer);
-                if (cap.getCube(cap.getSlot()) != null) ticks = Minecraft.getSystemTime();
+                boolean send = cap.getCube(cap.getSlot()) != null && !cap.isOut(cap.getSlot());
+                if (send) ticks = Minecraft.getSystemTime();
                 else
                 {
                     if (mob != null)
@@ -102,6 +103,7 @@ public class KeyHandler
                     }
                     ticks = 0;
                 }
+                System.out.println("recall "+send);
             }
         }
         else if (ticks != 0)

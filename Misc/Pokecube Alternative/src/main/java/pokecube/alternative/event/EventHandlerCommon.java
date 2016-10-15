@@ -35,7 +35,6 @@ import pokecube.core.interfaces.IPokecube;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.items.pokecubes.PokecubeManager;
-import pokecube.core.utils.Tools;
 import thut.api.maths.Vector3;
 import thut.core.common.handlers.PlayerDataHandler;
 
@@ -54,6 +53,9 @@ public class EventHandlerCommon
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
         if (player.worldObj.isRemote) return;
+        if (item != null && item.hasTagCompound())
+        {
+        }
         if (item != null && item.getItem() instanceof ItemBadge && item.hasTagCompound())
         {
             CardPlayerData data = PlayerDataHandler.getInstance().getPlayerData(player).getData(CardPlayerData.class);
@@ -121,12 +123,6 @@ public class EventHandlerCommon
                         player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.tobelt",
                                 item.getDisplayName()));
                     }
-                    else
-                    {
-                        player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.useBelt",
-                                item.getDisplayName()));
-                        Tools.giveItem(player, item);
-                    }
                     event.setCanceled(true);
                 }
             }
@@ -151,7 +147,7 @@ public class EventHandlerCommon
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(event.getEntityLiving());
-                if (cap.getCube(cap.getSlot()) != null)
+                if (cap.getCube(cap.getSlot()) != null && !cap.isOut(cap.getSlot()))
                 {
                     ItemStack cube = cap.getCube(cap.getSlot());
                     if (PokecubeManager.isFilled(cube))
@@ -164,7 +160,7 @@ public class EventHandlerCommon
                                 cube, t, null);
                         ITextComponent text = new TextComponentTranslation("pokecube.trainer.toss",
                                 event.getEntityLiving().getDisplayName(), cube.getDisplayName());
-                        cap.setCube(cap.getSlot(), null);
+                        cap.setOut(cap.getSlot(), true);
                         syncPokemon((EntityPlayer) event.getEntityLiving());
                         target.addChatMessage(text);
                     }
@@ -230,41 +226,27 @@ public class EventHandlerCommon
             ItemStack pokemonStack = PokecubeManager.pokemobToItem(pokemon);
             EntityPlayer player = (EntityPlayer) pokemon.getPokemonOwner();
             IPokemobBelt cap = BeltPlayerData.getBelt(player);
-            boolean added = true;
-            if (cap.getCube(0) == null)
+            boolean added = false;
+            for (int i = 0; i < 6; i++)
             {
-                cap.setCube(0, pokemonStack);
-            }
-            else if (cap.getCube(1) == null)
-            {
-                cap.setCube(1, pokemonStack);
-            }
-            else if (cap.getCube(2) == null)
-            {
-                cap.setCube(2, pokemonStack);
-            }
-            else if (cap.getCube(3) == null)
-            {
-                cap.setCube(3, pokemonStack);
-            }
-            else if (cap.getCube(4) == null)
-            {
-                cap.setCube(4, pokemonStack);
-            }
-            else if (cap.getCube(5) == null)
-            {
-                cap.setCube(5, pokemonStack);
-            }
-            else
-            {
-                InventoryPC.addPokecubeToPC(pokemonStack, player.getEntityWorld());
-                added = false;
+                ItemStack stack = cap.getCube(i);
+                if (stack == null || PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
+                {
+                    cap.setOut(i, false);
+                    cap.setCube(i, pokemonStack);
+                    added = true;
+                    break;
+                }
             }
             if (added)
             {
                 ITextComponent mess = new TextComponentTranslation("pokemob.action.return",
                         pokemon.getPokemonDisplayName().getFormattedText());
                 pokemon.displayMessageToOwner(mess);
+            }
+            else
+            {
+                InventoryPC.addPokecubeToPC(pokemonStack, player.getEntityWorld());
             }
             if (!player.isSneaking() && !((Entity) pokemon).isDead)
             {

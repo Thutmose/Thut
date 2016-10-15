@@ -51,7 +51,7 @@ public class GuiWearableButton extends GuiButton
             {
                 this.drawTexturedModalRect(this.xPosition + potionShift + 1, this.yPosition, 9, 247, 9, 9);
                 this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + 5 + potionShift,
-                        this.yPosition + this.height, 0xffffff);
+                        this.yPosition + this.height, this.packedFGColour);
             }
 
             this.mouseDragged(mc, xx, yy);

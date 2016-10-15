@@ -1,16 +1,11 @@
 package pokecube.alternative.container.belt;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
@@ -18,7 +13,7 @@ import pokecube.alternative.network.PacketSyncBelt;
 public class InventoryPokemon implements IInventory
 {
 
-    public final IPokemobBelt       cap;
+    public final IPokemobBelt          cap;
     private Container                  eventHandler;
     public WeakReference<EntityPlayer> player;
     public boolean                     blockEvents = false;
@@ -209,48 +204,6 @@ public class InventoryPokemon implements IInventory
         // for(int c = 0; c < 6; c++) {
         // this.stackList[c] = cap.getCube(c);
         // }
-    }
-
-    public void dropItems(ArrayList<EntityItem> drops)
-    {
-        for (int i = 0; i < 6; ++i)
-        {
-            if (cap.getCube(i) != null)
-            {
-                EntityItem ei = new EntityItem(player.get().worldObj, player.get().posX,
-                        player.get().posY + player.get().getEyeHeight(), player.get().posZ, this.cap.getCube(i).copy());
-                ei.setPickupDelay(40);
-                float f1 = player.get().worldObj.rand.nextFloat() * 0.5F;
-                float f2 = player.get().worldObj.rand.nextFloat() * (float) Math.PI * 2.0F;
-                ei.motionX = -MathHelper.sin(f2) * f1;
-                ei.motionZ = MathHelper.cos(f2) * f1;
-                ei.motionY = 0.20000000298023224D;
-                drops.add(ei);
-                cap.setCube(i, null);
-            }
-        }
-        syncToClients();
-    }
-
-    public void dropItemsAt(List<EntityItem> drops, Entity e)
-    {
-        for (int i = 0; i < 6; ++i)
-        {
-            if (cap.getCube(i) != null)
-            {
-                EntityItem ei = new EntityItem(e.worldObj, e.posX, e.posY + e.getEyeHeight(), e.posZ,
-                        cap.getCube(i).copy());
-                ei.setPickupDelay(40);
-                float f1 = e.worldObj.rand.nextFloat() * 0.5F;
-                float f2 = e.worldObj.rand.nextFloat() * (float) Math.PI * 2.0F;
-                ei.motionX = -MathHelper.sin(f2) * f1;
-                ei.motionZ = MathHelper.cos(f2) * f1;
-                ei.motionY = 0.20000000298023224D;
-                drops.add(ei);
-                cap.setCube(i, null);
-            }
-        }
-        syncToClients();
     }
 
     public void syncToClients()
