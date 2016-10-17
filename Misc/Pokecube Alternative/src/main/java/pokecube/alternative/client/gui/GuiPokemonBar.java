@@ -20,9 +20,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import pokecube.alternative.Config;
 import pokecube.alternative.Reference;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
+import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.events.handlers.EventsHandlerClient;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
@@ -48,48 +50,17 @@ public class GuiPokemonBar extends Gui
         // Make sure that the bar renders after the experince bar
         if (event.isCancelable() || event.getType() != RenderGameOverlayEvent.ElementType.EXPERIENCE
                 || mc.currentScreen instanceof GuiChat) { return; }
-
         int i, j;
         GL11.glPushMatrix();
-        float scaleFactor = 1;
-        boolean flag = mc.isUnicode();
-        i = mc.gameSettings.guiScale;
-        int scaledWidth = mc.displayWidth;
-        int scaledHeight = mc.displayHeight;
-        if (i == 0)
-        {
-            i = 1000;
-        }
-        while (scaleFactor < i && scaledWidth / (scaleFactor + 1) >= 320 && scaledHeight / (scaleFactor + 1) >= 240)
-        {
-            ++scaleFactor;
-        }
-
-        if (flag && scaleFactor % 2 != 0 && scaleFactor != 1)
-        {
-            --scaleFactor;
-        }
-        float scaleFactor2 = 1;
-        i = 1000;
-        while (scaleFactor2 < i && scaledWidth / (scaleFactor2 + 1) >= 320 && scaledHeight / (scaleFactor2 + 1) >= 240)
-        {
-            ++scaleFactor2;
-        }
-
-        if (flag && scaleFactor2 % 2 != 0 && scaleFactor2 != 1)
-        {
-            --scaleFactor2;
-        }
-        scaleFactor2 *= 0.8f;
-        // scaleFactor2 *= 2.5;
-        GL11.glScaled(scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor, scaleFactor2 / scaleFactor);
+        GuiDisplayPokecubeInfo.applyTransform("middle_left", new int[] { 0, Config.instance.shift },
+                new int[] { 130, 25 }, Config.instance.scale);
         ResourceLocation bar = new ResourceLocation(Reference.MODID, "textures/gui/pokemon_hotbar.png");
         this.mc.renderEngine.bindTexture(bar);
         int texW = 25;
         int texH = 130;
         // Render the bar
         int xPos = 0; // Distance from left to start
-        int yPos = 70; // Distance from top to start
+        int yPos = -texH / 2; // Distance from top to start
 
         // yPos = 0;
 
