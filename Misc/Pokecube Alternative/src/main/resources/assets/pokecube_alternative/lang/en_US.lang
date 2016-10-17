@@ -7,5 +7,6 @@ pokecube_alternative.pokebelt.useBelt=Your Pokebelt was full!
 # Keys
 keybind.cycleGuiState=Cycle Health
 keybind.openCard=Open Trainer Card
+keybind.useItem=Use Item
 keybind.togglebarcontrol= Toggle Bar Control (Hold Down)
 key.categories.pokecube_alternative=Pokecube Extras

@@ -81,7 +81,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
                 {
                     // TODO recall it here?
                 }
-//                else
+                else
                 {
                     cap.setCube(index, null);
                     cap.setOut(index, false);

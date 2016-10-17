@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -21,6 +22,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
     public static final byte SENDOUT  = 2;
     public static final byte RECALL   = 3;
     public static final byte OPENCARD = 4;
+    public static final byte USEITEM  = 5;
 
     byte                     messageId;
     int                      ticks    = 0;
@@ -76,7 +78,14 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
             player.openGui(PokecubeAlternative.instance, 0, player.getEntityWorld(), 0, 0, 0);
             return;
         }
-        else if (message.messageId == SENDOUT)
+        if (message.messageId == USEITEM)
+        {
+            int id = message.ticks;
+            Entity entity = player.getEntityWorld().getEntityByID(id);
+            if (entity != null) player.interact(entity, player.getHeldItemMainhand(), EnumHand.MAIN_HAND);
+            return;
+        }
+        if (message.messageId == SENDOUT)
         {
             ItemStack cube = cap.getCube(cap.getSlot());
             if (cube != null && !cap.isOut(cap.getSlot()))

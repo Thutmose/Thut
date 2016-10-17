@@ -31,6 +31,7 @@ public class KeyHandler
     public static KeyBinding toggleBarControl;
     public static KeyBinding cycleGuiState;
     public static KeyBinding openCard;
+    public static KeyBinding useItem;
 
     public static void init()
     {
@@ -40,6 +41,8 @@ public class KeyHandler
                 I18n.format("key.categories.pokecube_alternative"));
         openCard = new KeyBinding(I18n.format("keybind.openCard"), KeyConflictContext.UNIVERSAL, KeyModifier.CONTROL,
                 Keyboard.KEY_E, I18n.format("key.categories.pokecube_alternative"));
+        useItem = new KeyBinding(I18n.format("keybind.useItem"), KeyConflictContext.UNIVERSAL, KeyModifier.NONE,
+                Keyboard.KEY_V, I18n.format("key.categories.pokecube_alternative"));
         ClientRegistry.registerKeyBinding(toggleBarControl);
         ClientRegistry.registerKeyBinding(cycleGuiState);
         ClientRegistry.registerKeyBinding(openCard);
@@ -64,6 +67,15 @@ public class KeyHandler
             else if (prevPoke.isPressed() && prevPoke.isKeyDown())
             {
                 PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.SLOTUP);
+                PacketHandler.INSTANCE.sendToServer(packet);
+            }
+        }
+        if (useItem.isKeyDown())
+        {
+            IPokemob pokemob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
+            if (pokemob != null)
+            {
+                PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.USEITEM, ((Entity) pokemob).getEntityId());
                 PacketHandler.INSTANCE.sendToServer(packet);
             }
         }
@@ -103,7 +115,6 @@ public class KeyHandler
                     }
                     ticks = 0;
                 }
-                System.out.println("recall "+send);
             }
         }
         else if (ticks != 0)
