@@ -131,21 +131,6 @@ public class GuiPokemonBar extends Gui
             int j1 = i1 % 65536;
             int k1 = i1 / 65536;
 
-            // GL Calls to actually draw pokemob
-            GL11.glPushMatrix();
-            GL11.glTranslatef(i, j, 10f);
-            GL11.glPushMatrix();
-            GL11.glScalef(-zoom, zoom, zoom);
-            GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
-            RenderHelper.enableStandardItemLighting();
-            GL11.glTranslatef(0.0F, (float) ((EntityLiving) pokemob).getYOffset(), 0.0F);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
-            Minecraft.getMinecraft().getRenderManager().doRenderEntity(((EntityLiving) pokemob), 0, 0, 0, 0, 1.5F,
-                    false);
-            RenderHelper.disableStandardItemLighting();
-            GL11.glPopMatrix();
-            GL11.glPopMatrix();
-
             if (infoBarsForAll || (infoBarForSelected && selected == pokemonNumber))
             {
                 this.mc.renderEngine.bindTexture(bar);
@@ -195,6 +180,21 @@ public class GuiPokemonBar extends Gui
                 float expSize = exp / maxExp;
                 this.drawTexturedModalRect(selectorXPos, selectorYPos + 3, 2, 167, (int) (53 * expSize), 2);
             }
+
+            // GL Calls to actually draw pokemob
+            GL11.glPushMatrix();
+            GL11.glTranslatef(i, j, 10f);
+            GL11.glPushMatrix();
+            GL11.glScalef(-zoom, zoom, zoom);
+            GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
+            RenderHelper.enableStandardItemLighting();
+            GL11.glTranslatef(0.0F, (float) ((EntityLiving) pokemob).getYOffset(), 0.0F);
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
+            Minecraft.getMinecraft().getRenderManager().doRenderEntity(((EntityLiving) pokemob), 0, 0, 0, 0, 1.5F,
+                    false);
+            RenderHelper.disableStandardItemLighting();
+            GL11.glPopMatrix();
+            GL11.glPopMatrix();
         }
         GL11.glPopMatrix();
     }

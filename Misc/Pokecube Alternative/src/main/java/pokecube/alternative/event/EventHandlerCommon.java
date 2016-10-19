@@ -21,6 +21,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import pokecube.adventures.items.ItemBadge;
+import pokecube.alternative.Config;
 import pokecube.alternative.Reference;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
@@ -142,7 +143,8 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void EntityHurt(LivingHurtEvent event)
     {
-        if (event.getEntityLiving() instanceof EntityPlayer && event.getSource().getEntity() instanceof IPokemob)
+        if (Config.instance.autoThrow && event.getEntityLiving() instanceof EntityPlayer
+                && event.getSource().getEntity() instanceof IPokemob)
         {
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {

@@ -23,6 +23,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import pokecube.core.PokecubeCore;
 import pokecube.core.client.GuiEvent;
+import pokecube.core.client.Resources;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.render.RenderHealth;
 import pokecube.core.interfaces.IMoveConstants;
@@ -45,6 +46,7 @@ public class GuiBattleHandler
     {
         IPokemob pokemob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
         if (pokemob == null) return;
+        Minecraft mc = Minecraft.getMinecraft();
         GlStateManager.pushMatrix();
         GL11.glTranslated(27, 6, 0);
         GuiDisplayPokecubeInfo.guiDims[0] = 60;
@@ -55,10 +57,50 @@ public class GuiBattleHandler
         GlStateManager.scale(scale, scale, scale);
         GL11.glTranslated(9, -2, 0);
         drawHealth(entity);
+        if (pokemob.getStatus() != IPokemob.STATUS_NON)
+        {
+            mc.renderEngine.bindTexture(Resources.GUI_BATTLE);
+            byte status = pokemob.getStatus();
+            float x = -34;
+            float y = -6.5f;
+            int dv = 0;
+            if ((status & IMoveConstants.STATUS_BRN) != 0)
+            {
+                dv = 2 * 14;
+            }
+            if ((status & IMoveConstants.STATUS_FRZ) != 0)
+            {
+                dv = 1 * 14;
+            }
+            if ((status & IMoveConstants.STATUS_PAR) != 0)
+            {
+                dv = 3 * 14;
+            }
+            if ((status & IMoveConstants.STATUS_PSN) != 0)
+            {
+                dv = 4 * 14;
+            }
+            int height = 15;
+            int width = 15;
+            float sx = 0.5f;
+            float sy = sx;
+            int textureY = 138 + dv;
+            int textureX = 0;
+            float f = 0.00390625F;
+            float f1 = 0.00390625F;
+            Tessellator tessellator = Tessellator.getInstance();
+            VertexBuffer vertexbuffer = tessellator.getBuffer();
+            vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            vertexbuffer.pos(x + 0, y + height * sy, 0).tex((textureX + 0) * f, (textureY + height) * f1).endVertex();
+            vertexbuffer.pos(x + width * sx, y + height * sy, 0).tex((textureX + width) * f, (textureY + height) * f1)
+                    .endVertex();
+            vertexbuffer.pos(x + width * sx, y + 0, 0).tex((textureX + width) * f, (textureY + 0) * f1).endVertex();
+            vertexbuffer.pos(x + 0, y + 0, 0).tex((textureX + 0) * f, (textureY + 0) * f1).endVertex();
+            tessellator.draw();
+        }
         GL11.glTranslated(-9, 2, 0);
         GlStateManager.scale(1 / scale, 1 / scale, 1 / scale);
 
-        Minecraft mc = Minecraft.getMinecraft();
         GlStateManager.pushMatrix();
         GL11.glNormal3f(0.0F, 1.0F, 0.0F);
         boolean lighting = GL11.glGetBoolean(GL11.GL_LIGHTING);
@@ -152,6 +194,47 @@ public class GuiBattleHandler
         float scale = 1.5f;
         GlStateManager.scale(scale, scale, scale);
         drawHealth(entity);
+        if (pokemob.getStatus() != IPokemob.STATUS_NON)
+        {
+            Minecraft.getMinecraft().renderEngine.bindTexture(Resources.GUI_BATTLE);
+            byte status = pokemob.getStatus();
+            float x = 26.5f;
+            float y = -6.5f;
+            int dv = 0;
+            if ((status & IMoveConstants.STATUS_BRN) != 0)
+            {
+                dv = 2 * 14;
+            }
+            if ((status & IMoveConstants.STATUS_FRZ) != 0)
+            {
+                dv = 1 * 14;
+            }
+            if ((status & IMoveConstants.STATUS_PAR) != 0)
+            {
+                dv = 3 * 14;
+            }
+            if ((status & IMoveConstants.STATUS_PSN) != 0)
+            {
+                dv = 4 * 14;
+            }
+            int height = 15;
+            int width = 15;
+            float sx = 0.5f;
+            float sy = sx;
+            int textureY = 138 + dv;
+            int textureX = 0;
+            float f = 0.00390625F;
+            float f1 = 0.00390625F;
+            Tessellator tessellator = Tessellator.getInstance();
+            VertexBuffer vertexbuffer = tessellator.getBuffer();
+            vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            vertexbuffer.pos(x + 0, y + height * sy, 0).tex((textureX + 0) * f, (textureY + height) * f1).endVertex();
+            vertexbuffer.pos(x + width * sx, y + height * sy, 0).tex((textureX + width) * f, (textureY + height) * f1)
+                    .endVertex();
+            vertexbuffer.pos(x + width * sx, y + 0, 0).tex((textureX + width) * f, (textureY + 0) * f1).endVertex();
+            vertexbuffer.pos(x + 0, y + 0, 0).tex((textureX + 0) * f, (textureY + 0) * f1).endVertex();
+            tessellator.draw();
+        }
         GlStateManager.popMatrix();
         evt.setCanceled(true);
     }

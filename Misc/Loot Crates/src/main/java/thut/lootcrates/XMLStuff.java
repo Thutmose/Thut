@@ -47,7 +47,7 @@ public class XMLStuff
     {
         @XmlAnyAttribute
         Map<QName, String> values = Maps.newHashMap();
-        @XmlElement(name = "tag")
+        @XmlElement(name = "Tag")
         String             tag;
     }
 
@@ -73,7 +73,9 @@ public class XMLStuff
     public static class XMLReward
     {
         @XmlElement(name = "Item")
-        private List<XMLItem> items = Lists.newArrayList();
+        private List<XMLItem> items    = Lists.newArrayList();
+        @XmlElement(name = "Command")
+        private List<String>  commands = Lists.newArrayList();
         @XmlAttribute
         public int            r;
     }
@@ -115,7 +117,8 @@ public class XMLStuff
 
     public static class Reward
     {
-        List<ItemStack> rewards = Lists.newArrayList();
+        List<ItemStack> rewards  = Lists.newArrayList();
+        List<String>    commands = Lists.newArrayList();
 
         public Reward(XMLReward reward)
         {
@@ -125,6 +128,7 @@ public class XMLStuff
                 if (stack != null) rewards.add(stack);
                 else throw new NullPointerException("Error with item for reward");
             }
+            commands.addAll(reward.commands);
         }
 
         public ITextComponent giveRewards(EntityPlayer entityPlayer)
@@ -136,6 +140,15 @@ public class XMLStuff
                 giveItem(entityPlayer, reward);
                 message = message + reward.getDisplayName();
                 if (i < rewards.size() - 1) message = message + ", ";
+            }
+            for (String s : commands)
+            {
+                s = s.replace("@p", entityPlayer.getGameProfile().getName());
+                s = s.replace("'x'", entityPlayer.posX + "");
+                s = s.replace("'y'", (entityPlayer.posY + 1) + "");
+                s = s.replace("'z'", entityPlayer.posZ + "");
+                entityPlayer.getServer().getCommandManager().executeCommand(entityPlayer.getServer(), s);
+                // TODO have a message here?
             }
             return new TextComponentString(message);
         }

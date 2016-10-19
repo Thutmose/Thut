@@ -244,9 +244,9 @@ public class ModelJson extends TabulaModelBase
      * @since 0.1.0 */
     @Override
     public void setRotationAngles(float limbSwing, float limbSwingAmount, float rotation, float rotationYaw,
-            float rotationPitch, float partialTicks, Entity entity)
+            float rotationPitch, float scaleFactor, Entity entity)
     {
-        super.setRotationAngles(limbSwing, limbSwingAmount, rotation, rotationYaw, rotationPitch, partialTicks, entity);
+        super.setRotationAngles(limbSwing, limbSwingAmount, rotation, rotationYaw, rotationPitch, scaleFactor, entity);
 
         if (!Minecraft.getMinecraft().isGamePaused())
         {
@@ -254,7 +254,7 @@ public class ModelJson extends TabulaModelBase
 
             if (playingAnimation != null || !playing.isEmpty())
             {
-                updateAnimation(entity, partialTicks);
+                updateAnimation(entity, Minecraft.getMinecraft().getRenderPartialTicks());
             }
         }
     }
