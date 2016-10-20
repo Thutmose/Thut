@@ -32,10 +32,13 @@ public class CommandKey extends CommandBase
     {
         EntityPlayer player = getPlayer(server, sender, args[0]);
         String name = args[1];
+        int num = 1;
+        if (args.length > 2) num = Integer.parseInt(args[2]);
         Crate crate = XMLStuff.instance.map.get(name);
         if (crate != null)
         {
             ItemStack key = crate.key.copy();
+            key.stackSize = num;
             XMLStuff.giveItem(player, key);
         }
     }
