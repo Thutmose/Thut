@@ -128,11 +128,12 @@ public class GuiBattleHandler
         // Background
         if (PokecubeMod.core.getConfig().drawBackground)
         {
+            int a = 102;
             buffer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-            buffer.pos(-size - padding, -bgHeight, 0.0D).color(0, 0, 0, 64).endVertex();
-            buffer.pos(-size - padding, barHeight1 + padding, 0.0D).color(0, 0, 0, 64).endVertex();
-            buffer.pos(size + padding, barHeight1 + padding, 0.0D).color(0, 0, 0, 64).endVertex();
-            buffer.pos(size + padding, -bgHeight, 0.0D).color(0, 0, 0, 64).endVertex();
+            buffer.pos(-size - padding, -bgHeight, 0.0D).color(0, 0, 0, a).endVertex();
+            buffer.pos(-size - padding, barHeight1 + padding, 0.0D).color(0, 0, 0, a).endVertex();
+            buffer.pos(size + padding, barHeight1 + padding, 0.0D).color(0, 0, 0, a).endVertex();
+            buffer.pos(size + padding, -bgHeight, 0.0D).color(0, 0, 0, a).endVertex();
             tessellator.draw();
             if (selected != 5)
             {
@@ -293,15 +294,15 @@ public class GuiBattleHandler
             float namel = mc.fontRendererObj.getStringWidth(name) * s;
             if (namel + 20 > size * 2) size = namel / 2F + 10F;
             float healthSize = size * (health / maxHealth);
-
+            int a = 102;
             // Background
             if (PokecubeMod.core.getConfig().drawBackground)
             {
                 buffer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-                buffer.pos(-size - padding, -bgHeight, 0.0D).color(0, 0, 0, 64).endVertex();
-                buffer.pos(-size - padding, barHeight1 + padding, 0.0D).color(0, 0, 0, 64).endVertex();
-                buffer.pos(size + padding, barHeight1 + padding, 0.0D).color(0, 0, 0, 64).endVertex();
-                buffer.pos(size + padding, -bgHeight, 0.0D).color(0, 0, 0, 64).endVertex();
+                buffer.pos(-size - padding, -bgHeight, 0.0D).color(0, 0, 0, a).endVertex();
+                buffer.pos(-size - padding, barHeight1 + padding, 0.0D).color(0, 0, 0, a).endVertex();
+                buffer.pos(size + padding, barHeight1 + padding, 0.0D).color(0, 0, 0, a).endVertex();
+                buffer.pos(size + padding, -bgHeight, 0.0D).color(0, 0, 0, a).endVertex();
                 tessellator.draw();
             }
 

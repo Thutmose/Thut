@@ -3,6 +3,7 @@ package thut.core.client.render.animation;
 import java.util.ArrayList;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.model.IExtendedModelPart;
@@ -36,11 +37,24 @@ public class AnimationHelper
         Vector3 temp = Vector3.getNewVector();
         float x = 0, y = 0, z = 0;
         float sx = 1, sy = 1, sz = 1;
-
-        float time = entity.ticksExisted + partialTick;
-        time = time % animationLength;
+        float time1 = 0;
+        float time2 = 0;
+        {
+            time1 = entity.ticksExisted + partialTick;
+        }
+        EntityLivingBase living = (EntityLivingBase) entity;
+        float f5 = living.prevLimbSwingAmount + (living.limbSwingAmount - living.prevLimbSwingAmount) * partialTick;
+        float f6 = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
+        if (f5 > 1.0F)
+        {
+            f5 = 1.0F;
+        }
+        time2 = f6;
+        time1 = time1 % animationLength;
+        time2 = time2 % animationLength;
         if (components != null) for (AnimationComponent component : components)
         {
+            float time = component.limbBased ? time2 : time1;
             if (time >= component.startKey)
             {
                 animate = true;

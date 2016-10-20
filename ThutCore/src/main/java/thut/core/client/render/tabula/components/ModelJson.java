@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.core.client.render.model.IAnimationChanger;
@@ -347,14 +348,27 @@ public class ModelJson extends TabulaModelBase
 
     public void updateAnimation(Entity entity, float partialTick)
     {
-        float time = entity.ticksExisted + partialTick;
-        time = time % animationLength;
+        float time1 = 0;
+        float time2 = 0;
+        {
+            time1 = entity.ticksExisted + partialTick;
+        }
+        EntityLivingBase living = (EntityLivingBase) entity;
+        float f5 = living.prevLimbSwingAmount + (living.limbSwingAmount - living.prevLimbSwingAmount) * partialTick;
+        float f6 = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
+        if (f5 > 1.0F)
+        {
+            f5 = 1.0F;
+        }
+        time2 = f6;
+        time1 = time1 % animationLength;
+        time2 = time2 % animationLength;
         for (Entry<String, ArrayList<AnimationComponent>> entry : playingAnimation.sets.entrySet())
         {
             TabulaRenderer animating = identifierMap.get(entry.getKey());
-
             for (AnimationComponent component : entry.getValue())
             {
+                float time = component.limbBased ? time2 : time1;
                 if (time >= component.startKey)
                 {
                     float componentTimer = time - component.startKey;

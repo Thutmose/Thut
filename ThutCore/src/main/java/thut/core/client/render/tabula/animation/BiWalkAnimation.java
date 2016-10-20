@@ -218,7 +218,13 @@ public class BiWalkAnimation extends Animation
             set.add(component3);
             sets.put(s, set);
         }
-
+        for (ArrayList<AnimationComponent> set : sets.values())
+        {
+            for (AnimationComponent c : set)
+            {
+                c.limbBased = true;
+            }
+        }
         return this;
     }
 }
