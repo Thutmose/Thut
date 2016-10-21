@@ -12,7 +12,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemFood;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -151,10 +150,10 @@ public class LandEventsHandler
                 if (owner == null || owner.isEmpty()) continue;
                 if (evt.getExplosion().getExplosivePlacedBy() instanceof EntityPlayerMP)
                 {
-                    Team playerTeam = LandManager.getTeam((EntityPlayer) evt.getExplosion().getExplosivePlacedBy());
+                    LandTeam playerTeam = LandManager.getTeam((EntityPlayer) evt.getExplosion().getExplosivePlacedBy());
                     if (playerTeam != null)
                     {
-                        String team = playerTeam.getRegisteredName();
+                        String team = playerTeam.teamName;
                         if (owner.equals(team))
                         {
                             owner = null;
@@ -177,9 +176,8 @@ public class LandEventsHandler
         LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
         String owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
-        Team playerTeam = LandManager.getTeam(evt.getEntityPlayer());
-
-        String team = playerTeam.getRegisteredName();
+        LandTeam playerTeam = LandManager.getTeam(evt.getEntityPlayer());
+        String team = playerTeam.teamName;
         if (owner.equals(team)) { return; }
         LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
@@ -202,8 +200,8 @@ public class LandEventsHandler
         String owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || evt.getItemStack().getItem() instanceof ItemFood || !ConfigManager.INSTANCE.landEnabled)
             return;
-        Team playerTeam = LandManager.getTeam(evt.getEntityPlayer());
-        String team = playerTeam.getRegisteredName();
+        LandTeam playerTeam = LandManager.getTeam(evt.getEntityPlayer());
+        String team = playerTeam.teamName;
         if (owner.equals(team))
         {
             return;
@@ -239,15 +237,15 @@ public class LandEventsHandler
         IBlockState state = evt.getWorld().getBlockState(evt.getPos());
         block = evt.getWorld().getBlockState(evt.getPos()).getBlock();
         boolean b = true;
-        Team playerTeam = LandManager.getTeam(evt.getEntityPlayer());
-        String team = playerTeam.getRegisteredName();
+        LandTeam playerTeam = LandManager.getTeam(evt.getEntityPlayer());
+        String team = playerTeam.teamName;
         boolean shouldPass = true;
         if (owner.equals(team) && !evt.getWorld().isRemote)
         {
             if (evt.getItemStack() != null && evt.getItemStack().getDisplayName().equals("Public Toggle")
                     && evt.getEntityPlayer().isSneaking())
             {
-                if (LandManager.getInstance().isAdmin(evt.getEntityPlayer().getName(), team))
+                if (LandManager.getInstance().isAdmin(evt.getEntityPlayer().getUniqueID()))
                 {
                     LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
                     if (LandManager.getInstance().isPublic(blockLoc))

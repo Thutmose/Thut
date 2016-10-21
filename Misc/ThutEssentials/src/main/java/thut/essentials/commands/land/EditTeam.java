@@ -23,9 +23,9 @@ public class EditTeam extends BaseCommand
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
         EntityPlayer player = getCommandSenderAsPlayer(sender);
-        String team = LandManager.getTeam(player).getRegisteredName();
-        if (!LandManager.getInstance().isAdmin(player.getName(),
-                team)) { throw new CommandException("you need to be a team admin to do that"); }
+        String team = LandManager.getTeam(player).teamName;
+        if (!LandManager.getInstance().isAdmin(
+                player.getUniqueID())) { throw new CommandException("you need to be a team admin to do that"); }
         LandTeam landTeam = LandManager.getInstance().getTeam(team, false);
         String arg = args[0];
         String message = "";

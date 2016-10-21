@@ -70,6 +70,8 @@ public class ConfigManager extends ConfigBase
     @Configure(category = LAND)
     public int                  teamLandPerPlayer  = 125;
     @Configure(category = LAND)
+    public int                  playerLand         = 1;
+    @Configure(category = LAND)
     public String               defaultTeamName    = "Plebs";
 
     public ConfigManager()

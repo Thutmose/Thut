@@ -4,6 +4,7 @@ import java.util.List;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -21,8 +22,8 @@ public class Invites extends BaseCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        String player = sender.getName();
-        List<String> c = LandManager.getInstance().getInvites(player);
+        EntityPlayer player = getCommandSenderAsPlayer(sender);
+        List<String> c = LandManager.getInstance().getInvites(player.getUniqueID());
 
         if (c.isEmpty())
         {

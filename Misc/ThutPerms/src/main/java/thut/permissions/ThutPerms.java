@@ -72,14 +72,14 @@ public class ThutPerms
 
     }
 
-    @Optional.Method(modid = "worldedit")
-    @EventHandler
-    public void serverAboutToStart(FMLServerStartingEvent event)
-    {
-        thut.permissions.WorldEditPermissions worldEditSupport = new thut.permissions.WorldEditPermissions();
-        com.sk89q.worldedit.forge.ForgeWorldEdit.inst.setPermissionsProvider(worldEditSupport);
-        System.out.println("REGISTERING WORLD EDIT SUPPORT");
-    }
+//    @Optional.Method(modid = "worldedit")
+//    @EventHandler
+//    public void serverAboutToStart(FMLServerStartingEvent event)
+//    {
+//        thut.permissions.WorldEditPermissions worldEditSupport = new thut.permissions.WorldEditPermissions();
+//        com.sk89q.worldedit.forge.ForgeWorldEdit.inst.setPermissionsProvider(worldEditSupport);
+//        System.out.println("REGISTERING WORLD EDIT SUPPORT");
+//    }
 
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event)

@@ -2,6 +2,7 @@ package thut.essentials.commands.land;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
@@ -21,18 +22,14 @@ public class UnClaim extends BaseCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        net.minecraft.scoreboard.Team team;
-        if ((team = getCommandSenderAsPlayer(sender).getTeam()) == null)
-            throw new CommandException("You are not in a team.");
-        if (!LandManager.getInstance().isAdmin(sender.getName(), team)
-                || team.getRegisteredName().equalsIgnoreCase("Trainers"))
+        EntityPlayer player = getCommandSenderAsPlayer(sender);
+        if (!LandManager.getInstance().isAdmin(player.getUniqueID()))
         {
             sender.addChatMessage(new TextComponentString("You are not Authorized to unclaim land for your team"));
             return;
         }
         boolean up = false;
         int num = 1;
-
         if (args.length > 1)
         {
             try
@@ -48,11 +45,12 @@ public class UnClaim extends BaseCommand
                 // e.printStackTrace();
             }
         }
+        String team = LandManager.getTeam(player).teamName;
         if (args.length > 1 && args[0].equalsIgnoreCase("all"))
         {
-            LandTeam team1 = LandManager.getInstance().getTeam(team.getRegisteredName(), false);
+            LandTeam team1 = LandManager.getInstance().getTeam(team, false);
             team1.land.land.clear();
-            sender.addChatMessage(new TextComponentString("Unclaimed all land for Team" + team.getRegisteredName()));
+            sender.addChatMessage(new TextComponentString("Unclaimed all land for Team" + team));
             return;
         }
         int n = 0;
@@ -65,10 +63,9 @@ public class UnClaim extends BaseCommand
             int dim = sender.getEntityWorld().provider.getDimension();
             if (y < 0 || y > 15) continue;
             n++;
-            LandManager.getInstance().removeTeamLand(team.getRegisteredName(), new LandChunk(x, y, z, dim));
+            LandManager.getInstance().removeTeamLand(team, new LandChunk(x, y, z, dim));
         }
-        if (n > 0)
-            sender.addChatMessage(new TextComponentString("Unclaimed This land for Team" + team.getRegisteredName()));
+        if (n > 0) sender.addChatMessage(new TextComponentString("Unclaimed This land for Team" + team));
     }
 
 }

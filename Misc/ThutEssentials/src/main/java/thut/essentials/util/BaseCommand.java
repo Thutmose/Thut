@@ -2,6 +2,7 @@ package thut.essentials.util;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -26,13 +27,11 @@ public abstract class BaseCommand extends CommandBase
     {
         this.key = key;
         perm = perms;
-        if (aliases.length > 0)
-        {
-            List<String> alii = CommandManager.commands.get(key);
-            if (alii == null) CommandManager.commands.put(key, alii = Lists.newArrayList(key));
-            for (String s : aliases)
-                alii.add(s);
-        }
+        List<String> alii = CommandManager.commands.get(key);
+        if (alii == null) CommandManager.commands.put(key, alii = Lists.newArrayList(key));
+        for (String s : aliases)
+            alii.add(s);
+        if (!alii.contains(key.toLowerCase(Locale.ENGLISH))) alii.add(key.toLowerCase(Locale.ENGLISH));
     }
 
     @Override

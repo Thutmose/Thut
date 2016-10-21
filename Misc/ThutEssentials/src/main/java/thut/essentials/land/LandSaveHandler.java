@@ -1,7 +1,6 @@
 package thut.essentials.land;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
@@ -11,11 +10,7 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
 import thut.essentials.land.LandManager.LandTeam;
 
 public class LandSaveHandler
@@ -27,7 +22,7 @@ public class LandSaveHandler
         public boolean shouldSkipField(FieldAttributes f)
         {
             String name = f.getName();
-            return name.equals("landMap") || name.equals("teamMap");
+            return name.equals("landMap") || name.equals("teamMap") || name.equals("playerTeams");
         }
 
         @Override
@@ -36,50 +31,6 @@ public class LandSaveHandler
             return false;
         }
     };
-
-    private static void loadTeamsOld()
-    {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
-
-        try
-        {
-            World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(0);
-            File file = world.getSaveHandler().getMapFileFromName("PokecubeTeams");
-            if (file != null && file.exists())
-            {
-                FileInputStream fileinputstream = new FileInputStream(file);
-                NBTTagCompound nbttagcompound = CompressedStreamTools.readCompressed(fileinputstream);
-                fileinputstream.close();
-
-                boolean old = !nbttagcompound.hasKey("VERSION");
-                if (old) LandManager.getInstance().loadFromNBTOld(nbttagcompound.getCompoundTag("Data"));
-                else LandManager.getInstance().loadFromNBT(nbttagcompound.getCompoundTag("Data"));
-            }
-            File upperDir = new File(file.getParentFile().getAbsolutePath());
-            File dir = new File(upperDir, "PokeTeams");
-            if (dir.exists() && dir.isDirectory())
-            {
-                for (File f : dir.listFiles())
-                {
-                    try
-                    {
-                        FileInputStream fileinputstream = new FileInputStream(f);
-                        NBTTagCompound nbttagcompound = CompressedStreamTools.readCompressed(fileinputstream);
-                        fileinputstream.close();
-                        LandManager.getInstance().loadTeamFromNBT(nbttagcompound.getCompoundTag("Data"));
-                    }
-                    catch (Exception e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        catch (Exception exception)
-        {
-            exception.printStackTrace();
-        }
-    }
 
     public static File getGlobalFolder()
     {
@@ -133,7 +84,6 @@ public class LandSaveHandler
         }
         else
         {
-            loadTeamsOld();
             saveGlobalData();
         }
     }
@@ -149,6 +99,7 @@ public class LandSaveHandler
                 String json = FileUtils.readFileToString(file, "UTF-8");
                 LandTeam team = gson.fromJson(json, LandTeam.class);
                 LandManager.getInstance().teamMap.put(team.teamName, team);
+                team.init(FMLCommonHandler.instance().getMinecraftServerInstance());
                 for (LandChunk land : team.land.land)
                     LandManager.getInstance().addTeamLand(team.teamName, land, false);
             }

@@ -5,18 +5,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mojang.authlib.GameProfile;
 
+import net.minecraft.command.CommandException;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntitySkull;
 import thut.essentials.util.ConfigManager;
 
 public class LandManager
@@ -29,30 +30,16 @@ public class LandManager
 
     public static class LandTeam
     {
-        public static LandTeam loadFromNBT(NBTTagCompound nbt)
-        {
-            if (!nbt.hasKey("name")) return null;
-            LandTeam team = new LandTeam(nbt.getString("name"));
-            team.land.loadFromNBT(nbt.getCompoundTag("land"));
-            for (LandChunk land : team.land.land)
-            {
-                LandManager.getInstance().landMap.put(land, team.teamName);
-            }
-            NBTTagList adminList = nbt.getTagList("admins", 10);
-            for (int i = 0; i < adminList.tagCount(); i++)
-            {
-                team.admins.add(adminList.getCompoundTagAt(i).getString("N"));
-            }
-            return team;
-        }
-
-        public TeamLand land         = new TeamLand();
-        String          teamName;
-        Set<String>     admins       = Sets.newHashSet();
-        public String   exitMessage  = "";
-        public String   enterMessage = "";
-        public String   denyMessage  = "";
-        public boolean  reserved     = false;
+        public TeamLand  land         = new TeamLand();
+        public String    teamName;
+        Set<String>      admins       = Sets.newHashSet();
+        Set<UUID>        admin        = Sets.newHashSet();
+        public Set<UUID> member       = Sets.newHashSet();
+        public String    exitMessage  = "";
+        public String    enterMessage = "";
+        public String    denyMessage  = "";
+        public boolean   reserved     = false;
+        public boolean   players      = false;
 
         public LandTeam()
         {
@@ -61,6 +48,55 @@ public class LandManager
         public LandTeam(String name)
         {
             teamName = name;
+        }
+
+        public boolean isMember(EntityPlayer player)
+        {
+            if (player.getTeam() != null && player.getTeam().getRegisteredName().equals(teamName))
+            {
+                member.add(player.getUniqueID());
+            }
+            return member.contains(player.getUniqueID());
+        }
+
+        public boolean isAdmin(EntityPlayer player)
+        {
+            if (admin.contains(player.getUniqueID())) return true;
+            if (admins.contains(player.getName()))
+            {
+                admins.remove(player.getName());
+                admin.add(player.getUniqueID());
+                return true;
+            }
+            return false;
+        }
+
+        public void init(MinecraftServer server)
+        {
+            for (String s : admins)
+            {
+                GameProfile profile = TileEntitySkull.updateGameprofile(new GameProfile(null, s));
+                if (profile.getId() != null) admin.add(profile.getId());
+            }
+            admins.clear();
+            Scoreboard board = server.getEntityWorld().getScoreboard();
+            Team team = board.getTeam(teamName);
+            if (team != null)
+            {
+                for (String s : team.getMembershipCollection())
+                {
+                    GameProfile profile = TileEntitySkull.updateGameprofile(new GameProfile(null, s));
+                    if (profile.getId() != null) member.add(profile.getId());
+                }
+            }
+            Set<UUID> members = Sets.newHashSet(member);
+            for (UUID id : members)
+            {
+                if (!LandManager.instance.playerTeams.containsKey(id)
+                        || (LandManager.instance.playerTeams.get(id).teamName
+                                .equals(ConfigManager.INSTANCE.defaultTeamName)))
+                    LandManager.instance.playerTeams.put(id, this);
+            }
         }
     }
 
@@ -76,19 +112,6 @@ public class LandManager
         public int countLand()
         {
             return land.size();
-        }
-
-        public void loadFromNBT(NBTTagCompound tag)
-        {
-            NBTTagList list = tag.getTagList("Land", 10);
-            for (int i = 0; i < list.tagCount(); i++)
-            {
-                NBTTagCompound landTag = list.getCompoundTagAt(i);
-                int[] loc = landTag.getIntArray("Location");
-                if (loc.length != 4) continue;
-                LandChunk c = new LandChunk(loc[0], loc[1], loc[2], loc[3]);
-                land.add(c);
-            }
         }
 
         public boolean removeLand(LandChunk land)
@@ -118,27 +141,30 @@ public class LandManager
         return instance;
     }
 
-    public static Team getTeam(EntityPlayer player)
+    public static LandTeam getTeam(EntityPlayer player)
     {
-        Team playerTeam = player.getEntityWorld().getScoreboard().getPlayersTeam(player.getName());
+        LandTeam playerTeam = getInstance().playerTeams.get(player.getUniqueID());
         if (playerTeam == null)
         {
-            getInstance().addToTeam(player, ConfigManager.INSTANCE.defaultTeamName);
+            getInstance().addToTeam(player.getUniqueID(), ConfigManager.INSTANCE.defaultTeamName);
+            playerTeam = getInstance().getTeam(ConfigManager.INSTANCE.defaultTeamName, false);
         }
         return playerTeam;
     }
 
-    protected HashMap<String, LandTeam>  teamMap;
-    protected HashMap<LandChunk, String> landMap;
-    protected HashMap<String, Invites>   inviteMap;
-    protected HashSet<LandChunk>         publicBlocks;
+    public static LandTeam getDefaultTeam()
+    {
+        return getInstance().getTeam(ConfigManager.INSTANCE.defaultTeamName, true);
+    }
+
+    protected HashMap<String, LandTeam>  teamMap      = Maps.newHashMap();
+    protected HashMap<LandChunk, String> landMap      = Maps.newHashMap();
+    protected HashMap<UUID, LandTeam>    playerTeams  = Maps.newHashMap();
+    protected HashMap<UUID, Invites>     inviteMap    = Maps.newHashMap();
+    protected HashSet<LandChunk>         publicBlocks = Sets.newHashSet();
 
     private LandManager()
     {
-        publicBlocks = Sets.newHashSet();
-        inviteMap = Maps.newHashMap();
-        teamMap = Maps.newHashMap();
-        landMap = Maps.newHashMap();
     }
 
     public void addTeamLand(String team, LandChunk land, boolean sync)
@@ -161,32 +187,33 @@ public class LandManager
         }
     }
 
-    public void addToAdmins(String admin, String team)
+    public void addAdmin(UUID admin, String team)
     {
         LandTeam t = getTeam(team, true);
-        System.out.println("Adding Admin " + admin + " to " + team);
-        t.admins.add(admin);
+        t.admin.add(admin);
         LandSaveHandler.saveTeam(team);
     }
 
-    public void addToTeam(EntityPlayer player, String team)
+    public void addToTeam(UUID member, String team)
     {
-        if (player.getEntityWorld().getScoreboard().getTeam(team) == null)
-        {
-            player.getEntityWorld().getScoreboard().createTeam(team);
-        }
-        player.getEntityWorld().getScoreboard().addPlayerToTeam(player.getName(), team);
-        player.addChatMessage(new TextComponentString("You joined Team " + team));
         LandTeam t = getTeam(team, true);
-        if (t.admins.isEmpty())
+        if (t.admin.isEmpty() && !t.teamName.equals(ConfigManager.INSTANCE.defaultTeamName))
         {
-            addToAdmins(player.getName(), team);
+            t.admin.add(member);
         }
-        Invites invite = inviteMap.get(player.getName());
+        if (playerTeams.containsKey(member))
+        {
+            LandTeam old = playerTeams.remove(member);
+            old.member.remove(member);
+        }
+        t.member.add(member);
+        playerTeams.put(member, t);
+        Invites invite = inviteMap.get(member);
         if (invite != null)
         {
             invite.teams.remove(team);
         }
+        LandSaveHandler.saveTeam(team);
     }
 
     public int countLand(String team)
@@ -196,24 +223,12 @@ public class LandManager
         return 0;
     }
 
-    public void createTeam(EntityPlayer player, String team)
+    public void createTeam(UUID member, String team) throws CommandException
     {
-        for (Object o : player.getEntityWorld().getScoreboard().getTeamNames())
-        {
-            String s = (String) o;
-            if (s.equalsIgnoreCase(team))
-            {
-                player.addChatMessage(new TextComponentString("Team " + team + " Already Exists"));
-                return;
-            }
-        }
-        if (player.getEntityWorld().getScoreboard().getTeam(team) == null)
-        {
-            player.getEntityWorld().getScoreboard().createTeam(team);
-            getTeam(team, true);
-            addToTeam(player, team);
-            addToAdmins(player.getName(), team);
-        }
+        if (teamMap.containsKey(team)) throw new CommandException(team + " already exists!");
+        getTeam(team, true);
+        addToTeam(member, team);
+        addAdmin(member, team);
     }
 
     public List<String> getAdmins(String team)
@@ -224,10 +239,10 @@ public class LandManager
         return ret;
     }
 
-    public List<String> getInvites(String player)
+    public List<String> getInvites(UUID member)
     {
         List<String> ret = new ArrayList<String>();
-        Invites invite = inviteMap.get(player);
+        Invites invite = inviteMap.get(member);
         if (invite == null) return ret;
         return Lists.newArrayList(invite.teams);
     }
@@ -256,36 +271,33 @@ public class LandManager
         return ret;
     }
 
-    public boolean hasInvite(String player, String team)
+    public boolean hasInvite(UUID member, String team)
     {
-        Invites invite = inviteMap.get(player);
+        Invites invite = inviteMap.get(member);
         if (invite != null) return invite.teams.contains(team);
         return false;
     }
 
-    public void invite(String admin, String player, String team)
+    public boolean invite(UUID inviter, UUID invitee)
     {
-        if (!isAdmin(admin, team)) return;
-        if (hasInvite(player, team)) return;
-        Invites invite = inviteMap.get(player);
+        if (!isAdmin(inviter)) return false;
+        String team = playerTeams.get(inviter).teamName;
+        if (hasInvite(invitee, team)) return false;
+        Invites invite = inviteMap.get(invitee);
         if (invite == null)
         {
             invite = new Invites();
-            inviteMap.put(player, invite);
+            inviteMap.put(invitee, invite);
         }
         invite.teams.add(team);
+        return true;
     }
 
-    public boolean isAdmin(String name, String team)
+    public boolean isAdmin(UUID member)
     {
-        LandTeam t = teamMap.get(team);
-        if (t != null) return t.admins.contains(name);
-        return false;
-    }
-
-    public boolean isAdmin(String name, Team team)
-    {
-        return isAdmin(name, team.getRegisteredName());
+        LandTeam team = playerTeams.get(member);
+        if (team == null) return false;
+        return team.admin.contains(member);
     }
 
     public boolean isOwned(LandChunk land)
@@ -305,110 +317,18 @@ public class LandManager
         return false;
     }
 
-    public void loadFromNBT(NBTTagCompound nbt)
+    public void removeAdmin(UUID member)
     {
-        NBTBase base;
-        if (((base = nbt.getTag("PublicBlocks")) instanceof NBTTagList))
+        LandTeam t = playerTeams.get(member);
+        if (t != null)
         {
-            NBTTagList tagList = (NBTTagList) base;
-            for (int i = 0; i < tagList.tagCount(); i++)
-            {
-                NBTTagCompound landTag = tagList.getCompoundTagAt(i);
-                int[] loc = landTag.getIntArray("Location");
-                if (loc.length != 4) continue;
-                LandChunk c = new LandChunk(loc[0], loc[1], loc[2], loc[3]);
-                publicBlocks.add(c);
-            }
-        }
-        if (((base = nbt.getTag("Invites")) instanceof NBTTagList))
-        {
-            NBTTagList tagList = (NBTTagList) base;
-            for (int i = 0; i < tagList.tagCount(); i++)
-            {
-                NBTTagCompound tag = tagList.getCompoundTagAt(i);
-                String name = tag.getString("name");
-                Invites invites;
-                inviteMap.put(name, invites = new Invites());
-                NBTTagList teams = tag.getTagList("teams", 10);
-                for (int i1 = 0; i1 < teams.tagCount(); i1++)
-                {
-                    invites.teams.add(teams.getCompoundTagAt(i1).getString("T"));
-                }
-            }
+            t.admin.remove(member);
         }
     }
 
-    public void loadFromNBTOld(NBTTagCompound nbt)
+    public void removeFromInvites(UUID member, String team)
     {
-        if ((nbt.getTag("LandMap") instanceof NBTTagList))
-        {
-            NBTTagList tagList = (NBTTagList) nbt.getTag("LandMap");
-            for (int i = 0; i < tagList.tagCount(); i++)
-            {
-                NBTTagCompound landTag = tagList.getCompoundTagAt(i);
-                int[] loc = landTag.getIntArray("Location");
-                String team = landTag.getString("Team");
-                if (loc.length != 4 || team.isEmpty()) continue;
-                LandChunk c = new LandChunk(loc[0], loc[1], loc[2], loc[3]);
-                addTeamLand(team, c, false);
-            }
-        }
-        if ((nbt.getTag("Admins") instanceof NBTTagList))
-        {
-            NBTTagList tagList = (NBTTagList) nbt.getTag("Admins");
-            for (int i = 0; i < tagList.tagCount(); i++)
-            {
-                NBTTagCompound adminTag = tagList.getCompoundTagAt(i);
-                String[] admins = adminTag.getString("Admins").split(":");
-                String team;
-                getTeam(team = adminTag.getString("Team"), true);
-                for (String s : admins)
-                {
-                    if (s == null || s.isEmpty())
-                    {
-                        addToAdmins(s, team);
-                    }
-                }
-            }
-        }
-        if ((nbt.getTag("PublicBlocks") instanceof NBTTagList))
-        {
-            NBTTagList tagList = (NBTTagList) nbt.getTag("PublicBlocks");
-            for (int i = 0; i < tagList.tagCount(); i++)
-            {
-                NBTTagCompound landTag = tagList.getCompoundTagAt(i);
-                int[] loc = landTag.getIntArray("Location");
-                if (loc.length != 4) continue;
-                LandChunk c = new LandChunk(loc[0], loc[1], loc[2], loc[3]);
-                publicBlocks.add(c);
-            }
-        }
-    }
-
-    public void loadTeamFromNBT(NBTTagCompound nbt)
-    {
-        LandTeam team = LandTeam.loadFromNBT(nbt);
-        if (team != null)
-        {
-            teamMap.put(team.teamName, team);
-            LandSaveHandler.saveTeam(team.teamName);
-        }
-    }
-
-    public void removeFromAdmins(String admin, String team)
-    {
-        LandTeam t = teamMap.get(team);
-        if (t != null && t.admins.contains(admin))
-        {
-            t.admins.remove(admin);
-            System.out.println("Removing Admin " + admin + " to " + team);
-            LandSaveHandler.saveTeam(team);
-        }
-    }
-
-    public void removeFromInvites(String player, String team)
-    {
-        Invites invites = inviteMap.get(player);
+        Invites invites = inviteMap.get(member);
         if (invites != null && invites.teams.contains(team))
         {
             invites.teams.remove(team);
@@ -416,15 +336,17 @@ public class LandManager
         }
     }
 
-    public void removeFromTeam(EntityPlayer admin, String team, String toRemove)
+    public void removeFromTeam(UUID member)
     {
-        ScorePlayerTeam oldTeam = admin.getEntityWorld().getScoreboard().getPlayersTeam(toRemove);
-        if (oldTeam != null)
+        LandTeam team = playerTeams.get(member);
+        if (team != null)
         {
-            removeFromAdmins(toRemove, team);
-            admin.getEntityWorld().getScoreboard().removePlayerFromTeam(toRemove, oldTeam);
+            team.admin.remove(member);
+            team.member.remove(member);
+            playerTeams.remove(member);
         }
     }
+
     public void removeTeamLand(String team, LandChunk land)
     {
         LandTeam t = teamMap.get(team);

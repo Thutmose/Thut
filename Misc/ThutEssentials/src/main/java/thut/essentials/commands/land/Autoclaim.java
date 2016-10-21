@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
@@ -16,6 +15,7 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.essentials.land.LandChunk;
 import thut.essentials.land.LandManager;
+import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.BaseCommand;
 
 public class Autoclaim extends BaseCommand
@@ -56,7 +56,7 @@ public class Autoclaim extends BaseCommand
         if (evt.getEntityLiving() instanceof EntityPlayer && claimers.containsKey(evt.getEntityLiving()))
         {
             boolean all = claimers.get(evt.getEntityLiving());
-            Team team = LandManager.getTeam((EntityPlayer) evt.getEntityLiving());
+            LandTeam team = LandManager.getTeam((EntityPlayer) evt.getEntityLiving());
             if (team == null)
             {
                 claimers.remove(evt.getEntityLiving());
@@ -78,12 +78,12 @@ public class Autoclaim extends BaseCommand
                     continue;
                 }
                 n++;
-                LandManager.getInstance().addTeamLand(team.getRegisteredName(), new LandChunk(x, y, z, dim), true);
+                LandManager.getInstance().addTeamLand(team.teamName, new LandChunk(x, y, z, dim), true);
             }
             if (n > 0)
             {
-                evt.getEntityLiving().addChatMessage(
-                        new TextComponentString("Claimed This land for Team" + team.getRegisteredName()));
+                evt.getEntityLiving()
+                        .addChatMessage(new TextComponentString("Claimed This land for Team" + team.teamName));
             }
         }
     }

@@ -18,7 +18,8 @@ public class Create extends BaseCommand
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
         String teamname = args[0];
-        LandManager.getInstance().createTeam((EntityPlayer) sender, teamname);
+        EntityPlayer player = getCommandSenderAsPlayer(sender);
+        LandManager.getInstance().createTeam(player.getUniqueID(), teamname);
         return;
     }
 }

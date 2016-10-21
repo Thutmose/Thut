@@ -19,16 +19,13 @@ public class Kick extends BaseCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        net.minecraft.scoreboard.Team team;
-        if ((team = getCommandSenderAsPlayer(sender).getTeam()) == null)
-            throw new CommandException("You are not in a team.");
-        String teamname = args[0];
-
-        if (teamname.equalsIgnoreCase(sender.getName()) || LandManager.getInstance().isAdmin(sender.getName(), team))
+        EntityPlayer kicker = getCommandSenderAsPlayer(sender);
+        String toKick = args[0];
+        EntityPlayer kickee = getPlayer(server, sender, toKick);
+        if (toKick.equalsIgnoreCase(sender.getName()) || LandManager.getInstance().isAdmin(kicker.getUniqueID()))
         {
-            LandManager.getInstance().removeFromTeam((EntityPlayer) sender, team.getRegisteredName(), teamname);
-            sender.addChatMessage(
-                    new TextComponentString("Removed " + teamname + " From Team " + team.getRegisteredName()));
+            LandManager.getInstance().removeFromTeam(kickee.getUniqueID());
+            sender.addChatMessage(new TextComponentString("Removed " + toKick + " From Team."));
         }
         else
         {

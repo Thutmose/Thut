@@ -23,12 +23,11 @@ public class Join extends BaseCommand
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
         boolean isOp = CommandManager.isOp(sender);
-
+        EntityPlayer player = getCommandSenderAsPlayer(sender);
         String teamname = args[0];
         ScorePlayerTeam teamtojoin = sender.getEntityWorld().getScoreboard().getTeam(teamname);
         if (teamtojoin != null)
         {
-            // TODO have default team settable in configs.
             boolean empty = teamtojoin.getRegisteredName().equalsIgnoreCase(ConfigManager.INSTANCE.defaultTeamName);
             if (empty)
             {
@@ -38,13 +37,13 @@ public class Join extends BaseCommand
             }
             if (empty || isOp)
             {
-                LandManager.getInstance().addToTeam((EntityPlayer) sender, teamname);
-                LandManager.getInstance().addToAdmins(sender.getName(), teamname);
+                LandManager.getInstance().addToTeam(player.getUniqueID(), teamname);
+                LandManager.getInstance().addAdmin(player.getUniqueID(), teamname);
                 return;
             }
         }
-        if (LandManager.getInstance().hasInvite(sender.getName(), teamname) || isOp)
-            LandManager.getInstance().addToTeam((EntityPlayer) sender, teamname);
+        if (LandManager.getInstance().hasInvite(player.getUniqueID(), teamname) || isOp)
+            LandManager.getInstance().addToTeam(player.getUniqueID(), teamname);
         else sender.addChatMessage(new TextComponentString("You do not have an invite for Team " + teamname));
     }
 

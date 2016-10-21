@@ -6,6 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import thut.essentials.land.LandManager;
+import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.BaseCommand;
 
 public class Leave extends BaseCommand
@@ -19,12 +20,12 @@ public class Leave extends BaseCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        net.minecraft.scoreboard.Team team;
-        if ((team = getCommandSenderAsPlayer(sender).getTeam()) == null)
-            throw new CommandException("You are not in a team.");
-        String playerName = sender.getName();
-        LandManager.getInstance().removeFromTeam((EntityPlayer) sender, team.getRegisteredName(), playerName);
-        sender.addChatMessage(new TextComponentString("Left Team " + team.getRegisteredName()));
+        EntityPlayer player = getCommandSenderAsPlayer(sender);
+        LandTeam team = LandManager.getTeam(player);
+        LandTeam def = LandManager.getDefaultTeam();
+        if (team == def) throw new CommandException("You cannot leave the default team");
+        LandManager.getInstance().removeFromTeam(player.getUniqueID());
+        sender.addChatMessage(new TextComponentString("Left Team " + team.teamName));
 
     }
 

@@ -138,7 +138,7 @@ public class XMLStuff
             {
                 ItemStack reward = rewards.get(i);
                 giveItem(entityPlayer, reward);
-                message = message + reward.getDisplayName();
+                message = message + reward.getDisplayName() + " x" + reward.stackSize;
                 if (i < rewards.size() - 1) message = message + ", ";
             }
             for (String s : commands)

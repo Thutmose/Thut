@@ -2,6 +2,7 @@ package thut.essentials.commands.land;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import thut.essentials.land.LandManager;
@@ -18,14 +19,11 @@ public class SetAdmin extends BaseCommand
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        net.minecraft.scoreboard.Team team;
-        if ((team = getCommandSenderAsPlayer(sender).getTeam()) == null)
-            throw new CommandException("You are not in a team.");
-        String player = args[0];
-        String teamName = team.getRegisteredName();
-        if (LandManager.getInstance().isAdmin(sender.getName(), team))
+        EntityPlayer player = getPlayer(server, sender, args[0]);
+        String teamName = LandManager.getTeam(player).teamName;
+        if (LandManager.getInstance().isAdmin(player.getUniqueID()))
         {
-            LandManager.getInstance().addToAdmins(player, teamName);
+            LandManager.getInstance().addAdmin(player.getUniqueID(), teamName);
             sender.addChatMessage(new TextComponentString(player + " added as an Admin for Team " + teamName));
 
         }
