@@ -2,6 +2,7 @@ package thut.core.client.render.tabula.model.modelbase;
 
 import org.lwjgl.opengl.GL11;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelRenderer;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.entity.IMobColourable;
@@ -136,9 +138,9 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
             int i;
 
             /** Rotate the head */
-            if (set.isHeadRoot(identifier))
+            if (set.isHeadRoot(identifier) && entity instanceof EntityLivingBase)
             {
-                rotateHead(entity, set.getHeadInfo(), scale);
+                rotateHead((EntityLivingBase) entity, set.getHeadInfo(), scale);
             }
 
             GL11.glPushMatrix();
@@ -229,38 +231,49 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 
     }
 
-    private void rotateHead(Entity entity, float[] headInfo, float scale)
+    private void rotateHead(EntityLivingBase entity, float[] headInfo, float scale)
     {
         float ang;
-        float head = (entity.getRotationYawHead()) % 360 + 180;
+        float partialTicks = Minecraft.getMinecraft().getRenderPartialTicks();
+        float f = this.interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
+        float f1 = this.interpolateRotation(entity.prevRotationYawHead, entity.rotationYawHead, partialTicks);
+        float headYaw = f1 - f;
+        float headPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
+        float head = headYaw % 360 + 180;
         float diff = 0;
-        float body = (entity.rotationYaw) % 360;
-        if (headInfo[2] == 1) body *= -1;
-        else head *= -1;
-
-        diff = (head + body) % 360;
-
+        if (headInfo[2] != 1) head *= -1;
+        diff = (head) % 360;
         diff = (diff + 360) % 360;
         diff = (diff - 180) % 360;
         diff = Math.max(diff, headInfo[0]);
         diff = Math.min(diff, headInfo[1]);
-
         ang = diff;
-
-        float ang2 = Math.max(entity.rotationPitch, headInfo[3]);
+        float ang2 = Math.max(headPitch, headInfo[3]);
         ang2 = Math.min(ang2, headInfo[4]);
-
         GL11.glTranslatef(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
-
         rotateToParent();
-
         if (headInfo[5] == 2) GlStateManager.rotate(ang, 0, 0, 1);
         else GlStateManager.rotate(ang, 0, 1, 0);
         GlStateManager.rotate(ang2, 1, 0, 0);
-
         unRotateToParent();
-
         GL11.glTranslatef(-rotationPointX * scale, -rotationPointY * scale, -rotationPointZ * scale);
+    }
+
+    protected float interpolateRotation(float prevYawOffset, float yawOffset, float partialTicks)
+    {
+        float f;
+
+        for (f = yawOffset - prevYawOffset; f < -180.0F; f += 360.0F)
+        {
+            ;
+        }
+
+        while (f >= 180.0F)
+        {
+            f -= 360.0F;
+        }
+
+        return prevYawOffset + partialTicks * f;
     }
 
     private void rotateToParent()

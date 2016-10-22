@@ -12,9 +12,8 @@ public class Area
     int              xMax;
     int              yMax;
     int              zMax;
-
+    int              direction;
     Set<Requirement> requirements = Sets.newHashSet();
-
     public Area()
     {
         // TODO Auto-generated constructor stub
