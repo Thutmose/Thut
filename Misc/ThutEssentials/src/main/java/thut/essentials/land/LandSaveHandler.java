@@ -52,6 +52,7 @@ public class LandSaveHandler
     public static void saveGlobalData()
     {
         Gson gson = new GsonBuilder().addSerializationExclusionStrategy(exclusion).setPrettyPrinting().create();
+        LandManager.getInstance().version = LandManager.VERSION;
         String json = gson.toJson(LandManager.getInstance());
         File teamsFile = new File(getGlobalFolder(), "landData.json");
         try
@@ -99,7 +100,8 @@ public class LandSaveHandler
                 String json = FileUtils.readFileToString(file, "UTF-8");
                 LandTeam team = gson.fromJson(json, LandTeam.class);
                 LandManager.getInstance().teamMap.put(team.teamName, team);
-                team.init(FMLCommonHandler.instance().getMinecraftServerInstance());
+                if (LandManager.getInstance().version != LandManager.VERSION)
+                    team.init(FMLCommonHandler.instance().getMinecraftServerInstance());
                 for (LandChunk land : team.land.land)
                     LandManager.getInstance().addTeamLand(team.teamName, land, false);
             }
@@ -128,6 +130,13 @@ public class LandSaveHandler
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void deleteTeam(String team)
+    {
+        File folder = getTeamFolder();
+        File teamFile = new File(folder, team + ".json");
+        if (teamFile.exists()) teamFile.delete();
     }
 
 }

@@ -97,8 +97,9 @@ public class PlayerDataHandler
     }
 
     public static Set<Class<? extends PlayerData>> dataMap = Sets.newHashSet();
-    private static PlayerDataHandler INSTANCESERVER;
-    private static PlayerDataHandler INSTANCECLIENT;
+    private static PlayerDataHandler               INSTANCESERVER;
+    private static PlayerDataHandler               INSTANCECLIENT;
+
     public static PlayerDataHandler getInstance()
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) { return INSTANCECLIENT != null
@@ -180,7 +181,7 @@ public class PlayerDataHandler
     public PlayerDataManager load(String uuid)
     {
         PlayerDataManager manager = new PlayerDataManager(uuid);
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) for (PlayerData data : manager.data.values())
+        if (this == INSTANCESERVER) for (PlayerData data : manager.data.values())
         {
             String fileName = data.dataFileName();
             File file = null;
@@ -214,7 +215,7 @@ public class PlayerDataHandler
     public void save(String uuid, String dataType)
     {
         PlayerDataManager manager = data.get(uuid);
-        if (manager != null)
+        if (manager != null && this == INSTANCESERVER)
         {
             for (PlayerData data : manager.data.values())
             {
@@ -245,7 +246,7 @@ public class PlayerDataHandler
     public void save(String uuid)
     {
         PlayerDataManager manager = data.get(uuid);
-        if (manager != null)
+        if (manager != null && this == INSTANCESERVER)
         {
             for (PlayerData data : manager.data.values())
             {

@@ -31,7 +31,8 @@ public class Claim extends BaseCommand
         LandTeam team = LandManager.getTeam(player);
         if (team == null) throw new CommandException("You are not in a team.");
         boolean isOp = CommandManager.isOp(sender);
-        if (!LandManager.getInstance().isAdmin(player.getUniqueID()) || team.teamName.equalsIgnoreCase("Trainers"))
+        if (!LandManager.getInstance().isAdmin(player.getUniqueID())
+                || team.teamName.equalsIgnoreCase(ConfigManager.INSTANCE.defaultTeamName))
         {
             sender.addChatMessage(new TextComponentString("You are not Authorized to claim land for your team"));
             return;
