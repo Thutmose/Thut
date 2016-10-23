@@ -16,16 +16,9 @@ import thut.core.client.render.tabula.components.AnimationComponent;
  * @author Thutmose */
 public class AnimationHelper
 {
-    /** Apples tabula Animation animation to the passed in part.
-     * 
-     * @param animation
-     * @param entity
-     * @param partName
-     * @param part
-     * @param partialTick
-     * @return */
+
     public static boolean doAnimation(Animation animation, Entity entity, String partName, IExtendedModelPart part,
-            float partialTick)
+            float partialTick, float limbSwing)
     {
         ArrayList<AnimationComponent> components = animation.getComponents(partName);
         if (animation.getLength() < 0)
@@ -42,14 +35,7 @@ public class AnimationHelper
         {
             time1 = entity.ticksExisted + partialTick;
         }
-        EntityLivingBase living = (EntityLivingBase) entity;
-        float f5 = living.prevLimbSwingAmount + (living.limbSwingAmount - living.prevLimbSwingAmount) * partialTick;
-        float f6 = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
-        if (f5 > 1.0F)
-        {
-            f5 = 1.0F;
-        }
-        time2 = f6;
+        time2 = limbSwing;
         time1 = time1 % animationLength;
         time2 = time2 % animationLength;
         if (components != null) for (AnimationComponent component : components)
@@ -109,5 +95,21 @@ public class AnimationHelper
             if (angle != null) part.setPreRotations(angle);
         }
         return animate;
+    }
+
+    /** Apples tabula Animation animation to the passed in part.
+     * 
+     * @param animation
+     * @param entity
+     * @param partName
+     * @param part
+     * @param partialTick
+     * @return */
+    public static boolean doAnimation(Animation animation, Entity entity, String partName, IExtendedModelPart part,
+            float partialTick)
+    {
+        EntityLivingBase living = (EntityLivingBase) entity;
+        float limbSwing = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
+        return doAnimation(animation, entity, partName, part, partialTick, limbSwing);
     }
 }

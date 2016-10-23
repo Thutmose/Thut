@@ -1229,7 +1229,7 @@ public class Vector3
     {
         int ret = 255;
         {
-            for (ret = 255; ret > 5; ret--)
+            for (ret = 255; ret > 1; ret--)
             {
                 IBlockState state = world.getBlockState(new BlockPos(intX(), ret, intZ()));
                 if (state == null) continue;

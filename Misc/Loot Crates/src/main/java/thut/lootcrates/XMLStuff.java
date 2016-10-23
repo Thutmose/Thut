@@ -164,15 +164,6 @@ public class XMLStuff
                     ((entityplayer.getRNG().nextFloat() - entityplayer.getRNG().nextFloat()) * 0.7F + 1.0F) * 2.0F);
             entityplayer.inventoryContainer.detectAndSendChanges();
         }
-        if (flag && itemstack.stackSize <= 0)
-        {
-            itemstack.stackSize = 1;
-            EntityItem entityitem1 = entityplayer.dropItem(itemstack, false);
-            if (entityitem1 != null)
-            {
-                entityitem1.makeFakeItem();
-            }
-        }
         else
         {
             EntityItem entityitem = entityplayer.dropItem(itemstack, false);
