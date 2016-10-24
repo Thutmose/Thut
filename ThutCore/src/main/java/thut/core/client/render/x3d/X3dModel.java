@@ -221,34 +221,28 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     @Override
     public void renderAllExcept(String... excludedGroupNames)
     {
-        for (String s : parts.keySet())
+        for (IExtendedModelPart o : parts.values())
         {
-            boolean skipPart = false;
-            for (String excludedGroupName : excludedGroupNames)
-            {
-                if (excludedGroupName.equalsIgnoreCase(s))
-                {
-                    skipPart = true;
-                }
-            }
-            if (!skipPart)
-            {
-                parts.get(s).renderAll();
-            }
+            o.renderAllExcept(excludedGroupNames);
         }
     }
 
     @Override
     public void renderOnly(String... groupNames)
     {
-        for (String s : groupNames)
-            if (parts.containsKey(s)) parts.get(s).renderAll();
+        for (IExtendedModelPart o : parts.values())
+        {
+            o.renderOnly(groupNames);
+        }
     }
 
     @Override
     public void renderPart(String partName)
     {
-        if (parts.containsKey(partName)) parts.get(partName).renderPart(partName);
+        for (IExtendedModelPart o : parts.values())
+        {
+            o.renderPart(partName);
+        }
     }
 
     @Override

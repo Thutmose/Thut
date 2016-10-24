@@ -109,6 +109,19 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
 
     public void render()
     {
+        preRender();
+        // Renders the model.
+        addForRender();
+        postRender();
+    }
+
+    private void postRender()
+    {
+        GL11.glPopMatrix();
+    }
+
+    private void preRender()
+    {
         // Rotate to the offset of the parent.
         rotateToParent();
         // Translate of offset for rotation.
@@ -140,9 +153,6 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
         postRot1.glRotate();
         // Scale
         GL11.glScalef(scale.x, scale.y, scale.z);
-        // Renders the model.
-        addForRender();
-        GL11.glPopMatrix();
     }
 
     @Override
@@ -163,42 +173,57 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
     @Override
     public void renderAllExcept(String... excludedGroupNames)
     {
-        for (String s : childParts.keySet())
-        {
-            for (String s1 : excludedGroupNames)
-                if (!s.equalsIgnoreCase(s1))
-                {
-                    childParts.get(s).renderAllExcept(excludedGroupNames);
-                }
-        }
+        boolean rendered = false;
         for (String s1 : excludedGroupNames)
-            if (s1.equalsIgnoreCase(name)) render();
+            if (rendered = s1.equalsIgnoreCase(name))
+            {
+                render();
+                break;
+            }
+        if (!rendered)
+        {
+            preRender();
+            postRender();
+        }
+        for (IExtendedModelPart o : childParts.values())
+        {
+            GL11.glPushMatrix();
+            GL11.glTranslated(offset.x, offset.y, offset.z);
+            GL11.glScalef(scale.x, scale.y, scale.z);
+            o.renderAllExcept(excludedGroupNames);
+            GL11.glPopMatrix();
+        }
     }
 
     @Override
     public void renderOnly(String... groupNames)
     {
+        boolean rendered = false;
+        for (String s1 : groupNames)
+            if (rendered = s1.equalsIgnoreCase(name))
+            {
+                render();
+                break;
+            }
+        if (!rendered)
+        {
+            preRender();
+            postRender();
+        }
         for (IExtendedModelPart o : childParts.values())
         {
-            for (String s : groupNames)
-            {
-                if (s.equalsIgnoreCase(o.getName()))
-                {
-                    o.renderOnly(groupNames);
-                }
-            }
-        }
-        for (String s : groupNames)
-        {
-            if (s.equalsIgnoreCase(name)) render();
+            GL11.glPushMatrix();
+            GL11.glTranslated(offset.x, offset.y, offset.z);
+            GL11.glScalef(scale.x, scale.y, scale.z);
+            o.renderOnly(groupNames);
+            GL11.glPopMatrix();
         }
     }
 
     @Override
     public void renderPart(String partName)
     {
-        if (this.name.equalsIgnoreCase(partName)) render();
-        if (childParts.containsKey(partName)) childParts.get(partName).renderPart(partName);
+        renderOnly(partName);
     }
 
     @Override
