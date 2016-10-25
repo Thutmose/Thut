@@ -270,7 +270,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             if (list.size() == 1 && this.getRecursivePassengers() != null
                     && !this.getRecursivePassengers().isEmpty()) { return; }
-
             for (int i = 0; i < list.size(); ++i)
             {
                 Entity entity = (Entity) list.get(i);

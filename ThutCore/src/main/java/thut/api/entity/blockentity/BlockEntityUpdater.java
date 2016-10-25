@@ -1,7 +1,5 @@
 package thut.api.entity.blockentity;
 
-import static java.lang.Math.max;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -157,9 +155,24 @@ public class BlockEntityUpdater
         double maxX = entity.getEntityBoundingBox().maxX;
         double maxY = entity.getEntityBoundingBox().maxY;
         double maxZ = entity.getEntityBoundingBox().maxZ;
-        double factor = 0.75d;
-        double dx = max(maxX - minX, 0.5) / factor + (entity.motionX - theEntity.motionX),
-                dz = max(maxZ - minZ, 0.5) / factor + (entity.motionZ - theEntity.motionZ), r;
+        double dx = (entity.motionX - theEntity.motionX), dz = (entity.motionZ - theEntity.motionZ),
+                dy = (entity.motionY - theEntity.motionY), r;
+
+        if (Math.abs(dx) > 0.5)
+        {
+            if (dx > 0) maxX += dx;
+            else minX += dx;
+        }
+        if (Math.abs(dy) > 0.5)
+        {
+            if (dy > 0) maxY += dy;
+            else minY += dy;
+        }
+        if (Math.abs(dz) > 0.5)
+        {
+            if (dz > 0) maxZ += dz;
+            else minZ += dz;
+        }
 
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
 
@@ -318,7 +331,7 @@ public class BlockEntityUpdater
             {
                 if (!(floor || ceiling))
                 {
-                    double dy = aabb.minY - boundingBox.maxY - diffs.y;
+                    dy = aabb.minY - boundingBox.maxY - diffs.y;
                     temp1.y = (float) Math.min(dy, temp1.y);
                 }
                 thisCieling = !(thisFloor || floor);
