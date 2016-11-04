@@ -1,6 +1,7 @@
 package thut.essentials;
 
 import net.minecraft.command.CommandHandler;
+import net.minecraft.command.ICommand;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -13,6 +14,8 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import thut.essentials.commands.CommandManager;
+import thut.essentials.economy.EconomyManager;
+import thut.essentials.economy.EconomySaveHandler;
 import thut.essentials.itemcontrol.ItemControl;
 import thut.essentials.land.LandEventsHandler;
 import thut.essentials.land.LandManager;
@@ -55,10 +58,24 @@ public class ThutEssentials
     public void serverLoad(FMLServerStartingEvent event)
     {
         CommandHandler ch = (CommandHandler) event.getServer().getCommandManager();
-        ch.getCommands().put("gm", ch.getCommands().get("gamemode"));
+        for (String s : ConfigManager.INSTANCE.alternateCommands)
+        {
+            String[] args = s.split(":");
+            ICommand command = ch.getCommands().get(args[0]);
+            if (command == null)
+            {
+                System.err.println("No Command found for " + args[0]);
+                continue;
+            }
+            for (int i = 1; i < args.length; i++)
+            {
+                ch.getCommands().put(args[i], command);
+            }
+        }
         manager = new CommandManager(event);
         MinecraftForge.EVENT_BUS.register(this);
         LandSaveHandler.loadGlobalData();
+        EconomySaveHandler.loadGlobalData();
     }
 
     @EventHandler
@@ -67,6 +84,7 @@ public class ThutEssentials
         PlayerDataHandler.saveAll();
         PlayerDataHandler.clear();
         LandManager.clearInstance();
+        EconomyManager.clearInstance();
         manager.clear();
     }
 

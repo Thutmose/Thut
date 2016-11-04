@@ -26,5 +26,4 @@ public class Player
     {
         return hasPermission(command.getClass().getName());
     }
-
 }

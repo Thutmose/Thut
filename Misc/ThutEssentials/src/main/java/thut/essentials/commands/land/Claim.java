@@ -89,13 +89,13 @@ public class Claim extends BaseCommand
                 int dim = sender.getEntityWorld().provider.getDimension();
                 if (y < 0 || y > 15) continue;
                 LandChunk chunk = new LandChunk(x, y, z, dim);
-                String owner = LandManager.getInstance().getLandOwner(chunk);
+                LandTeam owner = LandManager.getInstance().getLandOwner(chunk);
                 ClaimLandEvent event = new ClaimLandEvent(new BlockPos(x, y, z), dim, player, team.teamName);
                 MinecraftForge.EVENT_BUS.post(event);
                 if (event.isCanceled()) continue;
                 if (owner != null)
                 {
-                    if (owner.equals(team.teamName)) continue;
+                    if (owner.equals(team)) continue;
                     sender.addChatMessage(new TextComponentString("This land is already claimed by " + owner));
                     continue;
                 }

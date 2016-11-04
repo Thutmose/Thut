@@ -77,4 +77,12 @@ public class GroupManager
         return ret;
     }
 
+    public boolean hasPermission(UUID id, String perm)
+    {
+        Group g = GroupManager.instance.getPlayerGroup(id);
+        Player player = GroupManager.instance.playerIDMap.get(id);
+        boolean canPlayerUse = (player != null ? player.hasPermission(perm) : false);
+        return g.hasPermission(perm) || canPlayerUse;
+    }
+
 }

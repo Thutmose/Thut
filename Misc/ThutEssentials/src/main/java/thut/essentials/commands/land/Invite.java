@@ -35,6 +35,7 @@ public class Invite extends BaseCommand
         links = abilityJson;
         invitee.addChatMessage(new TextComponentString("New Invite to Team " + team));
         ITextComponent message = ITextComponent.Serializer.jsonToComponent("[\" [\"," + links + ",\"]\"]");
+        inviter.addChatMessage(new TextComponentString("Invite sent"));
         invitee.addChatMessage(message);
     }
 }

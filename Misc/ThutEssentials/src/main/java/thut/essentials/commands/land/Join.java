@@ -39,6 +39,7 @@ public class Join extends BaseCommand
             {
                 LandManager.getInstance().addToTeam(player.getUniqueID(), teamname);
                 LandManager.getInstance().addAdmin(player.getUniqueID(), teamname);
+                player.addChatMessage(new TextComponentString("You joined Team " + teamname));
                 return;
             }
         }

@@ -50,8 +50,7 @@ public class LandEventsHandler
         {
             LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), player.dimension);
             if (!LandManager.getInstance().isOwned(c)) return;
-            if (LandManager.getInstance().isOwned(c)
-                    && !LandManager.getInstance().isTeamLand(c, player.getTeam().getRegisteredName()))
+            if (!LandManager.owns(player, c))
             {
                 player.addChatMessage(getDenyMessage(LandManager.getInstance().getLandOwner(c)));
                 evt.setCanceled(true);
@@ -84,11 +83,6 @@ public class LandEventsHandler
                 && FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
         {
             EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
-            if (player.getTeam() == null)
-            {
-                player.getEntityWorld().getScoreboard().addPlayerToTeam(player.getName(),
-                        ConfigManager.INSTANCE.defaultTeamName);
-            }
             BlockPos here;
             BlockPos old;
             here = new BlockPos(player.chasingPosX, player.chasingPosY, player.chasingPosZ);
@@ -98,8 +92,8 @@ public class LandEventsHandler
             if (c.equals(c1) || !ConfigManager.INSTANCE.landEnabled) return;
             if (LandManager.getInstance().isOwned(c) || LandManager.getInstance().isOwned(c1))
             {
-                String team = LandManager.getInstance().getLandOwner(c);
-                String team1 = LandManager.getInstance().getLandOwner(c1);
+                LandTeam team = LandManager.getInstance().getLandOwner(c);
+                LandTeam team1 = LandManager.getInstance().getLandOwner(c1);
                 if (!lastLeaveMessage.containsKey(evt.getEntity().getUniqueID()))
                     lastLeaveMessage.put(evt.getEntity().getUniqueID(), System.currentTimeMillis() - 1);
                 if (!lastEnterMessage.containsKey(evt.getEntity().getUniqueID()))
@@ -146,8 +140,8 @@ public class LandEventsHandler
             for (BlockPos pos : evt.getAffectedBlocks())
             {
                 LandChunk c = LandChunk.getChunkCoordFromWorldCoord(pos, dimension);
-                String owner = LandManager.getInstance().getLandOwner(c);
-                if (owner == null || owner.isEmpty()) continue;
+                LandTeam owner = LandManager.getInstance().getLandOwner(c);
+                if (owner == null) continue;
                 if (evt.getExplosion().getExplosivePlacedBy() instanceof EntityPlayerMP)
                 {
                     LandTeam playerTeam = LandManager.getTeam((EntityPlayer) evt.getExplosion().getExplosivePlacedBy());
@@ -174,53 +168,42 @@ public class LandEventsHandler
     public void interactLeftClickBlock(PlayerInteractEvent.LeftClickBlock evt)
     {
         LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
-        String owner = LandManager.getInstance().getLandOwner(c);
+        LandTeam owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
-        LandTeam playerTeam = LandManager.getTeam(evt.getEntityPlayer());
-        String team = playerTeam.teamName;
-        if (owner.equals(team)) { return; }
+        if (LandManager.owns(evt.getEntityPlayer(), c)) { return; }
         LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
-        if (!team.equals(owner))
+        if (!LandManager.getInstance().isPublic(blockLoc))
         {
-            if (!LandManager.getInstance().isPublic(blockLoc))
-            {
-                evt.setUseBlock(Result.DENY);
-                evt.setCanceled(true);
-                if (!evt.getWorld().isRemote) evt.getEntity().addChatMessage(getDenyMessage(owner));
-            }
-            evt.setUseItem(Result.DENY);
+            evt.setUseBlock(Result.DENY);
+            evt.setCanceled(true);
+            if (!evt.getWorld().isRemote) evt.getEntity().addChatMessage(getDenyMessage(owner));
         }
+        evt.setUseItem(Result.DENY);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void interactRightClickItem(PlayerInteractEvent.RightClickItem evt)
     {
         LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
-        String owner = LandManager.getInstance().getLandOwner(c);
+        LandTeam owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || evt.getItemStack().getItem() instanceof ItemFood || !ConfigManager.INSTANCE.landEnabled)
             return;
-        LandTeam playerTeam = LandManager.getTeam(evt.getEntityPlayer());
-        String team = playerTeam.teamName;
-        if (owner.equals(team))
+        if (LandManager.owns(evt.getEntityPlayer(), c))
         {
             return;
         }
         else if (MinecraftForge.EVENT_BUS
                 .post(new DenyItemUseEvent(evt.getEntity(), evt.getItemStack(), UseType.RIGHTCLICKBLOCK))) { return; }
         if (evt.getItemStack() == null) return;
-
         LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
-        if (!team.equals(owner))
+        if (!LandManager.getInstance().isPublic(blockLoc))
         {
-            if (!LandManager.getInstance().isPublic(blockLoc))
-            {
-                evt.setResult(Result.DENY);
-                evt.setCanceled(true);
-            }
             evt.setResult(Result.DENY);
+            evt.setCanceled(true);
         }
+        evt.setResult(Result.DENY);
     }
 
     /** Uses player interact here to also prevent opening of inventories.
@@ -230,19 +213,17 @@ public class LandEventsHandler
     public void interactRightClickBlock(PlayerInteractEvent.RightClickBlock evt)
     {
         LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
-        String owner = LandManager.getInstance().getLandOwner(c);
+        LandTeam owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
-
         Block block = null;
         IBlockState state = evt.getWorld().getBlockState(evt.getPos());
         block = evt.getWorld().getBlockState(evt.getPos()).getBlock();
         boolean b = true;
-        LandTeam playerTeam = LandManager.getTeam(evt.getEntityPlayer());
-        String team = playerTeam.teamName;
         boolean shouldPass = true;
-        if (owner.equals(team) && !evt.getWorld().isRemote)
+        if (LandManager.owns(evt.getEntityPlayer(), c))
         {
-            if (evt.getItemStack() != null && evt.getItemStack().getDisplayName().equals("Public Toggle")
+            if (!evt.getWorld().isRemote && evt.getItemStack() != null
+                    && evt.getItemStack().getDisplayName().equals("Public Toggle")
                     && evt.getEntityPlayer().isSneaking())
             {
                 if (LandManager.getInstance().isAdmin(evt.getEntityPlayer().getUniqueID()))
@@ -273,22 +254,18 @@ public class LandEventsHandler
                     (float) evt.getHitVec().zCoord);
         }
         if (!b && shouldPass) return;
-
         LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
-        if (!team.equals(owner))
+        if (!LandManager.getInstance().isPublic(blockLoc))
         {
-            if (!LandManager.getInstance().isPublic(blockLoc))
+            evt.setUseBlock(Result.DENY);
+            evt.setCanceled(true);
+            if (!evt.getWorld().isRemote && evt.getHand() == EnumHand.MAIN_HAND)
             {
-                evt.setUseBlock(Result.DENY);
-                evt.setCanceled(true);
-                if (!evt.getWorld().isRemote && evt.getHand() == EnumHand.MAIN_HAND)
-                {
-                    evt.getEntity().addChatMessage(getDenyMessage(owner));
-                }
+                evt.getEntity().addChatMessage(getDenyMessage(owner));
             }
-            evt.setUseItem(Result.DENY);
         }
+        evt.setUseItem(Result.DENY);
     }
 
     public void onServerStarted()
@@ -301,24 +278,21 @@ public class LandEventsHandler
         LandManager.clearInstance();
     }
 
-    private static ITextComponent getDenyMessage(String theteam)
+    private static ITextComponent getDenyMessage(LandTeam team)
     {
-        LandTeam team = LandManager.getInstance().getTeam(theteam, false);
         if (team != null && !team.denyMessage.isEmpty()) { return new TextComponentString(team.denyMessage); }
-        return new TextComponentTranslation("msg.team.deny", theteam);
+        return new TextComponentTranslation("msg.team.deny", team.teamName);
     }
 
-    private static ITextComponent getEnterMessage(String theteam)
+    private static ITextComponent getEnterMessage(LandTeam team)
     {
-        LandTeam team = LandManager.getInstance().getTeam(theteam, false);
         if (team != null && !team.enterMessage.isEmpty()) { return new TextComponentString(team.enterMessage); }
-        return new TextComponentTranslation("msg.team.enterLand", theteam);
+        return new TextComponentTranslation("msg.team.enterLand", team.teamName);
     }
 
-    private static ITextComponent getExitMessage(String theteam)
+    private static ITextComponent getExitMessage(LandTeam team)
     {
-        LandTeam team = LandManager.getInstance().getTeam(theteam, false);
         if (team != null && !team.exitMessage.isEmpty()) { return new TextComponentString(team.exitMessage); }
-        return new TextComponentTranslation("msg.team.exitLand", theteam);
+        return new TextComponentTranslation("msg.team.exitLand", team.teamName);
     }
 }

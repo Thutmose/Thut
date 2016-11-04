@@ -45,12 +45,11 @@ public class UnClaim extends BaseCommand
                 // e.printStackTrace();
             }
         }
-        String team = LandManager.getTeam(player).teamName;
+        LandTeam team = LandManager.getTeam(player);
         if (args.length > 1 && args[0].equalsIgnoreCase("all"))
         {
-            LandTeam team1 = LandManager.getInstance().getTeam(team, false);
-            team1.land.land.clear();
-            sender.addChatMessage(new TextComponentString("Unclaimed all land for Team" + team));
+            team.land.land.clear();
+            sender.addChatMessage(new TextComponentString("Unclaimed all land for Team" + team.teamName));
             return;
         }
         int n = 0;
@@ -61,11 +60,14 @@ public class UnClaim extends BaseCommand
             int y = MathHelper.floor_double(sender.getPosition().getY() / 16f) + dir * i;
             int z = MathHelper.floor_double(sender.getPosition().getZ() / 16f);
             int dim = sender.getEntityWorld().provider.getDimension();
+            LandChunk c = new LandChunk(x, y, z, dim);
+            LandTeam owner = LandManager.getInstance().getLandOwner(c);
+            if (owner != null && !team.equals(owner)) throw new CommandException("You may not unclaim that land.");
             if (y < 0 || y > 15) continue;
             n++;
-            LandManager.getInstance().removeTeamLand(team, new LandChunk(x, y, z, dim));
+            LandManager.getInstance().removeTeamLand(team.teamName, c);
         }
-        if (n > 0) sender.addChatMessage(new TextComponentString("Unclaimed This land for Team" + team));
+        if (n > 0) sender.addChatMessage(new TextComponentString("Unclaimed This land for Team" + team.teamName));
     }
 
 }

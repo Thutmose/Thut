@@ -49,15 +49,6 @@ public class EditPerms extends BaseCommand
                 ThutPerms.savePerms();
                 return;
             }
-            try
-            {
-                Class<?> cmd = Class.forName(command);
-                if (cmd == null) { throw new CommandException("Error, Command not found."); }
-            }
-            catch (Exception e)
-            {
-                throw new CommandException("Error, Command not found.");
-            }
             if (enable)
             {
                 g.allowedCommands.add(command);

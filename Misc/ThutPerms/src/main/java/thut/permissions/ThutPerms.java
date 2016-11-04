@@ -31,6 +31,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.permissions.commands.CommandManager;
+import thut.permissions.util.SpawnProtector;
 
 @Mod(modid = ThutPerms.MODID, name = "Thut Permissions", version = ThutPerms.VERSION, dependencies = "after:worldedit", updateJSON = ThutPerms.UPDATEURL, acceptableRemoteVersions = "*", acceptedMinecraftVersions = ThutPerms.MCVERSIONS)
 public class ThutPerms
@@ -69,7 +70,7 @@ public class ThutPerms
         allCommandUse = config.getBoolean("allCommandUse", Configuration.CATEGORY_GENERAL, false,
                 "Can any player use OP commands if their group is allowed to?");
         config.save();
-
+        MinecraftForge.EVENT_BUS.register(new SpawnProtector());
     }
 
 //    @Optional.Method(modid = "worldedit")
@@ -237,9 +238,6 @@ public class ThutPerms
     private boolean canUse(ICommand command, EntityPlayer sender)
     {
         UUID id = sender.getUniqueID();
-        Group g = GroupManager.instance.getPlayerGroup(id);
-        Player player = GroupManager.instance.playerIDMap.get(id);
-        boolean canPlayerUse = (player != null ? player.canUse(command) : false);
-        return g.canUse(command) || canPlayerUse;
+        return GroupManager.instance.hasPermission(id, command.getClass().getName());
     }
 }

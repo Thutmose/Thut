@@ -56,6 +56,9 @@ public class ConfigManager extends ConfigBase
     @Configure(category = MISC)
     public String[]             disabledCommands   = {};
 
+    @Configure(category = MISC)
+    public String[]             alternateCommands  = { "gamemode:gm" };
+
     @Configure(category = NAMES)
     public boolean              name               = true;
     @Configure(category = NAMES)

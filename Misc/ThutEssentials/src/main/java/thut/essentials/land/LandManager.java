@@ -98,6 +98,19 @@ public class LandManager
                     LandManager.instance.playerTeams.put(id, this);
             }
         }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o instanceof LandTeam) { return ((LandTeam) o).teamName.equals(teamName); }
+            return false;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return teamName.hashCode();
+        }
     }
 
     public static class TeamLand
@@ -157,15 +170,17 @@ public class LandManager
         return getInstance().getTeam(ConfigManager.INSTANCE.defaultTeamName, true);
     }
 
-    protected HashMap<String, LandTeam>  teamMap      = Maps.newHashMap();
-    protected HashMap<LandChunk, String> landMap      = Maps.newHashMap();
-    protected HashMap<UUID, LandTeam>    playerTeams  = Maps.newHashMap();
-    protected HashMap<UUID, Invites>     invites      = Maps.newHashMap();
-    protected HashSet<LandChunk>         publicBlocks = Sets.newHashSet();
-    public int                           version      = 0;                // TODO
-                                                                          // VERSION
-                                                                          // here
-                                                                          // instead
+    public static boolean owns(EntityPlayer player, LandChunk chunk)
+    {
+        return getTeam(player).equals(getInstance().getLandOwner(chunk));
+    }
+
+    protected HashMap<String, LandTeam>    teamMap      = Maps.newHashMap();
+    protected HashMap<LandChunk, LandTeam> landMap      = Maps.newHashMap();
+    protected HashMap<UUID, LandTeam>      playerTeams  = Maps.newHashMap();
+    protected HashMap<UUID, Invites>       invites      = Maps.newHashMap();
+    protected HashSet<LandChunk>           publicBlocks = Sets.newHashSet();
+    public int                             version      = VERSION;
 
     private LandManager()
     {
@@ -177,15 +192,6 @@ public class LandManager
         LandTeam team = teamMap.remove(oldName);
         if (team == null) throw new CommandException("Error, specified team not found");
         teamMap.put(newName, team);
-        team.teamName = newName;
-        HashSet<LandChunk> land = Sets.newHashSet(landMap.keySet());
-        for (LandChunk c : land)
-        {
-            if (landMap.get(c).equals(oldName))
-            {
-                landMap.put(c, newName);
-            }
-        }
         for (Invites i : invites.values())
         {
             if (i.teams.remove(oldName))
@@ -193,8 +199,35 @@ public class LandManager
                 i.teams.add(newName);
             }
         }
+        team.teamName = newName;
         LandSaveHandler.saveTeam(newName);
         LandSaveHandler.deleteTeam(oldName);
+    }
+
+    public void removeTeam(String teamName)
+    {
+        LandTeam team = teamMap.remove(teamName);
+        HashSet<LandChunk> land = Sets.newHashSet(landMap.keySet());
+        for (LandChunk c : land)
+        {
+            if (landMap.get(c).equals(team))
+            {
+                landMap.remove(c);
+            }
+        }
+        HashSet<UUID> ids = Sets.newHashSet(playerTeams.keySet());
+        for (UUID id : ids)
+        {
+            if (playerTeams.get(id).equals(team))
+            {
+                playerTeams.remove(id);
+            }
+        }
+        for (Invites i : invites.values())
+        {
+            i.teams.remove(teamName);
+        }
+        LandSaveHandler.deleteTeam(teamName);
     }
 
     public void addTeamLand(String team, LandChunk land, boolean sync)
@@ -206,7 +239,7 @@ public class LandManager
             return;
         }
         t.land.addLand(land);
-        landMap.put(land, team);
+        landMap.put(land, t);
         for (LandTeam t1 : teamMap.values())
         {
             if (t != t1) t1.land.removeLand(land);
@@ -277,7 +310,7 @@ public class LandManager
         return Lists.newArrayList(invite.teams);
     }
 
-    public String getLandOwner(LandChunk land)
+    public LandTeam getLandOwner(LandChunk land)
     {
         return landMap.get(land);
     }
@@ -380,9 +413,9 @@ public class LandManager
     public void removeTeamLand(String team, LandChunk land)
     {
         LandTeam t = teamMap.get(team);
-        landMap.remove(land);
         if (t != null && t.land.removeLand(land))
         {
+            landMap.remove(land);
             LandSaveHandler.saveTeam(team);
         }
     }
