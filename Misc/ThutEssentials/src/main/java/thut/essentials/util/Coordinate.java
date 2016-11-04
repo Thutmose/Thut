@@ -1,22 +1,22 @@
-package thut.essentials.land;
+package thut.essentials.util;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
-public class LandChunk implements Comparable<LandChunk>
+public class Coordinate implements Comparable<Coordinate>
 {
 
-    public static LandChunk getChunkCoordFromWorldCoord(BlockPos pos, int dimension)
+    public static Coordinate getChunkCoordFromWorldCoord(BlockPos pos, int dimension)
     {
         return getChunkCoordFromWorldCoord(pos.getX(), pos.getY(), pos.getZ(), dimension);
     }
 
-    public static LandChunk getChunkCoordFromWorldCoord(int x, int y, int z, int dim)
+    public static Coordinate getChunkCoordFromWorldCoord(int x, int y, int z, int dim)
     {
         int i = MathHelper.floor_double(x / 16.0D);
         int j = MathHelper.floor_double(y / 16.0D);
         int k = MathHelper.floor_double(z / 16.0D);
-        return new LandChunk(i, j, k, dim);
+        return new Coordinate(i, j, k, dim);
     }
 
     public int x;
@@ -24,12 +24,12 @@ public class LandChunk implements Comparable<LandChunk>
     public int z;
     public int dim;
 
-    public LandChunk(BlockPos pos, int dimension)
+    public Coordinate(BlockPos pos, int dimension)
     {
         this(pos.getX(), pos.getY(), pos.getZ(), dimension);
     }
 
-    public LandChunk(int x, int y, int z, int dim)
+    public Coordinate(int x, int y, int z, int dim)
     {
         this.x = x;
         this.y = y;
@@ -40,11 +40,11 @@ public class LandChunk implements Comparable<LandChunk>
     @Override
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof LandChunk))
+        if (!(obj instanceof Coordinate))
         {
             return false;
         }
-        LandChunk BlockPos = (LandChunk) obj;
+        Coordinate BlockPos = (Coordinate) obj;
         return x == BlockPos.x && y == BlockPos.y && this.z == BlockPos.z && this.dim == BlockPos.dim;
     }
 
@@ -55,7 +55,7 @@ public class LandChunk implements Comparable<LandChunk>
     }
 
     @Override
-    public int compareTo(LandChunk p_compareTo_1_)
+    public int compareTo(Coordinate p_compareTo_1_)
     {
         return y == p_compareTo_1_.y
                 ? (this.z == p_compareTo_1_.z ? x - p_compareTo_1_.x

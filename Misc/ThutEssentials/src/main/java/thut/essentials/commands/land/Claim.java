@@ -10,11 +10,11 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.MinecraftForge;
 import thut.essentials.commands.CommandManager;
 import thut.essentials.events.ClaimLandEvent;
-import thut.essentials.land.LandChunk;
 import thut.essentials.land.LandManager;
 import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.BaseCommand;
 import thut.essentials.util.ConfigManager;
+import thut.essentials.util.Coordinate;
 
 public class Claim extends BaseCommand
 {
@@ -88,7 +88,7 @@ public class Claim extends BaseCommand
                 int z = MathHelper.floor_double(sender.getPosition().getZ() / 16f);
                 int dim = sender.getEntityWorld().provider.getDimension();
                 if (y < 0 || y > 15) continue;
-                LandChunk chunk = new LandChunk(x, y, z, dim);
+                Coordinate chunk = new Coordinate(x, y, z, dim);
                 LandTeam owner = LandManager.getInstance().getLandOwner(chunk);
                 ClaimLandEvent event = new ClaimLandEvent(new BlockPos(x, y, z), dim, player, team.teamName);
                 MinecraftForge.EVENT_BUS.post(event);

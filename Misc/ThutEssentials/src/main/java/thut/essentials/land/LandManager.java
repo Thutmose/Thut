@@ -10,15 +10,12 @@ import java.util.UUID;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.mojang.authlib.GameProfile;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tileentity.TileEntitySkull;
 import thut.essentials.util.ConfigManager;
+import thut.essentials.util.Coordinate;
 
 public class LandManager
 {
@@ -32,7 +29,6 @@ public class LandManager
     {
         public TeamLand  land         = new TeamLand();
         public String    teamName;
-        Set<String>      admins       = Sets.newHashSet();
         Set<UUID>        admin        = Sets.newHashSet();
         public Set<UUID> member       = Sets.newHashSet();
         public String    exitMessage  = "";
@@ -52,50 +48,20 @@ public class LandManager
 
         public boolean isMember(EntityPlayer player)
         {
-            if (player.getTeam() != null && player.getTeam().getRegisteredName().equals(teamName))
-            {
-                member.add(player.getUniqueID());
-            }
             return member.contains(player.getUniqueID());
         }
 
         public boolean isAdmin(EntityPlayer player)
         {
-            if (admin.contains(player.getUniqueID())) return true;
-            if (admins.contains(player.getName()))
-            {
-                admins.remove(player.getName());
-                admin.add(player.getUniqueID());
-                return true;
-            }
-            return false;
+            return admin.contains(player.getUniqueID());
         }
 
         public void init(MinecraftServer server)
         {
-            for (String s : admins)
-            {
-                GameProfile profile = TileEntitySkull.updateGameprofile(new GameProfile(null, s));
-                if (profile.getId() != null) admin.add(profile.getId());
-            }
-            admins.clear();
-            Scoreboard board = server.getEntityWorld().getScoreboard();
-            Team team = board.getTeam(teamName);
-            if (team != null)
-            {
-                for (String s : team.getMembershipCollection())
-                {
-                    GameProfile profile = TileEntitySkull.updateGameprofile(new GameProfile(null, s));
-                    if (profile.getId() != null) member.add(profile.getId());
-                }
-            }
             Set<UUID> members = Sets.newHashSet(member);
-            for (UUID id : members)
+            if (!teamName.equals(ConfigManager.INSTANCE.defaultTeamName)) for (UUID id : members)
             {
-                if (!LandManager.instance.playerTeams.containsKey(id)
-                        || (LandManager.instance.playerTeams.get(id).teamName
-                                .equals(ConfigManager.INSTANCE.defaultTeamName)))
-                    LandManager.instance.playerTeams.put(id, this);
+                LandManager.instance.playerTeams.put(id, this);
             }
         }
 
@@ -115,9 +81,9 @@ public class LandManager
 
     public static class TeamLand
     {
-        public HashSet<LandChunk> land = Sets.newHashSet();
+        public HashSet<Coordinate> land = Sets.newHashSet();
 
-        public boolean addLand(LandChunk land)
+        public boolean addLand(Coordinate land)
         {
             return this.land.add(land);
         }
@@ -127,7 +93,7 @@ public class LandManager
             return land.size();
         }
 
-        public boolean removeLand(LandChunk land)
+        public boolean removeLand(Coordinate land)
         {
             return this.land.remove(land);
         }
@@ -159,8 +125,20 @@ public class LandManager
         LandTeam playerTeam = getInstance().playerTeams.get(player.getUniqueID());
         if (playerTeam == null)
         {
-            getInstance().addToTeam(player.getUniqueID(), ConfigManager.INSTANCE.defaultTeamName);
-            playerTeam = getInstance().getTeam(ConfigManager.INSTANCE.defaultTeamName, false);
+            for (LandTeam team : getInstance().teamMap.values())
+            {
+                if (team.isMember(player))
+                {
+                    getInstance().addToTeam(player.getUniqueID(), team.teamName);
+                    playerTeam = team;
+                    break;
+                }
+            }
+            if (playerTeam == null)
+            {
+                getInstance().addToTeam(player.getUniqueID(), ConfigManager.INSTANCE.defaultTeamName);
+                playerTeam = getInstance().getTeam(ConfigManager.INSTANCE.defaultTeamName, false);
+            }
         }
         return playerTeam;
     }
@@ -170,17 +148,17 @@ public class LandManager
         return getInstance().getTeam(ConfigManager.INSTANCE.defaultTeamName, true);
     }
 
-    public static boolean owns(EntityPlayer player, LandChunk chunk)
+    public static boolean owns(EntityPlayer player, Coordinate chunk)
     {
         return getTeam(player).equals(getInstance().getLandOwner(chunk));
     }
 
-    protected HashMap<String, LandTeam>    teamMap      = Maps.newHashMap();
-    protected HashMap<LandChunk, LandTeam> landMap      = Maps.newHashMap();
-    protected HashMap<UUID, LandTeam>      playerTeams  = Maps.newHashMap();
-    protected HashMap<UUID, Invites>       invites      = Maps.newHashMap();
-    protected HashSet<LandChunk>           publicBlocks = Sets.newHashSet();
-    public int                             version      = VERSION;
+    protected HashMap<String, LandTeam>     teamMap      = Maps.newHashMap();
+    protected HashMap<Coordinate, LandTeam> landMap      = Maps.newHashMap();
+    protected HashMap<UUID, LandTeam>       playerTeams  = Maps.newHashMap();
+    protected HashMap<UUID, Invites>        invites      = Maps.newHashMap();
+    protected HashSet<Coordinate>           publicBlocks = Sets.newHashSet();
+    public int                              version      = VERSION;
 
     private LandManager()
     {
@@ -207,8 +185,8 @@ public class LandManager
     public void removeTeam(String teamName)
     {
         LandTeam team = teamMap.remove(teamName);
-        HashSet<LandChunk> land = Sets.newHashSet(landMap.keySet());
-        for (LandChunk c : land)
+        HashSet<Coordinate> land = Sets.newHashSet(landMap.keySet());
+        for (Coordinate c : land)
         {
             if (landMap.get(c).equals(team))
             {
@@ -230,7 +208,7 @@ public class LandManager
         LandSaveHandler.deleteTeam(teamName);
     }
 
-    public void addTeamLand(String team, LandChunk land, boolean sync)
+    public void addTeamLand(String team, Coordinate land, boolean sync)
     {
         LandTeam t = teamMap.get(team);
         if (t == null)
@@ -294,14 +272,6 @@ public class LandManager
         addAdmin(member, team);
     }
 
-    public List<String> getAdmins(String team)
-    {
-        List<String> ret = new ArrayList<String>();
-        LandTeam t = teamMap.get(team);
-        if (t != null) return Lists.newArrayList(t.admins);
-        return ret;
-    }
-
     public List<String> getInvites(UUID member)
     {
         List<String> ret = new ArrayList<String>();
@@ -310,7 +280,7 @@ public class LandManager
         return Lists.newArrayList(invite.teams);
     }
 
-    public LandTeam getLandOwner(LandChunk land)
+    public LandTeam getLandOwner(Coordinate land)
     {
         return landMap.get(land);
     }
@@ -326,9 +296,9 @@ public class LandManager
         return team;
     }
 
-    public List<LandChunk> getTeamLand(String team)
+    public List<Coordinate> getTeamLand(String team)
     {
-        ArrayList<LandChunk> ret = new ArrayList<LandChunk>();
+        ArrayList<Coordinate> ret = new ArrayList<Coordinate>();
         LandTeam t = teamMap.get(team);
         if (t != null) ret.addAll(t.land.land);
         return ret;
@@ -363,17 +333,17 @@ public class LandManager
         return team.admin.contains(member);
     }
 
-    public boolean isOwned(LandChunk land)
+    public boolean isOwned(Coordinate land)
     {
         return landMap.containsKey(land);
     }
 
-    public boolean isPublic(LandChunk c)
+    public boolean isPublic(Coordinate c)
     {
         return publicBlocks.contains(c);
     }
 
-    public boolean isTeamLand(LandChunk chunk, String team)
+    public boolean isTeamLand(Coordinate chunk, String team)
     {
         LandTeam t = teamMap.get(team);
         if (t != null) return t.land.land.contains(chunk);
@@ -410,7 +380,7 @@ public class LandManager
         }
     }
 
-    public void removeTeamLand(String team, LandChunk land)
+    public void removeTeamLand(String team, Coordinate land)
     {
         LandTeam t = teamMap.get(team);
         if (t != null && t.land.removeLand(land))
@@ -420,13 +390,13 @@ public class LandManager
         }
     }
 
-    public void setPublic(LandChunk c)
+    public void setPublic(Coordinate c)
     {
         publicBlocks.add(c);
         LandSaveHandler.saveGlobalData();
     }
 
-    public void unsetPublic(LandChunk c)
+    public void unsetPublic(Coordinate c)
     {
         if (!publicBlocks.contains(c)) return;
         publicBlocks.remove(c);

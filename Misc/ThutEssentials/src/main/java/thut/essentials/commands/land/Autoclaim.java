@@ -13,10 +13,10 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import thut.essentials.land.LandChunk;
 import thut.essentials.land.LandManager;
 import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.BaseCommand;
+import thut.essentials.util.Coordinate;
 
 public class Autoclaim extends BaseCommand
 {
@@ -72,12 +72,12 @@ public class Autoclaim extends BaseCommand
                 int z = MathHelper.floor_double(evt.getEntityLiving().getPosition().getZ() / 16f);
                 int dim = evt.getEntityLiving().getEntityWorld().provider.getDimension();
                 if (y < 0 || y > 15) continue;
-                if (LandManager.getInstance().getLandOwner(new LandChunk(x, y, z, dim)) != null)
+                if (LandManager.getInstance().getLandOwner(new Coordinate(x, y, z, dim)) != null)
                 {
                     continue;
                 }
                 n++;
-                LandManager.getInstance().addTeamLand(team.teamName, new LandChunk(x, y, z, dim), true);
+                LandManager.getInstance().addTeamLand(team.teamName, new Coordinate(x, y, z, dim), true);
             }
             if (n > 0)
             {

@@ -4,6 +4,7 @@ import java.io.File;
 
 import net.minecraftforge.common.MinecraftForge;
 import thut.essentials.itemcontrol.ItemControl;
+import thut.essentials.land.LandEventsHandler;
 
 public class ConfigManager extends ConfigBase
 {
@@ -76,6 +77,9 @@ public class ConfigManager extends ConfigBase
     public int                  playerLand         = 1;
     @Configure(category = LAND)
     public String               defaultTeamName    = "Plebs";
+    @Configure(category = MISC)
+    public String[]             protectedEntities  = { "net.minecraft.entity.EntityHanging",
+            "net.minecraft.entity.item.EntityArmorStand", "net.minecraft.entity.item.EntityMinecart" };
 
     public ConfigManager()
     {
@@ -97,6 +101,7 @@ public class ConfigManager extends ConfigBase
     {
         WarpManager.init();
         ItemControl.init();
+        LandEventsHandler.init();
     }
 
 }

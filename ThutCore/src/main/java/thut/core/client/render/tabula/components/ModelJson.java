@@ -210,10 +210,10 @@ public class ModelJson extends TabulaModelBase
     }
 
     @Override
-    public void render(Entity entity, float limbSwing, float limbSwingAmount, float rotation, float rotationYaw,
+    public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float rotationYaw,
             float rotationPitch, float scale)
     {
-        this.setRotationAngles(limbSwing, limbSwingAmount, rotation, rotationYaw, rotationPitch, scale, entity);
+        this.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, rotationYaw, rotationPitch, scale, entity);
 
         double[] scales = tabulaModel.getScale();
         GL11.glScaled(scales[0], scales[1], scales[2]);
@@ -244,10 +244,11 @@ public class ModelJson extends TabulaModelBase
      * @see net.minecraft.entity.Entity
      * @since 0.1.0 */
     @Override
-    public void setRotationAngles(float limbSwing, float limbSwingAmount, float rotation, float rotationYaw,
+    public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float rotationYaw,
             float rotationPitch, float scaleFactor, Entity entity)
     {
-        super.setRotationAngles(limbSwing, limbSwingAmount, rotation, rotationYaw, rotationPitch, scaleFactor, entity);
+        super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, rotationYaw, rotationPitch, scaleFactor,
+                entity);
 
         if (!Minecraft.getMinecraft().isGamePaused())
         {
@@ -255,7 +256,7 @@ public class ModelJson extends TabulaModelBase
 
             if (playingAnimation != null || !playing.isEmpty())
             {
-                updateAnimation(entity, Minecraft.getMinecraft().getRenderPartialTicks());
+                updateAnimation(entity, ageInTicks - entity.ticksExisted);
             }
         }
     }

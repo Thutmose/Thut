@@ -6,10 +6,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
-import thut.essentials.land.LandChunk;
 import thut.essentials.land.LandManager;
 import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.BaseCommand;
+import thut.essentials.util.Coordinate;
 
 public class UnClaim extends BaseCommand
 {
@@ -60,7 +60,7 @@ public class UnClaim extends BaseCommand
             int y = MathHelper.floor_double(sender.getPosition().getY() / 16f) + dir * i;
             int z = MathHelper.floor_double(sender.getPosition().getZ() / 16f);
             int dim = sender.getEntityWorld().provider.getDimension();
-            LandChunk c = new LandChunk(x, y, z, dim);
+            Coordinate c = new Coordinate(x, y, z, dim);
             LandTeam owner = LandManager.getInstance().getLandOwner(c);
             if (owner != null && !team.equals(owner)) throw new CommandException("You may not unclaim that land.");
             if (y < 0 || y > 15) continue;

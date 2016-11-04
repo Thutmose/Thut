@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import thut.essentials.land.LandManager.LandTeam;
+import thut.essentials.util.Coordinate;
 
 public class LandSaveHandler
 {
@@ -100,9 +101,8 @@ public class LandSaveHandler
                 String json = FileUtils.readFileToString(file, "UTF-8");
                 LandTeam team = gson.fromJson(json, LandTeam.class);
                 LandManager.getInstance().teamMap.put(team.teamName, team);
-                if (LandManager.getInstance().version != LandManager.VERSION)
-                    team.init(FMLCommonHandler.instance().getMinecraftServerInstance());
-                for (LandChunk land : team.land.land)
+                team.init(FMLCommonHandler.instance().getMinecraftServerInstance());
+                for (Coordinate land : team.land.land)
                     LandManager.getInstance().addTeamLand(team.teamName, land, false);
             }
             catch (Exception e)

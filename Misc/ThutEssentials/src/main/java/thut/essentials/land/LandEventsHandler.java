@@ -2,10 +2,12 @@ package thut.essentials.land;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -19,6 +21,7 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
@@ -32,9 +35,29 @@ import thut.essentials.events.DenyItemUseEvent;
 import thut.essentials.events.DenyItemUseEvent.UseType;
 import thut.essentials.land.LandManager.LandTeam;
 import thut.essentials.util.ConfigManager;
+import thut.essentials.util.Coordinate;
 
 public class LandEventsHandler
 {
+    public static Set<Class<?>> protectedEntities = Sets.newHashSet();
+
+    public static void init()
+    {
+        protectedEntities.clear();
+        for (String s : ConfigManager.INSTANCE.protectedEntities)
+        {
+            try
+            {
+                Class<?> c = Class.forName(s);
+                protectedEntities.add(c);
+            }
+            catch (Throwable t)
+            {
+                t.printStackTrace();
+            }
+        }
+    }
+
     Map<UUID, Long> lastLeaveMessage = Maps.newHashMap();
     Map<UUID, Long> lastEnterMessage = Maps.newHashMap();
 
@@ -48,7 +71,7 @@ public class LandEventsHandler
         EntityPlayer player = evt.getPlayer();
         if (ConfigManager.INSTANCE.landEnabled && player != null && player.getTeam() != null)
         {
-            LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), player.dimension);
+            Coordinate c = Coordinate.getChunkCoordFromWorldCoord(evt.getPos(), player.dimension);
             if (!LandManager.getInstance().isOwned(c)) return;
             if (!LandManager.owns(player, c))
             {
@@ -56,7 +79,7 @@ public class LandEventsHandler
                 evt.setCanceled(true);
                 return;
             }
-            LandChunk block = new LandChunk(evt.getPos(), evt.getWorld().provider.getDimension());
+            Coordinate block = new Coordinate(evt.getPos(), evt.getWorld().provider.getDimension());
             LandManager.getInstance().unsetPublic(block);
         }
     }
@@ -65,15 +88,7 @@ public class LandEventsHandler
     public void PlayerLoggin(PlayerLoggedInEvent evt)
     {
         EntityPlayer entityPlayer = evt.player;
-        if (entityPlayer.getTeam() == null)
-        {
-            if (entityPlayer.getEntityWorld().getScoreboard().getTeam(ConfigManager.INSTANCE.defaultTeamName) == null)
-            {
-                entityPlayer.getEntityWorld().getScoreboard().createTeam(ConfigManager.INSTANCE.defaultTeamName);
-            }
-            entityPlayer.getEntityWorld().getScoreboard().addPlayerToTeam(entityPlayer.getName(),
-                    ConfigManager.INSTANCE.defaultTeamName);
-        }
+        LandManager.getTeam(entityPlayer);
     }
 
     @SubscribeEvent
@@ -87,8 +102,8 @@ public class LandEventsHandler
             BlockPos old;
             here = new BlockPos(player.chasingPosX, player.chasingPosY, player.chasingPosZ);
             old = new BlockPos(player.prevChasingPosX, player.prevChasingPosY, player.prevChasingPosZ);
-            LandChunk c = LandChunk.getChunkCoordFromWorldCoord(here, player.dimension);
-            LandChunk c1 = LandChunk.getChunkCoordFromWorldCoord(old, player.dimension);
+            Coordinate c = Coordinate.getChunkCoordFromWorldCoord(here, player.dimension);
+            Coordinate c1 = Coordinate.getChunkCoordFromWorldCoord(old, player.dimension);
             if (c.equals(c1) || !ConfigManager.INSTANCE.landEnabled) return;
             if (LandManager.getInstance().isOwned(c) || LandManager.getInstance().isOwned(c1))
             {
@@ -139,7 +154,7 @@ public class LandEventsHandler
             int dimension = evt.getWorld().provider.getDimension();
             for (BlockPos pos : evt.getAffectedBlocks())
             {
-                LandChunk c = LandChunk.getChunkCoordFromWorldCoord(pos, dimension);
+                Coordinate c = Coordinate.getChunkCoordFromWorldCoord(pos, dimension);
                 LandTeam owner = LandManager.getInstance().getLandOwner(c);
                 if (owner == null) continue;
                 if (evt.getExplosion().getExplosivePlacedBy() instanceof EntityPlayerMP)
@@ -167,11 +182,11 @@ public class LandEventsHandler
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void interactLeftClickBlock(PlayerInteractEvent.LeftClickBlock evt)
     {
-        LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
+        Coordinate c = Coordinate.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
         LandTeam owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
         if (LandManager.owns(evt.getEntityPlayer(), c)) { return; }
-        LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
+        Coordinate blockLoc = new Coordinate(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
         if (!LandManager.getInstance().isPublic(blockLoc))
         {
@@ -183,9 +198,44 @@ public class LandEventsHandler
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void interactRightClickEntity(PlayerInteractEvent.EntityInteract evt)
+    {
+        Coordinate c = Coordinate.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
+        LandTeam owner = LandManager.getInstance().getLandOwner(c);
+        if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
+        if (LandManager.owns(evt.getEntityPlayer(), c)) { return; }
+        for (Class<?> clas : protectedEntities)
+        {
+            if (clas.isInstance(evt.getTarget()))
+            {
+                evt.setCanceled(true);
+                return;
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void interactLeftClickEntity(AttackEntityEvent evt)
+    {
+        Coordinate c = Coordinate.getChunkCoordFromWorldCoord(evt.getTarget().getPosition(),
+                evt.getEntityPlayer().dimension);
+        LandTeam owner = LandManager.getInstance().getLandOwner(c);
+        if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
+        if (LandManager.owns(evt.getEntityPlayer(), c)) { return; }
+        for (Class<?> clas : protectedEntities)
+        {
+            if (clas.isInstance(evt.getTarget()))
+            {
+                evt.setCanceled(true);
+                return;
+            }
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void interactRightClickItem(PlayerInteractEvent.RightClickItem evt)
     {
-        LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
+        Coordinate c = Coordinate.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
         LandTeam owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || evt.getItemStack().getItem() instanceof ItemFood || !ConfigManager.INSTANCE.landEnabled)
             return;
@@ -196,7 +246,7 @@ public class LandEventsHandler
         else if (MinecraftForge.EVENT_BUS
                 .post(new DenyItemUseEvent(evt.getEntity(), evt.getItemStack(), UseType.RIGHTCLICKBLOCK))) { return; }
         if (evt.getItemStack() == null) return;
-        LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
+        Coordinate blockLoc = new Coordinate(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
         if (!LandManager.getInstance().isPublic(blockLoc))
         {
@@ -212,7 +262,7 @@ public class LandEventsHandler
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void interactRightClickBlock(PlayerInteractEvent.RightClickBlock evt)
     {
-        LandChunk c = LandChunk.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
+        Coordinate c = Coordinate.getChunkCoordFromWorldCoord(evt.getPos(), evt.getEntityPlayer().dimension);
         LandTeam owner = LandManager.getInstance().getLandOwner(c);
         if (owner == null || !ConfigManager.INSTANCE.landEnabled) return;
         Block block = null;
@@ -228,7 +278,7 @@ public class LandEventsHandler
             {
                 if (LandManager.getInstance().isAdmin(evt.getEntityPlayer().getUniqueID()))
                 {
-                    LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
+                    Coordinate blockLoc = new Coordinate(evt.getPos(), evt.getEntityPlayer().dimension);
                     if (LandManager.getInstance().isPublic(blockLoc))
                     {
                         evt.getEntityPlayer().addChatMessage(new TextComponentString("Set Block to Team Only"));
@@ -254,7 +304,7 @@ public class LandEventsHandler
                     (float) evt.getHitVec().zCoord);
         }
         if (!b && shouldPass) return;
-        LandChunk blockLoc = new LandChunk(evt.getPos(), evt.getEntityPlayer().dimension);
+        Coordinate blockLoc = new Coordinate(evt.getPos(), evt.getEntityPlayer().dimension);
         LandManager.getInstance().isPublic(blockLoc);
         if (!LandManager.getInstance().isPublic(blockLoc))
         {
