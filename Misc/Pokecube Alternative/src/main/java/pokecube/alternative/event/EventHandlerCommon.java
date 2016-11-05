@@ -110,6 +110,18 @@ public class EventHandlerCommon
                     boolean toBelt = false;
                     for (int i = 0; i < 6; i++)
                     {
+                        ItemStack stack = cap.getCube(i);
+                        if (stack == null) continue;
+                        if (PokecubeManager.getUUID(item).equals(PokecubeManager.getUUID(stack)))
+                        {
+                            cap.setOut(i, false);
+                            cap.setCube(i, item);
+                            toBelt = true;
+                            break;
+                        }
+                    }
+                    if (!toBelt) for (int i = 0; i < 6; i++)
+                    {
                         if (cap.getCube(i) == null)
                         {
                             cap.setCube(i, item);
@@ -230,6 +242,18 @@ public class EventHandlerCommon
             IPokemobBelt cap = BeltPlayerData.getBelt(player);
             boolean added = false;
             for (int i = 0; i < 6; i++)
+            {
+                ItemStack stack = cap.getCube(i);
+                if (stack == null) continue;
+                if (PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
+                {
+                    cap.setOut(i, false);
+                    cap.setCube(i, pokemonStack);
+                    added = true;
+                    break;
+                }
+            }
+            if (!added) for (int i = 0; i < 6; i++)
             {
                 ItemStack stack = cap.getCube(i);
                 if (stack == null || PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
