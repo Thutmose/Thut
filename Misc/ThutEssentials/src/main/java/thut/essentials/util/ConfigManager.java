@@ -16,6 +16,7 @@ public class ConfigManager extends ConfigBase
     private static final String LAND               = "land";
     private static final String ITEM               = "itemcontrol";
     private static final String MISC               = "misc";
+    private static final String ECON               = "economy";
 
     public static ConfigManager INSTANCE;
 
@@ -60,6 +61,9 @@ public class ConfigManager extends ConfigBase
     @Configure(category = MISC)
     public String[]             alternateCommands  = { "gamemode:gm" };
 
+    @Configure(category = ECON)
+    public String[]             economyPermLvls    = { "make_shop:-1", "make_infinite_shop:4" };
+
     @Configure(category = NAMES)
     public boolean              name               = true;
     @Configure(category = NAMES)
@@ -77,7 +81,7 @@ public class ConfigManager extends ConfigBase
     public int                  playerLand         = 1;
     @Configure(category = LAND)
     public String               defaultTeamName    = "Plebs";
-    @Configure(category = MISC)
+    @Configure(category = LAND)
     public String[]             protectedEntities  = { "net.minecraft.entity.EntityHanging",
             "net.minecraft.entity.item.EntityArmorStand", "net.minecraft.entity.item.EntityMinecart" };
 
@@ -102,6 +106,7 @@ public class ConfigManager extends ConfigBase
         WarpManager.init();
         ItemControl.init();
         LandEventsHandler.init();
+        DefaultPermissions.init();
     }
 
 }

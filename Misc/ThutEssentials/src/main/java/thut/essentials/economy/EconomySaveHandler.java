@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import thut.essentials.economy.EconomyManager.Account;
+import thut.essentials.economy.EconomyManager.Shop;
 
 public class EconomySaveHandler
 {
@@ -19,7 +21,8 @@ public class EconomySaveHandler
         @Override
         public boolean shouldSkipField(FieldAttributes f)
         {
-            return false;
+            String name = f.getName();
+            return name.equals("shopMap");
         }
 
         @Override
@@ -66,6 +69,14 @@ public class EconomySaveHandler
                         .create();
                 String json = FileUtils.readFileToString(teamsFile, "UTF-8");
                 EconomyManager.instance = gson.fromJson(json, EconomyManager.class);
+                for (Account account : EconomyManager.instance.bank.values())
+                {
+                    for (Shop shop : account.shops)
+                    {
+                        account.shopMap.put(shop.location, shop);
+                        EconomyManager.instance.shopMap.put(shop.location, account);
+                    }
+                }
             }
             catch (Exception e)
             {
