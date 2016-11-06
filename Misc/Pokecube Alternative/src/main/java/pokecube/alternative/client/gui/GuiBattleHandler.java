@@ -122,7 +122,7 @@ public class GuiBattleHandler
         scale = 0.75f;
         int barHeight1 = (int) (mc.fontRendererObj.FONT_HEIGHT * moveCount * scale);
         float size = PokecubeMod.core.getConfig().plateSize;
-        int selected = GuiDisplayPokecubeInfo.instance.currentMoveIndex;
+        int selected = pokemob.getMoveIndex();
         GlStateManager.translate(0F, 6, 0F);
 
         // Background
@@ -137,6 +137,15 @@ public class GuiBattleHandler
             tessellator.draw();
             if (selected != 5)
             {
+                float timer = 1;
+                Move_Base lastMove;
+                if ((lastMove = MovesUtils.getMoveFromName(pokemob.getLastMoveUsed())) != null)
+                {
+                    timer -= (pokemob.getAttackCooldown() / (float) MovesUtils.getAttackDelay(pokemob,
+                            pokemob.getLastMoveUsed(),
+                            (lastMove.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0, false));
+                }
+                timer = Math.max(0, Math.min(timer, 1));
                 GL11.glScaled(scale, scale, scale);
                 GlStateManager.translate(0F, selected * mc.fontRendererObj.FONT_HEIGHT, 0F);
                 barHeight1 = (int) (mc.fontRendererObj.FONT_HEIGHT * scale);
@@ -145,10 +154,10 @@ public class GuiBattleHandler
                 int r = 0;
                 int g = 0;
                 int b = 128;
-                buffer.pos(-size / scale - padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
-                buffer.pos(-size / scale - padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha).endVertex();
-                buffer.pos(size / scale + padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha).endVertex();
-                buffer.pos(size / scale + padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
+                buffer.pos(-size * timer / scale - padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
+                buffer.pos(-size * timer / scale - padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha).endVertex();
+                buffer.pos(size * timer / scale + padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha).endVertex();
+                buffer.pos(size * timer / scale + padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
                 tessellator.draw();
                 GlStateManager.translate(0F, -selected * mc.fontRendererObj.FONT_HEIGHT, 0F);
                 GL11.glScaled(1 / scale, 1 / scale, 1 / scale);

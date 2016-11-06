@@ -1,69 +1,33 @@
 package thut.api.entity;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Lists;
+
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Teleporter;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import thut.api.maths.Vector3;
-import thut.api.network.PacketHandler;
 
 public class Transporter
 {
-    public static class TelDestination
-    {
-
-        final World   dim;
-
-        final double  x;
-
-        final double  y;
-
-        final double  z;
-        final Vector3 loc;
-        final int     xOff;
-        final int     yOff;
-
-        final int     zOff;
-
-        public TelDestination(int dim, Vector3 loc)
-        {
-            this(FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dim), loc.getAABB(),
-                    loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
-        }
-
-        public TelDestination(World _dim, AxisAlignedBB srcBox, double _x, double _y, double _z, int tileX, int tileY,
-                int tileZ)
-        {
-            this.dim = _dim;
-            this.x = Math.min(srcBox.maxX - 0.5, Math.max(srcBox.minX + 0.5, _x + tileX));
-            this.y = Math.min(srcBox.maxY - 0.5, Math.max(srcBox.minY + 0.5, _y + tileY));
-            this.z = Math.min(srcBox.maxZ - 0.5, Math.max(srcBox.minZ + 0.5, _z + tileZ));
-            this.xOff = tileX;
-            this.yOff = tileY;
-            this.zOff = tileZ;
-            this.loc = Vector3.getNewVector().set(x, y, z);
-        }
-
-        public TelDestination(World _dim, Vector3 loc)
-        {
-            this(_dim, loc.getAABB(), loc.x, loc.y, loc.z, loc.intX(), loc.intY(), loc.intZ());
-        }
-    }
-
     // From RFTools.
     public static class TTeleporter extends Teleporter
     {
         private final WorldServer worldServerInstance;
-
+        private boolean           move = true;
         private double            x;
         private double            y;
         private double            z;
@@ -77,9 +41,17 @@ public class Transporter
             this.z = z;
         }
 
+        public TTeleporter(WorldServer worldServerForDimension)
+        {
+            super(worldServerForDimension);
+            this.worldServerInstance = worldServerForDimension;
+            move = false;
+        }
+
         @Override
         public void placeInPortal(Entity pEntity, float rotationYaw)
         {
+            if (!move) return;
             this.worldServerInstance.getBlockState(new BlockPos((int) this.x, (int) this.y, (int) this.z));
             pEntity.setPosition(this.x, this.y, this.z);
             pEntity.motionX = 0.0f;
@@ -87,29 +59,53 @@ public class Transporter
             pEntity.motionZ = 0.0f;
         }
 
+        @Override
+        public void removeStalePortalLocations(long par1)
+        {
+        }
+
+        @Override
+        public boolean makePortal(Entity p_85188_1_)
+        {
+            return true;
+        }
     }
 
     public static class ReMounter
     {
         final Entity theEntity;
         final Entity theMount;
-        final int    tick;
+        final int    dim;
+        final long   time;
 
-        public ReMounter(Entity entity, Entity mount)
+        public ReMounter(Entity entity, Entity mount, int dim)
         {
             theEntity = entity;
             theMount = mount;
-            tick = entity.ticksExisted;
+            time = entity.worldObj.getTotalWorldTime();
+            this.dim = dim;
         }
 
         @SubscribeEvent
-        public void tick(LivingUpdateEvent evt)
+        public void tick(TickEvent.ServerTickEvent evt)
         {
-            int diff = theEntity.ticksExisted - tick;
+            if (evt.phase != TickEvent.Phase.END) return;
             if (theEntity.isDead) MinecraftForge.EVENT_BUS.unregister(this);
-            if (evt.getEntity().getUniqueID().equals(theEntity.getUniqueID()) && diff > 10)
+            if (theEntity.worldObj.getTotalWorldTime() >= time)
             {
-                // TODO fix this remounter.
+                if (dim != theEntity.dimension)
+                {
+                    if (theEntity instanceof EntityPlayerMP)
+                        theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity, dim,
+                                new TTeleporter(theEntity.getServer().worldServerForDimension(dim)));
+                    else
+                    {
+                        // Handle moving non players.
+                    }
+                }
+                theEntity.setLocationAndAngles(theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
+                        theEntity.rotationPitch);
+                theEntity.startRiding(theMount);
                 MinecraftForge.EVENT_BUS.unregister(this);
             }
         }
@@ -120,10 +116,7 @@ public class Transporter
         if (entity.isRiding())
         {
             Entity mount = entity.getRidingEntity();
-            entity.dismountRidingEntity();
-            entity = teleportEntity(entity, t2, dimension, false);
             mount = teleportEntity(mount, t2, dimension, false);
-            MinecraftForge.EVENT_BUS.register(new ReMounter(entity, mount));
             return entity;
         }
         if (dimension != entity.dimension)
@@ -142,12 +135,17 @@ public class Transporter
                 entity.worldObj.getChunkFromChunkCoords(x, z);
             }
         entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
-        System.out.println("teleport " + entity);
+        List<Entity> passengers = Lists.newArrayList(entity.getPassengers());
+        for (Entity e : passengers)
+        {
+            e.dismountRidingEntity();
+            e.setPositionAndUpdate(t2.x, t2.y, t2.z);
+            MinecraftForge.EVENT_BUS.register(new ReMounter(e, entity, dimension));
+        }
         WorldServer world = entity.getServer().worldServerForDimension(dimension);
         EntityTracker tracker = world.getEntityTracker();
         if (tracker.getTrackingPlayers(entity).getClass().getSimpleName().equals("EmptySet"))
         {
-            System.out.println("track");
             tracker.trackEntity(entity);
             if (entity instanceof EntityPlayerMP)
             {
@@ -155,7 +153,6 @@ public class Transporter
                 tracker.updateVisibility(playerIn);
             }
         }
-        PacketHandler.sendEntityUpdate(entity);
         return entity;
     }
 
@@ -163,18 +160,11 @@ public class Transporter
     private static Entity transferToDimension(Entity entity, Vector3 t2, int dimension)
     {
         int oldDimension = entity.worldObj.provider.getDimension();
-
         if (oldDimension == dimension) return entity;
-
+        if (!(entity instanceof EntityPlayerMP)) { return changeDimension(entity, t2, dimension); }
         MinecraftServer server = entity.worldObj.getMinecraftServer();
         WorldServer worldServer = server.worldServerForDimension(dimension);
         Teleporter teleporter = new TTeleporter(worldServer, t2.x, t2.y, t2.z);
-        if (!(entity instanceof EntityPlayerMP))
-        {
-            server.getPlayerList().transferEntityToWorld(entity, dimension, (WorldServer) entity.worldObj, worldServer,
-                    teleporter);
-            return entity;
-        }
         EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
         entityPlayerMP.addExperienceLevel(0);
         worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(entityPlayerMP, dimension,
@@ -186,5 +176,77 @@ public class Transporter
             worldServer.updateEntityWithOptionalForce(entityPlayerMP, false);
         }
         return entityPlayerMP;
+    }
+
+    @Nullable
+    // From Advanced Rocketry
+    public static Entity changeDimension(Entity entityIn, Vector3 t2, int dimensionIn)
+    {
+        if (entityIn.dimension == dimensionIn) return entityIn;
+        if (!entityIn.worldObj.isRemote && !entityIn.isDead)
+        {
+            List<Entity> passengers = entityIn.getPassengers();
+
+            if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(entityIn, dimensionIn)) return null;
+            entityIn.worldObj.theProfiler.startSection("changeDimension");
+            MinecraftServer minecraftserver = entityIn.getServer();
+            int i = entityIn.dimension;
+            WorldServer worldserver = minecraftserver.worldServerForDimension(i);
+            WorldServer worldserver1 = minecraftserver.worldServerForDimension(dimensionIn);
+            entityIn.dimension = dimensionIn;
+
+            if (i == 1 && dimensionIn == 1)
+            {
+                worldserver1 = minecraftserver.worldServerForDimension(0);
+                entityIn.dimension = 0;
+            }
+            NBTTagCompound tag = new NBTTagCompound();
+            entityIn.writeToNBT(tag);
+            entityIn.worldObj.removeEntity(entityIn);
+            entityIn.readFromNBT(tag);
+            entityIn.isDead = false;
+            entityIn.worldObj.theProfiler.startSection("reposition");
+
+            double d0 = entityIn.posX;
+            double d1 = entityIn.posZ;
+            d0 = MathHelper.clamp_double(d0 * 8.0D, worldserver1.getWorldBorder().minX() + 16.0D,
+                    worldserver1.getWorldBorder().maxX() - 16.0D);
+            d1 = MathHelper.clamp_double(d1 * 8.0D, worldserver1.getWorldBorder().minZ() + 16.0D,
+                    worldserver1.getWorldBorder().maxZ() - 16.0D);
+            d0 = MathHelper.clamp_int((int) d0, -29999872, 29999872);
+            d1 = MathHelper.clamp_int((int) d1, -29999872, 29999872);
+            float f = entityIn.rotationYaw;
+            entityIn.setLocationAndAngles(d0, entityIn.posY, d1, 90.0F, 0.0F);
+            Teleporter teleporter = new TTeleporter(worldserver1, t2.x, t2.y, t2.z);
+            teleporter.placeInExistingPortal(entityIn, f);
+            worldserver.updateEntityWithOptionalForce(entityIn, false);
+            entityIn.worldObj.theProfiler.endStartSection("reloading");
+            Entity entity = EntityList.createEntityByName(EntityList.getEntityString(entityIn), worldserver1);
+            if (entity != null)
+            {
+                entity.copyDataFromOld(entityIn);
+                entity.forceSpawn = true;
+                worldserver1.spawnEntityInWorld(entity);
+                worldserver1.updateEntityWithOptionalForce(entity, true);
+                for (Entity e : passengers)
+                {
+                    // Fix that darn random crash?
+                    worldserver.resetUpdateEntityTick();
+                    worldserver1.resetUpdateEntityTick();
+                    // Transfer the player if applicable
+                    // Need to handle our own removal to avoid race condition
+                    // where player is mounted on client on the old entity but
+                    // is already mounted to the new one on server
+                    MinecraftForge.EVENT_BUS.register(new ReMounter(e, entity, dimensionIn));
+                }
+            }
+            entityIn.isDead = true;
+            entityIn.worldObj.theProfiler.endSection();
+            worldserver.resetUpdateEntityTick();
+            worldserver1.resetUpdateEntityTick();
+            entityIn.worldObj.theProfiler.endSection();
+            return entity;
+        }
+        return null;
     }
 }
