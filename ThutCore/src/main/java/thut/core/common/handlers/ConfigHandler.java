@@ -12,6 +12,7 @@ public class ConfigHandler extends ConfigBase
 {
     private static final String BOOMS           = "explosions";
     private static final String BIOMES          = "biomes";
+    private static final String AI              = "ai";
 
     // @Configure(category = "items")
     // private boolean spout = false;
@@ -27,6 +28,8 @@ public class ConfigHandler extends ConfigBase
     private double              minBlastEffect  = 0.25;
     @Configure(category = BIOMES)
     public boolean              resetAllTerrain = false;
+    @Configure(category = AI, needsMcRestart = true)
+    public int                  threadCount     = 1;
 
     public ConfigHandler()
     {

@@ -30,6 +30,7 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
+import thut.api.entity.ai.AIThreadManager;
 import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
 import thut.api.terrain.BiomeDatabase;
@@ -85,6 +86,10 @@ public class ThutCore
         proxy.preinit(e);
         config = new ConfigHandler(e.getSuggestedConfigurationFile());
         proxy.loadSounds();
+        AIThreadManager.AIThread.threadCount = config.threadCount;
+        AIThreadManager.AIThread.createThreads();
+        AIThreadManager aiTicker = new AIThreadManager();
+        MinecraftForge.EVENT_BUS.register(aiTicker);
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new TickHandler());
         new Cruncher();
@@ -102,6 +107,7 @@ public class ThutCore
     {
         TerrainManager.clear();
         PlayerDataHandler.clear();
+        AIThreadManager.clear();
     }
 
     @SubscribeEvent
