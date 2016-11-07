@@ -8,11 +8,15 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -31,6 +35,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
 import thut.api.entity.ai.AIThreadManager;
+import thut.api.entity.ai.AIThreadManager.AIStuff;
+import thut.api.entity.ai.IAIMob;
 import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
 import thut.api.terrain.BiomeDatabase;
@@ -93,6 +99,33 @@ public class ThutCore
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new TickHandler());
         new Cruncher();
+        CapabilityManager.INSTANCE.register(IAIMob.class, new Capability.IStorage<IAIMob>()
+        {
+            @Override
+            public NBTBase writeNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side)
+            {
+                return null;
+            }
+
+            @Override
+            public void readNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side, NBTBase nbt)
+            {
+            }
+        }, new IAIMob()
+        {
+
+            @Override
+            public AIStuff getAI()
+            {
+                return null;
+            }
+
+            @Override
+            public boolean selfManaged()
+            {
+                return true;
+            }
+        }.getClass());
     }
 
     @EventHandler

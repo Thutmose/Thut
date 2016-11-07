@@ -27,6 +27,14 @@ public class SMDParser
         }
         catch (IOException e)
         {
+            if(stream!=null) try
+            {
+                stream.close();
+            }
+            catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
             e.printStackTrace();
         }
     }

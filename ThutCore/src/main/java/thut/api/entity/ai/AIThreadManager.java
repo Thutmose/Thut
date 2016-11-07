@@ -13,6 +13,7 @@ import com.google.common.collect.Queues;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
@@ -274,5 +275,47 @@ public class AIThreadManager
                 }
             }
         }
+    }
+
+    @SubscribeEvent
+    public void LivingUpdate(LivingUpdateEvent event)
+    {
+        IAIMob mob = null;
+        AIStuff ai = null;
+        if (event.getEntity() instanceof IAIMob)
+        {
+            mob = ((IAIMob) event.getEntity());
+            ai = mob.getAI();
+        }
+        else if (event.getEntity().hasCapability(IAIMob.THUTMOBAI, null))
+        {
+            mob = event.getEntity().getCapability(IAIMob.THUTMOBAI, null);
+            ai = mob.getAI();
+        }
+        if (mob == null || mob.selfManaged() || ai == null) return;
+        for (ILogicRunnable logic : ai.aiLogic)
+        {
+            logic.doServerTick(event.getEntity().worldObj);
+        }
+        if (!event.getEntity().worldObj.isRemote) updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
+    }
+
+    protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
+    {
+        mob.worldObj.theProfiler.startSection("mob tick");
+        // Run last tick's results from AI stuff
+        ai.runServerThreadTasks(mob.worldObj);
+        // Schedule AIStuff to tick for next tick.
+        AIThreadManager.scheduleAITick(ai);
+        mob.worldObj.theProfiler.endSection();
+        mob.worldObj.theProfiler.startSection("controls");
+        mob.worldObj.theProfiler.startSection("move");
+        mob.getMoveHelper().onUpdateMoveHelper();
+        mob.worldObj.theProfiler.endStartSection("look");
+        mob.getLookHelper().onUpdateLook();
+        mob.worldObj.theProfiler.endStartSection("jump");
+        mob.getJumpHelper().doJump();
+        mob.worldObj.theProfiler.endSection();
+        mob.worldObj.theProfiler.endSection();
     }
 }
