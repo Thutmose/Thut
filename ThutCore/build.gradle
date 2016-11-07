@@ -57,7 +57,7 @@ processResources
     }
 }
 
-version = "${version_minecraft}-${version}"
+version = "${version}"
 
 jar {
         manifest {
