@@ -17,10 +17,18 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 repositories {
     maven {url = "http://maven.cil.li/"}
     maven {url 'http://maven.epoxide.xyz'}
+    ivy {
+        name = "thutcore"
+        url = "https://github.com/Thutmose/Thut/raw/1.9/ThutCore/deobf/"
+        layout "pattern", {
+            artifact "[module]-[revision]-dev.[ext]"
+        }
+    }
 }
 dependencies {
     compile "li.cil.oc:OpenComputers:MC${version_oc}:api"
     compile "net.darkhax.tesla:Tesla:${version_tesla}"
+    deobfCompile name: 'thutcore', version: "${version_thutcore}", ext: 'jar'
 }
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"

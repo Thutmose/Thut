@@ -10,6 +10,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -86,7 +88,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     TileEntityLiftAccess                current;
     public List<AxisAlignedBB>          blockBoxes         = Lists.newArrayList();
     public int[]                        floors             = new int[64];
-    public ItemStack[][][]              blocks             = null;
+    public IBlockState[][][]            blocks             = null;
     public TileEntity[][][]             tiles              = null;
     BlockEntityUpdater                  collider;
     LiftInteractHandler                 interacter;
@@ -468,6 +470,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void readBlocks(NBTTagCompound nbt)
     {
         if (nbt.hasKey("Blocks"))
@@ -481,8 +484,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 sizeX = sizeZ = nbt.getInteger("BlocksLength");
             }
             if (sizeY == 0) sizeY = 1;
-
-            blocks = new ItemStack[sizeX][sizeY][sizeZ];
+            int version = blockTag.getInteger("v");
+            blocks = new IBlockState[sizeX][sizeY][sizeZ];
             tiles = new TileEntity[sizeX][sizeY][sizeZ];
             for (int i = 0; i < sizeX; i++)
                 for (int k = 0; k < sizeY; k++)
@@ -498,9 +501,20 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                             n = blockTag.getInteger("I" + i + "," + k + "," + j);
                         }
                         if (n == -1) continue;
-                        ItemStack b = new ItemStack(Item.getItemById(n), 1,
-                                blockTag.getInteger("M" + i + "," + k + "," + j));
-                        blocks[i][k][j] = b;
+                        IBlockState state;
+                        if (version == 0)
+                        {
+                            Block b = Block.getBlockFromItem(Item.getItemById(n));
+                            int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
+                            state = b.getStateFromMeta(meta);
+                        }
+                        else
+                        {
+                            Block b = Block.getBlockById(n);
+                            int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
+                            state = b.getStateFromMeta(meta);
+                        }
+                        blocks[i][k][j] = state;
                         if (blockTag.hasKey("T" + i + "," + k + "," + j))
                         {
                             try
@@ -659,6 +673,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             blocksTag.setInteger("BlocksLengthX", blocks.length);
             blocksTag.setInteger("BlocksLengthY", blocks[0].length);
             blocksTag.setInteger("BlocksLengthZ", blocks[0][0].length);
+            blocksTag.setInteger("v", 1);
             int sizeX = blocks.length;
             int sizeY = blocks[0].length;
             int sizeZ = blocks[0][0].length;
@@ -668,10 +683,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 {
                     for (int j = 0; j < sizeZ; j++)
                     {
-                        ItemStack b = blocks[i][k][j];
-                        if (b == null || b.getItem() == null) continue;
-                        blocksTag.setInteger("I" + i + "," + k + "," + j, Item.getIdFromItem(b.getItem()));
-                        blocksTag.setInteger("M" + i + "," + k + "," + j, b.getItemDamage());
+                        IBlockState b = blocks[i][k][j];
+                        if (b == null) continue;
+                        blocksTag.setInteger("I" + i + "," + k + "," + j, Block.getIdFromBlock(b.getBlock()));
+                        blocksTag.setInteger("M" + i + "," + k + "," + j, b.getBlock().getMetaFromState(b));
                         try
                         {
                             if (tiles[i][k][j] != null)
@@ -786,13 +801,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     }
 
     @Override
-    public void setBlocks(ItemStack[][][] blocks)
+    public void setBlocks(IBlockState[][][] blocks)
     {
         this.blocks = blocks;
     }
 
     @Override
-    public ItemStack[][][] getBlocks()
+    public IBlockState[][][] getBlocks()
     {
         return blocks;
     }

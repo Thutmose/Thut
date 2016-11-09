@@ -1,17 +1,16 @@
 package thut.api.entity.blockentity;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -51,7 +50,7 @@ public interface IBlockEntity
                     }
         }
 
-        public static ItemStack[][][] checkBlocks(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
+        public static IBlockState[][][] checkBlocks(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
         {
             int xMin = min.getX();
             int zMin = min.getZ();
@@ -59,14 +58,13 @@ public interface IBlockEntity
             int zMax = max.getZ();
             int yMin = min.getY();
             int yMax = max.getY();
-            ItemStack[][][] ret = new ItemStack[(xMax - xMin) + 1][(yMax - yMin) + 1][(zMax - zMin) + 1];
+            IBlockState[][][] ret = new IBlockState[(xMax - xMin) + 1][(yMax - yMin) + 1][(zMax - zMin) + 1];
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
                         IBlockState state = worldObj.getBlockState(pos.add(i, j, k));
-                        Block b = state.getBlock();
-                        ret[i - xMin][j - yMin][k - zMin] = new ItemStack(b, 1, b.getMetaFromState(state));
+                        ret[i - xMin][j - yMin][k - zMin] = state;
                     }
             return ret;
         }
@@ -99,6 +97,12 @@ public interface IBlockEntity
                             }
                         }
                     }
+            List<Entity> possibleInside = entity.worldObj.getEntitiesWithinAABBExcludingEntity(entity,
+                    entity.getEntityBoundingBox());
+            for (Entity e : possibleInside)
+            {
+                e.setPosition(e.posX, e.posY + 0.25, e.posZ);
+            }
         }
 
         public static TileEntity[][][] checkTiles(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
@@ -208,14 +212,13 @@ public interface IBlockEntity
             entity.setMax(max);
             removeBlocks(worldObj, min, max, pos);
             worldObj.spawnEntityInWorld(ret);
-            System.out.println(box + " " + ret + " " + worldObj);
             return ret;
         }
     }
 
-    void setBlocks(ItemStack[][][] blocks);
+    void setBlocks(IBlockState[][][] blocks);
 
-    ItemStack[][][] getBlocks();
+    IBlockState[][][] getBlocks();
 
     void setTiles(TileEntity[][][] tiles);
 

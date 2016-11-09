@@ -5,12 +5,9 @@ import javax.annotation.Nullable;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -119,22 +116,13 @@ public class BlockEntityWorld extends World
         int i = pos.getX() - MathHelper.floor_double(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));
         int k = pos.getZ() - MathHelper.floor_double(entity.posZ + blockEntity.getMin().getZ());
-        Block b = Blocks.AIR;
-
         if (blockEntity.getBlocks() == null) { return world.getBlockState(pos); }
-        int meta = 0;
         if (i >= blockEntity.getBlocks().length || j >= blockEntity.getBlocks()[0].length
-                || k >= blockEntity.getBlocks()[0][0].length || i < 0 || j < 0 || k < 0)
-        {
-            return  world.getBlockState(pos);
-        }
-        ItemStack stack = blockEntity.getBlocks()[i][j][k];
-        if (stack == null || stack.getItem() == null) return world.getBlockState(pos);
-        b = Block.getBlockFromItem(stack.getItem());
-        meta = stack.getItemDamage();
-        @SuppressWarnings("deprecation")
-        IBlockState iblockstate = b.getStateFromMeta(meta);
-        return iblockstate;
+                || k >= blockEntity.getBlocks()[0][0].length || i < 0 || j < 0
+                || k < 0) { return world.getBlockState(pos); }
+        IBlockState state = blockEntity.getBlocks()[i][j][k];
+        if (state == null) return world.getBlockState(pos);
+        return state;
     }
 
     @Override
@@ -193,9 +181,8 @@ public class BlockEntityWorld extends World
         if (blockEntity.getBlocks() == null) return false;
         if (i >= blockEntity.getBlocks().length || j >= blockEntity.getBlocks()[0].length
                 || k >= blockEntity.getBlocks()[0][0].length || i < 0 || j < 0 || k < 0) { return false; }
-        Block b = newState.getBlock();
-        blockEntity.getBlocks()[i][j][k] = new ItemStack(b, 1, b.getMetaFromState(newState));
-        return false;
+        blockEntity.getBlocks()[i][j][k] = newState;
+        return true;
     }
 
     public World getWorld()
