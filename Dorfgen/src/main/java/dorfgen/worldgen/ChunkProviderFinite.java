@@ -156,7 +156,7 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
         // Block[] ablock = new Block[256 * worldObj.getHeight()];
         // byte[] abyte = new byte[256 * worldObj.getHeight()];
 
-        this.biomesForGeneration = this.worldObj.getBiomeProvider().getBiomes(this.biomesForGeneration,
+        this.biomesForGeneration = this.worldObj.getBiomeProvider().loadBlockGeneratorData(this.biomesForGeneration,
                 chunkX * 16, chunkZ * 16, 16, 16);
         if (WorldGenerator.instance.dorfs.elevationMap.length == 0) WorldGenerator.finite = false;
 
@@ -201,16 +201,16 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
                 for (int j = 0; j < 16; ++j)
                 {
                     Biome biome = biomesForGeneration[j + i * 16];
-//                    if (!BiomeDictionary.isBiomeOfType(biome, Type.OCEAN))
-//                    {
-//                        this.worldObj.setSeaLevel(0);// TODO find height at this
-//                                                     // location, use 2 less
-//                                                     // than that
-//                    }
-//                    else
-//                    {
-//                        this.worldObj.setSeaLevel(backupSeaLevel);
-//                    }
+                    // if (!BiomeDictionary.isBiomeOfType(biome, Type.OCEAN))
+                    // {
+                    // this.worldObj.setSeaLevel(0);// TODO find height at this
+                    // // location, use 2 less
+                    // // than that
+                    // }
+                    // else
+                    // {
+                    // this.worldObj.setSeaLevel(backupSeaLevel);
+                    // }
                     biome.genTerrainBlocks(this.worldObj, this.rand, primer, chunkX * 16 + i, chunkZ * 16 + j,
                             depthBuffer[j + i * 16]);
                 }
@@ -289,7 +289,7 @@ public class ChunkProviderFinite extends ChunkProviderOverworld
         int k = x * 16;
         int l = z * 16;
         BlockPos blockpos = new BlockPos(k, 0, l);
-        Biome Biome = this.worldObj.getBiome(new BlockPos(k + 16, 0, l + 16));
+        Biome Biome = this.worldObj.getBiomeGenForCoords(new BlockPos(k + 16, 0, l + 16));
         this.rand.setSeed(this.worldObj.getSeed());
         long i1 = this.rand.nextLong() / 2L * 2L + 1L;
         long j1 = this.rand.nextLong() / 2L * 2L + 1L;

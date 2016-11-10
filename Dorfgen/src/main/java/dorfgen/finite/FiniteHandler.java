@@ -3,7 +3,7 @@ package dorfgen.finite;
 import javax.vecmath.Vector3f;
 
 import dorfgen.WorldGenerator;
-import net.minecraft.entity.player.EntityPlayer;
+import dorfgen.finite.Transporter.Vector3;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent.EnteringChunk;
@@ -19,17 +19,13 @@ public class FiniteHandler
     @SubscribeEvent
     public void Wrap(EnteringChunk evt)
     {
-        // TODO properly handle riding entities
-        if (evt.getEntity().isBeingRidden()) return;
-
-        Vector3f pos = new Vector3f();
+        Vector3 pos = new Vector3(evt.getEntity().getPosition());
         pos.x = (float) evt.getEntity().posX;
         pos.y = (float) evt.getEntity().posY;
         pos.z = (float) evt.getEntity().posZ;
         int[] shift = new int[2];
         shift[0] = WorldGenerator.shift.getX();
         shift[1] = WorldGenerator.shift.getY();
-        // TODO maybe make a config as to which map to use for wrapping.
         if (!isInImage(WorldGenerator.instance.dorfs.biomeMap, shift, WorldGenerator.scale, pos))
         {
             Biome[][] image = WorldGenerator.instance.dorfs.biomeMap;
@@ -60,13 +56,7 @@ public class FiniteHandler
             {
                 pos.z = yMax - (yMin - pos.z) - 1;
             }
-
-            boolean newIn = isInImage(WorldGenerator.instance.dorfs.biomeMap, shift, WorldGenerator.scale, pos);
-            // TODO remove this print when done.
-            if (evt.getEntity() instanceof EntityPlayer) System.out.println(
-                    pos + " " + xMin + " " + xMax + " " + yMin + " " + yMax + " " + scale + " " + posOld + " " + newIn);
-            Transporter.teleportEntity(evt.getEntity(), pos, evt.getEntity().dimension, false);
-
+            Transporter.teleportEntity(evt.getEntity(), pos, evt.getEntity().dimension);
         }
     }
 
