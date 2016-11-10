@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Vector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -18,7 +20,10 @@ import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.block.IOwnableTE;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -207,6 +212,22 @@ public class TickHandler
         if (world != null)
         {
             world.removeChunk(evt.getChunk());
+        }
+    }
+
+    public static Map<UUID, Integer> playerTickTracker = Maps.newHashMap();
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void PlayerTick(PlayerTickEvent event)
+    {
+        if (event.phase == Phase.END && playerTickTracker.containsKey(event.player.getUniqueID()))
+        {
+            Integer time = playerTickTracker.remove(event.player.getUniqueID());
+            if (time < event.player.ticksExisted - 10)
+            {
+                Minecraft.getMinecraft().gameSettings.viewBobbing = true;
+            }
         }
     }
 

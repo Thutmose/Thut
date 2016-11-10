@@ -498,6 +498,12 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             boolean check = lift.getCurrentFloor() == this.floor && (int) (lift.motionY * 16) == 0;
             IBlockState state = worldObj.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
+
+            if (callPanel && !old && !lift.getCalled())
+            {
+                if (worldObj.isBlockPowered(getPos())) lift.call(floor);
+            }
+
             if (check != old)
             {
                 state = state.withProperty(BlockLift.CURRENT, check);

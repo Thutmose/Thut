@@ -18,9 +18,9 @@ import dorfgen.worldgen.WorldChunkManagerFinite;
 import dorfgen.worldgen.WorldTypeFinite;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
 import net.minecraftforge.common.MinecraftForge;
@@ -165,7 +165,7 @@ public class WorldGenerator
     @SubscribeEvent
     public void genEvent(Load evt)
     {
-        if (evt.world.provider.getWorldChunkManager() instanceof WorldChunkManagerFinite)
+        if (evt.getWorld().provider.getWorldChunkManager() instanceof WorldChunkManagerFinite)
         {
 
             if (!spawnSite.isEmpty())
@@ -196,7 +196,7 @@ public class WorldGenerator
             {
                 ArrayList<Site> sites = new ArrayList<Site>(DorfMap.sitesById.values());
 
-                Collections.shuffle(sites, evt.world.rand);
+                Collections.shuffle(sites, evt.getWorld().rand);
 
                 for (Site s : sites)
                 {

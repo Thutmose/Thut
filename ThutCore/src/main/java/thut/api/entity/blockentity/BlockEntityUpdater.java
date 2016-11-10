@@ -20,6 +20,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
 
 public class BlockEntityUpdater
@@ -418,6 +419,11 @@ public class BlockEntityUpdater
             if (player.worldObj.isRemote)
             {
                 // This fixes jitter, need a better way to handle this.
+                if (Minecraft.getMinecraft().gameSettings.viewBobbing
+                        || TickHandler.playerTickTracker.containsKey(player.getUniqueID()))
+                {
+                    TickHandler.playerTickTracker.put(player.getUniqueID(), player.ticksExisted);
+                }
                 Minecraft.getMinecraft().gameSettings.viewBobbing = false;
             }
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)

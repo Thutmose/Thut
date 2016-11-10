@@ -12,8 +12,7 @@ import dorfgen.conversion.DorfMap.Site;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.math.BlockPos;
 
 public class Commands implements ICommand
 {

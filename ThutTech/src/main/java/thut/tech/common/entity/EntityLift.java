@@ -359,7 +359,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return false;
     }
 
-    private boolean getCalled()
+    public boolean getCalled()
     {
         return dataManager.get(CALLEDDW);
     }

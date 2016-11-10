@@ -28,7 +28,7 @@ repositories {
 dependencies {
     compile "li.cil.oc:OpenComputers:MC${version_oc}:api"
     compile "net.darkhax.tesla:Tesla:${version_tesla}"
-    deobfCompile name: 'thutcore', version: "${version_thutcore}", ext: 'jar'
+    deobfCompile name: 'thutcore', version: "${version_core}", ext: 'jar'
 }
 group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "thuttech"
