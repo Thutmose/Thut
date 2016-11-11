@@ -8,6 +8,7 @@ import com.google.common.base.Predicate;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -15,6 +16,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 
 public class BlockEntityWorld extends World
@@ -160,6 +162,23 @@ public class BlockEntityWorld extends World
     protected IChunkProvider createChunkProvider()
     {
         return null;
+    }
+
+    /** Gets the chunk at the specified location. */
+    public Chunk getChunkFromChunkCoords(int chunkX, int chunkZ)
+    {// TODO make this instead check if in region and make fake chunks
+     // accordingly.
+     // System.out.println(chunkX+" "+chunkZ);
+
+        Chunk ret = new Chunk(this, chunkX, chunkZ);
+        for (int i = 0; i < 16; i++)
+            for (int j = 0; j < 16; j++)
+                for (int k = 0; k < 16; k++)
+                {
+                    ret.setBlockState(new BlockPos(i, j, k), Blocks.STONE.getDefaultState());
+                }
+
+        return ret;
     }
 
     @Override

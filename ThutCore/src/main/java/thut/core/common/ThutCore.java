@@ -46,7 +46,7 @@ import thut.core.common.handlers.ConfigHandler;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.reference.ThutCoreReference;
 
-@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS)
+@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS, guiFactory = "thut.core.client.config.ModGuiFactory")
 public class ThutCore
 {
 

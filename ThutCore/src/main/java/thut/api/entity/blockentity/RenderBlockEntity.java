@@ -56,7 +56,6 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             if (entity instanceof IMultiplePassengerEntity)
             {
                 IMultiplePassengerEntity multi = (IMultiplePassengerEntity) entity;
-
                 float yaw = -(multi.getPrevYaw() + (multi.getYaw() - multi.getPrevYaw()) * partialTicks);
                 float pitch = -(multi.getPrevPitch() + (multi.getPitch() - multi.getPrevPitch()) * partialTicks);
                 GL11.glRotatef(yaw, 0, 1, 0);
@@ -70,7 +69,6 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             int zMax = MathHelper.floor_double(blockEntity.getMax().getZ() + entity.posZ);
             int yMin = (int) Math.round(blockEntity.getMin().getY() + entity.posY);
             int yMax = (int) Math.round(blockEntity.getMax().getY() + entity.posY);
-
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)

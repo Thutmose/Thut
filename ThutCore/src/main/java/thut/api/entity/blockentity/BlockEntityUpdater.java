@@ -3,6 +3,7 @@ package thut.api.entity.blockentity;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.vecmath.Vector3f;
@@ -20,11 +21,24 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
 
 public class BlockEntityUpdater
 {
+    final static Map<Class<? extends TileEntity>, String> tileMap;
+
+    static
+    {
+        tileMap = ReflectionHelper.getPrivateValue(TileEntity.class, null, "classToNameMap", "field_145853_j", "g");
+    }
+
+    public static boolean isWhitelisted(TileEntity tile)
+    {
+        return IBlockEntity.TEWHITELIST.contains(tileMap.get(tile.getClass()));
+    }
+
     final IBlockEntity  blockEntity;
     final Entity        theEntity;
     List<AxisAlignedBB> blockBoxes = Lists.newArrayList();
@@ -79,7 +93,9 @@ public class BlockEntityUpdater
                     }
                     if (blockEntity.getTiles()[i][j][k] instanceof ITickable)
                     {
-                        if (erroredSet.contains(blockEntity.getTiles()[i][j][k])) continue;
+                        if (erroredSet.contains(blockEntity.getTiles()[i][j][k])
+                                || !isWhitelisted(blockEntity.getTiles()[i][j][k]))
+                            continue;
                         try
                         {
                             ((ITickable) blockEntity.getTiles()[i][j][k]).update();

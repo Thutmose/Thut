@@ -3,9 +3,12 @@ package thut.api.entity.blockentity;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
@@ -22,6 +25,8 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public interface IBlockEntity
 {
+    public static Set<String> TEWHITELIST = Sets.newHashSet();
+
     public static class BlockEntityFormer
     {
         private static final Logger LOGGER = LogManager.getLogger();
