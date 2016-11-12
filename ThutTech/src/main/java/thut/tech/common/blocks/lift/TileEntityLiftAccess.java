@@ -448,7 +448,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         this.lift = lift;
         this.liftID = lift.getUniqueID();
-        PacketHandler.sendTileUpdate(this);
+        if (!worldObj.isRemote) PacketHandler.sendTileUpdate(this);
     }
 
     public void setRoot(TileEntityLiftAccess root)

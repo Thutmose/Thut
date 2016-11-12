@@ -21,6 +21,9 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.TickHandler;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
+/** This is the main manager for the multi-threaded mob AI code. It creates the
+ * threads, and manages sorting the AI tasks to which thread they should be on.
+ * It also calls the various tick methods for the AI on the AI threads. */
 public class AIThreadManager
 {
     /** A collecion of AITasks and AILogics for the entity to run on seperate
@@ -48,6 +51,10 @@ public class AIThreadManager
             aiTasks.add(task);
         }
 
+        /** Run all of the server-thread tasks for the IAIRunnables. The
+         * ILogicRunnables are managed elsewhere.
+         * 
+         * @param world */
         public void runServerThreadTasks(World world)
         {
             for (IAIRunnable ai : aiTasks)
@@ -56,6 +63,8 @@ public class AIThreadManager
             }
         }
 
+        /** Run all of the thread-safe methods for the IAIRunnables and the
+         * ILogicRunnables. */
         public void tick()
         {
             ArrayList list;
@@ -141,6 +150,8 @@ public class AIThreadManager
                     System.out.println("This is Thread " + id);
                     while (true)
                     {
+                        // Wait for the lock to be notified from the main
+                        // thread.
                         synchronized (lock)
                         {
                             try
@@ -152,6 +163,8 @@ public class AIThreadManager
                                 e.printStackTrace();
                             }
                         }
+                        // After being notified, run though all of the scheduled
+                        // AIStuffs to tick.
                         synchronized (aiStuff)
                         {
                             while (!aiStuff.isEmpty())
@@ -216,7 +229,8 @@ public class AIThreadManager
         TickHandler.getInstance().worldCaches.clear();
     }
 
-    /** Sets the AIStuff to tick on correct thread.
+    /** Sets the AIStuff to tick on correct thread. the Queue is locked when
+     * reading, so this will wait instead of causing a CME
      * 
      * @param blockEntity
      * @param task */
@@ -260,6 +274,8 @@ public class AIThreadManager
     {
         if (evt.phase == Phase.END)
         {
+            // Loop through the threads, and notify the locks. this makes them
+            // run the AI Ticks that were scheduled this tick
             for (AIThread thread : AIThread.threads.values())
             {
                 try
@@ -292,11 +308,14 @@ public class AIThreadManager
             mob = event.getEntity().getCapability(IAIMob.THUTMOBAI, null);
             ai = mob.getAI();
         }
+        // If not IAIMob, or self managed, then no need to run AI stuff.
         if (mob == null || mob.selfManaged() || ai == null) return;
+        // Run the ILogicRunnables on both server and client side.
         for (ILogicRunnable logic : ai.aiLogic)
         {
             logic.doServerTick(event.getEntity().worldObj);
         }
+        // Run remainder if AI server side only.
         if (!event.getEntity().worldObj.isRemote) updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
     }
 

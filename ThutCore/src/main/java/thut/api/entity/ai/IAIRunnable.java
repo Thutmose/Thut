@@ -2,6 +2,11 @@ package thut.api.entity.ai;
 
 import net.minecraft.world.World;
 
+/** This is a custom version of minecraft's EntityAI, it is capable of being run
+ * on separate threads to improve performance. Every method here other than
+ * doMainThreadTick() must be made such that it is thread safe. <br>
+ * These methods are only ever called on the server, they are never called from
+ * client side. */
 public interface IAIRunnable
 {
     /** called to execute the needed non-threadsafe tasks on the main thread. */
