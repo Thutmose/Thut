@@ -137,7 +137,7 @@ public class XMLStuff
             for (int i = 0; i < rewards.size(); i++)
             {
                 ItemStack reward = rewards.get(i);
-                giveItem(entityPlayer, reward);
+                giveItem(entityPlayer, reward.copy());
                 message = message + reward.getDisplayName() + " x" + reward.stackSize;
                 if (i < rewards.size() - 1) message = message + ", ";
             }
