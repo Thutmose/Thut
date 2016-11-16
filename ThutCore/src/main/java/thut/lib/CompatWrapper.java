@@ -7,9 +7,11 @@ import com.google.common.collect.Lists;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
@@ -103,6 +105,16 @@ public class CompatWrapper
         for (int i = 0; i < size; i++)
             ret.add(nullStack);
         return ret;
+    }
+
+    public static void rightClickWith(ItemStack stack, EntityPlayer player, EnumHand hand)
+    {
+        stack.getItem().onItemRightClick(stack, player.worldObj, player, hand);
+    }
+
+    public static NBTTagCompound getTag(ItemStack stack, String name, boolean create)
+    {
+        return stack.getSubCompound(name, create);
     }
 
 }
