@@ -215,4 +215,10 @@ public class TileEntityMultiBlockPart extends TileEntity implements ISidedInvent
         compound.setInteger("type", type);
         return compound;
     }
+
+    //TODO what does this do?
+    public boolean func_191420_l()
+    {
+        return true;
+    }
 }

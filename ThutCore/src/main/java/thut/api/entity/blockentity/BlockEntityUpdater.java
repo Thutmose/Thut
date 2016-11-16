@@ -24,6 +24,7 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
+import thut.lib.CompatWrapper;
 
 public class BlockEntityUpdater
 {
@@ -425,7 +426,7 @@ public class BlockEntityUpdater
             // temp1.add(new Vector3f((float) entity.posX, (float) entity.posY,
             // (float) entity.posZ));
             // entity.setPosition(temp1.x, temp1.y, temp1.z);
-            entity.moveEntity(temp1.x, temp1.y, temp1.z);
+            CompatWrapper.moveEntitySelf(entity, temp1.x, temp1.y, temp1.z);
         }
         // Extra stuff to do with players.
         if (entity instanceof EntityPlayer)

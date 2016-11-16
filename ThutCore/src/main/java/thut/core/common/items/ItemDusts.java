@@ -61,11 +61,11 @@ public class ItemDusts extends Item
     @Override
     /** returns a list of items with the same ID, but different meta (eg: dye
      * returns 16 items) */
-    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> par3List)
+    public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems)
     {
         for (int j = 0; j < lastDust; ++j)
         {
-            par3List.add(new ItemStack(par1, 1, j));
+            subItems.add(new ItemStack(itemIn, 1, j));
         }
     }
 
@@ -80,9 +80,11 @@ public class ItemDusts extends Item
         return dust != null ? "item." + dust.name : super.getUnlocalizedName(stack);
     }
 
-    @Override
-    // public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World
-    // world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
+    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX,
+            float hitY, float hitZ, EnumHand hand)
+    {
+        return onItemUseFirst(player.getHeldItem(hand), player, world, pos, side, hitX, hitY, hitZ, hand);
+    }
 
     public EnumActionResult onItemUseFirst(ItemStack stack, EntityPlayer player, World world, BlockPos pos,
             EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand)

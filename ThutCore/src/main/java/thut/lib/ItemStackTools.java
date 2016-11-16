@@ -25,7 +25,7 @@ public class ItemStackTools
                     if (j >= 0)
                     {
                         toAddTo.setInventorySlotContents(j, CompatWrapper.copy(itemStackIn));
-                        toAddTo.getStackInSlot(j).animationsToGo = 5;
+                        CompatWrapper.setAnimationToGo(toAddTo.getStackInSlot(j), 5);
                         CompatWrapper.setStackSize(itemStackIn, 0);
                         return true;
                     }
@@ -125,7 +125,7 @@ public class ItemStackTools
         if (k == 0) { return i; }
         i = i - k;
         CompatWrapper.setStackSize(inventory.getStackInSlot(j), size + k);
-        inventory.getStackInSlot(j).animationsToGo = 5;
+        CompatWrapper.setAnimationToGo(inventory.getStackInSlot(j), 5);
         return i;
     }
 }

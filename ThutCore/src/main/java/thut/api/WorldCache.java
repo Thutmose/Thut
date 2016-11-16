@@ -72,7 +72,7 @@ public class WorldCache implements IBlockAccess
 
     void addChunk(Chunk chunk)
     {
-        long key = ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+        long key = asLong(chunk.xPosition, chunk.zPosition);
         ChunkCache chunkcache = new ChunkCache(chunk);
         map.put(key, chunkcache);
         cache.add(chunkcache);
@@ -100,7 +100,7 @@ public class WorldCache implements IBlockAccess
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
-        long key = ChunkPos.chunkXZ2Int(l, i1);
+        long key = asLong(l, i1);
         ChunkCache chunk = map.get(key);
         if (chunk == null) return Blocks.AIR.getDefaultState();
         return chunk.getBlockState(pos);
@@ -108,7 +108,7 @@ public class WorldCache implements IBlockAccess
 
     public Chunk getChunk(int chunkX, int chunkZ)
     {
-        long key = ChunkPos.chunkXZ2Int(chunkX, chunkZ);
+        long key = asLong(chunkX, chunkZ);
         ChunkCache chunkcache = map.get(key);
         if (chunkcache == null) return null;
         return chunkcache.chunk;
@@ -131,7 +131,7 @@ public class WorldCache implements IBlockAccess
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
-        long key = ChunkPos.chunkXZ2Int(l, i1);
+        long key = asLong(l, i1);
         ChunkCache chunk = map.get(key);
         if (chunk == null) return null;
         return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
@@ -155,7 +155,7 @@ public class WorldCache implements IBlockAccess
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
-        long key = ChunkPos.chunkXZ2Int(l, i1);
+        long key = asLong(l, i1);
         ChunkCache chunk = map.get(key);
         if (chunk == null || chunk.isEmpty()) return _default;
         IBlockState state;
@@ -164,8 +164,14 @@ public class WorldCache implements IBlockAccess
 
     void removeChunk(Chunk chunk)
     {
-        long key = ChunkPos.chunkXZ2Int(chunk.xPosition, chunk.zPosition);
+        long key = asLong(chunk.xPosition, chunk.zPosition);
         ChunkCache chunkcache = map.remove(key);
         if (chunkcache != null) cache.remove(chunkcache);
+    }
+
+    /** Converts the chunk coordinate pair to a long */
+    public static long asLong(int x, int z)
+    {
+        return (long) x & 4294967295L | ((long) z & 4294967295L) << 32;
     }
 }

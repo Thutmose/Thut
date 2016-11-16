@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
+import net.minecraft.entity.EntityList.EntityEggInfo;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -93,6 +94,11 @@ public class CompatWrapper
         return in;
     }
 
+    public static void setAnimationToGo(ItemStack stack, int num)
+    {
+        stack.animationsToGo = num;
+    }
+
     public static int increment(ItemStack in, int amt)
     {
         in.stackSize += amt;
@@ -115,6 +121,16 @@ public class CompatWrapper
     public static NBTTagCompound getTag(ItemStack stack, String name, boolean create)
     {
         return stack.getSubCompound(name, create);
+    }
+
+    public static void processInitialInteract(Entity in, EntityPlayer player, EnumHand hand, ItemStack stack)
+    {
+        in.processInitialInteract(player, stack, hand);
+    }
+
+    public static EntityEggInfo getEggInfo(String name, int colour1, int colour2)
+    {
+        return new EntityEggInfo(name, colour1, colour2);
     }
 
 }
