@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
+import thut.lib.CompatWrapper;
 
 public class PacketPipeline
 {
@@ -112,8 +113,8 @@ public class PacketPipeline
                     public void run()
                     {
                         IBlockState state = player1.worldObj.getBlockState(pos);
-                        state.getBlock().onBlockActivated(player1.worldObj, pos, state, player1, EnumHand.MAIN_HAND,
-                                player1.getHeldItemMainhand(), side, hit.x, hit.y, hit.z);
+                        CompatWrapper.interactWithBlock(state.getBlock(), player1.worldObj, pos, state, player1,
+                                EnumHand.MAIN_HAND, player1.getHeldItemMainhand(), side, hit.x, hit.y, hit.z);
                     }
                 });
             }

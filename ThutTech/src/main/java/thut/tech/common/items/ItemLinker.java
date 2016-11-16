@@ -38,6 +38,7 @@ import thut.api.boom.ExplosionCustom;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
+import thut.lib.CompatWrapper;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
@@ -139,7 +140,13 @@ public class ItemLinker extends Item
         }
     }
 
-    @Override
+    // 1.11
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
+    {
+        return onItemRightClick(player.getHeldItem(hand), world, player, hand);
+    }
+
+    // 1.10
     public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World worldIn, EntityPlayer playerIn,
             EnumHand hand)
     {
@@ -163,7 +170,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.toobig";
                 if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
-                return super.onItemRightClick(itemstack, worldIn, playerIn, hand);
+                return new ActionResult<>(EnumActionResult.PASS, itemstack);
             }
             int num = (dw + 1) * (max.getY() - min.getY() + 1);
             int count = 0;
@@ -172,15 +179,15 @@ public class ItemLinker extends Item
                 if (item != null)
                 {
                     ItemStack test = item.copy();
-                    test.stackSize = liftblocks.stackSize;
-                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += item.stackSize;
+                    CompatWrapper.setStackSize(test, CompatWrapper.getStackSize(liftblocks));
+                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += CompatWrapper.getStackSize(item);
                 }
             }
             if (!playerIn.capabilities.isCreativeMode && count < num)
             {
                 String message = "msg.lift.noblock";
                 if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, num));
-                return super.onItemRightClick(itemstack, worldIn, playerIn, hand);
+                return new ActionResult<>(EnumActionResult.PASS, itemstack);
             }
             else if (!playerIn.capabilities.isCreativeMode)
             {
@@ -197,7 +204,7 @@ public class ItemLinker extends Item
             }
             itemstack.getTagCompound().removeTag("min");
         }
-        return super.onItemRightClick(itemstack, worldIn, playerIn, hand);
+        return new ActionResult<>(EnumActionResult.PASS, itemstack);
     }
 
     public void tryBoom(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand,
@@ -289,7 +296,14 @@ public class ItemLinker extends Item
         }
     }
 
-    @Override
+    // 1.11
+    public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand,
+            EnumFacing side, float hitX, float hitY, float hitZ)
+    {
+        return onItemUse(playerIn.getHeldItem(hand), playerIn, worldIn, pos, hand, side, hitX, hitY, hitZ);
+    }
+
+    // 1.10
     public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
             EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
@@ -331,8 +345,8 @@ public class ItemLinker extends Item
                 if (item != null)
                 {
                     ItemStack test = item.copy();
-                    test.stackSize = liftblocks.stackSize;
-                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += item.stackSize;
+                    CompatWrapper.setStackSize(test, CompatWrapper.getStackSize(liftblocks));
+                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += CompatWrapper.getStackSize(item);
                 }
             }
             if (!playerIn.capabilities.isCreativeMode && count < num)

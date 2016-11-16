@@ -19,6 +19,7 @@ import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import thut.api.entity.blockentity.IBlockEntity;
+import thut.lib.CompatWrapper;
 import thut.tech.common.items.ItemLinker;
 import thut.tech.common.network.PacketPipeline;
 
@@ -57,8 +58,8 @@ public class LiftInteractHandler
             side = trace.sideHit;
         }
         IBlockState state = lift.getFakeWorld().getBlockState(pos);
-        boolean activate = state.getBlock().onBlockActivated(lift.getFakeWorld(), pos, state, player, hand, stack, side,
-                hitX, hitY, hitZ);
+        boolean activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getFakeWorld(), pos, state, player,
+                hand, stack, side, hitX, hitY, hitZ);
         if (activate) return EnumActionResult.SUCCESS;
         else if (trace == null || !state.getMaterial().isSolid())
         {
@@ -71,8 +72,8 @@ public class LiftInteractHandler
                 hitX = (float) (result.hitVec.xCoord - pos.getX());
                 hitY = (float) (result.hitVec.yCoord - pos.getY());
                 hitZ = (float) (result.hitVec.zCoord - pos.getZ());
-                activate = state.getBlock().onBlockActivated(lift.getEntityWorld(), pos, state, player, hand, stack,
-                        result.sideHit, hitX, hitY, hitZ);
+                activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getEntityWorld(), pos, state, player,
+                        hand, stack, result.sideHit, hitX, hitY, hitZ);
                 if (activate && lift.worldObj.isRemote)
                 {
                     PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(25));

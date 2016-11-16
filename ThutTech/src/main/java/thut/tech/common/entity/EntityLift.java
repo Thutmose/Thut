@@ -40,6 +40,7 @@ import thut.api.entity.blockentity.BlockEntityUpdater;
 import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
+import thut.lib.CompatWrapper;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
 
@@ -316,7 +317,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (!toMoveX) motionX = 0;
         if (!toMoveY) motionY = 0;
         if (!toMoveZ) motionZ = 0;
-        if (getCalled()) this.moveEntity(motionX, motionY, motionZ);
+        if (getCalled()) CompatWrapper.moveEntitySelf(this, motionX, motionY, motionZ);
     }
 
     @Override
@@ -399,8 +400,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return dataManager.get(DESTINATIONZDW);
     }
 
-    @Override
-    /** Applies the given player interaction to this Entity. */
+    // 1.11
+    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, EnumHand hand)
+    {
+        return applyPlayerInteraction(player, vec, player.getHeldItem(hand), hand);
+    }
+
+    // 1.10
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
             EnumHand hand)
     {
@@ -408,8 +414,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return interacter.applyPlayerInteraction(player, vec, stack, hand);
     }
 
-    /** First layer of player interaction */
-    @Override
+    // 1.11
+    public boolean processInitialInteract(EntityPlayer player, EnumHand hand)
+    {
+        return processInitialInteract(player, player.getHeldItem(hand), hand);
+    }
+
+    // 1.10
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
     {
         return interacter.processInitialInteract(player, stack, hand);
@@ -543,15 +554,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
             boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
         }
-
         if (nbt.hasKey("higher")) id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
         if (nbt.hasKey("ownerhigher")) owner = new UUID(nbt.getLong("ownerhigher"), nbt.getLong("ownerlower"));
-
-        if (nbt.hasKey("replacement"))
-        {
-            NBTTagCompound held = nbt.getCompoundTag("replacement");
-            setHeldItem(null, ItemStack.loadItemStackFromNBT(held));
-        }
         readList(nbt);
         readBlocks(nbt);
     }
@@ -728,13 +732,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             nbt.setLong("ownerlower", owner.getLeastSignificantBits());
             nbt.setLong("ownerhigher", owner.getMostSignificantBits());
         }
-        if (getHeldItem(null) != null)
-        {
-            NBTTagCompound held = new NBTTagCompound();
-            getHeldItem(null).writeToNBT(held);
-            nbt.setTag("replacement", held);
-        }
-
         writeList(nbt);
         try
         {
