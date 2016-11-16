@@ -22,6 +22,7 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -41,6 +42,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public int                          power        = 0;
     public int                          prevPower    = 1;
     public EntityLift                   lift;
+    public IBlockState                  copiedState  = null;
     boolean                             listNull     = false;
     List<Entity>                        list         = new ArrayList<Entity>();
     Vector3                             here;
@@ -404,6 +406,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         this.readFromNBT(nbttagcompound);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void readFromNBT(NBTTagCompound par1)
     {
@@ -417,6 +420,14 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (sides.length != 6) sides = new byte[6];
         sidePages = par1.getByteArray("sidePages");
         if (sidePages.length != 6) sidePages = new byte[6];
+        if (par1.hasKey("state"))
+        {
+            NBTTagCompound state = par1.getCompoundTag("state");
+            String key = state.getString("K");
+            int meta = state.getInteger("M");
+            Block block = Block.REGISTRY.getObject(new ResourceLocation(key));
+            if (block != null) copiedState = block.getStateFromMeta(meta);
+        }
     }
 
     public void setEnergy(double energy)
@@ -601,6 +612,13 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             par1.setLong("idLess", liftID.getLeastSignificantBits());
             par1.setLong("idMost", liftID.getMostSignificantBits());
+        }
+        if (copiedState != null)
+        {
+            NBTTagCompound state = new NBTTagCompound();
+            state.setString("K", copiedState.getBlock().getRegistryName().toString());
+            state.setInteger("M", copiedState.getBlock().getMetaFromState(copiedState));
+            par1.setTag("state", state);
         }
         return par1;
     }

@@ -129,7 +129,7 @@ public class BlockLift extends Block implements ITileEntityProvider
         super(Material.IRON);
         setHardness(3.5f);
         this.setUnlocalizedName("lift");
-        this.setTickRandomly(true);
+        this.setTickRandomly(false);
         this.setCreativeTab(TechCore.tabThut);
         this.setDefaultState(this.blockState.getBaseState().withProperty(VARIANT, EnumType.CONTROLLER)
                 .withProperty(CALLED, Boolean.valueOf(false)).withProperty(CURRENT, Boolean.valueOf(false)));
@@ -265,7 +265,27 @@ public class BlockLift extends Block implements ITileEntityProvider
                 && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
                         || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                         || heldItem.getItem() instanceof ItemLinker || heldItem.getItem() == Items.STICK);
-        if (heldItem != null && playerIn.isSneaking() && !linkerOrStick) { return false; }
+
+        if (heldItem != null && playerIn.isSneaking() && !linkerOrStick)
+        {
+            System.out.println(heldItem);
+            return false;
+        }
+        else if (heldItem != null && !linkerOrStick && side == EnumFacing.DOWN)
+        {
+            Block b = Block.getBlockFromItem(heldItem.getItem());
+            if (b != null && state.getValue(VARIANT) == EnumType.CONTROLLER)
+            {
+                @SuppressWarnings("deprecation")
+                IBlockState newState = b.getStateFromMeta(heldItem.getItemDamage());
+                System.out.println(newState);
+                TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+                te.copiedState = newState;
+                return true;
+            }
+
+            return false;
+        }
         if (state.getValue(VARIANT) == EnumType.LIFT)
         {
             return false;
@@ -350,6 +370,14 @@ public class BlockLift extends Block implements ITileEntityProvider
             int meta, EntityLivingBase placer)
     {
         return getStateFromMeta(meta);
+    }
+
+    @Deprecated
+    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos)
+    {
+        TileEntityLiftAccess tile = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+        if (tile != null && tile.copiedState != null) return tile.copiedState;
+        return state;
     }
 
     /** Rotate the block. For vanilla blocks this rotates around the axis passed
