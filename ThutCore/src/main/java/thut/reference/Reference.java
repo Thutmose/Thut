@@ -1,7 +1,7 @@
 package thut.reference;
 
 /** @author Vexatos */
-public class ThutCoreReference
+public class Reference
 {
     public static final String MOD_ID             = "thutcore";
     public static final String MOD_NAME           = "ThutCore";

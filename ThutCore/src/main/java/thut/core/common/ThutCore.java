@@ -44,19 +44,19 @@ import thut.api.terrain.TerrainManager;
 import thut.core.common.commands.ConfigCommand;
 import thut.core.common.handlers.ConfigHandler;
 import thut.core.common.handlers.PlayerDataHandler;
-import thut.reference.ThutCoreReference;
+import thut.reference.Reference;
 
-@Mod(modid = ThutCoreReference.MOD_ID, name = ThutCoreReference.MOD_NAME, version = ThutCoreReference.VERSION, updateJSON = ThutCoreReference.UPDATEURL, acceptedMinecraftVersions = ThutCoreReference.MCVERSIONS, guiFactory = "thut.core.client.config.ModGuiFactory")
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, guiFactory = "thut.core.client.config.ModGuiFactory")
 public class ThutCore
 {
 
-    @SidedProxy(clientSide = ThutCoreReference.CLIENT_PROXY_CLASS, serverSide = ThutCoreReference.COMMON_PROXY_CLASS)
+    @SidedProxy(clientSide = Reference.CLIENT_PROXY_CLASS, serverSide = Reference.COMMON_PROXY_CLASS)
     public static CommonProxy     proxy;
 
-    @Instance(ThutCoreReference.MOD_ID)
+    @Instance(Reference.MOD_ID)
     public static ThutCore        instance;
 
-    public static final String    modid   = ThutCoreReference.MOD_ID;
+    public static final String    modid   = Reference.MOD_ID;
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
 
     public static Block[]         blocks;

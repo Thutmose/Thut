@@ -6,7 +6,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import thut.tech.ThutTechReference;
+import thut.tech.Reference;
 import thut.tech.common.TechCore;
 import thut.tech.common.items.ItemLinker;
 
@@ -15,7 +15,7 @@ public class ItemHandler
     public static void registerItems()
     {
         new ItemLinker();
-        ItemLinker.instance.setRegistryName(ThutTechReference.MOD_ID, "devicelinker");
+        ItemLinker.instance.setRegistryName(Reference.MOD_ID, "devicelinker");
         ItemLinker.instance.setUnlocalizedName("devicelinker");
         GameRegistry.register(ItemLinker.instance);
     }

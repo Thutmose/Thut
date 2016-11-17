@@ -25,7 +25,7 @@ import thut.api.network.PacketHandler;
 import thut.core.common.CommonProxy;
 import thut.core.common.items.ItemDusts;
 import thut.core.common.items.ItemDusts.Dust;
-import thut.reference.ThutCoreReference;
+import thut.reference.Reference;
 
 public class ClientProxy extends CommonProxy
 {
@@ -42,7 +42,7 @@ public class ClientProxy extends CommonProxy
             if (event.player.worldObj.isRemote && event.player == FMLClientHandler.instance().getClientPlayerEntity())
             {
                 MinecraftForge.EVENT_BUS.unregister(this);
-                Object o = Loader.instance().getIndexedModList().get(ThutCoreReference.MOD_ID);
+                Object o = Loader.instance().getIndexedModList().get(Reference.MOD_ID);
                 CheckResult result = ForgeVersion.getResult(((ModContainer) o));
                 if (result.status == Status.OUTDATED)
                 {

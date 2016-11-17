@@ -10,7 +10,7 @@ import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.config.IConfigElement;
 import thut.core.common.ThutCore;
 import thut.core.common.handlers.ConfigHandler;
-import thut.reference.ThutCoreReference;
+import thut.reference.Reference;
 
 public class ModGuiConfig extends GuiConfig
 {
@@ -33,7 +33,7 @@ public class ModGuiConfig extends GuiConfig
 
     public ModGuiConfig(GuiScreen guiScreen)
     {
-        super(guiScreen, getConfigElements(), ThutCoreReference.MOD_ID, false, false,
+        super(guiScreen, getConfigElements(), Reference.MOD_ID, false, false,
                 GuiConfig.getAbridgedConfigPath(ThutCore.instance.config.getConfigFile().getAbsolutePath()));
     }
 }
