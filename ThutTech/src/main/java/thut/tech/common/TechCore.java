@@ -26,7 +26,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.core.common.CreativeTabThut;
-import thut.tech.ThutTechReference;
+import thut.tech.Reference;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.BlockHandler;
 import thut.tech.common.handlers.ConfigHandler;
@@ -38,13 +38,13 @@ import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer
 import thut.tech.common.tesla.TeslaHandler;
 
 @SuppressWarnings("deprecation")
-@Mod(modid = ThutTechReference.MOD_ID, name = ThutTechReference.MOD_NAME, dependencies = ThutTechReference.DEPSTRING, version = ThutTechReference.VERSION, acceptedMinecraftVersions = ThutTechReference.MCVERSIONS)
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, dependencies = Reference.DEPSTRING, version = Reference.VERSION)
 public class TechCore
 {
-    @SidedProxy(clientSide = ThutTechReference.CLIENT_PROXY_CLASS, serverSide = ThutTechReference.COMMON_PROXY_CLASS)
+    @SidedProxy(clientSide = Reference.CLIENT_PROXY_CLASS, serverSide = Reference.COMMON_PROXY_CLASS)
     public static CommonProxy     proxy;
 
-    @Instance(ThutTechReference.MOD_ID)
+    @Instance(Reference.MOD_ID)
     public static TechCore        instance;
 
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
@@ -94,7 +94,7 @@ public class TechCore
         Configuration config = new Configuration(e.getSuggestedConfigurationFile());
         ConfigHandler.load(config);
         if (!Loader.isModLoaded("tesla")) EntityLift.ENERGYUSE = false;
-        packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel(ThutTechReference.MOD_ID);
+        packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
 
         MinecraftForge.EVENT_BUS.register(this);
 

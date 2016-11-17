@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.tech.ThutTechReference;
+import thut.tech.Reference;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
@@ -62,7 +62,7 @@ public class BlockHandler
     @SuppressWarnings("deprecation")
     public static void registerBlocks(FMLPreInitializationEvent e)
     {
-        Block lift = new BlockLift().setRegistryName(ThutTechReference.MOD_ID, "lift");
+        Block lift = new BlockLift().setRegistryName(Reference.MOD_ID, "lift");
 
         GameRegistry.registerTileEntity(TileEntityLiftAccess.class, "liftaccesste");
 
