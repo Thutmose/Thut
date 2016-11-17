@@ -84,12 +84,12 @@ public class WorldCache implements IBlockAccess
     }
 
     @Override
-    public Biome getBiomeGenForCoords(BlockPos pos)
+    public Biome getBiome(BlockPos pos)
     {
         Biome ret = null;
         synchronized (world)
         {
-            ret = world.getBiomeGenForCoords(pos);
+            ret = world.getBiome(pos);
         }
         return ret;
     }

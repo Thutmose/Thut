@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -111,7 +112,7 @@ public class EntityProjectile extends EntityFallingBlock
                 double dist = here.distanceTo(hit);
                 velocity.scalarMultBy(dist);
                 velocity.setVelocities(this);
-                this.moveEntity(this.motionX, this.motionY, this.motionZ);
+                this.moveEntity(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
                 ExplosionCustom boom = new ExplosionCustom(worldObj, this, hit, 100);
                 float h = block.getBlockHardness(worldObj, hit.getPos());
                 double oldD = d;
@@ -128,7 +129,7 @@ public class EntityProjectile extends EntityFallingBlock
             }
             this.motionY -= 0.03999999910593033D;
 
-            this.moveEntity(this.motionX, this.motionY, this.motionZ);
+            this.moveEntity(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
             this.motionX *= 0.9800000190734863D;
             this.motionY *= 0.9800000190734863D;
             this.motionZ *= 0.9800000190734863D;
@@ -136,7 +137,7 @@ public class EntityProjectile extends EntityFallingBlock
     }
 
     @Override
-    public void moveEntity(double x, double y, double z)
+    public void moveEntity(MoverType type, double x, double y, double z)
     {
         List<AxisAlignedBB> aabbs = Lists.newArrayList();
         Matrix3 mainBox = new Matrix3();
@@ -165,7 +166,7 @@ public class EntityProjectile extends EntityFallingBlock
         x = diffs.x;
         y = diffs.y;
         z = diffs.z;
-        super.moveEntity(x, y, z);
+        super.moveEntity(type, x, y, z);
         if (lock)
         {
             this.worldObj.setBlockState(getPosition(), block);

@@ -1085,7 +1085,7 @@ public class Vector3
 
     public Biome getBiome(World worldObj)
     {
-        return worldObj.getBiomeGenForCoords(new BlockPos(intX(), 0, intZ()));
+        return worldObj.getBiome(new BlockPos(intX(), 0, intZ()));
     }
 
     public int getBiomeID(World worldObj)

@@ -1,6 +1,5 @@
 package thut.tech.common.blocks.lift;
 
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -28,6 +27,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
@@ -227,7 +227,7 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     /** returns a list of blocks with the same ID, but different meta (eg: wood
      * returns 4 blocks) */
-    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> par3List)
+    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
     {
         for (int j = 0; j < 2; j++)
         {

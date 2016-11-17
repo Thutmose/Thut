@@ -135,9 +135,9 @@ public class BlockEntityWorld extends World
     }
 
     @Override
-    public Biome getBiomeGenForCoords(BlockPos pos)
+    public Biome getBiome(BlockPos pos)
     {
-        return world.getBiomeGenForCoords(pos);
+        return world.getBiome(pos);
     }
 
     @Override

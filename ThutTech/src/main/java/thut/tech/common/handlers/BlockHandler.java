@@ -1,12 +1,11 @@
 package thut.tech.common.handlers;
 
-import java.util.List;
-
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -41,7 +40,7 @@ public class BlockHandler
         @SideOnly(Side.CLIENT)
         /** returns a list of items with the same ID, but different meta (eg:
          * dye returns 16 items) */
-        public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List<ItemStack> par3List)
+        public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
         {
             for (int j = 0; j < 2; ++j)
             {
