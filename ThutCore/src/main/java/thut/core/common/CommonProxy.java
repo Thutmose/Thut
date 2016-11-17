@@ -4,11 +4,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import thut.api.network.IPlayerProvider;
-import thut.core.common.blocks.tileentity.TileEntityBlockFluid;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPart;
-import thut.core.common.blocks.tileentity.TileEntityMultiBlockPartFluids;
 
 public class CommonProxy implements IPlayerProvider
 {
@@ -70,8 +66,5 @@ public class CommonProxy implements IPlayerProvider
 
     public void registerTEs()
     {
-		GameRegistry.registerTileEntity(TileEntityMultiBlockPart.class, "multiblockpart");
-		GameRegistry.registerTileEntity(TileEntityMultiBlockPartFluids.class, "multiblockpartfluids");
-        GameRegistry.registerTileEntity(TileEntityBlockFluid.class, "thutfluidte");
     }
 }
