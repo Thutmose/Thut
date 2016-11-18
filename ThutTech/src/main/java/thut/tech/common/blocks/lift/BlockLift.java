@@ -37,6 +37,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.network.PacketHandler;
+import thut.lib.CompatWrapper;
 import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
@@ -284,8 +285,7 @@ public class BlockLift extends Block implements ITileEntityProvider
             Block b = Block.getBlockFromItem(heldItem.getItem());
             if (b != null && state.getValue(VARIANT) == EnumType.CONTROLLER)
             {
-                @SuppressWarnings("deprecation")
-                IBlockState newState = b.getStateFromMeta(heldItem.getItemDamage());
+                IBlockState newState = CompatWrapper.getBlockStateFromMeta(b, heldItem.getItemDamage());
                 System.out.println(newState);
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                 te.copiedState = newState;

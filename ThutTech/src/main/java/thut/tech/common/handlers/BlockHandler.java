@@ -11,7 +11,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -64,7 +63,6 @@ public class BlockHandler
 
     }
 
-    @SuppressWarnings("deprecation")
     public static void registerBlocks(FMLPreInitializationEvent e)
     {
         Block lift = new BlockLift().setRegistryName(Reference.MOD_ID, "lift");

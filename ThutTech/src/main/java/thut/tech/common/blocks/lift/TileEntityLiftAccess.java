@@ -34,6 +34,7 @@ import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
+import thut.lib.CompatWrapper;
 import thut.tech.common.entity.EntityLift;
 
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
@@ -406,7 +407,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         this.readFromNBT(nbttagcompound);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void readFromNBT(NBTTagCompound par1)
     {
@@ -426,7 +426,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             String key = state.getString("K");
             int meta = state.getInteger("M");
             Block block = Block.REGISTRY.getObject(new ResourceLocation(key));
-            if (block != null) copiedState = block.getStateFromMeta(meta);
+            if (block != null) copiedState = CompatWrapper.getBlockStateFromMeta(block, meta);
         }
     }
 
