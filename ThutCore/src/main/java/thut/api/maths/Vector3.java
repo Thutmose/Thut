@@ -40,6 +40,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.IFluidBlock;
+import thut.lib.CompatWrapper;
 
 /** @author Thutmose */
 public class Vector3
@@ -183,12 +184,6 @@ public class Vector3
     public static Vector3 getNewVector()
     {
         return new Vector3();
-    }
-
-    @Deprecated
-    public static Vector3 getNewVectorFromPool()
-    {
-        return getNewVector();
     }
 
     /** determines whether the source can see out as far as range in the given
@@ -1062,11 +1057,6 @@ public class Vector3
         return null;
     }
 
-    @Deprecated
-    public void freeVectorFromPool()
-    {
-    }
-
     public double get(int i)
     {
         assert (i < 3);
@@ -1215,7 +1205,6 @@ public class Vector3
     {
         Vector3 other = offset(side);
         TileEntity ret = other.getTileEntity(worldObj);
-        other.freeVectorFromPool();
         return ret;
     }
 
@@ -1786,12 +1775,11 @@ public class Vector3
         return setBlock(worldObj, id, meta, 3);
     }
 
-    @SuppressWarnings("deprecation")
     public boolean setBlock(World worldObj, Block id, int meta, int flag)
     {
         if (doChunksExist(worldObj, 1))
         {
-            worldObj.setBlockState(getPos(), id.getStateFromMeta(meta), flag);
+            worldObj.setBlockState(getPos(), CompatWrapper.getBlockStateFromMeta(id, meta), flag);
             return true;
         }
         return false;
@@ -1885,7 +1873,6 @@ public class Vector3
     @Override
     public int hashCode()
     {
-        // TODO Auto-generated method stub
         return super.hashCode();
     }
 }

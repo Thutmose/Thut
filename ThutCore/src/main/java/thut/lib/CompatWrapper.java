@@ -145,5 +145,11 @@ public class CompatWrapper
     {
         return new EntityEggInfo(name, colour1, colour2);
     }
+    
+    @SuppressWarnings("deprecation")
+    public static IBlockState getBlockStateFromMeta(Block block, int meta)
+    {
+        return block.getStateFromMeta(meta);
+    }
 
 }

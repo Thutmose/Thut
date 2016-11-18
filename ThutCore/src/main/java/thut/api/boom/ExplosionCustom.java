@@ -33,6 +33,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
+import thut.lib.CompatWrapper;
 
 public class ExplosionCustom extends Explosion
 {
@@ -265,7 +266,6 @@ public class ExplosionCustom extends Explosion
      * 
      * @param destroyed
      * @param pos */
-    @SuppressWarnings("deprecation")
     public void doMeteorStuff(IBlockState destroyed, BlockPos pos)
     {
         if (!destroyed.getMaterial().isSolid() && !destroyed.getMaterial().isLiquid()) return;
@@ -280,7 +280,7 @@ public class ExplosionCustom extends Explosion
         if (resistance > 2 && !destroyed.getMaterial().isLiquid())
         {
             int meta = (int) Math.min(resistance / 2, 15);
-            world.setBlockState(pos, melt.getStateFromMeta(meta));
+            world.setBlockState(pos, CompatWrapper.getBlockStateFromMeta(melt, meta));
         }
         else
         {
