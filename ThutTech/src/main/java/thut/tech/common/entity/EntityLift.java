@@ -481,7 +481,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void readBlocks(NBTTagCompound nbt)
     {
         if (nbt.hasKey("Blocks"))
@@ -517,13 +516,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                         {
                             Block b = Block.getBlockFromItem(Item.getItemById(n));
                             int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
-                            state = b.getStateFromMeta(meta);
+                            state = CompatWrapper.getBlockStateFromMeta(b, meta);
                         }
                         else
                         {
                             Block b = Block.getBlockById(n);
                             int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
-                            state = b.getStateFromMeta(meta);
+                            state = CompatWrapper.getBlockStateFromMeta(b, meta);
                         }
                         blocks[i][k][j] = state;
                         if (blockTag.hasKey("T" + i + "," + k + "," + j))
