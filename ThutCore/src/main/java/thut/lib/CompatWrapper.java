@@ -23,6 +23,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
@@ -73,7 +75,11 @@ public class CompatWrapper
     public static void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod,
             int trackingRange, int updateFrequency, boolean sendsVelocityUpdates)
     {
-        EntityRegistry.registerModEntity(entityClass, entityName, id, mod, trackingRange, updateFrequency,
+        ModContainer mc = FMLCommonHandler.instance().findContainerFor(mod);
+        ResourceLocation regisrtyName;
+        if (entityName.contains(":")) regisrtyName = new ResourceLocation(entityName);
+        else regisrtyName = new ResourceLocation(mc.getModId(), entityName);
+        EntityRegistry.registerModEntity(regisrtyName, entityClass, entityName, id, mod, trackingRange, updateFrequency,
                 sendsVelocityUpdates);
     }
 
