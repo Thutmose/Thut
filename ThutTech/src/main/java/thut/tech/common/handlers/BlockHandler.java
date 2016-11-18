@@ -1,6 +1,9 @@
 package thut.tech.common.handlers;
 
+import java.lang.reflect.Constructor;
 import java.util.List;
+
+import com.google.common.collect.ObjectArrays;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -12,6 +15,7 @@ import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.lib.CompatWrapper;
 import thut.tech.Reference;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
@@ -67,12 +71,34 @@ public class BlockHandler
 
         GameRegistry.registerTileEntity(TileEntityLiftAccess.class, "liftaccesste");
 
-        EntityRegistry.registerModEntity(EntityLift.class, "thuttechlift", 1, TechCore.instance, 32, 1, true);
+        CompatWrapper.registerModEntity(EntityLift.class, "lift", 1, TechCore.instance, 32, 1, true);
 
-        EntityRegistry.registerModEntity(EntityProjectile.class, "thuttechprojectile", 2, TechCore.instance, 32, 1,
-                true);
+        CompatWrapper.registerModEntity(EntityProjectile.class, "projectile", 2, TechCore.instance, 32, 1, true);
 
-        GameRegistry.registerBlock(lift, ItemLiftBlock.class, lift.getRegistryName().toString());
+        register(lift, ItemLiftBlock.class, lift.getRegistryName().toString());
 
+    }
+
+    public static void register(Object o, Class<? extends ItemBlock> clazz, String name)
+    {
+        Block block = (Block) o;
+        if (clazz != null)
+        {
+            ItemBlock i = null;
+            Class<?>[] ctorArgClasses = new Class<?>[1];
+            ctorArgClasses[0] = Block.class;
+            try
+            {
+                Constructor<? extends ItemBlock> itemCtor = clazz.getConstructor(ctorArgClasses);
+                i = itemCtor.newInstance(ObjectArrays.concat(block, new Object[0]));
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+            // block registration has to happen first
+            GameRegistry.register(block.getRegistryName() == null ? block.setRegistryName(name) : block);
+            if (i != null) GameRegistry.register(i.setRegistryName(name));
+        }
     }
 }
