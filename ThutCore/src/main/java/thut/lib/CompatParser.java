@@ -114,13 +114,20 @@ public class CompatParser
             foundClasses = ClassFinder.find(classPackage);
             for (Class<?> c : foundClasses)
             {
-                CompatClass comp = null;
-                for (java.lang.reflect.Method m : c.getMethods())
+                try
                 {
-                    if ((comp = m.getAnnotation(CompatClass.class)) != null)
+                    CompatClass comp = null;
+                    for (java.lang.reflect.Method m : c.getMethods())
                     {
-                        initMethods.get(comp.phase()).add(m);
+                        if ((comp = m.getAnnotation(CompatClass.class)) != null)
+                        {
+                            initMethods.get(comp.phase()).add(m);
+                        }
                     }
+                }
+                catch (Throwable e)
+                {
+                    System.err.println("Error with " + c);
                 }
             }
         }
