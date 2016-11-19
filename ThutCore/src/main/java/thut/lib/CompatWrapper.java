@@ -102,7 +102,7 @@ public class CompatWrapper
 
     public static ItemStack validate(ItemStack in)
     {
-        if (!isValid(in)) return nullStack;
+        if (in == null || !isValid(in)) return nullStack;
         return in;
     }
 
@@ -161,7 +161,7 @@ public class CompatWrapper
     {
         return new EntityEggInfo(new ResourceLocation(name), colour1, colour2);
     }
-    
+
     @SuppressWarnings("deprecation")
     public static IBlockState getBlockStateFromMeta(Block block, int meta)
     {
