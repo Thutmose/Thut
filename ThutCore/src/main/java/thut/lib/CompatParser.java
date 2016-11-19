@@ -62,7 +62,7 @@ public class CompatParser
                             {
                                 classes.add(Class.forName(s.replace(CLASS_SUFFIX, "").replace(SLASH, DOT)));
                             }
-                            catch (ClassNotFoundException ignore)
+                            catch (Throwable ignore)
                             {
                             }
                         }
