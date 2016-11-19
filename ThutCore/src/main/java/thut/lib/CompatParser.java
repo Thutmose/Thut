@@ -62,14 +62,14 @@ public class CompatParser
                             {
                                 classes.add(Class.forName(s.replace(CLASS_SUFFIX, "").replace(SLASH, DOT)));
                             }
-                            catch (ClassNotFoundException ignore)
+                            catch (Throwable ignore)
                             {
                             }
                         }
                     }
                     zip.close();
                 }
-                catch (Exception e)
+                catch (Throwable e)
                 {
                     e.printStackTrace();
                 }
@@ -96,7 +96,7 @@ public class CompatParser
                 {
                     classes.add(Class.forName(className));
                 }
-                catch (ClassNotFoundException ignore)
+                catch (Throwable ignore)
                 {
                 }
             }
@@ -131,7 +131,7 @@ public class CompatParser
                 }
             }
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             e.printStackTrace();
         }
