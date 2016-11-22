@@ -770,7 +770,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn)
     {
-        return null;
+        return CompatWrapper.nullStack;
     }
 
     @Override
@@ -781,7 +781,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public ItemStack getHeldItem(EnumHand hand)
     {
-        return null;
+        return CompatWrapper.nullStack;
     }
 
     @Override
