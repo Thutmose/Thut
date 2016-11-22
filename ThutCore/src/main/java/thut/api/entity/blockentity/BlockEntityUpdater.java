@@ -3,7 +3,6 @@ package thut.api.entity.blockentity;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.vecmath.Vector3f;
@@ -18,26 +17,22 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.registry.GameData;
 import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
 import thut.lib.CompatWrapper;
 
 public class BlockEntityUpdater
 {
-    final static Map<Class<? extends TileEntity>, String> tileMap;
-
-    static
-    {
-        tileMap = ReflectionHelper.getPrivateValue(TileEntity.class, null, "classToNameMap", "field_145853_j", "g");
-    }
-
     public static boolean isWhitelisted(TileEntity tile)
     {
-        return IBlockEntity.TEWHITELIST.contains(tileMap.get(tile.getClass()));
+        @SuppressWarnings("deprecation")
+        ResourceLocation id = GameData.getTileEntityRegistry().getNameForObject(tile.getClass());
+        return id == null ? false : IBlockEntity.TEWHITELIST.contains(id.toString());
     }
 
     final IBlockEntity  blockEntity;

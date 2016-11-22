@@ -2,7 +2,6 @@ package thut.api.entity.blockentity;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,12 +15,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.registry.GameData;
 
 public interface IBlockEntity
 {
@@ -139,6 +139,7 @@ public interface IBlockEntity
             return ret;
         }
 
+        @SuppressWarnings("deprecation")
         public static TileEntity makeTile(NBTTagCompound compound)
         {
             TileEntity tileentity = null;
@@ -147,14 +148,11 @@ public interface IBlockEntity
 
             try
             {
-                Map<String, Class<? extends TileEntity>> nameToClassMap = ReflectionHelper
-                        .getPrivateValue(TileEntity.class, null, "nameToClassMap", "field_145855_i", "f");
-
-                oclass = nameToClassMap.get(s);
+                oclass = (Class<? extends TileEntity>)GameData.getTileEntityRegistry().getObject(new ResourceLocation(s));
 
                 if (oclass != null)
                 {
-                    tileentity = oclass.newInstance();
+                    tileentity = (TileEntity)oclass.newInstance();
                 }
             }
             catch (Throwable throwable1)
