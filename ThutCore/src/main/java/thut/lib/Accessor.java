@@ -14,10 +14,11 @@ public class Accessor
 
     static
     {
-        CREEPER_BOOM = ReflectionHelper.findMethod(EntityCreeper.class, null, new String[] { "func_146077_cc" });
+        CREEPER_BOOM = ReflectionHelper.findMethod(EntityCreeper.class, null,
+                new String[] { "func_146077_cc", "explode" });
         CREEPER_BOOM.setAccessible(true);
-        ENTITY_SETSIZE = ReflectionHelper.findMethod(Entity.class, null, new String[] { "func_70105_a" }, float.class,
-                float.class);
+        ENTITY_SETSIZE = ReflectionHelper.findMethod(Entity.class, null, new String[] { "func_70105_a", "setSize" },
+                float.class, float.class);
         ENTITY_SETSIZE.setAccessible(true);
     }
 
