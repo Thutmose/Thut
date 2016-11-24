@@ -97,6 +97,12 @@ public class CompatWrapper
 
     public static boolean isValid(ItemStack stack)
     {
+        if (stack == null)
+        {
+            System.err.println("Stacks should not be null!");
+            Thread.dumpStack();
+            return false;
+        }
         return getStackSize(stack) > 0;
     }
 
