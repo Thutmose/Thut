@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -37,7 +38,7 @@ import thut.lib.CompatWrapper;
 
 public class ExplosionCustom extends Explosion
 {
-    private static class HitEntity
+    static class HitEntity
     {
         final Entity entity;
         final float  blastStrength;
@@ -49,7 +50,7 @@ public class ExplosionCustom extends Explosion
         }
     }
 
-    private static class BlastResult
+    static class BlastResult
     {
         final List<BlockPos>  results;
         final List<HitEntity> hit;
@@ -75,7 +76,7 @@ public class ExplosionCustom extends Explosion
     int                          nextIndex              = 0;
     float                        minBlastDamage;
     public int[]                 maxPerTick;
-    private World                world;
+    World                        world;
     Vector3                      centre;
 
     float                        strength;
@@ -288,11 +289,12 @@ public class ExplosionCustom extends Explosion
         }
     }
 
-    HashMap<Integer, Float> resists    = new HashMap<Integer, Float>(100000, 1);
-    HashSet<Integer>        blockedSet = new HashSet<>(100000, 1);
+    HashMap<Integer, Float>      resists    = new HashMap<Integer, Float>(100000, 1);
+    HashSet<Integer>             blockedSet = new HashSet<>(100000, 1);
+    Int2ObjectOpenHashMap<Float> thisShell  = new Int2ObjectOpenHashMap<>();
     // used to speed up the checking of if a resist exists in the map
-    BitSet                  checked    = new BitSet();
-    Vector3                 r          = Vector3.getNewVector(), rAbs = Vector3.getNewVector(),
+    BitSet                       checked    = new BitSet();
+    Vector3                      r          = Vector3.getNewVector(), rAbs = Vector3.getNewVector(),
             rHat = Vector3.getNewVector(), rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(),
             rTestAbs = Vector3.getNewVector();
 

@@ -22,6 +22,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutItems;
 import thut.api.network.PacketHandler;
+import thut.core.client.render.particle.ParticleFactory;
 import thut.core.common.CommonProxy;
 import thut.core.common.items.ItemDusts;
 import thut.core.common.items.ItemDusts.Dust;
@@ -53,6 +54,7 @@ public class ClientProxy extends CommonProxy
             }
         }
     }
+
     public static int       renderPass;
 
     public static Minecraft mc;
@@ -82,10 +84,7 @@ public class ClientProxy extends CommonProxy
     {
         if (isOnClientSide())
         {
-            if (playerName != null)
-            {
-                return getWorld().getPlayerEntityByName(playerName);
-            }
+            if (playerName != null) { return getWorld().getPlayerEntityByName(playerName); }
             return Minecraft.getMinecraft().thePlayer;
         }
         return super.getPlayer(playerName);
@@ -94,10 +93,7 @@ public class ClientProxy extends CommonProxy
     @Override
     public World getWorld()
     {
-        if (isOnClientSide())
-        {
-            return Minecraft.getMinecraft().theWorld;
-        }
+        if (isOnClientSide()) { return Minecraft.getMinecraft().theWorld; }
         return super.getWorld();
     }
 
@@ -128,6 +124,7 @@ public class ClientProxy extends CommonProxy
                 .register(ThutItems.spreader, 0, new ModelResourceLocation("thutcore:spreader", "inventory"));
 
         new UpdateNotifier();
+        ParticleFactory.initVanillaParticles();
     }
 
     @Override
@@ -152,6 +149,6 @@ public class ClientProxy extends CommonProxy
     @Override
     public void preinit(FMLPreInitializationEvent e)
     {
-//        ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
+        // ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
     }
 }
