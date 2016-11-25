@@ -4,8 +4,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
@@ -19,6 +17,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -125,10 +124,7 @@ public class CompatWrapper
 
     public static List<ItemStack> makeList(int size)
     {
-        List<ItemStack> ret = Lists.newArrayList();
-        for (int i = 0; i < size; i++)
-            ret.add(nullStack);
-        return ret;
+        return NonNullList.<ItemStack> func_191197_a(size, ItemStack.field_190927_a);
     }
 
     public static void rightClickWith(ItemStack stack, EntityPlayer player, EnumHand hand)
