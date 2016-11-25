@@ -60,7 +60,7 @@ public class ParticleFactory
                     vanilla = name.contains("large") ? EnumParticleTypes.SMOKE_LARGE : EnumParticleTypes.SMOKE_NORMAL;
             }
             if (vanilla != null) id = vanilla.getParticleID();
-            Particle par = fact.getEntityFX(id, ThutCore.proxy.getWorld(), location.x, location.y, location.z, velocity.x,
+            Particle par = fact.createParticle(id, ThutCore.proxy.getWorld(), location.x, location.y, location.z, velocity.x,
                     velocity.y, velocity.z, args);
             if (par != null)
             {
