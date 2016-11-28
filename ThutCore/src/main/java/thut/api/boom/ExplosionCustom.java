@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -32,7 +30,6 @@ import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
-import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
 import thut.lib.CompatWrapper;
 
@@ -308,7 +305,7 @@ public class ExplosionCustom extends Explosion
     void doRemoveBlocks(WorldTickEvent evt)
     {
         if (evt.phase == Phase.START || evt.world != world) return;
-        BlastResult result = getBlocksToRemove();
+        BlastResult result = new Checker(this).getBlocksToRemove();
         applyBlockEffects(result.results);
         applyEntityEffects(result.hit);
         doExplosionB(false);
@@ -346,145 +343,6 @@ public class ExplosionCustom extends Explosion
                 targets.add(hit);
             }
         }
-    }
-
-    private BlastResult getBlocksToRemove()
-    {
-        int ind = currentIndex;
-        int index;
-        int index2;
-        double scaleFactor = 1500;
-        double rMag;
-        float resist;
-        double str;
-        int num = (int) (Math.sqrt(strength * scaleFactor / 0.5));
-        int max = MAX_RADIUS * 2 + 1;
-        num = Math.min(num, max);
-        num = Math.min(num, 1000);
-        int numCubed = num * num * num;
-        double radSq = num * num / 4;
-        int maxIndex = Math.min(numCubed, nextIndex);
-        int increment = maxPerTick[0] + (int) ((maxPerTick[1] - maxPerTick[0]) * (1 - nextIndex / (float) numCubed));
-        List<BlockPos> ret = Lists.newArrayList();
-        List<HitEntity> entityAffected = Lists.newArrayList();
-        boolean done = false;
-        for (currentIndex = ind; currentIndex < maxIndex; currentIndex++)
-        {
-            Cruncher.indexToVals(currentIndex, r);
-            if (r.y + centre.y < 0 || r.y + centre.y > 255) continue;
-            double rSq = r.magSq();
-            if (rSq > radSq) continue;
-            rMag = Math.sqrt(rSq);
-            rAbs.set(r).addTo(centre);
-            rHat.set(r).norm();
-            index = Cruncher.getVectorInt(rHat.scalarMultBy(num / 2d));
-            rHat.scalarMultBy(2d / num);
-            if (blockedSet.contains(index))
-            {
-                continue;
-            }
-            str = strength * scaleFactor / rSq;
-            if (rAbs.isAir(world) && !(r.isEmpty()))
-            {
-                if (AFFECTINAIR)
-                {
-                    List<Entity> hits = world.getEntitiesWithinAABBExcludingEntity(exploder,
-                            rAbs.getAABB().expand(0.5, 0.5, 0.5));
-                    if (hits != null) for (Entity e : hits)
-                    {
-                        entityAffected.add(new HitEntity(e, (float) str));
-                    }
-                }
-                continue;
-            }
-
-            if (str <= minBlastDamage)
-            {
-                System.out.println("Terminating at distance " + rMag);
-                done = true;
-                break;
-            }
-            if (!canBreak(rAbs))
-            {
-                blockedSet.add(index);
-                continue;
-            }
-            float res;
-            res = rAbs.getExplosionResistance(this, world);
-            if (res > 1) res = res * res;
-            index2 = Cruncher.getVectorInt(r);
-            resists.put(index2, res);
-            checked.set(index2);
-            if (res > str)
-            {
-                blockedSet.add(index);
-                continue;
-            }
-            boolean stop = false;
-            rMag = r.mag();
-            float dj = 1;
-            resist = 0;
-
-            for (float j = 0F; j <= rMag; j += dj)
-            {
-                rTest.set(rHat).scalarMultBy(j);
-
-                if (!(rTest.sameBlock(rTestPrev)))
-                {
-                    rTestAbs.set(rTest).addTo(centre);
-
-                    index2 = Cruncher.getVectorInt(rTest);
-
-                    if (checked.get(index2))
-                    {
-                        res = resists.get(index2);
-                    }
-                    else
-                    {
-                        res = rTestAbs.getExplosionResistance(this, world);
-                        if (res > 1) res = res * res;
-                        resists.put(index2, res);
-                        checked.set(index2);
-                    }
-                    resist += res;
-                    if (!canBreak(rTestAbs))
-                    {
-                        stop = true;
-                        blockedSet.add(index);
-                        break;
-                    }
-                    double d1 = rTest.magSq();
-                    double d = d1;
-                    str = strength * scaleFactor / d;
-                    if (resist > str)
-                    {
-                        stop = true;
-                        blockedSet.add(index);
-                        break;
-                    }
-                }
-                rTestPrev.set(rTest);
-            }
-            if (stop) continue;
-            rAbs.set(r).addTo(centre);
-            Chunk chunk = world.getChunkFromBlockCoords(rAbs.getPos());
-            if (chunk == null)
-            {
-                System.out.println("No chunk at " + rAbs);
-                Thread.dumpStack();
-            }
-            if (!affected.contains(chunk)) affected.add(chunk);
-            addChunkPosition(rAbs);
-            List<Entity> hits = world.getEntitiesWithinAABBExcludingEntity(exploder,
-                    rAbs.getAABB().expand(0.5, 0.5, 0.5));
-            if (hits != null) for (Entity e : hits)
-            {
-                entityAffected.add(new HitEntity(e, (float) str));
-            }
-            ret.add(new BlockPos(rAbs.getPos()));
-        }
-        nextIndex = currentIndex + increment;
-        return new BlastResult(ret, entityAffected, done);
     }
 
     public ExplosionCustom setMeteor(boolean meteor)

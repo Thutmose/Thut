@@ -25,7 +25,7 @@ public class Cruncher
 
     public static int getVectorInt(Vector3 rHat)
     {
-        if (rHat.magSq() > 511 * 511)
+        if (rHat.magSq() > 261121) // 511*511
         {
             new Exception().printStackTrace();
             return 0;
