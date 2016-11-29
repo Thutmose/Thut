@@ -1,10 +1,7 @@
 package thut.core.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ModelBakery;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
@@ -20,12 +17,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import thut.api.ThutItems;
 import thut.api.network.PacketHandler;
 import thut.core.client.render.particle.ParticleFactory;
 import thut.core.common.CommonProxy;
-import thut.core.common.items.ItemDusts;
-import thut.core.common.items.ItemDusts.Dust;
 import thut.reference.Reference;
 
 public class ClientProxy extends CommonProxy
@@ -102,27 +96,6 @@ public class ClientProxy extends CommonProxy
     {
         mc = FMLClientHandler.instance().getClient();
         PacketHandler.provider = this;
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ThutItems.tank, 0,
-                new ModelResourceLocation("thutcore:tank", "inventory"));
-
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ThutItems.spout, 0,
-                new ModelResourceLocation("thutcore:spout", "inventory"));
-
-        for (Integer id : ItemDusts.dusts.keySet())
-        {
-            Dust dust = ItemDusts.dusts.get(id);
-            String modid = dust.modid;
-            String name = dust.name;
-            String ident = modid + ":" + name;
-            ModelBakery.registerItemVariants(ThutItems.dusts, new ResourceLocation(ident));
-
-            Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ThutItems.dusts, id,
-                    new ModelResourceLocation(ident, "inventory"));
-        }
-
-        if (ThutItems.spreader != null) Minecraft.getMinecraft().getRenderItem().getItemModelMesher()
-                .register(ThutItems.spreader, 0, new ModelResourceLocation("thutcore:spreader", "inventory"));
-
         new UpdateNotifier();
         ParticleFactory.initVanillaParticles();
     }
