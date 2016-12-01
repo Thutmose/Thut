@@ -35,6 +35,11 @@ import thut.lib.CompatWrapper;
 
 public class ExplosionCustom extends Explosion
 {
+    public static interface IEntityHitter
+    {
+        void hitEntity(Entity e, float power, Explosion boom);
+    }
+
     static class HitEntity
     {
         final Entity entity;
@@ -68,6 +73,19 @@ public class ExplosionCustom extends Explosion
     public static Block          melt;
     public static Block          solidmelt;
     public static Block          dust;
+    public IEntityHitter         hitter                 = new IEntityHitter()
+                                                        {
+
+                                                            @Override
+                                                            public void hitEntity(Entity e, float power, Explosion boom)
+                                                            {
+                                                                float area = e.width * e.height;
+                                                                float damage = area * power;
+                                                                e.attackEntityFrom(
+                                                                        DamageSource.causeExplosionDamage(boom),
+                                                                        damage);
+                                                            }
+                                                        };
     int                          dimension;
     int                          currentIndex           = 0;
     int                          nextIndex              = 0;
@@ -337,9 +355,7 @@ public class ExplosionCustom extends Explosion
             float power = e.blastStrength;
             if (power > 0)
             {
-                float area = hit.width * hit.height;
-                float damage = area * power;
-                hit.attackEntityFrom(DamageSource.causeExplosionDamage(this), damage);
+                hitter.hitEntity(hit, power, this);
                 targets.add(hit);
             }
         }

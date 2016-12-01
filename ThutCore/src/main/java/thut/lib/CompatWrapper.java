@@ -1,10 +1,12 @@
 package thut.lib;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -22,11 +24,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CompatWrapper
 {
+
+    // Vanilla Section
     public static final ItemStack nullStack = null;
 
     public static ItemStack fromTag(NBTTagCompound tag)
@@ -145,11 +152,40 @@ public class CompatWrapper
     {
         return new EntityEggInfo(name, colour1, colour2);
     }
-    
+
     @SuppressWarnings("deprecation")
     public static IBlockState getBlockStateFromMeta(Block block, int meta)
     {
         return block.getStateFromMeta(meta);
+    }
+
+    // Forge Section
+
+    public static Type getBiomeType(String name)
+    {
+        try
+        {
+            return BiomeDictionary.Type.valueOf(name.toUpperCase(java.util.Locale.ENGLISH));
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    public static boolean isOfType(Biome biome, BiomeDictionary.Type type)
+    {
+        return BiomeDictionary.isBiomeOfType(biome, type);
+    }
+
+    public static Set<Type> getTypes(Biome biome)
+    {
+        return Sets.newHashSet(BiomeDictionary.getTypesForBiome(biome));
+    }
+
+    public static Set<Biome> getBiomes(Type type)
+    {
+        return Sets.newHashSet(BiomeDictionary.getBiomesForType(type));
     }
 
 }
