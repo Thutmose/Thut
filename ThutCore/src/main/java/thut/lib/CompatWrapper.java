@@ -1,6 +1,7 @@
 package thut.lib;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -32,6 +33,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class CompatWrapper
 {
@@ -177,31 +179,25 @@ public class CompatWrapper
     }
 
     // Forge Section
+    private static final Map<String, Type> byName = ReflectionHelper.getPrivateValue(Type.class, null, "byName");
 
     public static Type getBiomeType(String name)
     {
-        try
-        {
-            return BiomeDictionary.Type.valueOf(name.toUpperCase(java.util.Locale.ENGLISH));
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
+        return byName.get(name.toUpperCase());
     }
 
     public static boolean isOfType(Biome biome, BiomeDictionary.Type type)
     {
-        return BiomeDictionary.isBiomeOfType(biome, type);
+        return BiomeDictionary.hasType(biome, type);
     }
 
     public static Set<Type> getTypes(Biome biome)
     {
-        return Sets.newHashSet(BiomeDictionary.getTypesForBiome(biome));
+        return BiomeDictionary.getTypes(biome);
     }
 
     public static Set<Biome> getBiomes(Type type)
     {
-        return Sets.newHashSet(BiomeDictionary.getBiomesForType(type));
+        return BiomeDictionary.getBiomes(type);
     }
 }
