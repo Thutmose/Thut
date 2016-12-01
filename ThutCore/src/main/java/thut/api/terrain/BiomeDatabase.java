@@ -8,9 +8,9 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.Village;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import thut.api.maths.Vector3;
+import thut.lib.CompatWrapper;
 
 public class BiomeDatabase
 {
@@ -18,22 +18,7 @@ public class BiomeDatabase
 
     public static boolean contains(Biome b, Type type)
     {
-        boolean ret = false;
-        if (b == null) return ret;
-
-        Type[] arr = biomeTypes.get(b);
-        if (arr == null)
-        {
-            arr = BiomeDictionary.getTypesForBiome(b);
-            biomeTypes.put(b, arr);
-        }
-
-        for (Type t : arr)
-        {
-            ret = ret || t.equals(type);
-            if (ret) break;
-        }
-        return ret;
+        return CompatWrapper.isOfType(b, type);
     }
 
     public static BiomeType getBiome(Biome b)
