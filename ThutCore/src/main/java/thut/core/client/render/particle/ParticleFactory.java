@@ -35,10 +35,10 @@ public class ParticleFactory
             }
         }
     }
-    
+
     public static void initDefaultParticles()
     {
-        
+
     }
 
     public static void registerFactory(String name, IParticleFactory factory)
@@ -60,8 +60,8 @@ public class ParticleFactory
                     vanilla = name.contains("large") ? EnumParticleTypes.SMOKE_LARGE : EnumParticleTypes.SMOKE_NORMAL;
             }
             if (vanilla != null) id = vanilla.getParticleID();
-            Particle par = fact.createParticle(id, ThutCore.proxy.getWorld(), location.x, location.y, location.z, velocity.x,
-                    velocity.y, velocity.z, args);
+            Particle par = fact.getEntityFX(id, ThutCore.proxy.getWorld(), location.x, location.y, location.z,
+                    velocity.x, velocity.y, velocity.z, args);
             if (par != null)
             {
                 if (args.length > 1) par.setMaxAge(Math.max(2, args[1]));
