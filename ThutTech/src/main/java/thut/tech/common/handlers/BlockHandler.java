@@ -14,13 +14,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.lib.CompatWrapper;
 import thut.tech.Reference;
-import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
-import thut.tech.common.entity.EntityLift;
-import thut.tech.common.entity.EntityProjectile;
 
 public class BlockHandler
 {
@@ -66,15 +62,8 @@ public class BlockHandler
     public static void registerBlocks(FMLPreInitializationEvent e)
     {
         Block lift = new BlockLift().setRegistryName(Reference.MOD_ID, "lift");
-
         GameRegistry.registerTileEntity(TileEntityLiftAccess.class, "liftaccesste");
-
-        CompatWrapper.registerModEntity(EntityLift.class, "lift", 1, TechCore.instance, 32, 1, true);
-
-        CompatWrapper.registerModEntity(EntityProjectile.class, "projectile", 2, TechCore.instance, 32, 1, true);
-
         register(lift, ItemLiftBlock.class, lift.getRegistryName().toString());
-
     }
 
     public static void register(Object o, Class<? extends ItemBlock> clazz, String name)
