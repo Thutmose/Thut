@@ -138,7 +138,7 @@ public class XMLStuff
             {
                 ItemStack reward = rewards.get(i);
                 giveItem(entityPlayer, reward.copy());
-                message = message + reward.getDisplayName() + " x" + reward.stackSize;
+                message = message + reward.getDisplayName() + " x" + CompatWrapper.getStackSize(reward);
                 if (i < rewards.size() - 1) message = message + ", ";
             }
             for (String s : commands)
@@ -148,7 +148,6 @@ public class XMLStuff
                 s = s.replace("'y'", (entityPlayer.posY + 1) + "");
                 s = s.replace("'z'", entityPlayer.posZ + "");
                 entityPlayer.getServer().getCommandManager().executeCommand(entityPlayer.getServer(), s);
-                // TODO have a message here?
             }
             return new TextComponentString(message);
         }
@@ -337,9 +336,9 @@ public class XMLStuff
                 tag = values.get(key);
             }
         }
-        if (id.isEmpty()) return null;
+        if (id.isEmpty()) return CompatWrapper.nullStack;
         resource = id.contains(":");
-        ItemStack stack = null;
+        ItemStack stack = CompatWrapper.nullStack;
         Item item = null;
         if (resource)
         {
@@ -349,10 +348,10 @@ public class XMLStuff
         {
             item = Item.REGISTRY.getObject(new ResourceLocation("minecraft:" + id));
         }
-        if (item == null) return null;
+        if (item == null) return CompatWrapper.nullStack;
         if (meta == -1) meta = 0;
-        stack = new ItemStack(item, 1, meta);
-        stack.stackSize = size;
+        if (!CompatWrapper.isValid(stack)) stack = new ItemStack(item, 1, meta);
+        CompatWrapper.setStackSize(stack, size);
         if (!tag.isEmpty())
         {
             try

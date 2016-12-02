@@ -38,7 +38,7 @@ public class CommandKey extends CommandBase
         if (crate != null)
         {
             ItemStack key = crate.key.copy();
-            key.stackSize = num;
+            CompatWrapper.setStackSize(key, num);
             XMLStuff.giveItem(player, key);
         }
     }
