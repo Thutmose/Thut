@@ -75,8 +75,11 @@ public class LootCrates
                         + " has recieved ");
                 ITextComponent footer = new TextComponentString(TextFormatting.GOLD + " from " + name);
                 ITextComponent rewards = crate.getReward().giveRewards(evt.getEntityPlayer());
-                message.appendSibling(rewards).appendSibling(footer);
-                evt.getEntityPlayer().getServer().getPlayerList().sendChatMsg(message);
+                if (!rewards.getUnformattedText().isEmpty())
+                {
+                    message.appendSibling(rewards).appendSibling(footer);
+                    evt.getEntityPlayer().getServer().getPlayerList().sendChatMsg(message);
+                }
                 evt.getItemStack().splitStack(1);
                 evt.getEntityPlayer().inventoryContainer.detectAndSendChanges();
                 if (!chestOpens)
