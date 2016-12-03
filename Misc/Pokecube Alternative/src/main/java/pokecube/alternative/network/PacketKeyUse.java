@@ -14,6 +14,7 @@ import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokemob;
+import thut.lib.CompatWrapper;
 
 public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMessage>
 {
@@ -82,16 +83,17 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
         {
             int id = message.ticks;
             Entity entity = player.getEntityWorld().getEntityByID(id);
-            if (entity != null) player.interact(entity, player.getHeldItemMainhand(), EnumHand.MAIN_HAND);
+            if (entity != null)
+                CompatWrapper.processInitialInteract(entity, player, EnumHand.MAIN_HAND, player.getHeldItemMainhand());
             return;
         }
         if (message.messageId == SENDOUT)
         {
             ItemStack cube = cap.getCube(cap.getSlot());
-            if (cube != null && !cap.isOut(cap.getSlot()))
+            if (CompatWrapper.isValid(cube) && !cap.isOut(cap.getSlot()))
             {
                 cube.getItem().onPlayerStoppedUsing(cube, player.worldObj, player, message.ticks);
-                cube.stackSize = 1;
+                CompatWrapper.setStackSize(cube, 1);
                 cap.setOut(cap.getSlot(), true);
             }
         }

@@ -1,11 +1,14 @@
 package pokecube.alternative.container.belt;
 
+import java.util.List;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import pokecube.core.handlers.PokecubePlayerDataHandler;
 import thut.core.common.handlers.PlayerDataHandler.PlayerData;
+import thut.lib.CompatWrapper;
 
 public class BeltPlayerData extends PlayerData implements IPokemobBelt
 {
@@ -48,7 +51,7 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
         for (int n = 0; n < 6; n++)
         {
             ItemStack i = getCube(n);
-            if (i != null)
+            if (CompatWrapper.isValid(i))
             {
                 NBTTagCompound tag = new NBTTagCompound();
                 tag.setBoolean("o", outs[n]);
@@ -70,26 +73,26 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
             {
                 NBTTagCompound tag = (NBTTagCompound) temp;
                 outs[n] = tag.getBoolean("o");
-                setCube(n, ItemStack.loadItemStackFromNBT(tag));
+                setCube(n, CompatWrapper.fromTag(tag));
             }
         }
         setSlot(compound.getInteger("selectedSlot"));
     }
 
-    ItemStack[] cubes = new ItemStack[6];
-    boolean[]   outs  = new boolean[6];
-    int         slot  = 0;
+    List<ItemStack> cubes = CompatWrapper.makeList(6);
+    boolean[]       outs  = new boolean[6];
+    int             slot  = 0;
 
     @Override
     public ItemStack getCube(int index)
     {
-        return cubes[index];
+        return cubes.get(index);
     }
 
     @Override
     public void setCube(int index, ItemStack stack)
     {
-        cubes[index] = stack;
+        cubes.set(index, stack);
     }
 
     @Override

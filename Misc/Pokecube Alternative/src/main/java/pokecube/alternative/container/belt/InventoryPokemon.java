@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
+import thut.lib.CompatWrapper;
 
 public class InventoryPokemon implements IInventory
 {
@@ -16,7 +17,6 @@ public class InventoryPokemon implements IInventory
     public final IPokemobBelt          cap;
     private Container                  eventHandler;
     public WeakReference<EntityPlayer> player;
-    public boolean                     blockEvents = false;
 
     public InventoryPokemon(EntityPlayer player)
     {
@@ -43,7 +43,7 @@ public class InventoryPokemon implements IInventory
     @Override
     public ItemStack getStackInSlot(int slotIndex)
     {
-        return slotIndex >= this.getSizeInventory() ? null : cap.getCube(slotIndex);
+        return slotIndex >= this.getSizeInventory() ? CompatWrapper.nullStack : cap.getCube(slotIndex);
     }
 
     @Override
@@ -67,34 +67,33 @@ public class InventoryPokemon implements IInventory
     @Override
     public ItemStack removeStackFromSlot(int slotIndex)
     {
-        if (cap.getCube(slotIndex) != null)
+        if (CompatWrapper.isValid(cap.getCube(slotIndex)))
         {
             ItemStack itemStack = cap.getCube(slotIndex);
-            cap.setCube(slotIndex, null);
+            cap.setCube(slotIndex, CompatWrapper.nullStack);
             return itemStack;
         }
-        return null;
+        return CompatWrapper.nullStack;
     }
 
     @Override
     public ItemStack decrStackSize(int index, int count)
     {
-        if (this.getStackInSlot(index) != null)
+        if (CompatWrapper.isValid(this.getStackInSlot(index)))
         {
             ItemStack itemstack;
-
-            if (this.getStackInSlot(index).stackSize <= count)
+            if (CompatWrapper.getStackSize(this.getStackInSlot(index)) <= count)
             {
                 itemstack = this.getStackInSlot(index);
-                this.setInventorySlotContents(index, null);
+                this.setInventorySlotContents(index, CompatWrapper.nullStack);
                 this.markDirty();
                 return itemstack;
             }
             itemstack = this.getStackInSlot(index).splitStack(count);
 
-            if (this.getStackInSlot(index).stackSize <= 0)
+            if (!CompatWrapper.isValid(itemstack))
             {
-                this.setInventorySlotContents(index, null);
+                this.setInventorySlotContents(index, CompatWrapper.nullStack);
             }
             else
             {
@@ -105,18 +104,16 @@ public class InventoryPokemon implements IInventory
             this.markDirty();
             return itemstack;
         }
-        return null;
+        return CompatWrapper.nullStack;
     }
 
     @Override
     public void setInventorySlotContents(int index, ItemStack stack)
     {
         if (index < 0 || index >= this.getSizeInventory()) return;
-
-        if (stack != null && stack.stackSize > this.getInventoryStackLimit())
-            stack.stackSize = this.getInventoryStackLimit();
-
-        if (stack != null && stack.stackSize == 0) stack = null;
+        if (CompatWrapper.getStackSize(stack) > this.getInventoryStackLimit())
+            CompatWrapper.setStackSize(stack, this.getInventoryStackLimit());
+        if (!CompatWrapper.isValid(stack)) stack = CompatWrapper.nullStack;
         cap.setCube(index, stack);
         this.markDirty();
     }
@@ -154,7 +151,6 @@ public class InventoryPokemon implements IInventory
     @Override
     public void closeInventory(EntityPlayer player)
     {
-        System.out.println("close");
         saveCapability();
     }
 
@@ -187,23 +183,13 @@ public class InventoryPokemon implements IInventory
     {
         for (int i = 0; i < 6; i++)
         {
-            cap.setCube(i, null);
+            cap.setCube(i, CompatWrapper.nullStack);
         }
     }
 
     public void saveCapability()
     {
         syncToClients();
-    }
-
-    @Deprecated
-    public void readCapability()
-    {
-        // IBeltCapability cap =
-        // player.get().getCapability(EventHandlerCommon.BELTAI_CAP, null);
-        // for(int c = 0; c < 6; c++) {
-        // this.stackList[c] = cap.getCube(c);
-        // }
     }
 
     public void syncToClients()
@@ -222,6 +208,12 @@ public class InventoryPokemon implements IInventory
         {
             e.printStackTrace();
         }
+    }
+
+    public boolean func_191420_l()
+    {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

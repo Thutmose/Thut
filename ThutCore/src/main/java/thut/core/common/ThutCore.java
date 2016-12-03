@@ -1,6 +1,7 @@
 package thut.core.common;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 
@@ -10,8 +11,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
@@ -37,11 +40,14 @@ import thut.api.block.IOwnableTE;
 import thut.api.entity.ai.AIThreadManager;
 import thut.api.entity.ai.AIThreadManager.AIStuff;
 import thut.api.entity.ai.IAIMob;
+import thut.api.entity.genetics.Alleles;
+import thut.api.entity.genetics.IMobGenetics;
 import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
 import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
 import thut.core.common.commands.ConfigCommand;
+import thut.core.common.genetics.DefaultGenetics;
 import thut.core.common.handlers.ConfigHandler;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.reference.Reference;
@@ -126,6 +132,47 @@ public class ThutCore
                 return true;
             }
         }.getClass());
+        CapabilityManager.INSTANCE.register(IMobGenetics.class, new Capability.IStorage<IMobGenetics>()
+        {
+
+            @Override
+            public NBTBase writeNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side)
+            {
+                NBTTagList genes = new NBTTagList();
+                if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
+                    for (Map.Entry<ResourceLocation, Alleles> entry : instance.getAlleles().entrySet())
+                {
+                    NBTTagCompound tag = new NBTTagCompound();
+                    tag.setString("K", entry.getKey().toString());
+                    tag.setTag("V", entry.getValue().save());
+                    genes.appendTag(tag);
+                }
+                return genes;
+            }
+
+            @Override
+            public void readNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side,
+                    NBTBase nbt)
+            {
+                NBTTagList list = (NBTTagList) nbt;
+                for (int i = 0; i < list.tagCount(); i++)
+                {
+                    NBTTagCompound tag = list.getCompoundTagAt(i);
+                    Alleles alleles = new Alleles();
+                    try
+                    {
+                        alleles.load(tag.getCompoundTag("V"));
+                        ResourceLocation key = new ResourceLocation(tag.getString("K"));
+                        instance.getAlleles().put(key, alleles);
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+        }, DefaultGenetics.class);
     }
 
     @EventHandler

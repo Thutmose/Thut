@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import thut.core.common.handlers.PlayerDataHandler.PlayerData;
+import thut.lib.CompatWrapper;
 
 public class CardPlayerData extends PlayerData
 {
@@ -38,7 +39,7 @@ public class CardPlayerData extends PlayerData
         for (int n = 0; n < inventory.getSizeInventory(); n++)
         {
             ItemStack i = inventory.getStackInSlot(n);
-            if (i != null)
+            if (CompatWrapper.isValid(i))
             {
                 NBTTagCompound tag = new NBTTagCompound();
                 i.writeToNBT(tag);
@@ -57,7 +58,7 @@ public class CardPlayerData extends PlayerData
             if (temp instanceof NBTTagCompound)
             {
                 NBTTagCompound tag = (NBTTagCompound) temp;
-                inventory.setInventorySlotContents(n, ItemStack.loadItemStackFromNBT(tag));
+                inventory.setInventorySlotContents(n, CompatWrapper.fromTag(tag));
             }
         }
     }
