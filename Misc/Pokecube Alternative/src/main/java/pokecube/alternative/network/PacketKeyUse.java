@@ -83,7 +83,8 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
         {
             int id = message.ticks;
             Entity entity = player.getEntityWorld().getEntityByID(id);
-            if (entity != null) player.interact(entity, player.getHeldItemMainhand(), EnumHand.MAIN_HAND);
+            if (entity != null)
+                CompatWrapper.processInitialInteract(entity, player, EnumHand.MAIN_HAND, player.getHeldItemMainhand());
             return;
         }
         if (message.messageId == SENDOUT)
