@@ -36,13 +36,6 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
     @Override
     public void updateScreen()
     {
-        try
-        {
-            ((ContainerPlayerPokemon) inventorySlots).pokemon.blockEvents = false;
-        }
-        catch (Exception e)
-        {
-        }
         this.updateActivePotionEffects();
     }
 

@@ -68,13 +68,6 @@ public class ContainerPlayerPokemon extends Container
     }
 
     @Override
-    public void putStacksInSlots(ItemStack[] p_75131_1_)
-    {
-        pokemon.blockEvents = true;
-        super.putStacksInSlots(p_75131_1_);
-    }
-
-    @Override
     public boolean canMergeSlot(ItemStack par1ItemStack, Slot par2Slot)
     {
         return super.canMergeSlot(par1ItemStack, par2Slot);

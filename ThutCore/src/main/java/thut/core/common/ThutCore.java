@@ -1,8 +1,10 @@
 package thut.core.common;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,6 +14,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,6 +39,8 @@ import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
 import thut.api.entity.ai.AIThreadManager;
 import thut.api.entity.ai.AIThreadManager.AIStuff;
+import thut.api.entity.genetics.Alleles;
+import thut.api.entity.genetics.IMobGenetics;
 import thut.api.entity.ai.IAIMob;
 import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
@@ -124,6 +129,48 @@ public class ThutCore
             public boolean selfManaged()
             {
                 return true;
+            }
+        }.getClass());
+        CapabilityManager.INSTANCE.register(IMobGenetics.class, new Capability.IStorage<IMobGenetics>()
+        {
+
+            @Override
+            public NBTBase writeNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side)
+            {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void readNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side,
+                    NBTBase nbt)
+            {
+                // TODO Auto-generated method stub
+
+            }
+        }, new IMobGenetics()
+        {
+            Map<ResourceLocation, Alleles> genetics = Maps.newHashMap();
+
+            @Override
+            public Map<ResourceLocation, Alleles> getAlleles()
+            {
+                return genetics;
+            }
+
+            @Override
+            public void setFromParents(IMobGenetics parent1, IMobGenetics parent2)
+            {
+                Map<ResourceLocation, Alleles> genetics1 = parent1.getAlleles();
+                Map<ResourceLocation, Alleles> genetics2 = parent2.getAlleles();
+
+                for (Alleles a1 : genetics1.values())
+                {
+//                    Gene gene1 = a1.getExpressed();
+                    
+                    
+                }
+
             }
         }.getClass());
     }
