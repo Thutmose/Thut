@@ -38,6 +38,7 @@ import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.api.maths.Vector3;
 import thut.core.common.handlers.PlayerDataHandler;
+import thut.lib.CompatWrapper;
 
 public class EventHandlerCommon
 {
@@ -54,10 +55,10 @@ public class EventHandlerCommon
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
         if (player.worldObj.isRemote) return;
-        if (item != null && item.hasTagCompound())
+        if (CompatWrapper.isValid(item) && item.hasTagCompound())
         {
         }
-        if (item != null && item.getItem() instanceof ItemBadge && item.hasTagCompound())
+        if (CompatWrapper.isValid(item) && item.getItem() instanceof ItemBadge && item.hasTagCompound())
         {
             CardPlayerData data = PlayerDataHandler.getInstance().getPlayerData(player).getData(CardPlayerData.class);
             NBTTagCompound tag = item.getTagCompound();
@@ -90,10 +91,10 @@ public class EventHandlerCommon
                 index = 7;
                 break;
             }
-            if (index == -1 || data.inventory.getStackInSlot(index) != null) return;
+            if (index == -1 || CompatWrapper.isValid(data.inventory.getStackInSlot(index))) return;
             int slotIndex = event.getEntityPlayer().inventory.currentItem;
             data.inventory.setInventorySlotContents(index, item.copy());
-            player.inventory.setInventorySlotContents(slotIndex, null);
+            player.inventory.setInventorySlotContents(slotIndex, CompatWrapper.nullStack);
             PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), data.getIdentifier());
             event.setCanceled(true);
             return;
@@ -111,7 +112,7 @@ public class EventHandlerCommon
                     for (int i = 0; i < 6; i++)
                     {
                         ItemStack stack = cap.getCube(i);
-                        if (stack == null) continue;
+                        if (!CompatWrapper.isValid(stack)) continue;
                         if (PokecubeManager.getUUID(item).equals(PokecubeManager.getUUID(stack)))
                         {
                             cap.setOut(i, false);
@@ -122,10 +123,10 @@ public class EventHandlerCommon
                     }
                     if (!toBelt) for (int i = 0; i < 6; i++)
                     {
-                        if (cap.getCube(i) == null)
+                        if (!CompatWrapper.isValid(cap.getCube(i)))
                         {
                             cap.setCube(i, item);
-                            player.inventory.setInventorySlotContents(slotIndex, null);
+                            player.inventory.setInventorySlotContents(slotIndex, CompatWrapper.nullStack);
                             syncPokemon(player);
                             toBelt = true;
                             break;
@@ -161,7 +162,7 @@ public class EventHandlerCommon
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(event.getEntityLiving());
-                if (cap.getCube(cap.getSlot()) != null && !cap.isOut(cap.getSlot()))
+                if (CompatWrapper.isValid(cap.getCube(cap.getSlot())) && !cap.isOut(cap.getSlot()))
                 {
                     ItemStack cube = cap.getCube(cap.getSlot());
                     if (PokecubeManager.isFilled(cube))
@@ -244,7 +245,7 @@ public class EventHandlerCommon
             for (int i = 0; i < 6; i++)
             {
                 ItemStack stack = cap.getCube(i);
-                if (stack == null) continue;
+                if (!CompatWrapper.isValid(stack)) continue;
                 if (PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
                 {
                     cap.setOut(i, false);
@@ -256,7 +257,8 @@ public class EventHandlerCommon
             if (!added) for (int i = 0; i < 6; i++)
             {
                 ItemStack stack = cap.getCube(i);
-                if (stack == null || PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
+                if (!CompatWrapper.isValid(stack)
+                        || PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
                 {
                     cap.setOut(i, false);
                     cap.setCube(i, pokemonStack);
