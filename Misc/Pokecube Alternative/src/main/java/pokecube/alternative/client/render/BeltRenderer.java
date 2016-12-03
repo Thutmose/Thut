@@ -19,6 +19,7 @@ import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.x3d.X3dModel;
+import thut.lib.CompatWrapper;
 
 public class BeltRenderer implements LayerRenderer<EntityLivingBase>
 {
@@ -57,7 +58,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         GlStateManager.pushMatrix();
         float dx = 0, dy = -.0f, dz = -0.6f;
         float s = 0.52f;
-        if (entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS) == null)
+        if (!CompatWrapper.isValid(entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS)))
         {
             s = 0.46f;
         }
@@ -86,7 +87,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         for (int i = 0; i < 6; i++)
         {
             ItemStack stack = cap.getCube(i);
-            if (stack != null && !cap.isOut(i))
+            if (CompatWrapper.isValid(stack) && !cap.isOut(i))
             {
                 float amountX = 0.25f;
                 float amountZ = 0.15f;

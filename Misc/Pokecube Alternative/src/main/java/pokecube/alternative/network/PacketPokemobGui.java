@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.items.pokecubes.PokecubeManager;
+import thut.lib.CompatWrapper;
 
 public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemobGui, IMessage>
 {
@@ -75,7 +76,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
         {
             int index = message.data.getInteger("S");
             ItemStack stack = cap.getCube(index);
-            if (stack != null && player.inventory.getItemStack() == null)
+            if (CompatWrapper.isValid(stack) && !CompatWrapper.isValid(player.inventory.getItemStack()))
             {
                 if (cap.isOut(index))
                 {
@@ -83,18 +84,18 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
                 }
                 else
                 {
-                    cap.setCube(index, null);
+                    cap.setCube(index, CompatWrapper.nullStack);
                     cap.setOut(index, false);
                     player.inventory.setItemStack(stack);
                     player.updateHeldItem();
                 }
             }
-            else if (stack == null && player.inventory.getItemStack() != null
+            else if (!CompatWrapper.isValid(stack) && CompatWrapper.isValid(player.inventory.getItemStack())
                     && PokecubeManager.isFilled(player.inventory.getItemStack()))
             {
                 cap.setCube(index, player.inventory.getItemStack());
                 cap.setOut(cap.getSlot(), false);
-                player.inventory.setItemStack(null);
+                player.inventory.setItemStack(CompatWrapper.nullStack);
                 player.updateHeldItem();
             }
         }

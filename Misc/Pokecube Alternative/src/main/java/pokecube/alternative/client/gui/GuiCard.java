@@ -23,6 +23,7 @@ import pokecube.core.database.stats.CaptureStats;
 import pokecube.core.events.handlers.EventsHandlerClient;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
+import thut.lib.CompatWrapper;
 
 public class GuiCard extends InventoryEffectRenderer
 {
@@ -103,7 +104,7 @@ public class GuiCard extends InventoryEffectRenderer
             // Set the amount to shift by for the mob's index
             yPos = 15 + i1 * selectorSize;
             ItemStack pokemonItemstack = belt.getCube(i1);
-            if (pokemonItemstack == null) continue;
+            if (!CompatWrapper.isValid(pokemonItemstack)) continue;
             IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.theWorld);
             if (pokemob == null) continue;
             EntityLiving entity = (EntityLiving) pokemob;

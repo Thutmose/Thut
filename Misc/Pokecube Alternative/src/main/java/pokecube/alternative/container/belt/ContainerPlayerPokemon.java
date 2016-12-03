@@ -54,7 +54,6 @@ public class ContainerPlayerPokemon extends Container
     @Override
     public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player)
     {
-        System.out.println("TesT");
         return super.slotClick(slotId, dragType, clickTypeIn, player);
     }
 
