@@ -3,18 +3,20 @@ package thut.lib;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.NonNullList;
 
 public interface IDefaultRecipe extends IRecipe
 {
     @Override
-    default ItemStack[] getRemainingItems(InventoryCrafting inv)
+    default NonNullList<ItemStack> getRemainingItems(InventoryCrafting inv)
     {
-        ItemStack[] aitemstack = new ItemStack[inv.getSizeInventory()];
-        for (int i = 0; i < aitemstack.length; ++i)
+        NonNullList<ItemStack> nonnulllist = NonNullList.<ItemStack> func_191197_a(inv.getSizeInventory(),
+                ItemStack.field_190927_a);
+        for (int i = 0; i < nonnulllist.size(); ++i)
         {
             ItemStack itemstack = inv.getStackInSlot(i);
-            aitemstack[i] = net.minecraftforge.common.ForgeHooks.getContainerItem(itemstack);
+            nonnulllist.set(i, net.minecraftforge.common.ForgeHooks.getContainerItem(itemstack));
         }
-        return aitemstack;
+        return nonnulllist;
     }
 }
