@@ -159,15 +159,15 @@ public class ThutCore
                 {
                     NBTTagCompound tag = list.getCompoundTagAt(i);
                     Alleles alleles = new Alleles();
+                    ResourceLocation key = new ResourceLocation(tag.getString("K"));
                     try
                     {
                         alleles.load(tag.getCompoundTag("V"));
-                        ResourceLocation key = new ResourceLocation(tag.getString("K"));
                         instance.getAlleles().put(key, alleles);
                     }
                     catch (Exception e)
                     {
-                        e.printStackTrace();
+                        System.err.println("Error with " + key);
                     }
                 }
 
