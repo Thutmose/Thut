@@ -196,10 +196,8 @@ public class InventoryPokemon implements IInventory
     {
         try
         {
-            System.out.println("Sync");
             if (player.get().isServerWorld())
             {
-                System.out.println("Send");
                 IPokemobBelt cap = BeltPlayerData.getBelt(player.get());
                 PacketHandler.INSTANCE.sendToAll(new PacketSyncBelt(cap, player.get().getEntityId()));
             }

@@ -30,6 +30,7 @@ import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.core.utils.Tools;
+import thut.lib.CompatWrapper;
 
 public class GuiPokemonBar extends Gui
 {
@@ -85,7 +86,7 @@ public class GuiPokemonBar extends Gui
 
             EntityLiving entity = null;
             ItemStack pokemonItemstack = capability.getCube(pokemonNumber);
-            if (pokemonItemstack == null) continue;
+            if (!CompatWrapper.isValid(pokemonItemstack)) continue;
             IPokemob pokemob = null;// =
             if (capability.isOut(pokemonNumber))
             {

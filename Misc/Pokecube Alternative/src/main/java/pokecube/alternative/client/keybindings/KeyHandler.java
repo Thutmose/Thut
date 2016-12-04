@@ -21,6 +21,7 @@ import pokecube.alternative.network.PacketKeyUse;
 import pokecube.core.client.ClientProxyPokecube;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.interfaces.IPokemob;
+import thut.lib.CompatWrapper;
 
 public class KeyHandler
 {
@@ -104,7 +105,7 @@ public class KeyHandler
             else
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(Minecraft.getMinecraft().thePlayer);
-                boolean send = cap.getCube(cap.getSlot()) != null && !cap.isOut(cap.getSlot());
+                boolean send = CompatWrapper.isValid(cap.getCube(cap.getSlot())) && !cap.isOut(cap.getSlot());
                 if (send) ticks = Minecraft.getSystemTime();
                 else
                 {
