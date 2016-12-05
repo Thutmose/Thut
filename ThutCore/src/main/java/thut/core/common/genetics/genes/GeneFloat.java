@@ -35,9 +35,9 @@ public abstract class GeneFloat implements Gene
     }
 
     @Override
-    public boolean isEpigenetic()
+    public String toString()
     {
-        return false;
+        return "" + value;
     }
 
 }

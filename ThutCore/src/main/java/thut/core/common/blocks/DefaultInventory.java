@@ -14,8 +14,8 @@ public interface DefaultInventory extends IInventory
     @Override
     default public void clear()
     {
-        for (int i = 0; i < getInventory().size(); i++)
-            getInventory().set(i, CompatWrapper.nullStack);
+        for (int i = 0; i < getSizeInventory(); i++)
+            setInventorySlotContents(i, CompatWrapper.nullStack);
     }
 
     @Override
@@ -33,26 +33,24 @@ public interface DefaultInventory extends IInventory
     @Override
     default public ItemStack decrStackSize(int slot, int count)
     {
-        if (CompatWrapper.isValid(getInventory().get(slot)))
+        if (CompatWrapper.isValid(getStackInSlot(slot)))
         {
             ItemStack itemStack;
-            itemStack = getInventory().get(slot).splitStack(count);
-            if (!CompatWrapper.isValid(getInventory().get(slot)))
-            {
-                getInventory().set(slot, CompatWrapper.nullStack);
-            }
+            itemStack = getStackInSlot(slot).splitStack(count);
+            setInventorySlotContents(slot, itemStack);
             return itemStack;
         }
+        setInventorySlotContents(slot, CompatWrapper.nullStack);
         return CompatWrapper.nullStack;
     }
 
     @Override
     default public ItemStack removeStackFromSlot(int slot)
     {
-        if (CompatWrapper.isValid(getInventory().get(slot)))
+        if (CompatWrapper.isValid(getStackInSlot(slot)))
         {
-            ItemStack stack = getInventory().get(slot);
-            getInventory().set(slot, CompatWrapper.nullStack);
+            ItemStack stack = getStackInSlot(slot);
+            setInventorySlotContents(slot, CompatWrapper.nullStack);
             return stack;
         }
         return CompatWrapper.nullStack;
@@ -61,8 +59,8 @@ public interface DefaultInventory extends IInventory
     @Override
     default public void setInventorySlotContents(int index, ItemStack stack)
     {
-        if (CompatWrapper.isValid(stack)) getInventory().set(index, CompatWrapper.nullStack);
-        getInventory().set(index, stack);
+        if (!CompatWrapper.isValid(stack)) getInventory().set(index, CompatWrapper.nullStack);
+        else getInventory().set(index, stack);
     }
 
     @Override

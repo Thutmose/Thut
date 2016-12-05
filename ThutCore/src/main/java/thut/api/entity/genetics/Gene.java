@@ -20,8 +20,14 @@ public interface Gene
      *            Sets the value of the gene. */
     <T> void setValue(T value);
 
-    /** @return if true, the holder might edit this value before saving. */
-    boolean isEpigenetic();
+    /** This is how frequently the expressed gene is used instead of the
+     * parent's genes.
+     * 
+     * @return value from 0-1 of how often it uses expressed gene. */
+    default float getEpigeneticRate()
+    {
+        return 0;
+    }
 
     /** @return nbttag compount for saving. */
     NBTTagCompound save();

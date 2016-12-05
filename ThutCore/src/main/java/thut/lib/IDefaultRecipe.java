@@ -19,4 +19,9 @@ public interface IDefaultRecipe extends IRecipe
         }
         return nonnulllist;
     }
+
+    default ItemStack toKeep(int slot, ItemStack stackIn, InventoryCrafting inv)
+    {
+        return net.minecraftforge.common.ForgeHooks.getContainerItem(stackIn);
+    }
 }

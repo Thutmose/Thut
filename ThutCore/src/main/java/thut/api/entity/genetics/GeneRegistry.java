@@ -1,5 +1,6 @@
 package thut.api.entity.genetics;
 
+import java.util.Collection;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -10,6 +11,16 @@ import net.minecraft.util.ResourceLocation;
 public class GeneRegistry
 {
     static Map<ResourceLocation, Class<? extends Gene>> geneMap = Maps.newHashMap();
+
+    public static Class<? extends Gene> getClass(ResourceLocation location)
+    {
+        return geneMap.get(location);
+    }
+
+    public static Collection<Class<? extends Gene>> getGenes()
+    {
+        return geneMap.values();
+    }
 
     public static void register(Class<? extends Gene> gene)
     {

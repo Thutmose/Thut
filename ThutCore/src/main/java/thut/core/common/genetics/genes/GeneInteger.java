@@ -34,10 +34,4 @@ public abstract class GeneInteger implements Gene
         value = tag.getInteger("V");
     }
 
-    @Override
-    public boolean isEpigenetic()
-    {
-        return false;
-    }
-
 }

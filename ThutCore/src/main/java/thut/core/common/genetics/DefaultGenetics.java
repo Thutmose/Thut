@@ -1,6 +1,7 @@
 package thut.core.common.genetics;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
@@ -13,7 +14,7 @@ import thut.api.entity.genetics.IMobGenetics;
 
 public class DefaultGenetics implements IMobGenetics
 {
-
+    Random                         rand     = new Random();
     Map<ResourceLocation, Alleles> genetics = Maps.newHashMap();
     Set<Alleles>                   epigenes;
 
@@ -39,6 +40,11 @@ public class DefaultGenetics implements IMobGenetics
             if (a2 != null)
             {
                 Gene gene2 = a2.getExpressed();
+                if (gene1.getEpigeneticRate() < rand.nextFloat())
+                {
+                    gene1 = a1.getAlleles()[rand.nextInt(2)].mutate();
+                    gene2 = a2.getAlleles()[rand.nextInt(2)].mutate();
+                }
                 Alleles allele = new Alleles(gene1, gene2);
                 getAlleles().put(gene1.getKey(), allele);
             }
@@ -53,7 +59,7 @@ public class DefaultGenetics implements IMobGenetics
             epigenes = Sets.newHashSet();
             for (Alleles a : genetics.values())
             {
-                if (a.getExpressed().isEpigenetic())
+                if (a.getExpressed().getEpigeneticRate() > 0)
                 {
                     epigenes.add(a);
                 }

@@ -34,10 +34,4 @@ public abstract class GeneTagCompound implements Gene
         value = tag.getCompoundTag("V");
     }
 
-    @Override
-    public boolean isEpigenetic()
-    {
-        return false;
-    }
-
 }
