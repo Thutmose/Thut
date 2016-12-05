@@ -40,4 +40,10 @@ public abstract class GeneFloat implements Gene
         return false;
     }
 
+    @Override
+    public String toString()
+    {
+        return "" + value;
+    }
+
 }

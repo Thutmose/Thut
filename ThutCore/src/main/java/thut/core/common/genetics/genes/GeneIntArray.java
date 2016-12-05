@@ -1,5 +1,7 @@
 package thut.core.common.genetics.genes;
 
+import java.util.Arrays;
+
 import net.minecraft.nbt.NBTTagCompound;
 import thut.api.entity.genetics.Gene;
 
@@ -38,6 +40,12 @@ public abstract class GeneIntArray implements Gene
     public boolean isEpigenetic()
     {
         return false;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "" + Arrays.toString(value);
     }
 
 }
