@@ -34,10 +34,4 @@ public abstract class GeneString implements Gene
         value = tag.getString("V");
     }
 
-    @Override
-    public boolean isEpigenetic()
-    {
-        return false;
-    }
-
 }
