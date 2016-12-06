@@ -35,9 +35,8 @@ public interface DefaultInventory extends IInventory
     {
         if (CompatWrapper.isValid(getStackInSlot(slot)))
         {
-            ItemStack itemStack;
-            itemStack = getStackInSlot(slot).splitStack(count);
-            setInventorySlotContents(slot, itemStack);
+            ItemStack itemStack = getStackInSlot(slot).splitStack(count);
+            setInventorySlotContents(slot, getStackInSlot(slot));
             return itemStack;
         }
         setInventorySlotContents(slot, CompatWrapper.nullStack);
