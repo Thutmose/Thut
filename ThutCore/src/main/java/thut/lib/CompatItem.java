@@ -34,6 +34,20 @@ public abstract class CompatItem extends Item
             subItems.add(stack);
     }
 
+    // 1.10
+    public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn,
+            EnumHand hand)
+    {
+        return new ActionResult<>(EnumActionResult.PASS, itemStackIn);
+    }
+
+    // 1.10
+    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
+            EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
+    {
+        return EnumActionResult.PASS;
+    }
+
     // 1.11
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
     {
