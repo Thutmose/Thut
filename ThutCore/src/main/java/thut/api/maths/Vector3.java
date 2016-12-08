@@ -1297,12 +1297,11 @@ public class Vector3
         ret = isAir(worldObj);
         if (!ret) ret = ret || getBlockMaterial(worldObj).isLiquid();
         if (!ret) ret = ret || getBlockMaterial(worldObj).isReplaceable();
-
+        if (!ret) ret = ret || !getBlockMaterial(worldObj).blocksMovement();
         if (!ret)
         {
             ret = isPointClearBlocks(x, y, z, worldObj);
         }
-
         return ret;// isPointClearBlocks(x, y, z, worldObj);
     }
 
