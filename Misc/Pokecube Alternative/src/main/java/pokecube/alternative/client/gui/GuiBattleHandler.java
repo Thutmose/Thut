@@ -38,7 +38,6 @@ public class GuiBattleHandler
 
     public GuiBattleHandler()
     {
-        // TODO Auto-generated constructor stub
     }
 
     @SubscribeEvent(receiveCanceled = false)
