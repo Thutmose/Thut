@@ -176,7 +176,7 @@ public class AIThreadManager
             this.lock = lock;
             id = number;
             this.aiStuff = aiStuff;
-            this.setName("Netty Server IO - Pokemob AI Thread-" + id);
+            this.setName("Netty Server IO - Mob AI Thread-" + id);
             threads.put(id, this);
         }
 
