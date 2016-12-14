@@ -1,11 +1,6 @@
 package pokecube.alternative.client.gui;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.lwjgl.opengl.GL11;
-
-import com.google.common.base.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -15,7 +10,6 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -29,7 +23,6 @@ import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.events.handlers.EventsHandlerClient;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
-import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.core.utils.Tools;
 import thut.lib.CompatWrapper;
 
@@ -88,26 +81,7 @@ public class GuiPokemonBar extends Gui
             EntityLiving entity = null;
             ItemStack pokemonItemstack = capability.getCube(pokemonNumber);
             if (!CompatWrapper.isValid(pokemonItemstack)) continue;
-            IPokemob pokemob = null;// =
-            if (capability.isOut(pokemonNumber))
-            {
-                final UUID id = PokecubeManager.getUUID(pokemonItemstack);
-                List<EntityLivingBase> pokemobs = mc.theWorld.getEntities(EntityLivingBase.class,
-                        new Predicate<EntityLivingBase>()
-                        {
-                            @Override
-                            public boolean apply(EntityLivingBase input)
-                            {
-                                return input.getUniqueID().equals(id);
-                            }
-                        });
-                if (!pokemobs.isEmpty())
-                {
-                    entity = (EntityLiving) pokemobs.get(0);
-                    pokemob = EventsHandlerClient.getPokemobForRender(PokecubeManager.pokemobToItem((IPokemob) entity),
-                            mc.theWorld);
-                }
-            }
+            IPokemob pokemob = null;
             if (pokemob == null)
             {
                 pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.theWorld);

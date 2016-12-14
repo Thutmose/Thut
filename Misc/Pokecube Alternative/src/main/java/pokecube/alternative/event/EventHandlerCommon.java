@@ -115,7 +115,6 @@ public class EventHandlerCommon
                         if (!CompatWrapper.isValid(stack)) continue;
                         if (PokecubeManager.getUUID(item).equals(PokecubeManager.getUUID(stack)))
                         {
-                            cap.setOut(i, false);
                             cap.setCube(i, item);
                             toBelt = true;
                             break;
@@ -162,7 +161,7 @@ public class EventHandlerCommon
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(event.getEntityLiving());
-                if (CompatWrapper.isValid(cap.getCube(cap.getSlot())) && !cap.isOut(cap.getSlot()))
+                if (CompatWrapper.isValid(cap.getCube(cap.getSlot())))
                 {
                     ItemStack cube = cap.getCube(cap.getSlot());
                     if (PokecubeManager.isFilled(cube))
@@ -175,7 +174,7 @@ public class EventHandlerCommon
                                 cube, t, null);
                         ITextComponent text = new TextComponentTranslation("pokecube.trainer.toss",
                                 event.getEntityLiving().getDisplayName(), cube.getDisplayName());
-                        cap.setOut(cap.getSlot(), true);
+                        cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
                         syncPokemon((EntityPlayer) event.getEntityLiving());
                         target.addChatMessage(text);
                     }
@@ -248,7 +247,6 @@ public class EventHandlerCommon
                 if (!CompatWrapper.isValid(stack)) continue;
                 if (PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
                 {
-                    cap.setOut(i, false);
                     cap.setCube(i, pokemonStack);
                     added = true;
                     break;
@@ -260,7 +258,6 @@ public class EventHandlerCommon
                 if (!CompatWrapper.isValid(stack)
                         || PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
                 {
-                    cap.setOut(i, false);
                     cap.setCube(i, pokemonStack);
                     added = true;
                     break;
