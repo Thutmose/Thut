@@ -22,7 +22,6 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
     int         playerId;
     byte        selectedSlot;
     ItemStack[] pokemon = new ItemStack[6];
-    boolean[]   out     = new boolean[6];
 
     public PacketSyncBelt()
     {
@@ -35,10 +34,6 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
         {
             pokemon[i] = belt.getCube(i);
         }
-        for (int i = 0; i < 6; i++)
-        {
-            out[i] = belt.isOut(i);
-        }
         this.playerId = playerId;
     }
 
@@ -49,8 +44,6 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
         buffer.writeByte(selectedSlot);
         for (int i = 0; i < 6; i++)
             ByteBufUtils.writeItemStack(buffer, pokemon[i]);
-        for (int i = 0; i < 6; i++)
-            buffer.writeBoolean(out[i]);
     }
 
     @Override
@@ -60,8 +53,6 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
         selectedSlot = buffer.readByte();
         for (int i = 0; i < 6; i++)
             pokemon[i] = ByteBufUtils.readItemStack(buffer);
-        for (int i = 0; i < 6; i++)
-            out[i] = buffer.readBoolean();
     }
 
     @SideOnly(Side.CLIENT)
@@ -90,8 +81,7 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
             IPokemobBelt cap = BeltPlayerData.getBelt(p);
             for (int i = 0; i < 6; i++)
             {
-                cap.setCube(i, message.pokemon[i]);
-                cap.setOut(i, message.out[i]);
+                cap.setCube(i, message.pokemon[i]);                                                                                                                                                                 
             }
             cap.setSlot(message.selectedSlot);
         }

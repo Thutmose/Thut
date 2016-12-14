@@ -54,7 +54,6 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
             if (CompatWrapper.isValid(i))
             {
                 NBTTagCompound tag = new NBTTagCompound();
-                tag.setBoolean("o", outs[n]);
                 i.writeToNBT(tag);
                 nbt.setTag("slot" + n, tag);
             }
@@ -72,7 +71,6 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
             if (temp instanceof NBTTagCompound)
             {
                 NBTTagCompound tag = (NBTTagCompound) temp;
-                outs[n] = tag.getBoolean("o");
                 setCube(n, CompatWrapper.fromTag(tag));
             }
         }
@@ -80,7 +78,6 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
     }
 
     List<ItemStack> cubes = CompatWrapper.makeList(6);
-    boolean[]       outs  = new boolean[6];
     int             slot  = 0;
 
     @Override
@@ -106,17 +103,4 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
     {
         slot = index;
     }
-
-    @Override
-    public boolean isOut(int index)
-    {
-        return outs[index];
-    }
-
-    @Override
-    public void setOut(int index, boolean bool)
-    {
-        outs[index] = bool;
-    }
-
 }

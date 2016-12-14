@@ -78,23 +78,14 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
             ItemStack stack = cap.getCube(index);
             if (CompatWrapper.isValid(stack) && !CompatWrapper.isValid(player.inventory.getItemStack()))
             {
-                if (cap.isOut(index))
-                {
-                    // TODO recall it here?
-                }
-                else
-                {
-                    cap.setCube(index, CompatWrapper.nullStack);
-                    cap.setOut(index, false);
-                    player.inventory.setItemStack(stack);
-                    player.updateHeldItem();
-                }
+                cap.setCube(index, CompatWrapper.nullStack);
+                player.inventory.setItemStack(stack);
+                player.updateHeldItem();
             }
             else if (!CompatWrapper.isValid(stack) && CompatWrapper.isValid(player.inventory.getItemStack())
                     && PokecubeManager.isFilled(player.inventory.getItemStack()))
             {
                 cap.setCube(index, player.inventory.getItemStack());
-                cap.setOut(cap.getSlot(), false);
                 player.inventory.setItemStack(CompatWrapper.nullStack);
                 player.updateHeldItem();
             }

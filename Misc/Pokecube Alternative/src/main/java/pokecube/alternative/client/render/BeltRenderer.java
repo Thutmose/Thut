@@ -87,7 +87,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         for (int i = 0; i < 6; i++)
         {
             ItemStack stack = cap.getCube(i);
-            if (CompatWrapper.isValid(stack) && !cap.isOut(i))
+            if (CompatWrapper.isValid(stack))
             {
                 float amountX = 0.25f;
                 float amountZ = 0.15f;

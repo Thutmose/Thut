@@ -90,11 +90,11 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
         if (message.messageId == SENDOUT)
         {
             ItemStack cube = cap.getCube(cap.getSlot());
-            if (CompatWrapper.isValid(cube) && !cap.isOut(cap.getSlot()))
+            if (CompatWrapper.isValid(cube))
             {
                 cube.getItem().onPlayerStoppedUsing(cube, player.worldObj, player, message.ticks);
                 CompatWrapper.setStackSize(cube, 1);
-                cap.setOut(cap.getSlot(), true);
+                cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
             }
         }
         else if (message.messageId == RECALL)
