@@ -139,8 +139,7 @@ public class ThutCore
             public NBTBase writeNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side)
             {
                 NBTTagList genes = new NBTTagList();
-                if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
-                    for (Map.Entry<ResourceLocation, Alleles> entry : instance.getAlleles().entrySet())
+                for (Map.Entry<ResourceLocation, Alleles> entry : instance.getAlleles().entrySet())
                 {
                     NBTTagCompound tag = new NBTTagCompound();
                     tag.setString("K", entry.getKey().toString());
