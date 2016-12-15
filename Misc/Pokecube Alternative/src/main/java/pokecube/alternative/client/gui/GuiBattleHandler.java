@@ -21,6 +21,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import pokecube.alternative.Config;
 import pokecube.core.PokecubeCore;
 import pokecube.core.client.GuiEvent;
 import pokecube.core.client.Resources;
@@ -32,6 +33,7 @@ import pokecube.core.interfaces.Move_Base;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.moves.MovesUtils;
 import pokecube.core.utils.Tools;
+import thut.lib.CompatWrapper;
 
 public class GuiBattleHandler
 {
@@ -138,11 +140,12 @@ public class GuiBattleHandler
             {
                 float timer = 1;
                 Move_Base lastMove;
-                if ((lastMove = MovesUtils.getMoveFromName(pokemob.getLastMoveUsed())) != null)
+                if (Config.instance.cooldownMeter
+                        && (lastMove = MovesUtils.getMoveFromName(pokemob.getLastMoveUsed())) != null)
                 {
-                    timer -= (pokemob.getAttackCooldown() / (float) MovesUtils.getAttackDelay(pokemob,
-                            pokemob.getLastMoveUsed(),
-                            (lastMove.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0, false));
+                    timer -= (pokemob.getAttackCooldown()
+                            / (float) MovesUtils.getAttackDelay(pokemob, pokemob.getLastMoveUsed(),
+                                    (lastMove.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0, false));
                 }
                 timer = Math.max(0, Math.min(timer, 1));
                 GL11.glScaled(scale, scale, scale);
@@ -154,8 +157,10 @@ public class GuiBattleHandler
                 int g = 0;
                 int b = 128;
                 buffer.pos(-size * timer / scale - padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
-                buffer.pos(-size * timer / scale - padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha).endVertex();
-                buffer.pos(size * timer / scale + padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha).endVertex();
+                buffer.pos(-size * timer / scale - padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha)
+                        .endVertex();
+                buffer.pos(size * timer / scale + padding, barHeight1 + padding, 0.0D).color(r, g, b, alpha)
+                        .endVertex();
                 buffer.pos(size * timer / scale + padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
                 tessellator.draw();
                 GlStateManager.translate(0F, -selected * mc.fontRendererObj.FONT_HEIGHT, 0F);
@@ -282,7 +287,7 @@ public class GuiBattleHandler
             int r = 0;
             int g = 255;
             int b = 0;
-            ItemStack stack = null;
+            ItemStack stack = CompatWrapper.nullStack;
             if (pokemob != null && pokemob.getPokemonOwner() == renderManager.renderViewEntity)
             {
                 stack = entity.getHeldItemMainhand();
@@ -421,7 +426,7 @@ public class GuiBattleHandler
             GlStateManager.scale(s1, s1, s1);
             GlStateManager.translate(size / (s * s1) * 2 - 16, 0F, 0F);
             mc.renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-            if (stack != null && PokecubeMod.core.getConfig().showAttributes)
+            if (CompatWrapper.isValid(stack) && PokecubeMod.core.getConfig().showAttributes)
             {
                 RenderHealth.renderIcon(off, 0, stack, 16, 16);
                 off -= 16;

@@ -11,11 +11,13 @@ public class Config extends ConfigBase
     public static Config instance;
 
     @Configure(category = "client")
-    public float         scale     = 1.0f;
+    public float         scale         = 1.0f;
     @Configure(category = "client")
-    public int           shift     = 0;
+    public int           shift         = 0;
+    @Configure(category = "client")
+    public boolean       cooldownMeter = true;
     @Configure(category = "misc")
-    public boolean       autoThrow = true;
+    public boolean       autoThrow     = true;
 
     public Config()
     {
