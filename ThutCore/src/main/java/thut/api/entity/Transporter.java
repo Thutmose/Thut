@@ -18,6 +18,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.maths.Vector3;
 import thut.lib.CompatWrapper;
 
@@ -96,8 +97,12 @@ public class Transporter
                 if (dim != theEntity.dimension)
                 {
                     if (theEntity instanceof EntityPlayerMP)
+                    {
+                        ReflectionHelper.setPrivateValue(EntityPlayerMP.class, (EntityPlayerMP) theEntity, true,
+                                "invulnerableDimensionChange");
                         theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity, dim,
                                 new TTeleporter(theEntity.getServer().worldServerForDimension(dim)));
+                    }
                     else
                     {
                         // Handle moving non players.
@@ -166,6 +171,7 @@ public class Transporter
         WorldServer worldServer = server.worldServerForDimension(dimension);
         Teleporter teleporter = new TTeleporter(worldServer, t2.x, t2.y, t2.z);
         EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
+        ReflectionHelper.setPrivateValue(EntityPlayerMP.class, entityPlayerMP, true, "invulnerableDimensionChange");
         entityPlayerMP.addExperienceLevel(0);
         worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(entityPlayerMP, dimension,
                 teleporter);
