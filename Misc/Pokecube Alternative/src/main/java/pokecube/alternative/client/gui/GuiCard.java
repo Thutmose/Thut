@@ -96,7 +96,7 @@ public class GuiCard extends InventoryEffectRenderer
         int selectorSize = 9;
         String name = this.mc.thePlayer.getDisplayNameString();
         drawString(fontRendererObj, name, i + 7, j + 28, 0xffffff);
-        String num = "" + CaptureStats.getNumberUniqueCaughtBy(this.mc.thePlayer.getCachedUniqueIdString());
+        String num = "" + CaptureStats.getNumberUniqueCaughtBy(this.mc.thePlayer.getUniqueID());
         drawString(fontRendererObj, num, i + 7, j + 45, 0xffffff);
 
         for (int i1 = 0; i1 < 6; i1++)
