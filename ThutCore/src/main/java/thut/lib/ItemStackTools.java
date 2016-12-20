@@ -111,7 +111,7 @@ public class ItemStackTools
         if (!CompatWrapper.isValid(itemstack))
         {
             itemstack = itemStackIn.copy();
-            itemstack.stackSize = 0;
+            CompatWrapper.setStackSize(itemstack, 0);
             if (itemStackIn.hasTagCompound())
             {
                 itemstack.setTagCompound(itemStackIn.getTagCompound().copy());
