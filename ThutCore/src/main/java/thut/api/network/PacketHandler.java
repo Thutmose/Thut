@@ -118,7 +118,7 @@ public class PacketHandler
                     }
                     catch (Exception e)
                     {
-                        e.printStackTrace();
+                        System.err.println("Error with Dim " + player.dimension);
                     }
                     return;
                 }

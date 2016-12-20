@@ -90,7 +90,6 @@ public class CompatWrapper
 
     public static ItemStack setStackSize(ItemStack stack, int amount)
     {
-        if (amount <= 0) { return nullStack; }
         stack.func_190920_e(amount);
         return stack;
     }

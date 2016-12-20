@@ -5,7 +5,6 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
 
 public class ItemStackTools
@@ -14,7 +13,7 @@ public class ItemStackTools
      * impossible. */
     public static boolean addItemStackToInventory(ItemStack itemStackIn, IInventory toAddTo, int minIndex)
     {
-        if (CompatWrapper.getStackSize(itemStackIn) != 0 && itemStackIn.getItem() != null)
+        if (CompatWrapper.isValid(itemStackIn))
         {
             try
             {
@@ -36,7 +35,8 @@ public class ItemStackTools
                 while (true)
                 {
                     i = CompatWrapper.getStackSize(itemStackIn);
-                    CompatWrapper.setStackSize(itemStackIn, storePartialItemStack(itemStackIn, toAddTo, minIndex));
+                    int num = storePartialItemStack(itemStackIn, toAddTo, minIndex);
+                    itemStackIn = CompatWrapper.setStackSize(itemStackIn, num);
                     int size = CompatWrapper.getStackSize(itemStackIn);
                     if (size <= 0 || size >= i)
                     {
@@ -58,12 +58,27 @@ public class ItemStackTools
         return false;
     }
 
+    private static boolean canMergeStacks(ItemStack stack1, ItemStack stack2)
+    {
+        return CompatWrapper.isValid(stack1) && stackEqualExact(stack1, stack2) && stack1.isStackable()
+                && CompatWrapper.getStackSize(stack1) < stack1.getMaxStackSize()
+                && CompatWrapper.getStackSize(stack1) < 64;
+    }
+
+    /** Checks item, NBT, and meta if the item is not damageable */
+    private static boolean stackEqualExact(ItemStack stack1, ItemStack stack2)
+    {
+        return stack1.getItem() == stack2.getItem()
+                && (!stack1.getHasSubtypes() || stack1.getMetadata() == stack2.getMetadata())
+                && ItemStack.areItemStackTagsEqual(stack1, stack2);
+    }
+
     /** Returns the first item stack that is empty. */
-    private static int getFirstEmptyStack(IInventory inventory, int minIndex)
+    public static int getFirstEmptyStack(IInventory inventory, int minIndex)
     {
         for (int i = minIndex; i < inventory.getSizeInventory(); ++i)
         {
-            if (inventory.getStackInSlot(i) == CompatWrapper.nullStack) { return i; }
+            if (!CompatWrapper.isValid(inventory.getStackInSlot(i))) { return i; }
         }
         return -1;
     }
@@ -73,16 +88,8 @@ public class ItemStackTools
     {
         for (int i = minIndex; i < inventory.getSizeInventory(); ++i)
         {
-            int size = CompatWrapper.getStackSize(itemStackIn);
-            if (inventory.getStackInSlot(i) != CompatWrapper.nullStack
-                    && inventory.getStackInSlot(i).getItem() == itemStackIn.getItem()
-                    && inventory.getStackInSlot(i).isStackable() && size < inventory.getStackInSlot(i).getMaxStackSize()
-                    && size < inventory.getInventoryStackLimit()
-                    && (!inventory.getStackInSlot(i).getHasSubtypes()
-                            || inventory.getStackInSlot(i).getMetadata() == itemStackIn.getMetadata())
-                    && ItemStack.areItemStackTagsEqual(inventory.getStackInSlot(i), itemStackIn)) { return i; }
+            if (canMergeStacks(inventory.getStackInSlot(i), itemStackIn)) { return i; }
         }
-
         return -1;
     }
 
@@ -90,7 +97,6 @@ public class ItemStackTools
      * matching slot and returns the quantity of left over items. */
     private static int storePartialItemStack(ItemStack itemStackIn, IInventory inventory, int minIndex)
     {
-        Item item = itemStackIn.getItem();
         int i = CompatWrapper.getStackSize(itemStackIn);
         int j = storeItemStack(itemStackIn, inventory, minIndex);
 
@@ -100,14 +106,17 @@ public class ItemStackTools
         }
 
         if (j < 0) { return i; }
-        if (inventory.getStackInSlot(j) == CompatWrapper.nullStack)
-        {
-            inventory.setInventorySlotContents(j, new ItemStack(item, 0, itemStackIn.getMetadata()));
+        ItemStack itemstack = inventory.getStackInSlot(j);
 
+        if (!CompatWrapper.isValid(itemstack))
+        {
+            itemstack = itemStackIn.copy();
+            itemstack.stackSize = 0;
             if (itemStackIn.hasTagCompound())
             {
-                inventory.getStackInSlot(j).setTagCompound((NBTTagCompound) itemStackIn.getTagCompound().copy());
+                itemstack.setTagCompound(itemStackIn.getTagCompound().copy());
             }
+            inventory.setInventorySlotContents(j, itemstack);
         }
 
         int k = i;
