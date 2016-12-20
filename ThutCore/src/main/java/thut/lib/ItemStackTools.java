@@ -5,6 +5,7 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
 
 public class ItemStackTools
@@ -114,7 +115,7 @@ public class ItemStackTools
             CompatWrapper.setStackSize(itemstack, 0);
             if (itemStackIn.hasTagCompound())
             {
-                itemstack.setTagCompound(itemStackIn.getTagCompound().copy());
+                itemstack.setTagCompound((NBTTagCompound) itemStackIn.getTagCompound().copy());
             }
             inventory.setInventorySlotContents(j, itemstack);
         }
