@@ -85,7 +85,11 @@ public class CompatWrapper
 
     public static ItemStack setStackSize(ItemStack stack, int amount)
     {
-        if (amount <= 0) { return nullStack; }
+        if (amount <= 0)
+        {
+            stack.stackSize = 0;
+            return nullStack;
+        }
         stack.stackSize = amount;
         return stack;
     }
