@@ -84,8 +84,16 @@ public class GuiPokemonBar extends Gui
             IPokemob pokemob = null;
             if (pokemob == null)
             {
-                pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.theWorld);
-                entity = (EntityLiving) pokemob;
+                try
+                {
+                    pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.theWorld);
+                    entity = (EntityLiving) pokemob;
+                }
+                catch (Exception e)
+                {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
             if (pokemob == null || entity == null) continue;
 
