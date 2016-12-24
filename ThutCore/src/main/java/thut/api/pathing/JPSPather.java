@@ -50,7 +50,8 @@ public class JPSPather extends ThutPathFinder
             z = Int(ztest);
             if (!(x == Int(xprev) && y == Int(yprev) && z == Int(zprev)))
             {
-                boolean clear = isSafe(e, x, y, z, direction);
+                PathPoint point = openPoint(x, y, z);
+                boolean clear = isSafe(e, point, direction);
                 if (!clear) { return Vector3.getNewVector().set(Int(xtest), Int(ytest), Int(ztest)); }
             }
             yprev = ytest;
@@ -150,8 +151,7 @@ public class JPSPather extends ThutPathFinder
 
             if (time > PATHTIME || tries > 1000)
             {
-                // System.out.println(
-                // "Too long " + tries + " " + end + " " +time);
+                System.out.println("Too long " + tries + " " + end + " " + time);
                 break;
             }
         }
