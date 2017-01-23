@@ -1002,12 +1002,57 @@ public class Matrix3
     public boolean doTileCollision(IBlockAccess world, List<AxisAlignedBB> aabbs, Vector3 location, Entity e,
             Vector3 diffs)
     {
-        Vector3 diffs1 = Vector3.getNewVector().set(diffs);
-        Vector3 off = Vector3.getNewVector().set(location);
 
-        diffs1.set(doTileCollision(world, aabbs, e, off, diffs, false));
-        double x = diffs1.x, y = diffs1.y, z = diffs1.z;
-        return !(x == diffs.x && (y == diffs.y || Math.abs(y - diffs.y) < 0.5) && z == diffs.z);
+        Vector3 temp1 = Vector3.getNewVector();
+
+        Matrix3 box = copy().addOffsetTo(location);
+        Vector3 v1 = box.boxCentre();
+        Vector3[] corners = box.corners(v1);
+
+        double minX = Double.MAX_VALUE, minZ = Double.MAX_VALUE, minY = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+
+        for (Vector3 v : corners)
+        {
+            if (v.x > maxX) maxX = v.x;
+            if (v.y > maxY) maxY = (float) v.y;
+            if (v.z > maxZ) maxZ = v.z;
+            if (v.x < minX) minX = v.x;
+            if (v.y < minY) minY = (float) v.y;
+            if (v.z < minZ) minZ = v.z;
+        }
+        if (!e.getRecursivePassengers().isEmpty())
+        {
+            double mY = 0;
+            for (Entity e1 : e.getRecursivePassengers())
+            {
+                mY = Math.max(mY, e1.height + e.getMountedYOffset());
+            }
+            maxY += mY;
+        }
+        AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+        temp1.set(diffs);
+        for (AxisAlignedBB aabb : aabbs)
+        {
+            if (boundingBox.intersectsWith(aabb))
+            {
+                boolean collidesX = ((maxZ <= aabb.maxZ) && (maxZ >= aabb.minZ))
+                        || ((minZ <= aabb.maxZ) && (minZ >= aabb.minZ)) || ((minZ <= aabb.minZ) && (maxZ >= aabb.maxZ));
+
+                boolean collidesY = ((minY >= aabb.minY) && (minY <= aabb.maxY))
+                        || ((maxY <= aabb.maxY) && (maxY >= aabb.minY)) || ((minY <= aabb.minY) && (maxY >= aabb.maxY));
+
+                boolean collidesZ = ((maxX <= aabb.maxX) && (maxX >= aabb.minX))
+                        || ((minX <= aabb.maxX) && (minX >= aabb.minX)) || ((minX <= aabb.minX) && (maxX >= aabb.maxX));
+                collidesZ = collidesZ && (collidesX || collidesY);
+                collidesX = collidesX && (collidesZ || collidesY);
+                if (collidesZ || collidesX || collidesY)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public Vector3 get(int i)

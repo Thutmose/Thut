@@ -278,7 +278,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
                 boolean safe = false;
                 PathPoint point = openPoint(x, y, z);
-                if (isSafe(pokemob, x, y, z, opp))
+                if (isSafe(pokemob, point, opp))
                 {
                     PathPoint point1 = openPoint(x, y - 1, z);
                     if (!point.isFirst)
@@ -309,10 +309,10 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 }
                 if (!safe && !(side == EnumFacing.DOWN || side == EnumFacing.UP))
                 {
-                    boolean up = isEmpty(pokemob, x, y + 1, z, opp);
-                    if (isSafe(pokemob, x, y + 1, z, opp))
+                    PathPoint point1 = openPoint(x, y + 1, z);
+                    boolean up = isEmpty(pokemob, point, opp);
+                    if (isSafe(pokemob, point, opp))
                     {
-                        PathPoint point1 = openPoint(x, y + 1, z);
                         if (!point.isFirst)
                         {
                             IBlockState down = v0.set(point1).getBlockState(worldMap);
@@ -338,10 +338,10 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                             }
                         }
                     }
-                    if (up && isSafe(pokemob, x, y - 1, z, opp))
+                    point = openPoint(x, y - 1, z);
+                    if (up && isSafe(pokemob, point, opp))
                     {
-                        point = openPoint(x, y - 1, z);
-                        PathPoint point1 = openPoint(x, y - 2, z);
+                        point1 = openPoint(x, y - 2, z);
                         if (!point.isFirst)
                         {
                             IBlockState down = v0.set(point1).getBlockState(worldMap);
@@ -507,60 +507,75 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             long time = System.nanoTime() - starttime;
             if (time > PATHTIME || (tries > 2.5 * p3t && p3t > 200) || tries > 1000)
             {
+                System.out.println("gave up");
                 break;
             }
         }
         return pointf[2];
     }
 
-    private boolean isEmpty(Vector3 e, int x, int y, int z, Vector3 from)
+    private boolean isEmpty(Vector3 size, PathPoint point, Vector3 from)
     {
-        Vector3 v = v0.set(x + 0.5, y, z + 0.5);
-        boolean clear = false;
+        Vector3 v = v0.set(point).addTo(0.5, 0, 0.5);
+        point.x = point.xCoord + 0.5f;
+        point.z = point.zCoord + 0.5f;
         IBlockState state = v.getBlockState(worldMap);
         Block b = state.getBlock();
-        if (mob.getBlockPathWeight(worldMap, e) < 0) { return false; }
+        if (mob.getBlockPathWeight(worldMap, v) < 0) { return false; }
         Material m = state.getMaterial();
         if (b instanceof BlockDoor)
         {
-            if (m == Material.WOOD) { return canFit(e, state); }
+            if (m == Material.WOOD) { return canFit(size, state); }
         }
         if (state.isNormalCube() || m.blocksMovement()) return false;
-//        if (b.isLadder(state, worldMap, v.getPos(), (EntityLivingBase) mob)) return true;
-        if (e.x > 1 || e.z > 1)
+        if (size.x > 1 || size.z > 1)
         {
-            clear = mob.fits(worldMap, v, from);
-            return clear;
+            if (mob.fits(worldMap, v, from) || mob.fits(worldMap, v.addTo(0, ((EntityLiving) mob).stepHeight, 0), from))
+                return true;
+            for (EnumFacing side : EnumFacing.HORIZONTALS)
+            {
+                v.set(point).addTo(0.5 + side.getFrontOffsetX() * 0.5, 0, 0.5 + side.getFrontOffsetZ() * 0.5);
+                if (mob.fits(worldMap, v, from)
+                        || mob.fits(worldMap, v.addTo(0, ((EntityLiving) mob).stepHeight, 0), from))
+                {
+                    point.x = (float) v.x;
+                    point.y = (float) v.z;
+                    point.z = (float) v.y;
+                    return true;
+                }
+            }
+            return false;
         }
-        if (!(clear = v.clearOfBlocks(worldMap)
-                || v.add(0, ((EntityLiving) mob).stepHeight, 0).isClearOfBlocks(worldMap))) { return false; }
-        return clear;
+        if (!(v.clearOfBlocks(worldMap)
+                || v.addTo(0, ((EntityLiving) mob).stepHeight, 0).isClearOfBlocks(worldMap))) { return false; }
+        return true;
     }
 
-    protected boolean isSafe(Vector3 e, int x, int y, int z, Vector3 from)
+    protected boolean isSafe(Vector3 size, PathPoint point, Vector3 from)
     {
-        IBlockState state = worldMap.getBlockState(new BlockPos(x, y - 1, z));
+        BlockPos pos = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
+        IBlockState state = worldMap.getBlockState(pos.down());
         Material mDown = state.getMaterial();
         boolean water = mob.swims();
         boolean air = mob.flys() || mob.floats();
-        BlockPos pos;
-        boolean ladder = (state = worldMap.getBlockState(pos = new BlockPos(x, y, z))).getBlock().isLadder(state,
-                worldMap, pos, (EntityLivingBase) mob);
-        if (air || ladder) { return isEmpty(e, x, y, z, from); }
+        boolean ladder = (state = worldMap.getBlockState(pos)).getBlock().isLadder(state, worldMap, pos,
+                (EntityLivingBase) mob);
+        if (air || ladder) { return isEmpty(size, point, from); }
         if (water)
         {
             if (!mDown.isSolid())
             {
                 if (mDown != Material.WATER) return false;
             }
-            boolean empty = isEmpty(e, x, y, z, from);
+            boolean empty = isEmpty(size, point, from);
             return empty;
         }
         if (mDown.isLiquid())
         {
             if (mDown != Material.WATER) return false;
         }
-        return isEmpty(e, x, y, z, from) && (mDown == Material.WATER || !isEmpty(e, x, y - 1, z, from));
+        return isEmpty(size, point, from) && (mDown == Material.WATER
+                || !isEmpty(size, openPoint(point.xCoord, point.yCoord - 1, point.zCoord), from));
 
     }
 
@@ -574,7 +589,6 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             pathpoint = new PathPoint(x, y, z);
             this.pointMap.addKey(l, pathpoint);
         }
-
         return pathpoint;
     }
 
