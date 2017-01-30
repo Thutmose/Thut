@@ -310,8 +310,8 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 if (!safe && !(side == EnumFacing.DOWN || side == EnumFacing.UP))
                 {
                     PathPoint point1 = openPoint(x, y + 1, z);
-                    boolean up = isEmpty(pokemob, point, opp);
-                    if (isSafe(pokemob, point, opp))
+                    boolean up = isEmpty(pokemob, point1, opp);
+                    if (isSafe(pokemob, point1, opp))
                     {
                         if (!point.isFirst)
                         {
@@ -530,6 +530,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         if (state.isNormalCube() || m.blocksMovement()) return false;
         if (size.x > 1 || size.z > 1)
         {
+            System.out.println("test");
             if (mob.fits(worldMap, v, from) || mob.fits(worldMap, v.addTo(0, ((EntityLiving) mob).stepHeight, 0), from))
                 return true;
             for (EnumFacing side : EnumFacing.HORIZONTALS)
