@@ -151,7 +151,7 @@ public class JPSPather extends ThutPathFinder
 
             if (time > PATHTIME || tries > 1000)
             {
-                System.out.println("Too long " + tries + " " + end + " " + time);
+             //   System.out.println("Too long " + tries + " " + end + " " + time+" "+start+" "+end);
                 break;
             }
         }
