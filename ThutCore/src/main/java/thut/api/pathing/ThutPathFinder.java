@@ -530,7 +530,6 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         if (state.isNormalCube() || m.blocksMovement()) return false;
         if (size.x > 1 || size.z > 1)
         {
-            System.out.println("test");
             if (mob.fits(worldMap, v, from) || mob.fits(worldMap, v.addTo(0, ((EntityLiving) mob).stepHeight, 0), from))
                 return true;
             for (EnumFacing side : EnumFacing.HORIZONTALS)
