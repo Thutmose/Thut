@@ -1092,7 +1092,7 @@ public class Matrix3
                     Block block = iblockstate.getBlock();
                     if (block.isCollidable())
                     {
-                        iblockstate.addCollisionBoxToList(world, blockpos, box, collidingBoundingBoxes, null);
+                        iblockstate.addCollisionBoxToList(world, blockpos, box, collidingBoundingBoxes, null, false);
                     }
                 }
             }
