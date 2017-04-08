@@ -1,0 +1,27 @@
+# Thut's Tech Language Properties
+# @author Thutmose
+
+# Blocks
+tile.liftRail.name=Рельсы лифта
+tile.lift.name=Лифт
+tile.liftcontroller.name=Блок управления лифтом
+tile.railgun.name=Блочная пушка
+
+# Items
+item.devicelinker.name=Связыватель устройств
+
+#Chat Messages
+msg.liftSet.name=Лифт привязан к связывателю устройств
+msg.floorSet.name=Установлен %s этаж
+msg.callPanel.name=Set is Call Panel to %s
+msg.lift.killed=Лифт убит
+msg.lift.owner=Лифт принадлежит %s
+msg.lift.create=Лифт успешно создан
+msg.lift.setcorner=Установлен первый угол лифта в %s
+msg.lift.toobig=Лифт не может быть таким большим.
+msg.lift.noblock=You need to have %s Elevator blocks in your inventory to make an Elevator of this size.
+
+msg.linker.reset=Сброс связывателя устройств
+
+#Misc
+entity.thuttech.thuttechlift.name=Лифт
