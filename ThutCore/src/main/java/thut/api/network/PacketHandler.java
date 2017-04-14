@@ -372,7 +372,7 @@ public class PacketHandler
         sendToAllNear(message, Vector3.getNewVector().set(tile), tile.getWorld().provider.getDimension(), 64);
     }
 
-    public static void sentTerrainValues(EntityPlayerMP player)
+    public static void sendTerrainValues(EntityPlayerMP player)
     {
         Map<Integer, String> values = BiomeType.getMap();
         NBTTagCompound tag = new NBTTagCompound();
