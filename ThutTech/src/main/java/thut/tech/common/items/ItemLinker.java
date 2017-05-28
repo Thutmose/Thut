@@ -1,7 +1,6 @@
 package thut.tech.common.items;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,6 +21,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -442,8 +442,9 @@ public class ItemLinker extends Item
 
     /** returns a list of items with the same ID, but different meta (eg: dye
      * returns 16 items) */
+    @Override
     @SideOnly(Side.CLIENT)
-    public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems)
+    public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems)
     {
         subItems.add(new ItemStack(itemIn, 1, 0));
         subItems.add(TechCore.getInfoBook());
