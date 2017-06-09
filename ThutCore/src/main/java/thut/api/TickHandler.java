@@ -219,12 +219,14 @@ public class TickHandler
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
+    /** This is used to re-set view bobbing for when a player walks off a block
+     * entity. */
     public void PlayerTick(PlayerTickEvent event)
     {
         if (event.phase == Phase.END && playerTickTracker.containsKey(event.player.getUniqueID()))
         {
-            Integer time = playerTickTracker.remove(event.player.getUniqueID());
-            if (time < event.player.ticksExisted - 10)
+            Integer time = playerTickTracker.get(event.player.getUniqueID());
+            if (time < (int) (System.currentTimeMillis() % 2000) - 100)
             {
                 Minecraft.getMinecraft().gameSettings.viewBobbing = true;
             }

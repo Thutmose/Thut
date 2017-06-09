@@ -89,11 +89,12 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
     private void drawBlockAt(BlockPos pos, IBlockEntity entity)
     {
         IBlockState iblockstate = entity.getFakeWorld().getBlockState(pos);
-        GL11.glPushMatrix();
-        BlockPos liftPos = ((Entity) entity).getPosition();
-        GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(), pos.getZ() - liftPos.getZ());
         if (iblockstate.getMaterial() != Material.AIR)
         {
+            GL11.glPushMatrix();
+            BlockPos liftPos = ((Entity) entity).getPosition();
+            GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(),
+                    pos.getZ() - liftPos.getZ());
             BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
             iblockstate = iblockstate.getActualState(entity.getFakeWorld(), pos);
             GlStateManager.enableRescaleNormal();
@@ -113,18 +114,19 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                 blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
             GlStateManager.popMatrix();
             GlStateManager.disableRescaleNormal();
+            GL11.glPopMatrix();
         }
-        GL11.glPopMatrix();
     }
 
     private void drawTileAt(BlockPos pos, IBlockEntity entity, float partialTicks)
     {
         TileEntity tile = entity.getFakeWorld().getTileEntity(pos);
-        GL11.glPushMatrix();
-        BlockPos liftPos = ((Entity) entity).getPosition();
-        GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(), pos.getZ() - liftPos.getZ());
         if (tile != null)
         {
+            GL11.glPushMatrix();
+            BlockPos liftPos = ((Entity) entity).getPosition();
+            GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(),
+                    pos.getZ() - liftPos.getZ());
             GlStateManager.enableRescaleNormal();
             GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
             GlStateManager.pushMatrix();
@@ -141,8 +143,8 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             TileEntityRendererDispatcher.instance.renderTileEntityAt(tile, 0, 0, 0, partialTicks);
             GlStateManager.popMatrix();
             GlStateManager.disableRescaleNormal();
+            GL11.glPopMatrix();
         }
-        GL11.glPopMatrix();
     }
 
     @Override
