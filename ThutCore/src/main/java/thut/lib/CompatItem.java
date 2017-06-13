@@ -28,11 +28,11 @@ public abstract class CompatItem extends Item
     @Override
     /** returns a list of items with the same ID, but different meta (eg: dye
      * returns 16 items) */
-    public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> list)
     {
-        List<ItemStack> stacks = getTabItems(itemIn, tab);
+        List<ItemStack> stacks = getTabItems(this, tab);
         if (stacks != null) for (ItemStack stack : stacks)
-            subItems.add(stack);
+            list.add(stack);
     }
 
     // 1.10

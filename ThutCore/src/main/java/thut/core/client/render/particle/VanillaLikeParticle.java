@@ -3,7 +3,7 @@ package thut.core.client.render.particle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.ResourceLocation;
@@ -82,7 +82,7 @@ public class VanillaLikeParticle extends Particle
 
     /** Renders the particle */
     @Override
-    public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
+    public void renderParticle(BufferBuilder worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
             float rotationZ, float rotationYZ, float rotationXY, float rotationXZ)
     {
         if (textureMap != null) Minecraft.getMinecraft().renderEngine.bindTexture(textureMap);
@@ -101,7 +101,7 @@ public class VanillaLikeParticle extends Particle
         }
 
         @Override
-        public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
+        public void renderParticle(BufferBuilder worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
                 float rotationZ, float rotationYZ, float rotationXY, float rotationXZ)
         {
             setColour();
@@ -113,7 +113,7 @@ public class VanillaLikeParticle extends Particle
         {
             int time = particleAge + start;
             int num = (time / speed) % 16;
-            int rgba = EnumDyeColor.byMetadata(num).getMapColor().colorValue;
+            int rgba = EnumDyeColor.byMetadata(num).func_193350_e();
             float red = ((rgba >> 16) & 255) / 255f;
             float green = ((rgba >> 8) & 255) / 255f;
             float blue = (rgba & 255) / 255f;

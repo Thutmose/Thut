@@ -712,7 +712,7 @@ public class Matrix3
         dy = Math.max(dy, 1.5);
         dz = Math.max(dz, 1.5);
         AxisAlignedBB b1 = box.boxCentre().getAABB().expand(dx, dy, dz);
-        List<AxisAlignedBB> aabbs = getCollidingBoxes(b1, e.worldObj, world);
+        List<AxisAlignedBB> aabbs = getCollidingBoxes(b1, e.world, world);
         AxisAlignedBB b2;
         AxisAlignedBB[] boxes = aabbs.toArray(new AxisAlignedBB[aabbs.size()]);
         aabbs.clear();
@@ -749,10 +749,10 @@ public class Matrix3
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
                 factor = 16;
-                if (MathHelper.floor_double(b2.maxX * factor) == MathHelper.floor_double(b1.maxX * factor)
-                        && MathHelper.floor_double(b2.minX * factor) == MathHelper.floor_double(b1.minX * factor)
-                        && MathHelper.floor_double(b2.maxZ * factor) == MathHelper.floor_double(b1.maxZ * factor)
-                        && MathHelper.floor_double(b2.minZ * factor) == MathHelper.floor_double(b1.minZ * factor)
+                if (MathHelper.floor(b2.maxX * factor) == MathHelper.floor(b1.maxX * factor)
+                        && MathHelper.floor(b2.minX * factor) == MathHelper.floor(b1.minX * factor)
+                        && MathHelper.floor(b2.maxZ * factor) == MathHelper.floor(b1.maxZ * factor)
+                        && MathHelper.floor(b2.minZ * factor) == MathHelper.floor(b1.minZ * factor)
                         && Math.abs(b2.minY - b1.maxY) < dy)
                 {
                     b1 = copyAndChange(b1, 4, b2.maxY);
@@ -779,10 +779,10 @@ public class Matrix3
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
                 factor = 16;
-                if (MathHelper.floor_double(b2.maxY * factor) == MathHelper.floor_double(b1.maxY * factor)
-                        && MathHelper.floor_double(b2.minY * factor) == MathHelper.floor_double(b1.minY * factor)
-                        && MathHelper.floor_double(b2.maxZ * factor) == MathHelper.floor_double(b1.maxZ * factor)
-                        && MathHelper.floor_double(b2.minZ * factor) == MathHelper.floor_double(b1.minZ * factor)
+                if (MathHelper.floor(b2.maxY * factor) == MathHelper.floor(b1.maxY * factor)
+                        && MathHelper.floor(b2.minY * factor) == MathHelper.floor(b1.minY * factor)
+                        && MathHelper.floor(b2.maxZ * factor) == MathHelper.floor(b1.maxZ * factor)
+                        && MathHelper.floor(b2.minZ * factor) == MathHelper.floor(b1.minZ * factor)
                         && Math.abs(b2.minX - b1.maxX) < dx)
                 {
                     b1 = copyAndChange(b1, 3, b2.maxX);
@@ -800,10 +800,10 @@ public class Matrix3
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
                 factor = 16;
-                if (MathHelper.floor_double(b2.maxY * factor) == MathHelper.floor_double(b1.maxY * factor)
-                        && MathHelper.floor_double(b2.minY * factor) == MathHelper.floor_double(b1.minY * factor)
-                        && MathHelper.floor_double(b2.maxX * factor) == MathHelper.floor_double(b1.maxX * factor)
-                        && MathHelper.floor_double(b2.minX * factor) == MathHelper.floor_double(b1.minX * factor)
+                if (MathHelper.floor(b2.maxY * factor) == MathHelper.floor(b1.maxY * factor)
+                        && MathHelper.floor(b2.minY * factor) == MathHelper.floor(b1.minY * factor)
+                        && MathHelper.floor(b2.maxX * factor) == MathHelper.floor(b1.maxX * factor)
+                        && MathHelper.floor(b2.minX * factor) == MathHelper.floor(b1.minX * factor)
                         && Math.abs(b2.minZ - b1.maxZ) < dz)
                 {
                     b1 = copyAndChange(b1, 5, b2.maxZ);
@@ -1072,12 +1072,12 @@ public class Matrix3
         if (collidingBoundingBoxes == null) collidingBoundingBoxes = new ArrayList<AxisAlignedBB>();
 
         this.collidingBoundingBoxes.clear();
-        int i = MathHelper.floor_double(box.minX);
-        int j = MathHelper.floor_double(box.maxX + 1.0D);
-        int k = MathHelper.floor_double(box.minY);
-        int l = MathHelper.floor_double(box.maxY + 1.0D);
-        int i1 = MathHelper.floor_double(box.minZ);
-        int j1 = MathHelper.floor_double(box.maxZ + 1.0D);
+        int i = MathHelper.floor(box.minX);
+        int j = MathHelper.floor(box.maxX + 1.0D);
+        int k = MathHelper.floor(box.minY);
+        int l = MathHelper.floor(box.maxY + 1.0D);
+        int i1 = MathHelper.floor(box.minZ);
+        int j1 = MathHelper.floor(box.maxZ + 1.0D);
 
         for (int k1 = i; k1 < j; ++k1)
         {

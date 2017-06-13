@@ -6,10 +6,10 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -36,7 +36,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
     boolean                  up    = true;
 
     static final Tessellator t     = new Tessellator(2097152);
-    VertexBuffer             b     = t.getBuffer();
+    BufferBuilder             b     = t.getBuffer();
 
     ResourceLocation         texture;
 
@@ -63,10 +63,10 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             }
             GL11.glScaled(0.999, 0.999, 0.999);
             MutableBlockPos pos = new MutableBlockPos();
-            int xMin = MathHelper.floor_double(blockEntity.getMin().getX() + entity.posX);
-            int zMin = MathHelper.floor_double(blockEntity.getMin().getZ() + entity.posZ);
-            int xMax = MathHelper.floor_double(blockEntity.getMax().getX() + entity.posX);
-            int zMax = MathHelper.floor_double(blockEntity.getMax().getZ() + entity.posZ);
+            int xMin = MathHelper.floor(blockEntity.getMin().getX() + entity.posX);
+            int zMin = MathHelper.floor(blockEntity.getMin().getZ() + entity.posZ);
+            int xMax = MathHelper.floor(blockEntity.getMax().getX() + entity.posX);
+            int zMax = MathHelper.floor(blockEntity.getMax().getZ() + entity.posZ);
             int yMin = (int) Math.round(blockEntity.getMin().getY() + entity.posY);
             int yMax = (int) Math.round(blockEntity.getMax().getY() + entity.posY);
             for (int i = xMin; i <= xMax; i++)
@@ -103,7 +103,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             GlStateManager.translate(0.5F, 0.5F, 0.5F);
             float f7 = 1.0F;
             GlStateManager.scale(-f7, -f7, f7);
-            int i1 = ((Entity) entity).getBrightnessForRender(0);
+            int i1 = ((Entity) entity).getBrightnessForRender();
             int j1 = i1 % 65536;
             int k1 = i1 / 65536;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
@@ -133,7 +133,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             GlStateManager.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
             float f7 = 1.0F;
             GlStateManager.scale(-f7, -f7, f7);
-            int i1 = ((Entity) entity).getBrightnessForRender(0);
+            int i1 = ((Entity) entity).getBrightnessForRender();
             int j1 = i1 % 65536;
             int k1 = i1 / 65536;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);

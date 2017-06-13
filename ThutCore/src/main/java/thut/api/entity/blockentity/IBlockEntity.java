@@ -36,7 +36,7 @@ public interface IBlockEntity
             return toTrace.getFakeWorld().rayTraceBlocks(start, end, false, true, false);
         }
 
-        public static void removeBlocks(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
+        public static void removeBlocks(World world, BlockPos min, BlockPos max, BlockPos pos)
         {
             int xMin = min.getX();
             int zMin = min.getZ();
@@ -49,13 +49,13 @@ public interface IBlockEntity
                     for (int k = zMin; k <= zMax; k++)
                     {
                         BlockPos temp = pos.add(i, j, k);
-                        TileEntity tile = worldObj.getTileEntity(temp);
+                        TileEntity tile = world.getTileEntity(temp);
                         if (tile != null) tile.invalidate();
-                        worldObj.setBlockState(temp, Blocks.AIR.getDefaultState(), 2);
+                        world.setBlockState(temp, Blocks.AIR.getDefaultState(), 2);
                     }
         }
 
-        public static IBlockState[][][] checkBlocks(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
+        public static IBlockState[][][] checkBlocks(World world, BlockPos min, BlockPos max, BlockPos pos)
         {
             int xMin = min.getX();
             int zMin = min.getZ();
@@ -68,7 +68,7 @@ public interface IBlockEntity
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
-                        IBlockState state = worldObj.getBlockState(pos.add(i, j, k));
+                        IBlockState state = world.getBlockState(pos.add(i, j, k));
                         ret[i - xMin][j - yMin][k - zMin] = state;
                     }
             return ret;
@@ -94,15 +94,15 @@ public interface IBlockEntity
                         TileEntity tile = toRevert.getFakeWorld().getTileEntity(pos);
                         if (state != null)
                         {
-                            entity.worldObj.setBlockState(pos, state);
+                            entity.world.setBlockState(pos, state);
                             if (tile != null)
                             {
-                                TileEntity newTile = entity.worldObj.getTileEntity(pos);
+                                TileEntity newTile = entity.world.getTileEntity(pos);
                                 if (newTile != null) newTile.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                             }
                         }
                     }
-            List<Entity> possibleInside = entity.worldObj.getEntitiesWithinAABBExcludingEntity(entity,
+            List<Entity> possibleInside = entity.world.getEntitiesWithinAABBExcludingEntity(entity,
                     entity.getEntityBoundingBox());
             for (Entity e : possibleInside)
             {
@@ -110,7 +110,7 @@ public interface IBlockEntity
             }
         }
 
-        public static TileEntity[][][] checkTiles(World worldObj, BlockPos min, BlockPos max, BlockPos pos)
+        public static TileEntity[][][] checkTiles(World world, BlockPos min, BlockPos max, BlockPos pos)
         {
             int xMin = min.getX();
             int zMin = min.getZ();
@@ -124,10 +124,10 @@ public interface IBlockEntity
                     for (int k = zMin; k <= zMax; k++)
                     {
                         BlockPos temp = pos.add(i, j, k);
-                        IBlockState state = worldObj.getBlockState(temp);
+                        IBlockState state = world.getBlockState(temp);
                         if (((state.getBlock()) instanceof ITileEntityProvider))
                         {
-                            TileEntity old = worldObj.getTileEntity(temp);
+                            TileEntity old = world.getTileEntity(temp);
                             if (old != null)
                             {
                                 NBTTagCompound tag = new NBTTagCompound();
@@ -186,13 +186,13 @@ public interface IBlockEntity
             return tileentity;
         }
 
-        public static <T extends Entity> T makeBlockEntity(World worldObj, BlockPos min, BlockPos max, BlockPos pos,
+        public static <T extends Entity> T makeBlockEntity(World world, BlockPos min, BlockPos max, BlockPos pos,
                 Class<T> clas)
         {
             T ret = null;
             try
             {
-                ret = clas.getConstructor(World.class).newInstance(worldObj);
+                ret = clas.getConstructor(World.class).newInstance(world);
             }
             catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException e)
@@ -209,12 +209,12 @@ public interface IBlockEntity
             max = new BlockPos(box.maxX, box.maxY, box.maxZ);
             IBlockEntity entity = (IBlockEntity) ret;
             ret.setPosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            entity.setBlocks(checkBlocks(worldObj, min, max, pos));
-            entity.setTiles(checkTiles(worldObj, min, max, pos));
+            entity.setBlocks(checkBlocks(world, min, max, pos));
+            entity.setTiles(checkTiles(world, min, max, pos));
             entity.setMin(min);
             entity.setMax(max);
-            removeBlocks(worldObj, min, max, pos);
-            worldObj.spawnEntityInWorld(ret);
+            removeBlocks(world, min, max, pos);
+            world.spawnEntity(ret);
             return ret;
         }
     }

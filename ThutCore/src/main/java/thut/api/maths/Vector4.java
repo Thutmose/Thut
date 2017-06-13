@@ -201,8 +201,8 @@ public class Vector4
 
     public String toIntString()
     {
-        return "x:" + MathHelper.floor_double(x) + " y:" + MathHelper.floor_double(y) + " z:"
-                + MathHelper.floor_double(z) + " w:" + MathHelper.floor_double(w);
+        return "x:" + MathHelper.floor(x) + " y:" + MathHelper.floor(y) + " z:"
+                + MathHelper.floor(z) + " w:" + MathHelper.floor(w);
     }
 
     public Vector4 toQuaternion()

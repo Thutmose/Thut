@@ -93,7 +93,7 @@ public class PathPoint extends net.minecraft.pathfinding.PathPoint
         float f = point.xCoord - this.xCoord;
         float f1 = point.yCoord - this.yCoord;
         float f2 = point.zCoord - this.zCoord;
-        return MathHelper.sqrt_float(f * f + f1 * f1 + f2 * f2);
+        return MathHelper.sqrt(f * f + f1 * f1 + f2 * f2);
     }
 
     /** Returns the squared distance to another path point */

@@ -134,9 +134,9 @@ public class TerrainSegment
                                                                     {
                                                                         Village village = world.villageCollectionObj
                                                                                 .getNearestVillage(new BlockPos(
-                                                                                        MathHelper.floor_double(v.x),
-                                                                                        MathHelper.floor_double(v.y),
-                                                                                        MathHelper.floor_double(v.z)),
+                                                                                        MathHelper.floor(v.x),
+                                                                                        MathHelper.floor(v.y),
+                                                                                        MathHelper.floor(v.z)),
                                                                                         2);
                                                                         if (village != null)
                                                                         {
@@ -165,9 +165,9 @@ public class TerrainSegment
                 {
 
                     boolean bool = true;
-                    int i1 = MathHelper.floor_double((v.intX() + i)) >> 4;
-                    // int j1 = MathHelper.floor_double(v.intY()+i / 16.0D);
-                    int k1 = MathHelper.floor_double((v.intZ() + i)) >> 4;
+                    int i1 = MathHelper.floor((v.intX() + i)) >> 4;
+                    // int j1 = MathHelper.floor(v.intY()+i / 16.0D);
+                    int k1 = MathHelper.floor((v.intZ() + i)) >> 4;
 
                     bool = i1 == v.intX() >> 4 && k1 == v.intZ() >> 4;// &&j==chunkY;
 
@@ -204,8 +204,8 @@ public class TerrainSegment
     public static boolean isInTerrainColumn(Vector3 t, Vector3 point)
     {
         boolean ret = true;
-        int i = MathHelper.floor_double(point.intX() / 16.0D);
-        int k = MathHelper.floor_double(point.intZ() / 16.0D);
+        int i = MathHelper.floor(point.intX() / 16.0D);
+        int k = MathHelper.floor(point.intZ() / 16.0D);
 
         ret = i == t.intX() && k == t.intZ();
         return ret;
@@ -433,9 +433,9 @@ public class TerrainSegment
     public boolean isInTerrainSegment(double x, double y, double z)
     {
         boolean ret = true;
-        int i = MathHelper.floor_double(x / 16.0D);
-        int j = MathHelper.floor_double(y / 16.0D);
-        int k = MathHelper.floor_double(z / 16.0D);
+        int i = MathHelper.floor(x / 16.0D);
+        int j = MathHelper.floor(y / 16.0D);
+        int k = MathHelper.floor(z / 16.0D);
 
         ret = i == chunkX && k == chunkZ && j == chunkY;
         return ret;

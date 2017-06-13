@@ -3,9 +3,9 @@ package thut.core.client.render.particle;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
@@ -28,7 +28,7 @@ public class ParticleOrientable extends ParticleBase
     public void render(double renderPartialTicks)
     {
         // This will draw a textured, coloured quad
-        VertexBuffer tez = Tessellator.getInstance().getBuffer();
+        BufferBuilder tez = Tessellator.getInstance().getBuffer();
         ResourceLocation texture;
         GL11.glPushMatrix();
 

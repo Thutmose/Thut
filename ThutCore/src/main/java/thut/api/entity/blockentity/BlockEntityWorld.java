@@ -50,7 +50,7 @@ public class BlockEntityWorld extends World
                     {
                         BlockPos pos = new BlockPos(i + xMin + entity.posX, j + yMin + entity.posY,
                                 k + zMin + entity.posZ);
-                        blockEntity.getTiles()[i][j][k].setWorldObj(world);
+                        blockEntity.getTiles()[i][j][k].setWorld(world);
                         blockEntity.getTiles()[i][j][k].setPos(pos);
                         blockEntity.getTiles()[i][j][k].validate();
                     }
@@ -78,16 +78,16 @@ public class BlockEntityWorld extends World
     public TileEntity getTileEntity(BlockPos pos)
     {
         if (blockEntity.getTiles() == null) { return world.getTileEntity(pos); }
-        int i = pos.getX() - MathHelper.floor_double(entity.posX + blockEntity.getMin().getX());
+        int i = pos.getX() - MathHelper.floor(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));
-        int k = pos.getZ() - MathHelper.floor_double(entity.posZ + blockEntity.getMin().getZ());
+        int k = pos.getZ() - MathHelper.floor(entity.posZ + blockEntity.getMin().getZ());
         if (i >= blockEntity.getTiles().length || j >= blockEntity.getTiles()[0].length
                 || k >= blockEntity.getTiles()[0][0].length || i < 0 || j < 0
                 || k < 0) { return world.getTileEntity(pos); }
         if (blockEntity.getTiles()[i][j][k] != null)
         {
             blockEntity.getTiles()[i][j][k].setPos(pos.toImmutable());
-            blockEntity.getTiles()[i][j][k].setWorldObj(this);
+            blockEntity.getTiles()[i][j][k].setWorld(this);
         }
         return blockEntity.getTiles()[i][j][k];
     }
@@ -95,14 +95,14 @@ public class BlockEntityWorld extends World
     @Override
     public void setTileEntity(BlockPos pos, @Nullable TileEntity tileEntityIn)
     {
-        int i = pos.getX() - MathHelper.floor_double(entity.posX + blockEntity.getMin().getX());
+        int i = pos.getX() - MathHelper.floor(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));
-        int k = pos.getZ() - MathHelper.floor_double(entity.posZ + blockEntity.getMin().getZ());
+        int k = pos.getZ() - MathHelper.floor(entity.posZ + blockEntity.getMin().getZ());
         if (blockEntity.getTiles() == null) return;
         if (i >= blockEntity.getTiles().length || j >= blockEntity.getBlocks()[0].length
                 || k >= blockEntity.getTiles()[0][0].length || i < 0 || j < 0 || k < 0) { return; }
         blockEntity.getTiles()[i][j][k] = tileEntityIn;
-        tileEntityIn.setWorldObj(this);
+        tileEntityIn.setWorld(this);
         tileEntityIn.setPos(pos.toImmutable());
     }
 
@@ -115,9 +115,9 @@ public class BlockEntityWorld extends World
     @Override
     public IBlockState getBlockState(BlockPos pos)
     {
-        int i = pos.getX() - MathHelper.floor_double(entity.posX + blockEntity.getMin().getX());
+        int i = pos.getX() - MathHelper.floor(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));
-        int k = pos.getZ() - MathHelper.floor_double(entity.posZ + blockEntity.getMin().getZ());
+        int k = pos.getZ() - MathHelper.floor(entity.posZ + blockEntity.getMin().getZ());
         if (blockEntity.getBlocks() == null) { return world.getBlockState(pos); }
         if (i >= blockEntity.getBlocks().length || j >= blockEntity.getBlocks()[0].length
                 || k >= blockEntity.getBlocks()[0][0].length || i < 0 || j < 0
@@ -194,9 +194,9 @@ public class BlockEntityWorld extends World
     @Override
     public boolean setBlockState(BlockPos pos, IBlockState newState, int flags)
     {
-        int i = pos.getX() - MathHelper.floor_double(entity.posX + blockEntity.getMin().getX());
+        int i = pos.getX() - MathHelper.floor(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));
-        int k = pos.getZ() - MathHelper.floor_double(entity.posZ + blockEntity.getMin().getZ());
+        int k = pos.getZ() - MathHelper.floor(entity.posZ + blockEntity.getMin().getZ());
         if (blockEntity.getBlocks() == null) return false;
         if (i >= blockEntity.getBlocks().length || j >= blockEntity.getBlocks()[0].length
                 || k >= blockEntity.getBlocks()[0][0].length || i < 0 || j < 0 || k < 0) { return false; }

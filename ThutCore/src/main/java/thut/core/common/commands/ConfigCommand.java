@@ -76,7 +76,7 @@ public class ConfigCommand extends CommandBase
             ITextComponent mess = new TextComponentTranslation("thutcore.command.settings.check", args[0], text);
             if (check)
             {
-                sender.addChatMessage(mess);
+                sender.sendMessage(mess);
                 return;
             }
             if (!op) { throw new CommandException("No permission to do that"); }
@@ -111,7 +111,7 @@ public class ConfigCommand extends CommandBase
                 text += o;
             }
             mess = new TextComponentTranslation("thutcore.command.settings.set", args[0], text);
-            sender.addChatMessage(mess);
+            sender.sendMessage(mess);
             return;
         }
         catch (Exception e)
@@ -122,19 +122,19 @@ public class ConfigCommand extends CommandBase
     }
 
     @Override
-    public List<String> getCommandAliases()
+    public List<String> getAliases()
     {
         return this.aliases;
     }
 
     @Override
-    public String getCommandName()
+    public String getName()
     {
         return aliases.get(0);
     }
 
     @Override
-    public String getCommandUsage(ICommandSender sender)
+    public String getUsage(ICommandSender sender)
     {
         return "/" + aliases.get(0) + "<option name> <optional:newvalue>";
     }
@@ -147,7 +147,7 @@ public class ConfigCommand extends CommandBase
     }
 
     @Override
-    public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args,
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args,
             BlockPos pos)
     {
         List<String> ret = new ArrayList<String>();

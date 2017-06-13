@@ -13,7 +13,7 @@ public class JPSPather extends ThutPathFinder
 {
     public static int Int(double x)
     {
-        return MathHelper.floor_double(x);
+        return MathHelper.floor(x);
     }
 
     public JPSPather(IBlockAccess world, IPathingMob entity)
@@ -24,13 +24,13 @@ public class JPSPather extends ThutPathFinder
     /** Finds the closest location to the target where the pokemob can path the
      * entire way.
      * 
-     * @param worldObj
+     * @param world
      * @param e
      * @param source
      * @param direction
      * @param range
      * @return */
-    public Vector3 findNextLocation(IBlockAccess worldObj, Vector3 e, Vector3 source, Vector3 direction, double range)
+    public Vector3 findNextLocation(IBlockAccess world, Vector3 e, Vector3 source, Vector3 direction, double range)
     {
         direction.norm();
         double xprev = source.x, yprev = source.y, zprev = source.z;

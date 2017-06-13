@@ -26,7 +26,7 @@ public class CommonProxy implements IPlayerProvider
 	
     public World getWorld()
     {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServers[0];
+        return FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
     }
     
 	public void initClient() {}

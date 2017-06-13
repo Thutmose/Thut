@@ -75,7 +75,7 @@ public interface DefaultInventory extends IInventory
     }
 
     @Override
-    default public boolean isUseableByPlayer(EntityPlayer player)
+    default public boolean isUsableByPlayer(EntityPlayer player)
     {
         return true;
     }

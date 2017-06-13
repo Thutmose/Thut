@@ -66,7 +66,7 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkSaveEvent(ChunkDataEvent.Save evt)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT || evt.getChunk().unloaded) return;
         try
         {
             NBTTagCompound nbt = evt.getData();
@@ -91,7 +91,7 @@ public class TerrainManager
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
         NBTTagCompound terrainData = new NBTTagCompound();
-        TerrainManager.getInstance().getTerrain(evt.getPlayer().worldObj).saveTerrain(terrainData,
+        TerrainManager.getInstance().getTerrain(evt.getPlayer().world).saveTerrain(terrainData,
                 evt.getChunk().chunkXPos, evt.getChunk().chunkZPos);
         MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
         PacketHandler.packetPipeline.sendTo(message, evt.getPlayer());
@@ -107,9 +107,9 @@ public class TerrainManager
         return map.get(id);
     }
 
-    public WorldTerrain getTerrain(World worldObj)
+    public WorldTerrain getTerrain(World world)
     {
-        int id = worldObj.provider.getDimension();
+        int id = world.provider.getDimension();
         return getTerrain(id);
     }
 
@@ -118,14 +118,14 @@ public class TerrainManager
         return getTerrain(world, p.getX(), p.getY(), p.getZ());
     }
 
-    public TerrainSegment getTerrain(World worldObj, double x, double y, double z)
+    public TerrainSegment getTerrain(World world, double x, double y, double z)
     {
-        int i = MathHelper.floor_double(x / 16.0D);
-        int j = MathHelper.floor_double(y / 16.0D);
-        int k = MathHelper.floor_double(z / 16.0D);
+        int i = MathHelper.floor(x / 16.0D);
+        int j = MathHelper.floor(y / 16.0D);
+        int k = MathHelper.floor(z / 16.0D);
 
-        TerrainSegment ret = getTerrain(worldObj).getTerrain(i, j, k);
-        if (!worldObj.isRemote) ret.initBiomes(worldObj);
+        TerrainSegment ret = getTerrain(world).getTerrain(i, j, k);
+        if (!world.isRemote) ret.initBiomes(world);
         return ret;
     }
 
@@ -133,12 +133,12 @@ public class TerrainManager
     {
         if (e == null) return null;
 
-        return getTerrain(e.worldObj, e.posX, e.posY, e.posZ);
+        return getTerrain(e.world, e.posX, e.posY, e.posZ);
     }
 
-    public TerrainSegment getTerrian(World worldObj, Vector3 v)
+    public TerrainSegment getTerrian(World world, Vector3 v)
     {
-        return getTerrain(worldObj, v.x, v.y, v.z);
+        return getTerrain(world, v.x, v.y, v.z);
     }
 
     @SubscribeEvent

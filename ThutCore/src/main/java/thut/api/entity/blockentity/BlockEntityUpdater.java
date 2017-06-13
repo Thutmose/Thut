@@ -66,7 +66,7 @@ public class BlockEntityUpdater
         {
             theEntity.setPosition(theEntity.posX, Math.round(theEntity.posY), theEntity.posZ);
         }
-        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.worldObj.getTotalWorldTime());
+        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.world.getTotalWorldTime());
         MutableBlockPos pos = new MutableBlockPos();
         int xMin = blockEntity.getMin().getX();
         int zMin = blockEntity.getMin().getZ();
@@ -85,7 +85,7 @@ public class BlockEntityUpdater
                     if (blockEntity.getTiles()[i][j][k] != null)
                     {
                         blockEntity.getTiles()[i][j][k].setPos(pos.toImmutable());
-                        blockEntity.getTiles()[i][j][k].setWorldObj(blockEntity.getFakeWorld());
+                        blockEntity.getTiles()[i][j][k].setWorld(blockEntity.getFakeWorld());
                     }
                     if (blockEntity.getTiles()[i][j][k] instanceof ITickable)
                     {
@@ -135,7 +135,7 @@ public class BlockEntityUpdater
                     }
                     catch (Exception e)
                     {
-                        // blockBox = block.getBoundingBox(state, worldObj,
+                        // blockBox = block.getBoundingBox(state, world,
                         // pos);
                     }
                     for (AxisAlignedBB blockBox : toAdd)
@@ -428,7 +428,7 @@ public class BlockEntityUpdater
         {
             EntityPlayer player = (EntityPlayer) entity;
 
-            if (player.worldObj.isRemote)
+            if (player.world.isRemote)
             {
                 // This fixes jitter, need a better way to handle this.
                 if (Minecraft.getMinecraft().gameSettings.viewBobbing
@@ -444,12 +444,12 @@ public class BlockEntityUpdater
                 entity.fallDistance = 0;
             }
             // Meed to set floatingTickCount to prevent being kicked for flying.
-            if (!player.capabilities.isCreativeMode && !player.worldObj.isRemote)
+            if (!player.capabilities.isCreativeMode && !player.world.isRemote)
             {
                 EntityPlayerMP entityplayer = (EntityPlayerMP) player;
                 if (collidedY) entityplayer.connection.floatingTickCount = 0;
             }
-            else if (player.worldObj.isRemote)
+            else if (player.world.isRemote)
             {
                 // PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(12));
                 // MessageServer packet = new MessageServer(buffer);

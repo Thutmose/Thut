@@ -168,7 +168,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         this.pathb.clearPath();
         this.pathf.clearPath();
         this.pointMap.clearMap();
-        int i = MathHelper.floor_double(entity.getEntityBoundingBox().minY + 0.5D);
+        int i = MathHelper.floor(entity.getEntityBoundingBox().minY + 0.5D);
 
         double dist = entity.getDistance(x, y, z);
         dist = Math.max(2 * dist, 2 * distance);
@@ -179,11 +179,11 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             // top of water.
             for (Block block = this.worldMap
                     .getBlockState(
-                            new BlockPos(MathHelper.floor_double(entity.posX), i, MathHelper.floor_double(entity.posZ)))
+                            new BlockPos(MathHelper.floor(entity.posX), i, MathHelper.floor(entity.posZ)))
                     .getBlock(); block == Blocks.FLOWING_WATER
                             || block == Blocks.WATER; block = this.worldMap
-                                    .getBlockState(new BlockPos(MathHelper.floor_double(entity.posX), i,
-                                            MathHelper.floor_double(entity.posZ)))
+                                    .getBlockState(new BlockPos(MathHelper.floor(entity.posX), i,
+                                            MathHelper.floor(entity.posZ)))
                                     .getBlock())
             {
                 ++i;
@@ -203,10 +203,10 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         {
 
         }
-        PathPoint start = this.openPoint(MathHelper.floor_double(entity.getEntityBoundingBox().minX), i,
-                MathHelper.floor_double(entity.getEntityBoundingBox().minZ));
-        PathPoint end = this.openPoint(MathHelper.floor_double(x - entity.width / 2.0F), MathHelper.floor_double(y),
-                MathHelper.floor_double(z - entity.width / 2.0F));
+        PathPoint start = this.openPoint(MathHelper.floor(entity.getEntityBoundingBox().minX), i,
+                MathHelper.floor(entity.getEntityBoundingBox().minZ));
+        PathPoint end = this.openPoint(MathHelper.floor(x - entity.width / 2.0F), MathHelper.floor(y),
+                MathHelper.floor(z - entity.width / 2.0F));
         Path path = this.addToPath(entity, start, end, distance);
 
         return path;

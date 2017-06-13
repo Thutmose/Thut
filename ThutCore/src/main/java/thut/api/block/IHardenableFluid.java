@@ -6,7 +6,7 @@ import net.minecraft.world.World;
 
 public interface IHardenableFluid
 {
-    public IBlockState getSolidState(World worldObj, BlockPos location);
+    public IBlockState getSolidState(World world, BlockPos location);
     
-    public void tryHarden(World worldObj, BlockPos vec);
+    public void tryHarden(World world, BlockPos vec);
 }

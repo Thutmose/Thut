@@ -18,6 +18,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import thut.api.TickHandler;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -133,8 +134,8 @@ public class AIThreadManager
         final int                   id;
 
         public AIThread(final int number, final Queue<AIStuff> aiStuff, final Object lock)
-        {
-            super(new Runnable()
+        {// TODO see if adding the threadgroup breaks anything...
+            super(SidedThreadGroups.SERVER, new Runnable()
             {
                 @Override
                 public void run()
@@ -313,28 +314,28 @@ public class AIThreadManager
         // Run the ILogicRunnables on both server and client side.
         for (ILogicRunnable logic : ai.aiLogic)
         {
-            logic.doServerTick(event.getEntity().worldObj);
+            logic.doServerTick(event.getEntity().world);
         }
         // Run remainder if AI server side only.
-        if (!event.getEntity().worldObj.isRemote) updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
+        if (!event.getEntity().world.isRemote) updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
     }
 
     protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
     {
-        mob.worldObj.theProfiler.startSection("mob tick");
+        mob.world.theProfiler.startSection("mob tick");
         // Run last tick's results from AI stuff
-        ai.runServerThreadTasks(mob.worldObj);
+        ai.runServerThreadTasks(mob.world);
         // Schedule AIStuff to tick for next tick.
         AIThreadManager.scheduleAITick(ai);
-        mob.worldObj.theProfiler.endSection();
-        mob.worldObj.theProfiler.startSection("controls");
-        mob.worldObj.theProfiler.startSection("move");
+        mob.world.theProfiler.endSection();
+        mob.world.theProfiler.startSection("controls");
+        mob.world.theProfiler.startSection("move");
         mob.getMoveHelper().onUpdateMoveHelper();
-        mob.worldObj.theProfiler.endStartSection("look");
+        mob.world.theProfiler.endStartSection("look");
         mob.getLookHelper().onUpdateLook();
-        mob.worldObj.theProfiler.endStartSection("jump");
+        mob.world.theProfiler.endStartSection("jump");
         mob.getJumpHelper().doJump();
-        mob.worldObj.theProfiler.endSection();
-        mob.worldObj.theProfiler.endSection();
+        mob.world.theProfiler.endSection();
+        mob.world.theProfiler.endSection();
     }
 }

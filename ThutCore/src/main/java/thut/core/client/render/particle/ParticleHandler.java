@@ -85,7 +85,7 @@ public class ParticleHandler
                         list.add(packet);
                         continue;
                     }
-                    EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+                    EntityPlayer player = Minecraft.getMinecraft().player;
                     Vector3 source = Vector3.getNewVector().set(player.lastTickPosX, player.lastTickPosY,
                             player.lastTickPosZ);
                     GL11.glPushMatrix();

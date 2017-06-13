@@ -55,9 +55,9 @@ public class TickHandler
             this.metaTo = meta;
         }
 
-        public boolean changeBlock(World worldObj)
+        public boolean changeBlock(World world)
         {
-            boolean ret = location.setBlock(worldObj, blockTo, metaTo, flag);
+            boolean ret = location.setBlock(world, blockTo, metaTo, flag);
             return ret;
         }
 
@@ -160,13 +160,13 @@ public class TickHandler
         return ret;
     }
 
-    public static Vector<BlockChange> getListForWorld(World worldObj)
+    public static Vector<BlockChange> getListForWorld(World world)
     {
-        Vector<BlockChange> ret = getInstance().blocks.get(worldObj.provider.getDimension());
+        Vector<BlockChange> ret = getInstance().blocks.get(world.provider.getDimension());
         if (ret == null)
         {
             ret = new Vector<BlockChange>();
-            getInstance().blocks.put(worldObj.provider.getDimension(), ret);
+            getInstance().blocks.put(world.provider.getDimension(), ret);
         }
         return ret;
     }

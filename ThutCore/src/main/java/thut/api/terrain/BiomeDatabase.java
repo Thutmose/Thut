@@ -48,8 +48,8 @@ public class BiomeDatabase
         if (checkIndandVillage)
         {
             Village village = world.villageCollectionObj
-                    .getNearestVillage(new BlockPos(MathHelper.floor_double(v.intX()),
-                            MathHelper.floor_double(v.intY()), MathHelper.floor_double(v.intZ())), 2);
+                    .getNearestVillage(new BlockPos(MathHelper.floor(v.intX()),
+                            MathHelper.floor(v.intY()), MathHelper.floor(v.intZ())), 2);
             if (village != null) return "village";
         }
         Biome biome = v.getBiome(world);

@@ -10,8 +10,7 @@ public interface IDefaultRecipe extends IRecipe
     @Override
     default NonNullList<ItemStack> getRemainingItems(InventoryCrafting inv)
     {
-        NonNullList<ItemStack> nonnulllist = NonNullList.<ItemStack> func_191197_a(inv.getSizeInventory(),
-                ItemStack.field_190927_a);
+        NonNullList<ItemStack> nonnulllist = NonNullList.<ItemStack> withSize(inv.getSizeInventory(), ItemStack.EMPTY);
         for (int i = 0; i < nonnulllist.size(); ++i)
         {
             ItemStack itemstack = inv.getStackInSlot(i);

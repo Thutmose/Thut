@@ -61,11 +61,11 @@ public class ItemDusts extends Item
     @Override
     /** returns a list of items with the same ID, but different meta (eg: dye
      * returns 16 items) */
-    public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems)
     {
         for (int j = 0; j < lastDust; ++j)
         {
-            subItems.add(new ItemStack(itemIn, 1, j));
+            subItems.add(new ItemStack(this, 1, j));
         }
     }
 

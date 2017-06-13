@@ -208,7 +208,7 @@ public class ExplosionCustom extends Explosion
     }
 
     // TODO Revisit this to make blast energy more conserved
-    public void doKineticImpactor(World worldObj, Vector3 velocity, Vector3 hitLocation, Vector3 acceleration,
+    public void doKineticImpactor(World world, Vector3 velocity, Vector3 hitLocation, Vector3 acceleration,
             float density, float energy)
     {
         if (density < 0 || energy <= 0) { return; }
@@ -220,13 +220,13 @@ public class ExplosionCustom extends Explosion
         List<Vector3> locations = new ArrayList<Vector3>();
         List<Float> blasts = new ArrayList<Float>();
 
-        float resist = hitLocation.getExplosionResistance(this, worldObj);
+        float resist = hitLocation.getExplosionResistance(this, world);
         float blast = Math.min((energy * (resist / density)), energy);
 
         if (resist > density)
         {
             hitLocation = hitLocation.subtract(velocity.normalize());
-            ExplosionCustom boo = new ExplosionCustom(worldObj, exploder, hitLocation, blast * factor);
+            ExplosionCustom boo = new ExplosionCustom(world, exploder, hitLocation, blast * factor);
             boo.doExplosion();
             return;
         }
@@ -240,7 +240,7 @@ public class ExplosionCustom extends Explosion
             blasts.add(blast);
             hitLocation = hitLocation.add(velocity.normalize());
             velocity.add(acceleration);
-            resist = Math.max(hitLocation.getExplosionResistance(this, worldObj), 0);
+            resist = Math.max(hitLocation.getExplosionResistance(this, world), 0);
             blast = Math.min(energy * (resist / density), energy);
             if (resist > density)
             {
@@ -259,11 +259,11 @@ public class ExplosionCustom extends Explosion
             {
             Vector3 source = locations.get(i);
             float strength = Math.min(blasts.get(i), 256);
-            if (worldObj.isAreaLoaded(source.getPos(), max))
+            if (world.isAreaLoaded(source.getPos(), max))
             {
             if (strength != 0)
             {
-            ExplosionCustom boo = new ExplosionCustom(worldObj, exploder, source, strength * factor);
+            ExplosionCustom boo = new ExplosionCustom(world, exploder, source, strength * factor);
             boo.doExplosion();
 
             }
@@ -272,7 +272,7 @@ public class ExplosionCustom extends Explosion
         if (remainingEnergy > 10)
         {
             absorbedLoc = absorbedLoc.subtract(velocity.normalize());
-            ExplosionCustom boo = new ExplosionCustom(worldObj, exploder, absorbedLoc, remainingEnergy * factor);
+            ExplosionCustom boo = new ExplosionCustom(world, exploder, absorbedLoc, remainingEnergy * factor);
             boo.doExplosion();
         }
     }
