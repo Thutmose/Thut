@@ -44,7 +44,7 @@ public class EntityProjectile extends EntityFallingBlock
         {
             if (side.getFrontOffsetY() == 0)
             {
-                Block b = here.getBlock(worldObj, side);
+                Block b = here.getBlock(world, side);
                 if (b == Blocks.GOLDEN_RAIL)
                 {
                     dir = side;
@@ -62,7 +62,7 @@ public class EntityProjectile extends EntityFallingBlock
         {
             temp1.set(ret).scalarMultBy(n++);
             temp.set(temp1.addTo(here));
-            end = temp.getBlock(worldObj) != Blocks.GOLDEN_RAIL;
+            end = temp.getBlock(world) != Blocks.GOLDEN_RAIL;
         }
         ret.scalarMultBy(n);
 
@@ -71,7 +71,7 @@ public class EntityProjectile extends EntityFallingBlock
 
     boolean isOnRails(Vector3 here)
     {
-        return here.getBlock(worldObj) == Blocks.GOLDEN_RAIL;
+        return here.getBlock(world) == Blocks.GOLDEN_RAIL;
     }
 
     /** Called to update the entity's position/logic. */
@@ -93,9 +93,9 @@ public class EntityProjectile extends EntityFallingBlock
             Vector3 velocity = Vector3.getNewVector().setToVelocity(this);
             double d = velocity.mag() + 1;
 
-            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(worldObj);
+            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(world);
 
-            Vector3 hit = here.findNextSolidBlock(worldObj, velocity, d);
+            Vector3 hit = here.findNextSolidBlock(world, velocity, d);
             d -= 1;
 
             if (isOnRails(here) && !accelerated)
@@ -112,9 +112,9 @@ public class EntityProjectile extends EntityFallingBlock
                 double dist = here.distanceTo(hit);
                 velocity.scalarMultBy(dist);
                 velocity.setVelocities(this);
-                this.moveEntity(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
-                ExplosionCustom boom = new ExplosionCustom(worldObj, this, hit, 100);
-                float h = block.getBlockHardness(worldObj, hit.getPos());
+                this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+                ExplosionCustom boom = new ExplosionCustom(world, this, hit, 100);
+                float h = block.getBlockHardness(world, hit.getPos());
                 double oldD = d;
                 d /= 100;
                 d = Math.max(d, oldD / 2);
@@ -129,7 +129,7 @@ public class EntityProjectile extends EntityFallingBlock
             }
             this.motionY -= 0.03999999910593033D;
 
-            this.moveEntity(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+            this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
             this.motionX *= 0.9800000190734863D;
             this.motionY *= 0.9800000190734863D;
             this.motionZ *= 0.9800000190734863D;
@@ -137,7 +137,7 @@ public class EntityProjectile extends EntityFallingBlock
     }
 
     @Override
-    public void moveEntity(MoverType type, double x, double y, double z)
+    public void move(MoverType type, double x, double y, double z)
     {
         List<AxisAlignedBB> aabbs = Lists.newArrayList();
         Matrix3 mainBox = new Matrix3();
@@ -152,12 +152,12 @@ public class EntityProjectile extends EntityFallingBlock
         AxisAlignedBB box = mainBox.getBoundingBox();
         AxisAlignedBB box1 = box.expand(2 + width, 2 + height, 2 + width);
         box1 = box1.addCoord(motionX, motionY, motionZ);
-        aabbs = mainBox.getCollidingBoxes(box1, worldObj, worldObj);
+        aabbs = mainBox.getCollidingBoxes(box1, world, world);
         Matrix3.expandAABBs(aabbs, box);
         Matrix3.mergeAABBs(aabbs, 0.01, 0.01, 0.01);
         Vector3 diffs = Vector3.getNewVector().set(x, y, z);
         mainBox.set(getEntityBoundingBox());
-        diffs.set(mainBox.doTileCollision(worldObj, aabbs, this, Vector3.empty, diffs, false));
+        diffs.set(mainBox.doTileCollision(world, aabbs, this, Vector3.empty, diffs, false));
         boolean lock = false;
         if (diffs.x != x || diffs.y != y || diffs.z != z)
         {
@@ -166,10 +166,10 @@ public class EntityProjectile extends EntityFallingBlock
         x = diffs.x;
         y = diffs.y;
         z = diffs.z;
-        super.moveEntity(type, x, y, z);
+        super.move(type, x, y, z);
         if (lock)
         {
-            this.worldObj.setBlockState(getPosition(), block);
+            this.world.setBlockState(getPosition(), block);
             this.setDead();
         }
     }

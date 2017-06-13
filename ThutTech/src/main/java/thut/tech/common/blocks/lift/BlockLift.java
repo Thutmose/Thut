@@ -228,11 +228,11 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     /** returns a list of blocks with the same ID, but different meta (eg: wood
      * returns 4 blocks) */
-    public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
+    public void getSubBlocks(CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
     {
         for (int j = 0; j < 2; j++)
         {
-            par3List.add(new ItemStack(par1, 1, j));
+            par3List.add(new ItemStack(Item.getItemFromBlock(this), 1, j));
         }
     }
 
@@ -333,7 +333,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                                     te.callPanel = !te.callPanel;
                                     String message = "msg.callPanel.name";
                                     if (!worldIn.isRemote)
-                                        playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
+                                        playerIn.sendMessage(new TextComponentTranslation(message, te.callPanel));
                                     return true;
                                 }
                                 te.setLift(lift);
@@ -341,7 +341,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                                 te.setFloor(floor);
                                 String message = "msg.floorSet.name";
                                 if (!worldIn.isRemote)
-                                    playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                                    playerIn.sendMessage(new TextComponentTranslation(message, floor));
                                 return true;
                             }
                         }
@@ -374,7 +374,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     @Override
     /** Called when a block is placed using its ItemBlock. Args: World, X, Y, Z,
      * side, hitX, hitY, hitZ, block metadata */
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
             int meta, EntityLivingBase placer)
     {
         return getStateFromMeta(meta);

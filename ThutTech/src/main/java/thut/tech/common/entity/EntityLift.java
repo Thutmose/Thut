@@ -68,7 +68,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public BlockPos                     boundMax           = BlockPos.ORIGIN;
 
     int                                 energy             = 0;
-    private BlockEntityWorld            world;
+    BlockEntityWorld                    fakeWorld;
     public double                       speedUp            = ConfigHandler.LiftSpeedUp;
     public double                       speedDown          = -ConfigHandler.LiftSpeedDown;
     public double                       speedHoriz         = 0.5;
@@ -108,11 +108,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public BlockEntityWorld getFakeWorld()
     {
-        if (world == null)
+        if (fakeWorld == null)
         {
-            world = new BlockEntityWorld(this, worldObj);
+            fakeWorld = new BlockEntityWorld(this, world);
         }
-        return world;
+        return fakeWorld;
     }
 
     public EntityLift(World world, double x, double y, double z)
@@ -267,8 +267,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int xMax = boundMax.getX();
         int zMax = boundMax.getZ();
 
-        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
-                posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
+        List<?> list = this.world.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1), posY,
+                posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
         if (list != null && !list.isEmpty())
         {
             if (list.size() == 1 && this.getRecursivePassengers() != null
@@ -470,7 +470,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void passengerCheck()
     {
-        List<Entity> list = worldObj.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
+        List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
         if (list.size() > 0)
         {
             hasPassenger = true;
@@ -584,7 +584,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         NBTTagCompound tag = new NBTTagCompound();
         try
         {
-            tag = buff.readNBTTagCompoundFromBuffer();
+            tag = buff.readCompoundTag();
             readEntityFromNBT(tag);
         }
         catch (Exception e)
@@ -604,7 +604,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setDead()
     {
-        if (!worldObj.isRemote && !this.isDead)
+        if (!world.isRemote && !this.isDead)
         {
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }
@@ -758,7 +758,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         PacketBuffer buff = new PacketBuffer(data);
         NBTTagCompound tag = new NBTTagCompound();
         writeEntityToNBT(tag);
-        buff.writeNBTTagCompoundToBuffer(tag);
+        buff.writeCompoundTag(tag);
     }
 
     @Override
@@ -847,7 +847,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setFakeWorld(BlockEntityWorld world)
     {
-        this.world = world;
+        this.fakeWorld = world;
     }
 
     public static EntityLift getLiftFromUUID(final UUID liftID, World world)

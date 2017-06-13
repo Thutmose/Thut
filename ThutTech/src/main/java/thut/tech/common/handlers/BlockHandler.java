@@ -6,7 +6,6 @@ import com.google.common.collect.ObjectArrays;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -40,11 +39,11 @@ public class BlockHandler
         @SideOnly(Side.CLIENT)
         /** returns a list of items with the same ID, but different meta (eg:
          * dye returns 16 items) */
-        public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
+        public void getSubItems(CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
         {
             for (int j = 0; j < 2; ++j)
             {
-                par3List.add(new ItemStack(par1, 1, j));
+                par3List.add(new ItemStack(this, 1, j));
             }
         }
 

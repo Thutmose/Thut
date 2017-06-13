@@ -158,7 +158,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /** Sets the worldObj for this tileEntity. */
     public void setWorldObj(World worldIn)
     {
-        this.worldObj = worldIn;
+        this.world = worldIn;
         if (worldIn instanceof BlockEntityWorld)
         {
             IBlockEntity blockEntity = ((BlockEntityWorld) worldIn).getEntity();
@@ -171,7 +171,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public boolean checkSides()
     {
-        List<EntityLift> check = worldObj.getEntitiesWithinAABB(EntityLift.class,
+        List<EntityLift> check = world.getEntitiesWithinAABB(EntityLift.class,
                 new AxisAlignedBB(getPos().getX() + 0.5 - 1, getPos().getY(), getPos().getZ() + 0.5 - 1,
                         getPos().getX() + 0.5 + 1, getPos().getY() + 1, getPos().getZ() + 0.5 + 1));
         if (check != null && check.size() > 0)
@@ -190,12 +190,12 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public void doButtonClick(EntityLivingBase clicker, EnumFacing side, float hitX, float hitY, float hitZ)
     {
-        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, worldObj))
+        if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, world))
         {
-            lift = EntityLift.getLiftFromUUID(liftID, worldObj);
+            lift = EntityLift.getLiftFromUUID(liftID, world);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        if (!worldObj.isRemote && lift != null)
+        if (!world.isRemote && lift != null)
         {
             if (isSideOn(side))
             {
@@ -309,10 +309,10 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
         if (rootNode != null) return rootNode;
 
-        Block b = here.getBlock(worldObj, DOWN);
+        Block b = here.getBlock(world, DOWN);
         if (b == getBlockType())
         {
-            TileEntityLiftAccess te = (TileEntityLiftAccess) here.getTileEntity(worldObj, DOWN);
+            TileEntityLiftAccess te = (TileEntityLiftAccess) here.getTileEntity(world, DOWN);
             if (te != null && te != this) { return rootNode = te.getRoot(); }
         }
         return rootNode = this;
@@ -459,7 +459,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         this.lift = lift;
         this.liftID = lift.getUniqueID();
-        if (!worldObj.isRemote) PacketHandler.sendTileUpdate(this);
+        if (!world.isRemote) PacketHandler.sendTileUpdate(this);
     }
 
     public void setRoot(TileEntityLiftAccess root)
@@ -495,7 +495,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (here == null) here = Vector3.getNewVector();
         here.set(this);
-        if (this.worldObj instanceof BlockEntityWorld) { return; }
+        if (this.world instanceof BlockEntityWorld) { return; }
 
         if ((lift == null || lift.isDead))
         {
@@ -504,21 +504,21 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             currentFloor = 0;
         }
 
-        if (lift != null && !worldObj.isRemote)
+        if (lift != null && !world.isRemote)
         {
             boolean check = lift.getCurrentFloor() == this.floor && (int) (lift.motionY * 16) == 0;
-            IBlockState state = worldObj.getBlockState(getPos());
+            IBlockState state = world.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
 
             if (callPanel && !old && !lift.getCalled())
             {
-                if (worldObj.isBlockPowered(getPos())) lift.call(floor);
+                if (world.isBlockPowered(getPos())) lift.call(floor);
             }
 
             if (check != old)
             {
                 state = state.withProperty(BlockLift.CURRENT, check);
-                worldObj.setBlockState(getPos(), state);
+                world.setBlockState(getPos(), state);
             }
             if (lift.motionY == 0 || lift.getDestinationFloor() == floor)
             {
@@ -527,7 +527,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 if (check != old)
                 {
                     state = state.withProperty(BlockLift.CALLED, check);
-                    worldObj.setBlockState(getPos(), state);
+                    world.setBlockState(getPos(), state);
                 }
             }
             MinecraftForge.EVENT_BUS.post(new EventLiftUpdate(this));
@@ -550,7 +550,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             calledFloor = lift.getDestinationFloor();
             currentFloor = lift.getCurrentFloor();
         }
-        EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, worldObj);
+        EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, world);
         if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead || tempLift != lift))
         {
             lift = tempLift;
@@ -571,8 +571,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             for (EnumFacing side : EnumFacing.values())
             {
-                TileEntity t = here.getTileEntity(worldObj, side);
-                Block b = here.getBlock(worldObj, side);
+                TileEntity t = here.getTileEntity(world, side);
+                Block b = here.getBlock(world, side);
                 if (b == getBlockType() && t instanceof TileEntityLiftAccess)
                 {
                     TileEntityLiftAccess te = (TileEntityLiftAccess) t;
@@ -632,7 +632,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public void sendUpdate(EntityPlayerMP player)
     {
-        if (worldObj instanceof BlockEntityWorld) return;
+        if (world instanceof BlockEntityWorld) return;
         player.connection.sendPacket(getUpdatePacket());
     }
 

@@ -54,7 +54,7 @@ public class ClientProxy extends CommonProxy
             }
             else
             {
-                return Minecraft.getMinecraft().thePlayer;
+                return Minecraft.getMinecraft().player;
             }
         }
         else
@@ -68,7 +68,7 @@ public class ClientProxy extends CommonProxy
     {
         if (isOnClientSide())
         {
-            return Minecraft.getMinecraft().theWorld;
+            return Minecraft.getMinecraft().world;
         }
         else
         {
@@ -76,11 +76,10 @@ public class ClientProxy extends CommonProxy
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void initClient()
     {
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController<>());
         // ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDoor.class,
         // new RenderDoor());
 

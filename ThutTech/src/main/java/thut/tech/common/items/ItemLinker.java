@@ -7,9 +7,9 @@ import java.util.UUID;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -78,7 +78,7 @@ public class ItemLinker extends Item
         {
             BlockPos pos = event.getTarget().getBlockPos();
             if (pos == null) return;
-            if (!player.worldObj.getBlockState(pos).getMaterial().isSolid())
+            if (!player.world.getBlockState(pos).getMaterial().isSolid())
             {
                 Vec3d loc = player.getPositionVector().addVector(0, player.getEyeHeight(), 0)
                         .add(player.getLookVec().scale(2));
@@ -108,7 +108,7 @@ public class ItemLinker extends Item
                 GlStateManager.depthMask(false);
                 GlStateManager.color(1.0F, 0.0F, 0.0F, 1F);
                 Tessellator tessellator = Tessellator.getInstance();
-                VertexBuffer vertexbuffer = tessellator.getBuffer();
+                BufferBuilder vertexbuffer = tessellator.getBuffer();
                 vertexbuffer.begin(3, DefaultVertexFormats.POSITION);
                 vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
                 vertexbuffer.pos(box.maxX, box.minY, box.minZ).endVertex();
@@ -169,7 +169,7 @@ public class ItemLinker extends Item
             if (max.getY() - min.getY() > ConfigHandler.maxHeight || dw > 2 * ConfigHandler.maxRadius + 1)
             {
                 String message = "msg.lift.toobig";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
                 return new ActionResult<>(EnumActionResult.PASS, itemstack);
             }
             int num = (dw + 1) * (max.getY() - min.getY() + 1);
@@ -186,7 +186,7 @@ public class ItemLinker extends Item
             if (!playerIn.capabilities.isCreativeMode && count < num)
             {
                 String message = "msg.lift.noblock";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, num));
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, num));
                 return new ActionResult<>(EnumActionResult.PASS, itemstack);
             }
             else if (!playerIn.capabilities.isCreativeMode)
@@ -200,7 +200,7 @@ public class ItemLinker extends Item
                         EntityLift.class);
                 lift.owner = playerIn.getUniqueID();
                 String message = "msg.lift.create";
-                playerIn.addChatMessage(new TextComponentTranslation(message));
+                playerIn.sendMessage(new TextComponentTranslation(message));
             }
             itemstack.getTagCompound().removeTag("min");
         }
@@ -316,7 +316,7 @@ public class ItemLinker extends Item
             Vector3.getNewVector().set(pos).writeToNBT(min, "");
             stack.getTagCompound().setTag("min", min);
             String message = "msg.lift.setcorner";
-            if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, pos));
+            if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, pos));
             return EnumActionResult.SUCCESS;
         }
         else if (playerIn.isSneaking() && stack.hasTagCompound() && stack.getTagCompound().hasKey("min"))
@@ -335,7 +335,7 @@ public class ItemLinker extends Item
             if (max.getY() - min.getY() > ConfigHandler.maxHeight || dw > 2 * ConfigHandler.maxRadius + 1)
             {
                 String message = "msg.lift.toobig";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
                 return EnumActionResult.FAIL;
             }
             int num = (dw + 1) * (max.getY() - min.getY() + 1);
@@ -352,7 +352,7 @@ public class ItemLinker extends Item
             if (!playerIn.capabilities.isCreativeMode && count < num)
             {
                 String message = "msg.lift.noblock";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, num));
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, num));
                 return EnumActionResult.FAIL;
             }
             else if (!playerIn.capabilities.isCreativeMode)
@@ -366,7 +366,7 @@ public class ItemLinker extends Item
                         EntityLift.class);
                 lift.owner = playerIn.getUniqueID();
                 String message = "msg.lift.create";
-                playerIn.addChatMessage(new TextComponentTranslation(message));
+                playerIn.sendMessage(new TextComponentTranslation(message));
             }
             stack.getTagCompound().removeTag("min");
             return EnumActionResult.SUCCESS;
@@ -397,7 +397,7 @@ public class ItemLinker extends Item
             {
                 stack.setTagCompound(new NBTTagCompound());
                 String message = "msg.linker.reset";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
                 return EnumActionResult.FAIL;
             }
             EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
@@ -409,7 +409,7 @@ public class ItemLinker extends Item
                 {
                     te.callPanel = !te.callPanel;
                     String message = "msg.callPanel.name";
-                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
+                    if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, te.callPanel));
                 }
                 else
                 {
@@ -417,7 +417,7 @@ public class ItemLinker extends Item
                     int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
                     te.setFloor(floor);
                     String message = "msg.floorSet.name";
-                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                    if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, floor));
                 }
                 return EnumActionResult.SUCCESS;
             }
@@ -425,7 +425,7 @@ public class ItemLinker extends Item
             {
                 stack.setTagCompound(new NBTTagCompound());
                 String message = "msg.linker.reset";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
             }
         }
         return EnumActionResult.PASS;
@@ -444,9 +444,9 @@ public class ItemLinker extends Item
      * returns 16 items) */
     @Override
     @SideOnly(Side.CLIENT)
-    public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems)
     {
-        subItems.add(new ItemStack(itemIn, 1, 0));
+        subItems.add(new ItemStack(this, 1, 0));
         subItems.add(TechCore.getInfoBook());
     }
 }

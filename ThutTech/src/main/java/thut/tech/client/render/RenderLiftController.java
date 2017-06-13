@@ -20,8 +20,7 @@ import thut.api.ThutBlocks;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 
-@SuppressWarnings("rawtypes")
-public class RenderLiftController extends TileEntitySpecialRenderer
+public class RenderLiftController<T extends TileEntity> extends TileEntitySpecialRenderer<T>
 {
 
     // public static final int ID =
@@ -177,7 +176,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
     }
 
     @Override
-    public void renderTileEntityAt(TileEntity tileentity, double x, double y, double z, float f, int i1)
+    public void func_192841_a(T tileentity, double x, double y, double z, float f, int i1, float f2)
     {
         TileEntityLiftAccess monitor = (TileEntityLiftAccess) tileentity;
         IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());

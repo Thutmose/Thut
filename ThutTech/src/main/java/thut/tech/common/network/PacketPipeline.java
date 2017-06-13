@@ -60,7 +60,7 @@ public class PacketPipeline
         {
             this.buffer = new PacketBuffer(Unpooled.buffer());
             buffer.writeByte(channel);
-            buffer.writeNBTTagCompoundToBuffer(nbt);
+            buffer.writeCompoundTag(nbt);
         }
 
         public ClientPacket(byte[] data)
@@ -112,8 +112,8 @@ public class PacketPipeline
                     @Override
                     public void run()
                     {
-                        IBlockState state = player1.worldObj.getBlockState(pos);
-                        CompatWrapper.interactWithBlock(state.getBlock(), player1.worldObj, pos, state, player1,
+                        IBlockState state = player1.world.getBlockState(pos);
+                        CompatWrapper.interactWithBlock(state.getBlock(), player1.world, pos, state, player1,
                                 EnumHand.MAIN_HAND, player1.getHeldItemMainhand(), side, hit.x, hit.y, hit.z);
                     }
                 });
@@ -139,7 +139,7 @@ public class PacketPipeline
         {
             this.buffer = new PacketBuffer(Unpooled.buffer());
             buffer.writeByte(channel);
-            buffer.writeNBTTagCompoundToBuffer(nbt);
+            buffer.writeCompoundTag(nbt);
         }
 
         public ServerPacket(byte[] data)
@@ -210,7 +210,7 @@ public class PacketPipeline
     {
         PacketBuffer packetData = new PacketBuffer(Unpooled.buffer());
         packetData.writeByte(channel);
-        packetData.writeNBTTagCompoundToBuffer(nbt);
+        packetData.writeCompoundTag(nbt);
 
         return new ClientPacket(packetData);
     }
@@ -219,7 +219,7 @@ public class PacketPipeline
     {
         PacketBuffer packetData = new PacketBuffer(Unpooled.buffer());
         packetData.writeByte(channel);
-        packetData.writeNBTTagCompoundToBuffer(nbt);
+        packetData.writeCompoundTag(nbt);
 
         return new ServerPacket(packetData);
     }
