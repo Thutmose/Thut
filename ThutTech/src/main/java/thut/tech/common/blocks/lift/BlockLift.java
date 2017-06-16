@@ -395,7 +395,7 @@ public class BlockLift extends Block implements ITileEntityProvider
      * *to* that face, or a visiting of possible rotations. The method should
      * return true if the rotation was successful though.
      *
-     * @param worldObj
+     * @param world
      *            The world
      * @param x
      *            X position
@@ -408,9 +408,9 @@ public class BlockLift extends Block implements ITileEntityProvider
      * @return True if the rotation was successful, False if the rotation
      *         failed, or is not possible */
     @Override
-    public boolean rotateBlock(World worldObj, BlockPos pos, EnumFacing axis)
+    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis)
     {
-        return false;// RotationHelper.rotateVanillaBlock(this, worldObj, x, y,
+        return false;// RotationHelper.rotateVanillaBlock(this, world, x, y,
                      // z, axis);
     }
 

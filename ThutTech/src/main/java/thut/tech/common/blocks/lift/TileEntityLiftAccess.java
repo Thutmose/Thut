@@ -155,7 +155,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         throw new Exception("no connected lift");
     }
 
-    /** Sets the worldObj for this tileEntity. */
+    /** Sets the world for this tileEntity. */
     public void setWorldObj(World worldIn)
     {
         this.world = worldIn;

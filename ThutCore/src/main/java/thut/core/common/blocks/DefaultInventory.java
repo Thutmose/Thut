@@ -93,7 +93,7 @@ public interface DefaultInventory extends IInventory
     }
 
     // 1.11
-    default public boolean func_191420_l()
+    default public boolean isEmpty()
     {
         return true;
     }

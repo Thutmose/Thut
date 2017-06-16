@@ -456,7 +456,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             doMotion();
         }
-        else// if (!worldObj.isRemote)
+        else// if (!world.isRemote)
         {
             setCalled(false);
             BlockPos pos = getPosition();
