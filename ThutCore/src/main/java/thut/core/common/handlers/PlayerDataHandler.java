@@ -275,7 +275,7 @@ public class PlayerDataHandler
 
     public static File getFileForUUID(String uuid, String fileName)
     {
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(0);
+        World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
         ISaveHandler saveHandler = world.getSaveHandler();
         String seperator = System.getProperty("file.separator");
         File file = saveHandler.getMapFileFromName(uuid + seperator + fileName);

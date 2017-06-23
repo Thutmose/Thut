@@ -151,7 +151,7 @@ public class EntityProjectile extends EntityFallingBlock
         mainBox.addOffsetTo(offset).addOffsetTo(vec);
         AxisAlignedBB box = mainBox.getBoundingBox();
         AxisAlignedBB box1 = box.expand(2 + width, 2 + height, 2 + width);
-        box1 = box1.addCoord(motionX, motionY, motionZ);
+        box1 = box1.grow(motionX, motionY, motionZ);
         aabbs = mainBox.getCollidingBoxes(box1, world, world);
         Matrix3.expandAABBs(aabbs, box);
         Matrix3.mergeAABBs(aabbs, 0.01, 0.01, 0.01);

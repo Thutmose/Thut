@@ -27,7 +27,7 @@ public class BlockEntityWorld extends World
 
     public BlockEntityWorld(IBlockEntity lift, World world)
     {
-        super(world.getSaveHandler(), world.getWorldInfo(), world.provider, world.theProfiler, world.isRemote);
+        super(world.getSaveHandler(), world.getWorldInfo(), world.provider, world.profiler, world.isRemote);
         this.world = world;
         this.blockEntity = lift;
         this.entity = (Entity) lift;

@@ -138,7 +138,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             int k1 = i1 / 65536;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            TileEntityRendererDispatcher.instance.renderTileEntityAt(tile, 0, 0, 0, partialTicks);
+            TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
             GlStateManager.popMatrix();
             GlStateManager.disableRescaleNormal();
         }

@@ -118,7 +118,7 @@ public class ParticleBase implements IParticle, IAnimatedParticle
         {
             rgba = 0xFF000000;
             int num = ((getDuration() + initTime) / animSpeed) % 16;
-            rgba += EnumDyeColor.byMetadata(num).func_193350_e();
+            rgba += EnumDyeColor.byMetadata(num).getColorValue();
         }
     }
 

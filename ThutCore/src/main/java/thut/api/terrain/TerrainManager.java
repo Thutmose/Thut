@@ -66,18 +66,18 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkSaveEvent(ChunkDataEvent.Save evt)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT || evt.getChunk().unloaded) return;
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT || !evt.getChunk().isLoaded()) return;
         try
         {
             NBTTagCompound nbt = evt.getData();
             NBTTagCompound terrainData = new NBTTagCompound();
-            TerrainManager.getInstance().getTerrain(evt.getWorld()).saveTerrain(terrainData, evt.getChunk().xPosition,
-                    evt.getChunk().zPosition);
+            TerrainManager.getInstance().getTerrain(evt.getWorld()).saveTerrain(terrainData, evt.getChunk().x,
+                    evt.getChunk().z);
             nbt.setTag(TERRAIN, terrainData);
             if (!evt.getChunk().isLoaded())
             {
-                TerrainManager.getInstance().getTerrain(evt.getWorld()).removeTerrain(evt.getChunk().xPosition,
-                        evt.getChunk().zPosition);
+                TerrainManager.getInstance().getTerrain(evt.getWorld()).removeTerrain(evt.getChunk().x,
+                        evt.getChunk().z);
             }
         }
         catch (Exception e)
@@ -91,8 +91,8 @@ public class TerrainManager
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
         NBTTagCompound terrainData = new NBTTagCompound();
-        TerrainManager.getInstance().getTerrain(evt.getPlayer().world).saveTerrain(terrainData,
-                evt.getChunk().chunkXPos, evt.getChunk().chunkZPos);
+        TerrainManager.getInstance().getTerrain(evt.getPlayer().world).saveTerrain(terrainData, evt.getChunk().x,
+                evt.getChunk().z);
         MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
         PacketHandler.packetPipeline.sendTo(message, evt.getPlayer());
     }

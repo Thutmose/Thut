@@ -322,20 +322,20 @@ public class AIThreadManager
 
     protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
     {
-        mob.world.theProfiler.startSection("mob tick");
+        mob.world.profiler.startSection("mob tick");
         // Run last tick's results from AI stuff
         ai.runServerThreadTasks(mob.world);
         // Schedule AIStuff to tick for next tick.
         AIThreadManager.scheduleAITick(ai);
-        mob.world.theProfiler.endSection();
-        mob.world.theProfiler.startSection("controls");
-        mob.world.theProfiler.startSection("move");
+        mob.world.profiler.endSection();
+        mob.world.profiler.startSection("controls");
+        mob.world.profiler.startSection("move");
         mob.getMoveHelper().onUpdateMoveHelper();
-        mob.world.theProfiler.endStartSection("look");
+        mob.world.profiler.endStartSection("look");
         mob.getLookHelper().onUpdateLook();
-        mob.world.theProfiler.endStartSection("jump");
+        mob.world.profiler.endStartSection("jump");
         mob.getJumpHelper().doJump();
-        mob.world.theProfiler.endSection();
-        mob.world.theProfiler.endSection();
+        mob.world.profiler.endSection();
+        mob.world.profiler.endSection();
     }
 }

@@ -50,7 +50,7 @@ public class WorldTerrain
     {
         this.dimID = dimID;
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        if (server != null) this.world = server.worldServerForDimension(dimID);
+        if (server != null) this.world = server.getWorld(dimID);
         else this.world = null;
     }
 

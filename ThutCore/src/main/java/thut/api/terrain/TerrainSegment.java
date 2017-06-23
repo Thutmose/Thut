@@ -130,9 +130,9 @@ public class TerrainSegment
                                                                         }
                                                                         return biome;
                                                                     }
-                                                                    if (world.villageCollectionObj != null)
+                                                                    if (world.villageCollection != null)
                                                                     {
-                                                                        Village village = world.villageCollectionObj
+                                                                        Village village = world.villageCollection
                                                                                 .getNearestVillage(new BlockPos(
                                                                                         MathHelper.floor(v.x),
                                                                                         MathHelper.floor(v.y),
@@ -388,7 +388,7 @@ public class TerrainSegment
 
     private int getBiome(World world, Vector3 v, boolean caveAdjust)
     {
-        if (chunk == null || chunk.xPosition != chunkX || chunk.zPosition != chunkZ)
+        if (chunk == null || chunk.x != chunkX || chunk.z != chunkZ)
             chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
         if (chunk == null)
         {

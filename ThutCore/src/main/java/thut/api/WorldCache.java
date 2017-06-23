@@ -71,7 +71,7 @@ public class WorldCache implements IBlockAccess
 
     void addChunk(Chunk chunk)
     {
-        long key = asLong(chunk.xPosition, chunk.zPosition);
+        long key = asLong(chunk.x, chunk.z);
         ChunkCache chunkcache = new ChunkCache(chunk);
         map.put(key, chunkcache);
         cache.add(chunkcache);
@@ -163,7 +163,7 @@ public class WorldCache implements IBlockAccess
 
     void removeChunk(Chunk chunk)
     {
-        long key = asLong(chunk.xPosition, chunk.zPosition);
+        long key = asLong(chunk.x, chunk.z);
         ChunkCache chunkcache = map.remove(key);
         if (chunkcache != null) cache.remove(chunkcache);
     }

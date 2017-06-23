@@ -539,9 +539,9 @@ public class Vector3
 
     private Vector3(Vec3d vec)
     {
-        this.x = vec.xCoord;
-        this.y = vec.yCoord;
-        this.z = vec.zCoord;
+        this.x = vec.x;
+        this.y = vec.y;
+        this.z = vec.z;
     }
 
     public Vector3 add(double i, double j, double k)
@@ -1701,12 +1701,12 @@ public class Vector3
         else if (o instanceof PathPoint)
         {
             PathPoint p = (PathPoint) o;
-            this.set(p.xCoord, p.yCoord, p.zCoord);
+            this.set(p.x, p.y, p.z);
         }
         else if (o instanceof Vec3d)
         {
             Vec3d p = (Vec3d) o;
-            this.set(p.xCoord, p.yCoord, p.zCoord);
+            this.set(p.x, p.y, p.z);
         }
         else if (o instanceof int[])
         {
@@ -1759,7 +1759,7 @@ public class Vector3
         {
             biomes[point] = newBiome;
             chunk.setBiomeArray(biomes);
-            chunk.setChunkModified();
+            chunk.markDirty();
         }
     }
 

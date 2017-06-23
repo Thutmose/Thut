@@ -35,8 +35,8 @@ public class LiftInteractHandler
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
             EnumHand hand)
     {
-        vec = vec.addVector(vec.xCoord > 0 ? -0.01 : 0.01, vec.yCoord > 0 ? -0.01 : 0.01,
-                vec.zCoord > 0 ? -0.01 : 0.01);
+        vec = vec.addVector(vec.x > 0 ? -0.01 : 0.01, vec.y > 0 ? -0.01 : 0.01,
+                vec.z > 0 ? -0.01 : 0.01);
         Vec3d playerPos = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
         Vec3d start = playerPos.subtract(lift.getPositionVector());
         RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start.add(lift.getPositionVector()),
@@ -52,9 +52,9 @@ public class LiftInteractHandler
         else
         {
             pos = trace.getBlockPos();
-            hitX = (float) (trace.hitVec.xCoord - pos.getX());
-            hitY = (float) (trace.hitVec.yCoord - pos.getY());
-            hitZ = (float) (trace.hitVec.zCoord - pos.getZ());
+            hitX = (float) (trace.hitVec.x - pos.getX());
+            hitY = (float) (trace.hitVec.y - pos.getY());
+            hitZ = (float) (trace.hitVec.z - pos.getZ());
             side = trace.sideHit;
         }
         IBlockState state = lift.getFakeWorld().getBlockState(pos);
@@ -69,9 +69,9 @@ public class LiftInteractHandler
             {
                 pos = result.getBlockPos();
                 state = lift.world.getBlockState(pos);
-                hitX = (float) (result.hitVec.xCoord - pos.getX());
-                hitY = (float) (result.hitVec.yCoord - pos.getY());
-                hitZ = (float) (result.hitVec.zCoord - pos.getZ());
+                hitX = (float) (result.hitVec.x - pos.getX());
+                hitY = (float) (result.hitVec.y - pos.getY());
+                hitZ = (float) (result.hitVec.z - pos.getZ());
                 activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getEntityWorld(), pos, state, player,
                         hand, stack, result.sideHit, hitX, hitY, hitZ);
                 if (activate && lift.world.isRemote)

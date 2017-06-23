@@ -865,7 +865,7 @@ public class Matrix3
         boolean vert = false;
         for (AxisAlignedBB aabb : aabbs)
         {
-            if (boundingBox.intersectsWith(aabb))
+            if (boundingBox.intersects(aabb))
             {
                 dx = 10e3;
                 dz = 10e3;
@@ -1034,7 +1034,7 @@ public class Matrix3
         temp1.set(diffs);
         for (AxisAlignedBB aabb : aabbs)
         {
-            if (boundingBox.intersectsWith(aabb))
+            if (boundingBox.intersects(aabb))
             {
                 boolean collidesX = ((maxZ <= aabb.maxZ) && (maxZ >= aabb.minZ))
                         || ((minZ <= aabb.maxZ) && (minZ >= aabb.minZ)) || ((minZ <= aabb.minZ) && (maxZ >= aabb.maxZ));

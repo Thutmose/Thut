@@ -217,7 +217,7 @@ public class PacketHandler
             @Override
             public IMessage onMessage(MessageServer message, MessageContext ctx)
             {
-                EntityPlayer player = ctx.getServerHandler().playerEntity;
+                EntityPlayer player = ctx.getServerHandler().player;
                 handleServerSide(player, message.buffer);
                 return null;
             }

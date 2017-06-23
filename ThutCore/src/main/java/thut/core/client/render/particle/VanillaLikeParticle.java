@@ -113,7 +113,7 @@ public class VanillaLikeParticle extends Particle
         {
             int time = particleAge + start;
             int num = (time / speed) % 16;
-            int rgba = EnumDyeColor.byMetadata(num).func_193350_e();
+            int rgba = EnumDyeColor.byMetadata(num).getColorValue();
             float red = ((rgba >> 16) & 255) / 255f;
             float green = ((rgba >> 8) & 255) / 255f;
             float blue = (rgba & 255) / 255f;

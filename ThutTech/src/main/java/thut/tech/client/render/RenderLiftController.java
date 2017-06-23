@@ -176,7 +176,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
     }
 
     @Override
-    public void func_192841_a(T tileentity, double x, double y, double z, float f, int i1, float f2)
+    public void render(T tileentity, double x, double y, double z, float f, int i1, float f2)
     {
         TileEntityLiftAccess monitor = (TileEntityLiftAccess) tileentity;
         IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
