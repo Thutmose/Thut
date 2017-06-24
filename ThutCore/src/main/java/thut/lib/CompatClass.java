@@ -11,7 +11,7 @@ public @interface CompatClass
      * calling the methods. POSTPOST means it should occur after postinit. */
     public static enum Phase
     {
-        PRE, INIT, POST, POSTPOST;
+        CONSTRUCT, PRE, INIT, POST, POSTPOST;
     }
 
     Phase phase() default Phase.INIT;
