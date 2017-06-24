@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
@@ -382,6 +383,16 @@ public class PacketHandler
         }
         MessageClient message = new MessageClient(MessageClient.TERRAINVALUES, tag);
         packetPipeline.sendTo(message, player);
+    }
+
+    public static void resendTerrainValues()
+    {
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        if (server == null) return;
+        for (EntityPlayerMP player : server.getPlayerList().getPlayerList())
+        {
+            sendTerrainValues(player);
+        }
     }
 
     public static void sendToAllNear(IMessage toSend, Vector3 point, int dimID, double distance)

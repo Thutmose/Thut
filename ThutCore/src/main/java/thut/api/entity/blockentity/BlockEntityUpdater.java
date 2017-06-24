@@ -434,9 +434,9 @@ public class BlockEntityUpdater
                 if (Minecraft.getMinecraft().gameSettings.viewBobbing
                         || TickHandler.playerTickTracker.containsKey(player.getUniqueID()))
                 {
-                    TickHandler.playerTickTracker.put(player.getUniqueID(), player.ticksExisted);
+                    TickHandler.playerTickTracker.put(player.getUniqueID(), (int) (System.currentTimeMillis() % 2000));
+                    Minecraft.getMinecraft().gameSettings.viewBobbing = false;
                 }
-                Minecraft.getMinecraft().gameSettings.viewBobbing = false;
             }
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
