@@ -494,6 +494,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 sizeX = sizeZ = nbt.getInteger("BlocksLength");
             }
             if (sizeY == 0) sizeY = 1;
+            // Enforce that max radius is kept if this mob is larger.
+            World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, (sizeX) / 2);
+            World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, (sizeY) / 2);
+            World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, (sizeZ) / 2);
             int version = blockTag.getInteger("v");
             blocks = new IBlockState[sizeX][sizeY][sizeZ];
             tiles = new TileEntity[sizeX][sizeY][sizeZ];
@@ -604,7 +608,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setDead()
     {
-        if (!worldObj.isRemote && !this.isDead)
+        if (!worldObj.isRemote && !this.isDead && this.addedToChunk)
         {
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }

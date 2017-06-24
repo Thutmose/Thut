@@ -1,6 +1,7 @@
 package thut.api.terrain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -68,8 +69,22 @@ public class BiomeType
     public static ArrayList<BiomeType> values()
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
-            return Lists.newArrayList(typeMapClient.values());
-        return Lists.newArrayList(typeMap.values());
+        {
+            ArrayList<BiomeType> types = Lists.newArrayList();
+            Collection<BiomeType> values = typeMapClient.values();
+            synchronized (values)
+            {
+                types.addAll(values);
+            }
+            return types;
+        }
+        ArrayList<BiomeType> types = Lists.newArrayList();
+        Collection<BiomeType> values = typeMap.values();
+        synchronized (values)
+        {
+            types.addAll(values);
+        }
+        return types;
     }
 
     public static BiomeType getType(int id)

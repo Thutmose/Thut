@@ -215,6 +215,10 @@ public interface IBlockEntity
             entity.setMax(max);
             removeBlocks(worldObj, min, max, pos);
             worldObj.spawnEntityInWorld(ret);
+            // Enforce that max radius is kept if this mob is larger.
+            World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, (box.maxX - box.minX) / 2);
+            World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, (box.maxY - box.minY) / 2);
+            World.MAX_ENTITY_RADIUS = Math.max(World.MAX_ENTITY_RADIUS, (box.maxZ - box.minZ) / 2);
             return ret;
         }
     }
