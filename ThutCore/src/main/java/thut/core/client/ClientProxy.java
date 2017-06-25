@@ -5,6 +5,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.common.ForgeVersion.CheckResult;
 import net.minecraftforge.common.ForgeVersion.Status;
@@ -17,7 +19,11 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
+import thut.api.terrain.BiomeDatabase;
+import thut.api.terrain.TerrainManager;
+import thut.api.terrain.TerrainSegment;
 import thut.core.client.render.particle.ParticleFactory;
 import thut.core.common.CommonProxy;
 import thut.reference.Reference;
@@ -65,6 +71,11 @@ public class ClientProxy extends CommonProxy
                 + "\"";
         String mess = "[" + info + "," + linkComponent + ",\"]\"]";
         return ITextComponent.Serializer.jsonToComponent(mess);
+    }
+
+    public ClientProxy()
+    {
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -123,5 +134,23 @@ public class ClientProxy extends CommonProxy
     public void preinit(FMLPreInitializationEvent e)
     {
         // ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
+    }
+
+    @SubscribeEvent
+    public void textOverlay(RenderGameOverlayEvent.Text event)
+    {
+        boolean debug = Minecraft.getMinecraft().gameSettings.showDebugInfo;
+        if (!debug) return;
+        TerrainSegment t = TerrainManager.getInstance().getTerrainForEntity(Minecraft.getMinecraft().thePlayer);
+        Vector3 v = Vector3.getNewVector().set(Minecraft.getMinecraft().thePlayer);
+        String msg = "Sub-Biome: " + BiomeDatabase.getReadableNameFromType(t.getBiome(v));
+        // Until forge stops sending the same event, with the same list 8 times,
+        // this is needed
+        for (String s : event.getLeft())
+        {
+            if (s != null && s.equals(msg)) return;
+        }
+        event.getLeft().add("");
+        event.getLeft().add(msg);
     }
 }
