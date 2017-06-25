@@ -73,13 +73,6 @@ public class ClientProxy extends CommonProxy
         return ITextComponent.Serializer.jsonToComponent(mess);
     }
 
-    public ClientProxy()
-    {
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    private boolean debug = false;
-
     @Override
     public EntityPlayer getPlayer()
     {
@@ -142,20 +135,6 @@ public class ClientProxy extends CommonProxy
     @SubscribeEvent
     public void textOverlay(RenderGameOverlayEvent.Text event)
     {
-<<<<<<< HEAD
-        debug = event.getType() == ElementType.DEBUG;
-        if (!debug) return;
-        TerrainSegment t = TerrainManager.getInstance().getTerrainForEntity(Minecraft.getMinecraft().player);
-        Vector3 v = Vector3.getNewVector().set(Minecraft.getMinecraft().player);
-        String msg = "Sub-Biome: " + BiomeDatabase.getReadableNameFromType(t.getBiome(v));
-        // Until forge stops sending the same event, with the same list 8 times,
-        // this is needed
-        for (String s : event.getLeft())
-        {
-            if (s != null && s.equals(msg)) return;
-        }
-        debug = false;
-=======
         boolean debug = Minecraft.getMinecraft().gameSettings.showDebugInfo;
         if (!debug) return;
         TerrainSegment t = TerrainManager.getInstance().getTerrainForEntity(Minecraft.getMinecraft().thePlayer);
@@ -167,7 +146,6 @@ public class ClientProxy extends CommonProxy
         {
             if (s != null && s.equals(msg)) return;
         }
->>>>>>> refs/remotes/origin/1.11.x
         event.getLeft().add("");
         event.getLeft().add(msg);
     }
