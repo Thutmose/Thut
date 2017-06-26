@@ -389,7 +389,7 @@ public class PacketHandler
     {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         if (server == null) return;
-        for (EntityPlayerMP player : server.getPlayerList().getPlayerList())
+        for (EntityPlayerMP player : server.getPlayerList().getPlayers())
         {
             sendTerrainValues(player);
         }

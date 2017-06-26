@@ -21,7 +21,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
-import net.minecraftforge.fml.common.registry.GameData;
 import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
 import thut.lib.CompatWrapper;
@@ -30,8 +29,7 @@ public class BlockEntityUpdater
 {
     public static boolean isWhitelisted(TileEntity tile)
     {
-        @SuppressWarnings("deprecation")
-        ResourceLocation id = GameData.getTileEntityRegistry().getNameForObject(tile.getClass());
+        ResourceLocation id = TileEntity.getKey(tile.getClass());
         return id == null ? false : IBlockEntity.TEWHITELIST.contains(id.toString());
     }
 

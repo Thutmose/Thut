@@ -20,8 +20,9 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameData;
+import net.minecraftforge.registries.GameData;
 
 public interface IBlockEntity
 {
@@ -148,11 +149,14 @@ public interface IBlockEntity
 
             try
             {
-                oclass = (Class<? extends TileEntity>)GameData.getTileEntityRegistry().getObject(new ResourceLocation(s));
+                TileEntity.class.getField("REGISTRY").setAccessible(true);
+                RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> registry = (RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>) TileEntity.class
+                        .getField("REGISTRY").get(null);
+                oclass = (Class<? extends TileEntity>) registry.getObject(new ResourceLocation(s));
 
                 if (oclass != null)
                 {
-                    tileentity = (TileEntity)oclass.newInstance();
+                    tileentity = (TileEntity) oclass.newInstance();
                 }
             }
             catch (Throwable throwable1)

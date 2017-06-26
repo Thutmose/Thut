@@ -2,8 +2,10 @@ package thut.tech.common;
 
 import static thut.tech.common.network.PacketPipeline.packetPipeline;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
@@ -12,6 +14,7 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -29,6 +32,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.core.common.CreativeTabThut;
 import thut.tech.Reference;
+import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.BlockHandler;
 import thut.tech.common.handlers.ConfigHandler;
@@ -91,8 +95,7 @@ public class TechCore
     @EventHandler
     public void preInit(FMLPreInitializationEvent e)
     {
-        BlockHandler.registerBlocks(e);
-        ItemHandler.registerItems();
+        new BlockLift().setRegistryName(Reference.MOD_ID, "lift");
         proxy.preinit(e);
 
         Configuration config = new Configuration(e.getSuggestedConfigurationFile());
@@ -106,7 +109,19 @@ public class TechCore
         packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Side.SERVER);
 
     }
-
+    
+    @SubscribeEvent
+    public void registerItems(RegistryEvent.Register<Item> event)
+    {
+        ItemHandler.registerItems(event);
+    }
+    
+    @SubscribeEvent
+    public void registerBlocks(RegistryEvent.Register<Block> event)
+    {
+        BlockHandler.registerBlocks(event);
+    }
+    
     @Optional.Method(modid = "tesla")
     @EventHandler
     public void preInitTesla(FMLPreInitializationEvent e)
