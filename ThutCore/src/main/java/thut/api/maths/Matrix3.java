@@ -1093,6 +1093,7 @@ public class Matrix3
                     if (block.isCollidable())
                     {
                         iblockstate.addCollisionBoxToList(world, blockpos, box, collidingBoundingBoxes, null, false);
+                        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world, null, box, collidingBoundingBoxes));
                     }
                 }
             }
