@@ -23,4 +23,10 @@ public interface IDefaultRecipe extends IRecipe
     {
         return net.minecraftforge.common.ForgeHooks.getContainerItem(stackIn);
     }
+
+    @Override
+    default boolean canFit(int width, int height)
+    {
+        return width >= 3 && height >= 3;
+    }
 }
