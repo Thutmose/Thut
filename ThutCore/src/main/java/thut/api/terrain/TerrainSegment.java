@@ -7,9 +7,11 @@ import static thut.api.terrain.BiomeType.VILLAGE;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
@@ -64,95 +66,140 @@ public class TerrainSegment
 
         // Does not currently work TODO make this work
         void writeToNBT(NBTTagCompound nbt);
+
+        String getIdenitifer();
     }
 
-    public static final int              GRIDSIZE       = 4;
-    public static ISubBiomeChecker       defaultChecker = new ISubBiomeChecker()
-                                                        {
-                                                            @Override
-                                                            public int getSubBiome(World world, Vector3 v,
-                                                                    TerrainSegment segment, Chunk chunk,
-                                                                    boolean caveAdjusted)
-                                                            {
-                                                                if (caveAdjusted)
-                                                                {
-                                                                    if (world.provider.doesWaterVaporize()) return -1;
-                                                                    boolean sky = false;
-                                                                    Vector3 temp1 = Vector3.getNewVector();
-                                                                    int x0 = segment.chunkX * 16,
-                                                                            y0 = segment.chunkY * 16,
-                                                                            z0 = segment.chunkZ * 16;
-                                                                    int dx = ((v.intX() - x0) / GRIDSIZE) * GRIDSIZE;
-                                                                    int dy = ((v.intY() - y0) / GRIDSIZE) * GRIDSIZE;
-                                                                    int dz = ((v.intZ() - z0) / GRIDSIZE) * GRIDSIZE;
-                                                                    int x1 = x0 + dx, y1 = y0 + dy, z1 = z0 + dz;
-                                                                    outer:
-                                                                    for (int i = x1; i < x1 + GRIDSIZE; i++)
-                                                                        for (int j = y1; j < y1 + GRIDSIZE; j++)
-                                                                            for (int k = z1; k < z1 + GRIDSIZE; k++)
+    public static final int                            GRIDSIZE             = 4;
+    public static ISubBiomeChecker                     defaultChecker       = new ISubBiomeChecker()
                                                                             {
-                                                                                temp1.set(i, j, k);
-                                                                                if (segment.isInTerrainSegment(temp1.x,
-                                                                                        temp1.y, temp1.z))
+                                                                                @Override
+                                                                                public int getSubBiome(World world,
+                                                                                        Vector3 v,
+                                                                                        TerrainSegment segment,
+                                                                                        Chunk chunk,
+                                                                                        boolean caveAdjusted)
                                                                                 {
-                                                                                    double y = temp1.getMaxY(world);
-                                                                                    sky = y <= temp1.y;
+                                                                                    if (caveAdjusted)
+                                                                                    {
+                                                                                        if (world.provider
+                                                                                                .doesWaterVaporize())
+                                                                                            return -1;
+                                                                                        boolean sky = false;
+                                                                                        Vector3 temp1 = Vector3
+                                                                                                .getNewVector();
+                                                                                        int x0 = segment.chunkX * 16,
+                                                                                                y0 = segment.chunkY
+                                                                                                        * 16,
+                                                                                                z0 = segment.chunkZ
+                                                                                                        * 16;
+                                                                                        int dx = ((v.intX() - x0)
+                                                                                                / GRIDSIZE) * GRIDSIZE;
+                                                                                        int dy = ((v.intY() - y0)
+                                                                                                / GRIDSIZE) * GRIDSIZE;
+                                                                                        int dz = ((v.intZ() - z0)
+                                                                                                / GRIDSIZE) * GRIDSIZE;
+                                                                                        int x1 = x0 + dx, y1 = y0 + dy,
+                                                                                                z1 = z0 + dz;
+                                                                                        outer:
+                                                                                        for (int i = x1; i < x1
+                                                                                                + GRIDSIZE; i++)
+                                                                                            for (int j = y1; j < y1
+                                                                                                    + GRIDSIZE; j++)
+                                                                                                for (int k = z1; k < z1
+                                                                                                        + GRIDSIZE; k++)
+                                                                                                {
+                                                                                                    temp1.set(i, j, k);
+                                                                                                    if (segment
+                                                                                                            .isInTerrainSegment(
+                                                                                                                    temp1.x,
+                                                                                                                    temp1.y,
+                                                                                                                    temp1.z))
+                                                                                                    {
+                                                                                                        double y = temp1
+                                                                                                                .getMaxY(
+                                                                                                                        world);
+                                                                                                        sky = y <= temp1.y;
+                                                                                                    }
+                                                                                                    if (sky)
+                                                                                                        break outer;
+                                                                                                }
+                                                                                        if (sky) return -1;
+
+                                                                                        if (!sky && count(world,
+                                                                                                Blocks.WATER, v, 1) > 2)
+                                                                                            return BiomeType.CAVE_WATER
+                                                                                                    .getType();
+                                                                                        else if (!sky)
+                                                                                            return BiomeType.CAVE
+                                                                                                    .getType();
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        int biome = 0;
+
+                                                                                        Biome b = v.getBiome(chunk,
+                                                                                                world.getBiomeProvider());
+                                                                                        biome = BiomeDatabase
+                                                                                                .getBiomeType(b);
+
+                                                                                        boolean notLake = BiomeDatabase
+                                                                                                .contains(b, Type.OCEAN)
+                                                                                                || BiomeDatabase
+                                                                                                        .contains(b,
+                                                                                                                Type.SWAMP)
+                                                                                                || BiomeDatabase
+                                                                                                        .contains(b,
+                                                                                                                Type.RIVER)
+                                                                                                || BiomeDatabase
+                                                                                                        .contains(b,
+                                                                                                                Type.WATER)
+                                                                                                || BiomeDatabase
+                                                                                                        .contains(b,
+                                                                                                                Type.BEACH);
+
+                                                                                        int water = v.blockCount2(world,
+                                                                                                Blocks.WATER, 3);
+                                                                                        if (water > 4)
+                                                                                        {
+                                                                                            if (!notLake)
+                                                                                            {
+                                                                                                biome = LAKE.getType();
+                                                                                            }
+                                                                                            return biome;
+                                                                                        }
+                                                                                        if (world.villageCollectionObj != null)
+                                                                                        {
+                                                                                            Village village = world.villageCollectionObj
+                                                                                                    .getNearestVillage(
+                                                                                                            new BlockPos(
+                                                                                                                    MathHelper
+                                                                                                                            .floor_double(
+                                                                                                                                    v.x),
+                                                                                                                    MathHelper
+                                                                                                                            .floor_double(
+                                                                                                                                    v.y),
+                                                                                                                    MathHelper
+                                                                                                                            .floor_double(
+                                                                                                                                    v.z)),
+                                                                                                            2);
+                                                                                            if (village != null)
+                                                                                            {
+                                                                                                biome = VILLAGE
+                                                                                                        .getType();
+                                                                                            }
+                                                                                        }
+
+                                                                                        return biome;
+                                                                                    }
+                                                                                    return 0;
                                                                                 }
-                                                                                if (sky) break outer;
-                                                                            }
-                                                                    if (sky) return -1;
 
-                                                                    if (!sky && count(world, Blocks.WATER, v, 1) > 2)
-                                                                        return BiomeType.CAVE_WATER.getType();
-                                                                    else if (!sky) return BiomeType.CAVE.getType();
-                                                                }
-                                                                else
-                                                                {
-                                                                    int biome = 0;
-
-                                                                    Biome b = v.getBiome(chunk,
-                                                                            world.getBiomeProvider());
-                                                                    biome = BiomeDatabase.getBiomeType(b);
-
-                                                                    boolean notLake = BiomeDatabase.contains(b,
-                                                                            Type.OCEAN)
-                                                                            || BiomeDatabase.contains(b, Type.SWAMP)
-                                                                            || BiomeDatabase.contains(b, Type.RIVER)
-                                                                            || BiomeDatabase.contains(b, Type.WATER)
-                                                                            || BiomeDatabase.contains(b, Type.BEACH);
-
-                                                                    int water = v.blockCount2(world, Blocks.WATER, 3);
-                                                                    if (water > 4)
-                                                                    {
-                                                                        if (!notLake)
-                                                                        {
-                                                                            biome = LAKE.getType();
-                                                                        }
-                                                                        return biome;
-                                                                    }
-                                                                    if (world.villageCollectionObj != null)
-                                                                    {
-                                                                        Village village = world.villageCollectionObj
-                                                                                .getNearestVillage(new BlockPos(
-                                                                                        MathHelper.floor_double(v.x),
-                                                                                        MathHelper.floor_double(v.y),
-                                                                                        MathHelper.floor_double(v.z)),
-                                                                                        2);
-                                                                        if (village != null)
-                                                                        {
-                                                                            biome = VILLAGE.getType();
-                                                                        }
-                                                                    }
-
-                                                                    return biome;
-                                                                }
-                                                                return 0;
-                                                            }
-
-                                                        };
-    public static List<ISubBiomeChecker> biomeCheckers  = Lists.newArrayList();
-    public static boolean                noLoad         = false;
-    static Map<Integer, Integer>         idReplacements = Maps.newHashMap();
+                                                                            };
+    public static List<ISubBiomeChecker>               biomeCheckers        = Lists.newArrayList();
+    public static Set<Class<? extends ITerrainEffect>> terrainEffectClasses = Sets.newHashSet();
+    public static boolean                              noLoad               = false;
+    static Map<Integer, Integer>                       idReplacements       = Maps.newHashMap();
 
     public static int count(World world, Block b, Vector3 v, int range)
     {
@@ -280,9 +327,21 @@ public class TerrainSegment
         chunkZ = z;
         pos = new BlockPos(x, y, z);
         mid.set(this.chunkX * 16 + 8, this.chunkY * 16 + 8, this.chunkZ * 16 + 8);
+        for (Class<? extends ITerrainEffect> clas : terrainEffectClasses)
+        {
+            try
+            {
+                ITerrainEffect effect = clas.newInstance();
+                addEffect(effect, effect.getIdenitifer());
+            }
+            catch (InstantiationException | IllegalAccessException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void addEffect(ITerrainEffect effect, String name)
+    private void addEffect(ITerrainEffect effect, String name)
     {
         effect.bindToTerrain(chunkX, chunkY, chunkZ);
         effects.put(name, effect);
