@@ -286,7 +286,7 @@ public class Vector3
         Vector3 v = getNewVector().set(x, y, z);
 
         if (world instanceof World)
-            state.addCollisionBoxToList((World) world, pos, v.getAABB().expand(0.03, 0.03, 0.03), aabbs, null, false);
+            state.addCollisionBoxToList((World) world, pos, v.getAABB().grow(0.03, 0.03, 0.03), aabbs, null, false);
         if (aabbs.size() == 0) return true;
 
         for (AxisAlignedBB aabb : aabbs)

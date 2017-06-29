@@ -71,7 +71,7 @@ public class Checker
                 if (ExplosionCustom.AFFECTINAIR)
                 {
                     List<Entity> hits = boom.world.getEntitiesWithinAABBExcludingEntity(boom.exploder,
-                            boom.rAbs.getAABB().expand(0.5, 0.5, 0.5));
+                            boom.rAbs.getAABB().grow(0.5, 0.5, 0.5));
                     if (hits != null) for (Entity e : hits)
                     {
                         entityAffected.add(new HitEntity(e, (float) str));
@@ -158,7 +158,7 @@ public class Checker
             if (!boom.affected.contains(chunk)) boom.affected.add(chunk);
             boom.addChunkPosition(boom.rAbs);
             List<Entity> hits = boom.world.getEntitiesWithinAABBExcludingEntity(boom.exploder,
-                    boom.rAbs.getAABB().expand(0.5, 0.5, 0.5));
+                    boom.rAbs.getAABB().grow(0.5, 0.5, 0.5));
             if (hits != null) for (Entity e : hits)
             {
                 entityAffected.add(new HitEntity(e, (float) str));
@@ -316,7 +316,7 @@ public class Checker
             if (!boom.affected.contains(chunk)) boom.affected.add(chunk);
             boom.addChunkPosition(boom.rAbs);
             List<Entity> hits = boom.world.getEntitiesWithinAABBExcludingEntity(boom.exploder,
-                    boom.rAbs.getAABB().expand(0.5, 0.5, 0.5));
+                    boom.rAbs.getAABB().grow(0.5, 0.5, 0.5));
             if (hits != null) for (Entity e : hits)
             {
                 entityAffected.add(new HitEntity(e, (float) str));
