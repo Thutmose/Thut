@@ -29,8 +29,7 @@ import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ModContainer;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
@@ -85,9 +84,8 @@ public class CompatWrapper
         ResourceLocation regisrtyName;
         if (entityName.contains(":")) regisrtyName = new ResourceLocation(entityName);
         else regisrtyName = new ResourceLocation(mc.getModId(), entityName);
-        EntityEntry entry = new EntityEntry(entityClass, entityName).setRegistryName(regisrtyName);
-        if (!ForgeRegistries.ENTITIES.containsKey(regisrtyName)) ForgeRegistries.ENTITIES.register(entry);
-        else System.err.println("Double Registration Attempt for " + regisrtyName);
+        EntityRegistry.registerModEntity(regisrtyName, entityClass, entityName, id, mod, trackingRange, updateFrequency,
+                sendsVelocityUpdates);
     }
 
     public static ItemStack setStackSize(ItemStack stack, int amount)
