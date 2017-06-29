@@ -446,6 +446,7 @@ public class ItemLinker extends Item
     @SideOnly(Side.CLIENT)
     public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems)
     {
+        if (tab != getCreativeTab()) return;
         subItems.add(new ItemStack(itemIn, 1, 0));
         subItems.add(TechCore.getInfoBook());
     }

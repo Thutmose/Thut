@@ -42,6 +42,7 @@ public class BlockHandler
          * dye returns 16 items) */
         public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)
         {
+            if (par2CreativeTabs != getCreativeTab()) return;
             for (int j = 0; j < 2; ++j)
             {
                 par3List.add(new ItemStack(par1, 1, j));
