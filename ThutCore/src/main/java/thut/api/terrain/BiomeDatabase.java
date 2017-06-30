@@ -9,6 +9,7 @@ import net.minecraft.village.Village;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.maths.Vector3;
 import thut.lib.CompatWrapper;
 
@@ -25,7 +26,7 @@ public class BiomeDatabase
     {
         if (b != null)
         {
-            if (b.getBiomeName().toLowerCase(java.util.Locale.ENGLISH).contains("flower")) return BiomeType.FLOWER;
+            if (getBiomeName(b).toLowerCase(java.util.Locale.ENGLISH).contains("flower")) return BiomeType.FLOWER;
         }
         return BiomeType.NONE;
     }
@@ -72,7 +73,7 @@ public class BiomeDatabase
         for (ResourceLocation key : Biome.REGISTRY.getKeys())
         {
             Biome b = Biome.REGISTRY.getObject(key);
-            if (b != null) if (b.getBiomeName().equalsIgnoreCase(name)) return getBiomeType(b);
+            if (b != null) if (getBiomeName(b).equalsIgnoreCase(name)) return getBiomeType(b);
         }
         return BiomeType.NONE.getType();
     }
@@ -80,15 +81,22 @@ public class BiomeDatabase
     public static String getNameFromType(int type)
     {
         if (type > 255) return BiomeType.getType(type).name;
-        else if (Biome.getBiome(type) != null) return Biome.getBiome(type).getBiomeName();
+        else if (Biome.getBiome(type) != null) return getBiomeName(Biome.getBiome(type));
         else return "none";
     }
 
     public static String getReadableNameFromType(int type)
     {
         if (type > 255) return BiomeType.getType(type).readableName;
-        else if (Biome.getBiome(type) != null) return Biome.getBiome(type).getBiomeName();
+        else if (Biome.getBiome(type) != null) return getBiomeName(Biome.getBiome(type));
         else return "None " + type;
+    }
+
+    private static final int INDEX = 17;
+
+    public static String getBiomeName(Biome biome)
+    {
+        return ReflectionHelper.getPrivateValue(Biome.class, biome, INDEX);
     }
 
 }
