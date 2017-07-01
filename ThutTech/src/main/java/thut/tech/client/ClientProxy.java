@@ -77,23 +77,37 @@ public class ClientProxy extends CommonProxy
     }
 
     @Override
+    public void registerItemModels()
+    {
+        // TODO Auto-generated method stub
+        super.registerItemModels();
+        Item lift = Item.getItemFromBlock(ThutBlocks.lift);
+        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 0,
+                new ModelResourceLocation("thuttech:lift", "inventory"));
+        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 1,
+                new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
+
+        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
+                new ModelResourceLocation("thuttech:devicelinker", "inventory"));
+    }
+
+    @Override
+    public void registerBlockModels()
+    {
+        // TODO Auto-generated method stub
+        super.registerBlockModels();
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController<>());
+    }
+
+    @Override
     public void initClient()
     {
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController<>());
         // ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDoor.class,
         // new RenderDoor());
-
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(ThutBlocks.lift),
-                0, new ModelResourceLocation("thuttech:lift", "inventory"));
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(ThutBlocks.lift),
-                1, new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
 
         // Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(
         // Item.getItemFromBlock(BlockRailgun.instance), 0,
         // new ModelResourceLocation("thuttech:railgun", "inventory"));
-
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
-                new ModelResourceLocation("thuttech:devicelinker", "inventory"));
     }
 
     @Override

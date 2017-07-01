@@ -5,8 +5,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Predicate;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -46,52 +44,13 @@ public class BlockLift extends Block implements ITileEntityProvider
 {
     public static enum EnumType implements IStringSerializable
     {
-        LIFT(0, "lift"), CONTROLLER(1, "liftcontroller");
-
-        private static final EnumType[] META_LOOKUP = new EnumType[values().length];
-        static
-        {
-            EnumType[] var0 = values();
-            int var1 = var0.length;
-
-            for (int var2 = 0; var2 < var1; ++var2)
-            {
-                EnumType var3 = var0[var2];
-                META_LOOKUP[var3.getMetadata()] = var3;
-            }
-        }
-
-        public static EnumType byMetadata(int meta)
-        {
-            if (meta < 0 || meta >= META_LOOKUP.length)
-            {
-                meta = 0;
-            }
-
-            return META_LOOKUP[meta];
-        }
-
-        private final int    meta;
+        LIFT("lift"), CONTROLLER("liftcontroller");
 
         private final String name;
 
-        private final String unlocalizedName;
-
-        private EnumType(int meta, String name)
+        private EnumType(String name)
         {
-            this(meta, name, name);
-        }
-
-        private EnumType(int meta, String name, String unlocalizedName)
-        {
-            this.meta = meta;
             this.name = name;
-            this.unlocalizedName = unlocalizedName;
-        }
-
-        public int getMetadata()
-        {
-            return this.meta;
         }
 
         @Override
@@ -99,28 +58,9 @@ public class BlockLift extends Block implements ITileEntityProvider
         {
             return this.name;
         }
-
-        public String getUnlocalizedName()
-        {
-            return this.unlocalizedName;
-        }
-
-        @Override
-        public String toString()
-        {
-            return this.name;
-        }
     }
 
-    public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class,
-            new Predicate<EnumType>()
-                                                               {
-                                                                   @Override
-                                                                   public boolean apply(EnumType type)
-                                                                   {
-                                                                       return type.getMetadata() < 4;
-                                                                   }
-                                                               });
+    public static final PropertyEnum<EnumType> VARIANT = PropertyEnum.create("variant", EnumType.class);
     public static final PropertyBool           CALLED  = PropertyBool.create("called");
 
     public static final PropertyBool           CURRENT = PropertyBool.create("current");
@@ -198,7 +138,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     /** Convert the BlockState into the correct metadata value */
     public int getMetaFromState(IBlockState state)
     {
-        int ret = state.getValue(VARIANT).meta;
+        int ret = state.getValue(VARIANT).ordinal();
         if ((state.getValue(CALLED))) ret += 4;
         if ((state.getValue(CURRENT))) ret += 8;
         return ret;
@@ -211,7 +151,7 @@ public class BlockLift extends Block implements ITileEntityProvider
         int typeMeta = meta & 3;
         boolean called = ((meta / 4) & 1) > 0;
         boolean current = ((meta / 8) & 1) > 0;
-        return getDefaultState().withProperty(VARIANT, EnumType.byMetadata(typeMeta)).withProperty(CALLED, called)
+        return getDefaultState().withProperty(VARIANT, EnumType.values()[typeMeta]).withProperty(CALLED, called)
                 .withProperty(CURRENT, current);
     }
 
@@ -374,8 +314,8 @@ public class BlockLift extends Block implements ITileEntityProvider
     @Override
     /** Called when a block is placed using its ItemBlock. Args: World, X, Y, Z,
      * side, hitX, hitY, hitZ, block metadata */
-    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ,
-            int meta, EntityLivingBase placer)
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY,
+            float hitZ, int meta, EntityLivingBase placer)
     {
         return getStateFromMeta(meta);
     }

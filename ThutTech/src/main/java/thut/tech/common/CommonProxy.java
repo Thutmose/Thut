@@ -45,6 +45,10 @@ public class CommonProxy  implements IGuiHandler
 
     public void initClient() {}
     
+    public void registerBlockModels(){}
+    
+    public void registerItemModels(){}
+    
     public boolean isOnClientSide()
     {
         return false;
