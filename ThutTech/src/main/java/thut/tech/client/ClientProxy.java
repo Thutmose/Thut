@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -82,13 +81,8 @@ public class ClientProxy extends CommonProxy
         // TODO Auto-generated method stub
         super.registerItemModels();
         Item lift = Item.getItemFromBlock(ThutBlocks.lift);
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 0,
+        ModelBakery.registerItemVariants(lift, new ModelResourceLocation("thuttech:liftcontroller", "inventory"),
                 new ModelResourceLocation("thuttech:lift", "inventory"));
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 1,
-                new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
-
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
-                new ModelResourceLocation("thuttech:devicelinker", "inventory"));
     }
 
     @Override
@@ -96,18 +90,21 @@ public class ClientProxy extends CommonProxy
     {
         // TODO Auto-generated method stub
         super.registerBlockModels();
+        ModelLoader.setCustomStateMapper(ThutBlocks.lift, (new StateMap.Builder()).withName(BlockLift.VARIANT)
+                .ignore(new IProperty[] { BlockLift.CALLED, BlockLift.CURRENT }).build());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController<>());
     }
 
     @Override
     public void initClient()
     {
-        // ClientRegistry.bindTileEntitySpecialRenderer(TileEntityDoor.class,
-        // new RenderDoor());
-
-        // Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(
-        // Item.getItemFromBlock(BlockRailgun.instance), 0,
-        // new ModelResourceLocation("thuttech:railgun", "inventory"));
+        Item lift = Item.getItemFromBlock(ThutBlocks.lift);
+        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 0,
+                new ModelResourceLocation("thuttech:lift", "inventory"));
+        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 1,
+                new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
+        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
+                new ModelResourceLocation("thuttech:devicelinker", "inventory"));
     }
 
     @Override
@@ -125,12 +122,6 @@ public class ClientProxy extends CommonProxy
     public void preinit(FMLPreInitializationEvent event)
     {
         super.preinit(event);
-        ModelLoader.setCustomStateMapper(ThutBlocks.lift, (new StateMap.Builder()).withName(BlockLift.VARIANT)
-                .ignore(new IProperty[] { BlockLift.CALLED, BlockLift.CURRENT }).build());
-
-        ModelBakery.registerItemVariants(Item.getItemFromBlock(ThutBlocks.lift), new ResourceLocation("thuttech:lift"),
-                new ResourceLocation("thuttech:liftcontroller"));
-
         RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<EntityLivingBase>()
         {
             @Override

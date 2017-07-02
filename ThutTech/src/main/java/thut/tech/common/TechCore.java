@@ -72,7 +72,7 @@ public class TechCore
 
     public TechCore()
     {
-        new BlockLift().setRegistryName(Reference.MOD_ID, "lift");
+        BlockLift.init();
         MinecraftForge.EVENT_BUS.register(this);
     }
 
@@ -87,17 +87,13 @@ public class TechCore
     @EventHandler
     public void load(FMLInitializationEvent evt)
     {
-        proxy.initClient();
-        EntityRegistry.registerModEntity(new ResourceLocation(Reference.MOD_ID, "lift"), EntityLift.class, "lift", 0,
-                this, 32, 1, true);
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent e)
     {
-        proxy.registerItemModels();
-        proxy.registerBlockModels();
         ItemHandler.registerRecipes();
+        proxy.initClient();
     }
 
     @EventHandler
@@ -115,18 +111,22 @@ public class TechCore
         packetPipeline.registerMessage(MessageHandlerClient.class, ClientPacket.class, 0, Side.CLIENT);
         packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Side.SERVER);
 
+        EntityRegistry.registerModEntity(new ResourceLocation(Reference.MOD_ID, "lift"), EntityLift.class, "lift", 0,
+                this, 32, 1, true);
     }
 
     @SubscribeEvent
     public void registerItems(RegistryEvent.Register<Item> event)
     {
         ItemHandler.registerItems(event);
+        proxy.registerItemModels();
     }
 
     @SubscribeEvent
     public void registerBlocks(RegistryEvent.Register<Block> event)
     {
         BlockHandler.registerBlocks(event);
+        proxy.registerBlockModels();
     }
 
     @Optional.Method(modid = "tesla")

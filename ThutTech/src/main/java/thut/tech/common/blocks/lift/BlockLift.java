@@ -36,6 +36,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.network.PacketHandler;
 import thut.lib.CompatWrapper;
+import thut.tech.Reference;
 import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
@@ -65,7 +66,12 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     public static final PropertyBool           CURRENT = PropertyBool.create("current");
 
-    public BlockLift()
+    public static void init()
+    {
+        ThutBlocks.lift = new BlockLift().setRegistryName(Reference.MOD_ID, "lift");
+    }
+
+    protected BlockLift()
     {
         super(Material.IRON);
         setHardness(3.5f);
@@ -74,7 +80,6 @@ public class BlockLift extends Block implements ITileEntityProvider
         this.setCreativeTab(TechCore.tabThut);
         this.setDefaultState(this.blockState.getBaseState().withProperty(VARIANT, EnumType.CONTROLLER)
                 .withProperty(CALLED, Boolean.valueOf(false)).withProperty(CURRENT, Boolean.valueOf(false)));
-        ThutBlocks.lift = this;
     }
 
     /** Can this block provide power. Only wire currently seems to have this
