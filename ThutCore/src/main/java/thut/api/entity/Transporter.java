@@ -1,6 +1,8 @@
 package thut.api.entity;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -10,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketPlayerPosLook;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -54,7 +57,7 @@ public class Transporter
         {
             if (!move) return;
             this.worldServerInstance.getBlockState(new BlockPos((int) this.x, (int) this.y, (int) this.z));
-            pEntity.setPosition(this.x, this.y, this.z);
+            doMoveEntity(pEntity, this.x, this.y, this.z, pEntity.rotationYaw, pEntity.rotationPitch);
             pEntity.motionX = 0.0f;
             pEntity.motionY = 0.0f;
             pEntity.motionZ = 0.0f;
@@ -108,12 +111,30 @@ public class Transporter
                         // Handle moving non players.
                     }
                 }
-                theEntity.setLocationAndAngles(theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
+                doMoveEntity(theEntity, theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
                         theEntity.rotationPitch);
                 theEntity.startRiding(theMount);
                 MinecraftForge.EVENT_BUS.unregister(this);
             }
         }
+    }
+
+    private static void doMoveEntity(Entity theEntity, double x, double y, double z, float yaw, float pitch)
+    {
+        if (theEntity instanceof EntityPlayerMP)
+        {
+            Set<SPacketPlayerPosLook.EnumFlags> set = EnumSet.<SPacketPlayerPosLook.EnumFlags> noneOf(
+                    SPacketPlayerPosLook.EnumFlags.class);
+            theEntity.dismountRidingEntity();
+            ((EntityPlayerMP) theEntity).connection.firstGoodX = x;
+            ((EntityPlayerMP) theEntity).connection.firstGoodY = y;
+            ((EntityPlayerMP) theEntity).connection.firstGoodZ = z;
+            ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch, set);
+            theEntity.setRotationYawHead(yaw);
+            theEntity.motionY = 0.0D;
+            theEntity.onGround = true;
+        }
+        else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
 
     public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
@@ -139,12 +160,12 @@ public class Transporter
             {
                 entity.world.getChunkFromChunkCoords(x, z);
             }
-        entity.setPositionAndUpdate(t2.x, t2.y, t2.z);
+        doMoveEntity(entity, t2.x, t2.y, t2.z, entity.rotationYaw, entity.rotationPitch);
         List<Entity> passengers = Lists.newArrayList(entity.getPassengers());
         for (Entity e : passengers)
         {
             e.dismountRidingEntity();
-            e.setPositionAndUpdate(t2.x, t2.y, t2.z);
+            doMoveEntity(e, t2.x, t2.y, t2.z, e.rotationYaw, e.rotationPitch);
             MinecraftForge.EVENT_BUS.register(new ReMounter(e, entity, dimension));
         }
         WorldServer world = entity.getServer().getWorld(dimension);
@@ -223,7 +244,7 @@ public class Transporter
             d0 = MathHelper.clamp((int) d0, -29999872, 29999872);
             d1 = MathHelper.clamp((int) d1, -29999872, 29999872);
             float f = entityIn.rotationYaw;
-            entityIn.setLocationAndAngles(d0, entityIn.posY, d1, 90.0F, 0.0F);
+            doMoveEntity(entityIn, d0, entityIn.posY, d1, 90.0F, 0.0F);
             Teleporter teleporter = new TTeleporter(worldserver1, t2.x, t2.y, t2.z);
             teleporter.placeInExistingPortal(entityIn, f);
             worldserver.updateEntityWithOptionalForce(entityIn, false);
