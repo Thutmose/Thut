@@ -1,5 +1,6 @@
 package thut.api.entity.blockentity;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +23,6 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
-import net.minecraftforge.registries.GameData;
 
 public interface IBlockEntity
 {
@@ -149,9 +149,10 @@ public interface IBlockEntity
 
             try
             {
-                TileEntity.class.getField("REGISTRY").setAccessible(true);
-                RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> registry = (RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>) TileEntity.class
-                        .getField("REGISTRY").get(null);
+                Field F = TileEntity.class.getDeclaredFields()[1];
+                F.setAccessible(true);
+                RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> registry = (RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>) F
+                        .get(null);
                 oclass = (Class<? extends TileEntity>) registry.getObject(new ResourceLocation(s));
 
                 if (oclass != null)
