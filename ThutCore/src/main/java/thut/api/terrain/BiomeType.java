@@ -27,13 +27,11 @@ public class BiomeType
     public static void setMap(Map<Integer, String> mapIn)
     {
         typeMapClient.clear();
-        ArrayList<BiomeType> types = Lists.newArrayList();
         for (Integer i : mapIn.keySet())
         {
             String name = mapIn.get(i);
             BiomeType type = getBiome(name, true);
             typeMapClient.put(i, type);
-            types.add(type);
         }
     }
 
@@ -102,7 +100,15 @@ public class BiomeType
     {
         this.name = name;
         this.readableName = readableName;
-        id = MAXID++;
+        id = -1;
+        for (BiomeType type : typeMap.values())
+        {
+            if (type.name.equals(name))
+            {
+                id = type.id;
+            }
+        }
+        if (id == -1) id = MAXID++;
         typeMap.put(id, this);
         typeMapClient.put(id, this);
     }
