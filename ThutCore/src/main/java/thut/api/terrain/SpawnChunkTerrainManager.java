@@ -33,7 +33,7 @@ public class SpawnChunkTerrainManager
 
     public static void save(int dim, WorldTerrain world) throws IOException
     {
-        long last = lastSaves.get(dim);
+        long last = lastSaves.get(dim)!=null?lastSaves.get(dim):0;
         if (last > System.currentTimeMillis()) return;
         lastSaves.put(dim, System.currentTimeMillis() + 1000);
         TerrainMap terrain = world.spawnMap;
