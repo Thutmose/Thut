@@ -187,7 +187,7 @@ public class ThutCore
     @EventHandler
     public void serverLoad(FMLServerStartedEvent event)
     {
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(0);
+        World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
         WorldTerrain terrain = TerrainManager.getInstance().getTerrain(world);
         SpawnChunkTerrainManager.load(terrain.dimID, terrain);
     }
