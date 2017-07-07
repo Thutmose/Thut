@@ -1,5 +1,6 @@
 package thut.api.terrain;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import net.minecraft.entity.Entity;
@@ -11,6 +12,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
+import net.minecraftforge.event.world.WorldEvent.Save;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
@@ -53,9 +55,24 @@ public class TerrainManager
     {
         try
         {
+            WorldTerrain terrain = TerrainManager.getInstance().getTerrain(evt.getWorld());
             NBTTagCompound nbt = evt.getData();
+            if (!nbt.hasKey(TERRAIN))
+            {
+                // Init the segement if it didn't exist.
+                return;
+            }
             NBTTagCompound terrainData = nbt.getCompoundTag(TERRAIN);
-            TerrainManager.getInstance().getTerrain(evt.getWorld()).loadTerrain(terrainData);
+            int x = terrainData.getInteger("xCoord");
+            int z = terrainData.getInteger("zCoord");
+            if (evt.getChunk().xPosition != x || evt.getChunk().zPosition != z)
+            {
+
+                System.err.println("loaded: " + x + " " + z + " instead of " + evt.getChunk().xPosition + " " + evt.getChunk().zPosition
+                        + " " + terrainData);
+                return;
+            }
+            terrain.loadTerrain(terrainData);
         }
         catch (Exception e)
         {
@@ -66,13 +83,18 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkSaveEvent(ChunkDataEvent.Save evt)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
+        WorldTerrain terrain = TerrainManager.getInstance().getTerrain(evt.getWorld());
+        if (terrain.world == null || terrain.world.isRemote) return;
         try
         {
+            if (terrain.world.isSpawnChunk(evt.getChunk().xPosition, evt.getChunk().zPosition))
+            {
+                SpawnChunkTerrainManager.save(terrain.dimID, terrain);
+                return;
+            }
             NBTTagCompound nbt = evt.getData();
             NBTTagCompound terrainData = new NBTTagCompound();
-            TerrainManager.getInstance().getTerrain(evt.getWorld()).saveTerrain(terrainData, evt.getChunk().xPosition,
-                    evt.getChunk().zPosition);
+            terrain.saveTerrain(terrainData, evt.getChunk().xPosition, evt.getChunk().zPosition);
             nbt.setTag(TERRAIN, terrainData);
             if (!evt.getChunk().isLoaded())
             {
@@ -153,7 +175,15 @@ public class TerrainManager
     @SubscribeEvent
     public void WorldLoadEvent(Load evt)
     {
-        TerrainManager.getInstance().getTerrain(evt.getWorld());
+        WorldTerrain terrain = TerrainManager.getInstance().getTerrain(evt.getWorld());
+        if (terrain.world == null) terrain.world = evt.getWorld();
+    }
+
+    @SubscribeEvent
+    public void WorldSaveEvent(Save evt) throws IOException
+    {
+        SpawnChunkTerrainManager.save(evt.getWorld().provider.getDimension(),
+                TerrainManager.getInstance().getTerrain(evt.getWorld()));
     }
 
 }
