@@ -5,12 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -24,7 +23,7 @@ import thut.core.common.handlers.PlayerDataHandler;
  * data deleted at load time. */
 public class SpawnChunkTerrainManager
 {
-    private static HashMap<Integer, Long> lastSaves = Maps.newHashMap();
+    private static Int2LongOpenHashMap lastSaves = new Int2LongOpenHashMap();
 
     public static void clear()
     {
