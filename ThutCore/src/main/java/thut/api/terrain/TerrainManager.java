@@ -72,8 +72,6 @@ public class TerrainManager
                         + " " + terrainData);
                 return;
             }
-            if (terrain.world.isSpawnChunk(evt.getChunk().x, evt.getChunk().z))
-                System.out.println("loaded " + evt.getChunk().x + " " + evt.getChunk().z + " ");
             terrain.loadTerrain(terrainData);
         }
         catch (Exception e)
