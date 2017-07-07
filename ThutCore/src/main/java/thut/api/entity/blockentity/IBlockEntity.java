@@ -151,6 +151,7 @@ public interface IBlockEntity
             {
                 Field F = TileEntity.class.getDeclaredFields()[1];
                 F.setAccessible(true);
+                @SuppressWarnings("unchecked")
                 RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> registry = (RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>) F
                         .get(null);
                 oclass = (Class<? extends TileEntity>) registry.getObject(new ResourceLocation(s));

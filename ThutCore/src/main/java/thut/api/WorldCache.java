@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -157,8 +158,7 @@ public class WorldCache implements IBlockAccess
         long key = asLong(l, i1);
         ChunkCache chunk = map.get(key);
         if (chunk == null || chunk.isEmpty()) return _default;
-        IBlockState state;
-        return (state = getBlockState(pos)).getBlock().isSideSolid(state, this, pos, side);
+        return getBlockState(pos).getBlockFaceShape(this, pos, side) == BlockFaceShape.SOLID;
     }
 
     void removeChunk(Chunk chunk)

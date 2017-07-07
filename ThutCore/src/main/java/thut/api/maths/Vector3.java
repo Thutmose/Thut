@@ -239,9 +239,9 @@ public class Vector3
             double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
 
             boolean check = isNotSurfaceBlock((World) world, temp.set(xtest, ytest, ztest));// isPointClearBlocks(xtest,
-                                                                                               // ytest,
-                                                                                               // ztest,
-                                                                                               // world);
+                                                                                            // ytest,
+                                                                                            // ztest,
+                                                                                            // world);
             if (!check) { return Vector3.getNewVector().set(xtest, ytest, ztest); }
         }
         return null;
@@ -1121,13 +1121,15 @@ public class Vector3
         return world.getBlockState(getPos());
     }
 
+    @SuppressWarnings("deprecation")
     public float getExplosionResistance(Explosion boom, IBlockAccess world)
     {
         IBlockState state = getBlockState(world);
         if (state == null) return 0;
         Block block = state.getBlock();
-        if (block != null && !block.isAir(state, world, getPos())) { return block
-                .getExplosionResistance(boom.getExplosivePlacedBy()); }
+        if (block != null && !block.isAir(state, world, getPos())) { return world instanceof World
+                ? block.getExplosionResistance((World) world, pos, boom.getExplosivePlacedBy(), boom)
+                : block.getExplosionResistance(boom.getExplosivePlacedBy()); }
         return 0;
 
     }
@@ -1284,8 +1286,8 @@ public class Vector3
             // intZ())
         }
         return (m = getBlockMaterial(world)) == null || m == Material.AIR;// ||world.isAirBlock(intX(),
-                                                                             // intY(),
-                                                                             // intZ())
+                                                                          // intY(),
+                                                                          // intZ())
     }
 
     public boolean isClearOfBlocks(IBlockAccess world)
@@ -1327,8 +1329,8 @@ public class Vector3
 
         for (int i = -1; i <= 1; i++)
             for (int j = -1; j <= 1; j++)
-                ret = ret && v.set(this).addTo(v1.set(i * e.width / 2, e.height, j * e.width / 2))
-                        .isClearOfBlocks(world);
+                ret = ret
+                        && v.set(this).addTo(v1.set(i * e.width / 2, e.height, j * e.width / 2)).isClearOfBlocks(world);
 
         return ret;
     }
