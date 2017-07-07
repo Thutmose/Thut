@@ -17,6 +17,8 @@ import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
+import thut.core.common.ThutCore;
 
 public class WorldTerrain
 {
@@ -31,34 +33,36 @@ public class WorldTerrain
 
         public TerrainSegment getSegment(BlockPos pos)
         {
-            return terrain.get(pos);
+            return terrain.get(pos.toImmutable());
         }
 
         public void setSegment(TerrainSegment t, BlockPos pos)
         {
-            if (t != null) terrain.put(pos, t);
-            else terrain.remove(pos);
+            if (t != null) terrain.put(pos.toImmutable(), t);
+            else terrain.remove(pos.toImmutable());
         }
     }
 
-    final World        world;
-    public final int   dimID;
+    World                world;
+    public final int     dimID;
 
-    private TerrainMap terrainMap = new TerrainMap();
+    private TerrainMap   terrainMap = new TerrainMap();
+    protected TerrainMap spawnMap   = new TerrainMap();
 
     public WorldTerrain(int dimID)
     {
         this.dimID = dimID;
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        if (server != null) this.world = server.getWorld(dimID);
-        else this.world = null;
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) this.world = server.getWorld(dimID);
+        else this.world = ThutCore.proxy.getWorld();
     }
 
     public void addTerrain(TerrainSegment terrain)
     {
         if (terrain != null)
         {
-            terrainMap.setSegment(terrain, terrain.pos);
+            if (world.isSpawnChunk(terrain.chunkX, terrain.chunkY)) spawnMap.setSegment(terrain, terrain.pos);
+            else terrainMap.setSegment(terrain, terrain.pos);
         }
     }
 
@@ -78,7 +82,9 @@ public class WorldTerrain
     public TerrainSegment getTerrain(BlockPos pos, boolean saving)
     {
         TerrainSegment ret = null;
-        ret = terrainMap.getSegment(pos);
+        boolean spawn = world.isSpawnChunk(pos.getX(), pos.getY());
+        if (spawn) ret = spawnMap.getSegment(pos);
+        else ret = terrainMap.getSegment(pos);
         if (ret == null && !saving)
         {
             // TODO here we need to check the appropriate mca file for data, and
@@ -132,8 +138,9 @@ public class WorldTerrain
             if (ret == null)
             {
                 ret = new TerrainSegment(pos.getX(), pos.getY(), pos.getZ());
+                if (spawn) spawnMap.setSegment(ret, pos.toImmutable());
+                else terrainMap.setSegment(ret, pos.toImmutable());
             }
-            terrainMap.setSegment(ret, pos.toImmutable());
         }
         return ret;
     }
