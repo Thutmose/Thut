@@ -11,6 +11,7 @@ import java.util.Set;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.common.Loader;
 
 public abstract class ConfigBase extends Configuration
 {
@@ -194,10 +195,11 @@ public abstract class ConfigBase extends Configuration
 
         ConfigCategory cc;
         List<ConfigCategory> empty = new ArrayList<>();
+        String id = Loader.instance().activeModContainer().getModId();
         for (String s : getCategoryNames())
         {
             cc = getCategory(s);
-            cc.setLanguageKey("pokecube.config." + cc.getName());
+            cc.setLanguageKey(id + ".config." + cc.getName());
             List<String> removeThis = new ArrayList<>();
             if (cc.entrySet().isEmpty()) empty.add(cc);
             for (Map.Entry<String, Property> e : cc.entrySet())
