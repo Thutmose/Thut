@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.function.Predicate;
 
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.api.boom.ExplosionCustom;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.terrain.TerrainSegment;
@@ -12,6 +14,7 @@ import thut.core.common.config.ConfigBase;
 import thut.core.common.config.Configure;
 import thut.core.common.terrain.ConfigTerrainBuilder;
 import thut.core.common.terrain.ConfigTerrainChecker;
+import thut.reference.Reference;
 
 public class ConfigHandler extends ConfigBase
 {
@@ -77,5 +80,16 @@ public class ConfigHandler extends ConfigBase
             }
         });
         ConfigTerrainBuilder.process(customBiomeMappings);
+    }
+
+    @SubscribeEvent
+    public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs)
+    {
+        if (eventArgs.getModID().equals(Reference.MOD_ID))
+        {
+            populateSettings();
+            applySettings();
+            save();
+        }
     }
 }
