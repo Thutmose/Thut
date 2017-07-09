@@ -75,7 +75,7 @@ msg.particlesLeft.name=Particles Remaining
 
 
 # Misc
-itemGroup.tabConcrete=Thut's Mods
+itemGroup.tabThut=Thut's Mods
 
 # Commands
 thutcore.command.settings.check=%1$s §ais currently set to: %2$s

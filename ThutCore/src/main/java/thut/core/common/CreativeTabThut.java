@@ -10,7 +10,7 @@ public class CreativeTabThut extends CreativeTabs{
 	public static CreativeTabThut tabThut = new CreativeTabThut();;
 	
 	public CreativeTabThut() {
-		super("tabConcrete");
+		super("tabThut");
 	}
 
 	@Override
