@@ -117,4 +117,23 @@ public class BiomeType
     {
         return id;
     }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o instanceof BiomeType) { return ((BiomeType) o).id == id; }
+        return false;
+    }
+
+    @Override
+    public String toString()
+    {
+        return name;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return id;
+    }
 }
