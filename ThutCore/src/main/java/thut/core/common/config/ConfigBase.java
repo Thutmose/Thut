@@ -42,6 +42,7 @@ public abstract class ConfigBase extends Configuration
         Class<?> me = getClass();
         Set<Property> fields = new HashSet<>();
         Configure c;
+        String id = Loader.instance().activeModContainer().getModId();
         for (Field f : me.getDeclaredFields())
         {
             c = f.getAnnotation(Configure.class);
@@ -180,7 +181,7 @@ public abstract class ConfigBase extends Configuration
                     }
                     if (p != null)
                     {
-                        p.setLanguageKey("pokecube.config." + f.getName());
+                        p.setLanguageKey(id + ".config." + f.getName());
                         fields.add(p);
                     }
                 }
@@ -197,7 +198,6 @@ public abstract class ConfigBase extends Configuration
 
         ConfigCategory cc;
         List<ConfigCategory> empty = new ArrayList<>();
-        String id = Loader.instance().activeModContainer().getModId();
         for (String s : getCategoryNames())
         {
             cc = getCategory(s);
