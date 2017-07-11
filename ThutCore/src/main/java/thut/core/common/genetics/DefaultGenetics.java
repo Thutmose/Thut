@@ -44,9 +44,11 @@ public class DefaultGenetics implements IMobGenetics
                 {
                     int a = rand.nextInt(2);
                     int b = a == 1 ? 0 : 1;
-                    gene1 = a1.getAlleles()[a].mutate();
-                    gene2 = a2.getAlleles()[b].mutate();
+                    gene1 = a1.getAlleles()[a];
+                    gene2 = a2.getAlleles()[b];
                 }
+                if (gene1.getMutationRate() > rand.nextFloat()) gene1 = gene1.mutate(parent1, parent2);
+                if (gene2.getMutationRate() > rand.nextFloat()) gene2 = gene2.mutate(parent1, parent2);
                 Alleles allele = new Alleles(gene1, gene2);
                 getAlleles().put(gene1.getKey(), allele);
             }

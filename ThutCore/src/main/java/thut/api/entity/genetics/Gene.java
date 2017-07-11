@@ -9,9 +9,16 @@ public interface Gene
      * with this gene. */
     Gene interpolate(Gene other);
 
-    /** This method should return a mutated gene, if the gene does not mutate,
-     * mutate could return this. */
+    /** This method should return a mutated gene. */
     Gene mutate();
+
+    /** This method should return a mutated gene, this one is called during
+     * breeding, to allow any changes needed caused by the entirety of the
+     * parents genes. */
+    default Gene mutate(IMobGenetics parent1, IMobGenetics parent2)
+    {
+        return mutate();
+    }
 
     /** @return the value of this gene. */
     <T> T getValue();
@@ -23,8 +30,13 @@ public interface Gene
     /** This is how frequently the expressed gene is used instead of the
      * parent's genes.
      * 
-     * @return value from 0-1 of how often it uses expressed gene. */
+     * @return value from 0-1 of how often it uses expressed.. */
     default float getEpigeneticRate()
+    {
+        return 0;
+    }
+
+    default float getMutationRate()
     {
         return 0;
     }
