@@ -55,7 +55,7 @@ import thut.core.common.handlers.ConfigHandler;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.reference.Reference;
 
-@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, guiFactory = "thut.core.client.config.ModGuiFactory")
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, acceptableRemoteVersions = Reference.MINVERSION, guiFactory = "thut.core.client.config.ModGuiFactory")
 public class ThutCore
 {
 
