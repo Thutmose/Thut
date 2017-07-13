@@ -61,7 +61,7 @@ public class WorldTerrain
     {
         if (terrain != null)
         {
-            if (world.isSpawnChunk(terrain.chunkX, terrain.chunkY)) spawnMap.setSegment(terrain, terrain.pos);
+            if (world.isSpawnChunk(terrain.chunkX, terrain.chunkZ)) spawnMap.setSegment(terrain, terrain.pos);
             else terrainMap.setSegment(terrain, terrain.pos);
         }
     }
@@ -82,13 +82,11 @@ public class WorldTerrain
     public TerrainSegment getTerrain(BlockPos pos, boolean saving)
     {
         TerrainSegment ret = null;
-        boolean spawn = world.isSpawnChunk(pos.getX(), pos.getY());
+        boolean spawn = world.isSpawnChunk(pos.getX(), pos.getZ());
         if (spawn) ret = spawnMap.getSegment(pos);
         else ret = terrainMap.getSegment(pos);
         if (ret == null && !saving)
         {
-            // TODO here we need to check the appropriate mca file for data, and
-            // if it is there, use that.
             load:
             if (world != null && !world.isRemote && world.provider != null && !TerrainSegment.noLoad)
             {
