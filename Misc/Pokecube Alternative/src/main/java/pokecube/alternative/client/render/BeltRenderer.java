@@ -40,7 +40,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
     {
         EntityPlayer player = (EntityPlayer) entitylivingbaseIn;
         IPokemobBelt cap = BeltPlayerData.getBelt(player);
-        int brightness = entitylivingbaseIn.getBrightnessForRender(partialTicks);
+        int brightness = entitylivingbaseIn.getBrightnessForRender();
         // First pass of render
         GL11.glPushMatrix();
         ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
@@ -70,7 +70,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         GL11.glScalef(s * 1.01f, s, s);
         this.livingEntityRenderer.bindTexture(belt);
         EnumDyeColor ret = EnumDyeColor.GRAY;
-        Color colour = new Color(ret.getMapColor().colorValue + 0xFF000000);
+        Color colour = new Color(ret.getColorValue() + 0xFF000000);
         int[] col = { colour.getRed(), colour.getBlue(), colour.getGreen(), 255, brightness };
         for (IExtendedModelPart part : model.getParts().values())
         {

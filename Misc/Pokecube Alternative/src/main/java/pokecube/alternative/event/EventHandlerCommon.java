@@ -8,7 +8,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.stats.Achievement;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -29,12 +28,10 @@ import pokecube.alternative.container.card.CardPlayerData;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
 import pokecube.core.blocks.pc.InventoryPC;
-import pokecube.core.database.stats.StatsCollector;
 import pokecube.core.events.RecallEvent;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokecube;
 import pokecube.core.interfaces.IPokemob;
-import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.api.maths.Vector3;
 import thut.core.common.handlers.PlayerDataHandler;
@@ -54,7 +51,7 @@ public class EventHandlerCommon
     {
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
-        if (player.worldObj.isRemote) return;
+        if (player.world.isRemote) return;
         if (CompatWrapper.isValid(item) && item.hasTagCompound())
         {
         }
@@ -133,7 +130,7 @@ public class EventHandlerCommon
                     }
                     if (toBelt)
                     {
-                        player.addChatMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.tobelt",
+                        player.sendMessage(new TextComponentTranslation(Reference.MODID + ".pokebelt.tobelt",
                                 item.getDisplayName()));
                     }
                     event.setCanceled(true);
@@ -156,7 +153,7 @@ public class EventHandlerCommon
     public void EntityHurt(LivingHurtEvent event)
     {
         if (Config.instance.autoThrow && event.getEntityLiving() instanceof EntityPlayer
-                && event.getSource().getEntity() instanceof IPokemob)
+                && event.getSource().getImmediateSource() instanceof IPokemob)
         {
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
@@ -166,7 +163,7 @@ public class EventHandlerCommon
                     ItemStack cube = cap.getCube(cap.getSlot());
                     if (PokecubeManager.isFilled(cube))
                     {
-                        Entity target = event.getSource().getEntity();
+                        Entity target = event.getSource().getImmediateSource();
                         Vector3 here = Vector3.getNewVector().set(this);
                         Vector3 t = Vector3.getNewVector().set(target);
                         t.set(t.subtractFrom(here).scalarMultBy(0.5).addTo(here));
@@ -176,7 +173,7 @@ public class EventHandlerCommon
                                 event.getEntityLiving().getDisplayName(), cube.getDisplayName());
                         cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
                         syncPokemon((EntityPlayer) event.getEntityLiving());
-                        target.addChatMessage(text);
+                        target.sendMessage(text);
                     }
                 }
             }
@@ -186,7 +183,7 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void playerTick(PlayerEvent.LivingUpdateEvent event)
     {
-        if (event.getEntityLiving().worldObj.isRemote) return;
+        if (event.getEntityLiving().world.isRemote) return;
         if (event.getEntity() instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer) event.getEntity();
@@ -194,7 +191,7 @@ public class EventHandlerCommon
             if (!syncSchedule.isEmpty() && syncSchedule.contains(player.getUniqueID()) && player.ticksExisted > 20)
             {
                 syncPokemon(player);
-                for (EntityPlayer player2 : event.getEntity().worldObj.playerEntities)
+                for (EntityPlayer player2 : event.getEntity().world.playerEntities)
                 {
                     IPokemobBelt cap = BeltPlayerData.getBelt(player2);
                     PacketHandler.INSTANCE.sendTo(new PacketSyncBelt(cap, player2.getEntityId()),
@@ -272,16 +269,6 @@ public class EventHandlerCommon
             else
             {
                 InventoryPC.addPokecubeToPC(pokemonStack, player.getEntityWorld());
-            }
-            if (!player.isSneaking() && !((Entity) pokemon).isDead)
-            {
-                boolean has = player.hasAchievement(PokecubeMod.catchAchievements.get(pokemon.getPokedexEntry()));
-                Achievement hatch = PokecubeMod.hatchAchievements.get(pokemon.getPokedexEntry());
-                has = has || hatch != null && player.hasAchievement(hatch);
-                if (!has)
-                {
-                    StatsCollector.addCapture(pokemon);
-                }
             }
             syncPokemon(player);
             ((Entity) pokemon).setDead();

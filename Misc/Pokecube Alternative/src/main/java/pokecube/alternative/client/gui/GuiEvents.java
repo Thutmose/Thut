@@ -69,7 +69,7 @@ public class GuiEvents
             if (event.getGui() != lastcontainer)
             {
                 int[] offset = whitelistedGuis.get(event.getGui().getClass().getName());
-                gui = new GuiPlayerPokemon(Minecraft.getMinecraft().thePlayer, event.getGui());
+                gui = new GuiPlayerPokemon(Minecraft.getMinecraft().player, event.getGui());
                 lastcontainer = event.getGui();
                 gui.initToOther(lastcontainer);
                 gui.guiTop += offset[0];

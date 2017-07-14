@@ -61,7 +61,7 @@ public class GuiPokemonBar extends Gui
 
         this.drawTexturedModalRect(xPos, yPos, 0, 0, texW, texH);
         // Render the arrow
-        IPokemobBelt capability = BeltPlayerData.getBelt(Minecraft.getMinecraft().thePlayer);
+        IPokemobBelt capability = BeltPlayerData.getBelt(Minecraft.getMinecraft().player);
         int selected = capability.getSlot();
         int selectorSize = 21;
         int selectorXPos = 0;
@@ -86,7 +86,7 @@ public class GuiPokemonBar extends Gui
             {
                 try
                 {
-                    pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.theWorld);
+                    pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
                     entity = (EntityLiving) pokemob;
                 }
                 catch (Exception e)
@@ -130,14 +130,14 @@ public class GuiPokemonBar extends Gui
                 GL11.glScaled(s, s, s);
                 // Draw name
                 String name = I18n.format(nameComp.getFormattedText());
-                name = mc.fontRendererObj.trimStringToWidth(name, 55);
-                mc.fontRendererObj.drawString(name, 2, 0, 0xFFFFFF);
+                name = mc.fontRenderer.trimStringToWidth(name, 55);
+                mc.fontRenderer.drawString(name, 2, 0, 0xFFFFFF);
                 // Draw gender
                 int colour = pokemob.getSexe() == IPokemob.MALE ? 0x0011CC : 0xCC5555;
                 String gender = pokemob.getSexe() == IPokemob.MALE ? "\u2642"
                         : pokemob.getSexe() == IPokemob.FEMALE ? "\u2640" : "";
-                mc.fontRendererObj.drawString(gender,
-                        (int) (plateSize / (s * 1) * 2) - 2 - mc.fontRendererObj.getStringWidth(gender), 8, colour);
+                mc.fontRenderer.drawString(gender,
+                        (int) (plateSize / (s * 1) * 2) - 2 - mc.fontRenderer.getStringWidth(gender), 8, colour);
 
                 // Draw Level
                 GL11.glScaled(1 / s, 1 / s, 1 / s);
@@ -145,8 +145,8 @@ public class GuiPokemonBar extends Gui
                 GL11.glScaled(s, s, s);
                 GL11.glTranslatef(0, 0.5f, 0);
                 String lvlStr = "L." + pokemob.getLevel();
-                int lvlLength = mc.fontRendererObj.getStringWidth(lvlStr);
-                mc.fontRendererObj.drawString(lvlStr, (int) (plateSize / (s * 1) * 2) - 3 - lvlLength, 3, 0xFFFFFF);
+                int lvlLength = mc.fontRenderer.getStringWidth(lvlStr);
+                mc.fontRenderer.drawString(lvlStr, (int) (plateSize / (s * 1) * 2) - 3 - lvlLength, 3, 0xFFFFFF);
                 GL11.glPopMatrix();
 
                 // Draw health

@@ -27,7 +27,7 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
 
     public GuiPlayerPokemon(EntityPlayer player, GuiScreen base)
     {
-        super(new ContainerPlayerPokemon(player.inventory, !player.worldObj.isRemote, player));
+        super(new ContainerPlayerPokemon(player.inventory, !player.world.isRemote, player));
         this.baseGui = base;
         this.allowUserInput = true;
     }
@@ -51,7 +51,7 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
     {
         this.mc = other.mc;
         this.itemRender = mc.getRenderItem();
-        this.fontRendererObj = mc.fontRendererObj;
+        this.fontRenderer = mc.fontRenderer;
         this.width = other.width;
         this.height = other.height;
         initGui();
@@ -122,7 +122,7 @@ public class GuiPlayerPokemon extends InventoryEffectRenderer
     /** Returns whether the mouse is over the given slot. */
     private boolean isMouseOverSlot(Slot slotIn, int mouseX, int mouseY)
     {
-        return this.isPointInRegion(slotIn.xDisplayPosition, slotIn.yDisplayPosition, 16, 16, mouseX, mouseY);
+        return this.isPointInRegion(slotIn.xPos, slotIn.yPos, 16, 16, mouseX, mouseY);
     }
 
     /** Returns the slot at the given coordinates or null if there is none. */

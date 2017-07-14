@@ -29,7 +29,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
     public void toBytes(ByteBuf buffer)
     {
         PacketBuffer buf = new PacketBuffer(buffer);
-        buf.writeNBTTagCompoundToBuffer(data);
+        buf.writeCompoundTag(data);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
         PacketBuffer buf = new PacketBuffer(buffer);
         try
         {
-            data = buf.readNBTTagCompoundFromBuffer();
+            data = buf.readCompoundTag();
         }
         catch (IOException e)
         {
@@ -54,7 +54,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
             @Override
             public void run()
             {
-                processMessage(ctx.getServerHandler().playerEntity, message);
+                processMessage(ctx.getServerHandler().player, message);
             }
         });
         return null;

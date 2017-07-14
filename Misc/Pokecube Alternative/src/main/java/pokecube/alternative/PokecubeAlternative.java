@@ -12,7 +12,7 @@ import pokecube.alternative.network.PacketHandler;
 import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.PokecubeMod;
 
-@Mod(modid = Reference.MODID, name = Reference.MODNAME, guiFactory = "pokecube.alternative.client.gui.config.ModGuiFactory", version = Reference.VERSION)
+@Mod(modid = Reference.MODID, name = Reference.MODNAME, acceptableRemoteVersions = Reference.MINVERSION, guiFactory = "pokecube.alternative.client.gui.config.ModGuiFactory", version = Reference.VERSION)
 public class PokecubeAlternative
 {
     @SidedProxy(clientSide = "pokecube.alternative.ClientProxy", serverSide = "pokecube.alternative.utility.ServerProxy")

@@ -65,7 +65,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
             @Override
             public void run()
             {
-                processMessage(ctx.getServerHandler().playerEntity, message);
+                processMessage(ctx.getServerHandler().player, message);
             }
         });
         return null;
@@ -92,7 +92,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
             ItemStack cube = cap.getCube(cap.getSlot());
             if (CompatWrapper.isValid(cube))
             {
-                cube.getItem().onPlayerStoppedUsing(cube, player.worldObj, player, message.ticks);
+                cube.getItem().onPlayerStoppedUsing(cube, player.world, player, message.ticks);
                 CompatWrapper.setStackSize(cube, 1);
                 cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
             }
@@ -106,7 +106,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
             }
             else
             {
-                Entity mob = player.worldObj.getEntityByID(id);
+                Entity mob = player.world.getEntityByID(id);
                 if (mob instanceof IPokemob)
                 {
                     ((IPokemob) mob).returnToPokecube();

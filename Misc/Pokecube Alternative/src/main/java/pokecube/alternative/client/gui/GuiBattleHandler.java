@@ -6,9 +6,9 @@ import java.util.UUID;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -90,7 +90,7 @@ public class GuiBattleHandler
             float f = 0.00390625F;
             float f1 = 0.00390625F;
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer vertexbuffer = tessellator.getBuffer();
+            BufferBuilder vertexbuffer = tessellator.getBuffer();
             vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
             vertexbuffer.pos(x + 0, y + height * sy, 0).tex((textureX + 0) * f, (textureY + height) * f1).endVertex();
             vertexbuffer.pos(x + width * sx, y + height * sy, 0).tex((textureX + width) * f, (textureY + height) * f1)
@@ -112,7 +112,7 @@ public class GuiBattleHandler
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         Tessellator tessellator = Tessellator.getInstance();
-        VertexBuffer buffer = tessellator.getBuffer();
+        BufferBuilder buffer = tessellator.getBuffer();
         int moveCount = 0;
         for (moveCount = 0; moveCount < 4; moveCount++)
         {
@@ -121,7 +121,7 @@ public class GuiBattleHandler
         float padding = PokecubeMod.core.getConfig().backgroundPadding;
         int bgHeight = 0;
         scale = 0.75f;
-        int barHeight1 = (int) (mc.fontRendererObj.FONT_HEIGHT * moveCount * scale);
+        int barHeight1 = (int) (mc.fontRenderer.FONT_HEIGHT * moveCount * scale);
         float size = PokecubeMod.core.getConfig().plateSize;
         int selected = pokemob.getMoveIndex();
         GlStateManager.translate(0F, 6, 0F);
@@ -149,8 +149,8 @@ public class GuiBattleHandler
                 }
                 timer = Math.max(0, Math.min(timer, 1));
                 GL11.glScaled(scale, scale, scale);
-                GlStateManager.translate(0F, selected * mc.fontRendererObj.FONT_HEIGHT, 0F);
-                barHeight1 = (int) (mc.fontRendererObj.FONT_HEIGHT * scale);
+                GlStateManager.translate(0F, selected * mc.fontRenderer.FONT_HEIGHT, 0F);
+                barHeight1 = (int) (mc.fontRenderer.FONT_HEIGHT * scale);
                 buffer.begin(7, DefaultVertexFormats.POSITION_COLOR);
                 int alpha = 128;
                 int r = 0;
@@ -163,7 +163,7 @@ public class GuiBattleHandler
                         .endVertex();
                 buffer.pos(size * timer / scale + padding, -bgHeight, 0.0D).color(r, g, b, alpha).endVertex();
                 tessellator.draw();
-                GlStateManager.translate(0F, -selected * mc.fontRendererObj.FONT_HEIGHT, 0F);
+                GlStateManager.translate(0F, -selected * mc.fontRenderer.FONT_HEIGHT, 0F);
                 GL11.glScaled(1 / scale, 1 / scale, 1 / scale);
             }
         }
@@ -177,8 +177,8 @@ public class GuiBattleHandler
             if (move != null)
             {
                 GL11.glScaled(scale, scale, scale);
-                mc.fontRendererObj.drawString(MovesUtils.getMoveName(move.getName()).getFormattedText(), -33,
-                        moveIndex * mc.fontRendererObj.FONT_HEIGHT, move.move.type.colour);
+                mc.fontRenderer.drawString(MovesUtils.getMoveName(move.getName()).getFormattedText(), -33,
+                        moveIndex * mc.fontRenderer.FONT_HEIGHT, move.move.type.colour);
                 GL11.glScaled(1 / scale, 1 / scale, 1 / scale);
             }
         }
@@ -240,7 +240,7 @@ public class GuiBattleHandler
             float f = 0.00390625F;
             float f1 = 0.00390625F;
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer vertexbuffer = tessellator.getBuffer();
+            BufferBuilder vertexbuffer = tessellator.getBuffer();
             vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
             vertexbuffer.pos(x + 0, y + height * sy, 0).tex((textureX + 0) * f, (textureY + height) * f1).endVertex();
             vertexbuffer.pos(x + width * sx, y + height * sy, 0).tex((textureX + width) * f, (textureY + height) * f1)
@@ -277,7 +277,7 @@ public class GuiBattleHandler
             GlStateManager.enableBlend();
             GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer buffer = tessellator.getBuffer();
+            BufferBuilder buffer = tessellator.getBuffer();
 
             float padding = PokecubeMod.core.getConfig().backgroundPadding;
             int bgHeight = PokecubeMod.core.getConfig().backgroundHeight;
@@ -304,7 +304,7 @@ public class GuiBattleHandler
                 nameComp = new TextComponentString(TextFormatting.ITALIC + entity.getCustomNameTag());
             float s = 0.5F;
             String name = I18n.format(nameComp.getFormattedText());
-            float namel = mc.fontRendererObj.getStringWidth(name) * s;
+            float namel = mc.fontRenderer.getStringWidth(name) * s;
             if (namel + 20 > size * 2) size = namel / 2F + 10F;
             float healthSize = size * (health / maxHealth);
             int a = 102;
@@ -380,7 +380,7 @@ public class GuiBattleHandler
             }
             boolean isOwner = renderManager.renderViewEntity.getUniqueID().equals(owner);
             int colour = isOwner ? 0xFFFFFF : 0xAA4444;
-            mc.fontRendererObj.drawString(name, 0, 0, colour);
+            mc.fontRenderer.drawString(name, 0, 0, colour);
 
             GlStateManager.pushMatrix();
             float s1 = 0.75F;
@@ -413,11 +413,11 @@ public class GuiBattleHandler
                     colour = 0xCC5555;
                 }
             }
-            if (isOwner) mc.fontRendererObj.drawString(healthStr,
-                    (int) (size / (s * s1)) - mc.fontRendererObj.getStringWidth(healthStr) / 2, h, 0xFFFFFFFF);
-            mc.fontRendererObj.drawString(lvlStr, 2, h, 0xFFFFFF);
-            mc.fontRendererObj.drawString(gender,
-                    (int) (size / (s * s1) * 2) - 2 - mc.fontRendererObj.getStringWidth(gender), h - 1, colour);
+            if (isOwner) mc.fontRenderer.drawString(healthStr,
+                    (int) (size / (s * s1)) - mc.fontRenderer.getStringWidth(healthStr) / 2, h, 0xFFFFFFFF);
+            mc.fontRenderer.drawString(lvlStr, 2, h, 0xFFFFFF);
+            mc.fontRenderer.drawString(gender,
+                    (int) (size / (s * s1) * 2) - 2 - mc.fontRenderer.getStringWidth(gender), h - 1, colour);
             GlStateManager.popMatrix();
 
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -426,7 +426,7 @@ public class GuiBattleHandler
             GlStateManager.scale(s1, s1, s1);
             GlStateManager.translate(size / (s * s1) * 2 - 16, 0F, 0F);
             mc.renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-            if (CompatWrapper.isValid(stack) && PokecubeMod.core.getConfig().showAttributes)
+            if (CompatWrapper.isValid(stack) && PokecubeMod.core.getConfig().showHeldItem)
             {
                 RenderHealth.renderIcon(off, 0, stack, 16, 16);
                 off -= 16;

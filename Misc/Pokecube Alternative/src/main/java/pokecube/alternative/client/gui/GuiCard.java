@@ -89,15 +89,15 @@ public class GuiCard extends InventoryEffectRenderer
         int j = this.guiTop;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
         GuiInventory.drawEntityOnScreen(i + 155, j + 58, 25, i + 51 - this.oldMouseX, j + 75 - 50 - this.oldMouseY,
-                this.mc.thePlayer);
-        IPokemobBelt belt = BeltPlayerData.getBelt(this.mc.thePlayer);
+                this.mc.player);
+        IPokemobBelt belt = BeltPlayerData.getBelt(this.mc.player);
         int xPos = 135;
         int yPos = 15;
         int selectorSize = 9;
-        String name = this.mc.thePlayer.getDisplayNameString();
-        drawString(fontRendererObj, name, i + 7, j + 28, 0xffffff);
-        String num = "" + CaptureStats.getNumberUniqueCaughtBy(this.mc.thePlayer.getUniqueID());
-        drawString(fontRendererObj, num, i + 7, j + 45, 0xffffff);
+        String name = this.mc.player.getDisplayNameString();
+        drawString(fontRenderer, name, i + 7, j + 28, 0xffffff);
+        String num = "" + CaptureStats.getNumberUniqueCaughtBy(this.mc.player.getUniqueID());
+        drawString(fontRenderer, num, i + 7, j + 45, 0xffffff);
 
         for (int i1 = 0; i1 < 6; i1++)
         {
@@ -105,7 +105,7 @@ public class GuiCard extends InventoryEffectRenderer
             yPos = 15 + i1 * selectorSize;
             ItemStack pokemonItemstack = belt.getCube(i1);
             if (!CompatWrapper.isValid(pokemonItemstack)) continue;
-            IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.theWorld);
+            IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.world);
             if (pokemob == null) continue;
             EntityLiving entity = (EntityLiving) pokemob;
 

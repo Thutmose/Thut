@@ -138,7 +138,7 @@ public class InventoryPokemon implements IInventory
     }
 
     @Override
-    public boolean isUseableByPlayer(EntityPlayer player)
+    public boolean isUsableByPlayer(EntityPlayer player)
     {
         return true;
     }
@@ -208,7 +208,8 @@ public class InventoryPokemon implements IInventory
         }
     }
 
-    public boolean func_191420_l()
+    @Override
+    public boolean isEmpty()
     {
         // TODO Auto-generated method stub
         return false;

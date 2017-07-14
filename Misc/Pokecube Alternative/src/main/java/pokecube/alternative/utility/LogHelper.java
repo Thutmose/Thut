@@ -5,11 +5,12 @@ import org.apache.logging.log4j.Level;
 import net.minecraftforge.fml.common.FMLLog;
 import pokecube.alternative.Reference;
 
-public class LogHelper {
+public class LogHelper
+{
 
     public static void log(Level logLevel, Object object)
     {
-        FMLLog.log(Reference.MODNAME, logLevel, String.valueOf(object));
+        FMLLog.log.log(logLevel, Reference.MODNAME + ": " + String.valueOf(object));
     }
 
     public static void all(Object object)
@@ -52,4 +53,3 @@ public class LogHelper {
         log(Level.WARN, object);
     }
 }
-
