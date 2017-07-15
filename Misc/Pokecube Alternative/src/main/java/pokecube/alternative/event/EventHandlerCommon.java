@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
@@ -273,6 +274,7 @@ public class EventHandlerCommon
             syncPokemon(player);
             ((Entity) pokemon).setDead();
             pokemon.setPokemonOwner((UUID) null);
+            MinecraftForge.EVENT_BUS.post(new AddCube.OnRecall(player, pokemonStack));
             event.setCanceled(true);
         }
     }
