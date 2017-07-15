@@ -33,14 +33,14 @@ public class SpawnChunkTerrainManager
 
     public static void save(int dim, WorldTerrain world) throws IOException
     {
-        long last = lastSaves.get(dim)!=null?lastSaves.get(dim):0;
+        long last = lastSaves.get(dim) != null ? lastSaves.get(dim) : 0;
         if (last > System.currentTimeMillis()) return;
         lastSaves.put(dim, System.currentTimeMillis() + 1000);
         TerrainMap terrain = world.spawnMap;
         NBTTagCompound data = new NBTTagCompound();
         NBTTagList terrainList = new NBTTagList();
         Set<BlockPos> keys = Sets.newHashSet();
-        synchronized (terrain)
+        synchronized (terrain.terrain.keySet())
         {
             keys.addAll(terrain.terrain.keySet());
         }
