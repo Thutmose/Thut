@@ -57,7 +57,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public int                          calledYValue = -1;
     public int                          calledFloor  = 0;
     public int                          currentFloor = 0;
-    UUID                                liftID       = null;
+    public UUID                         liftID       = null;
     UUID                                empty        = new UUID(0, 0);
     private byte[]                      sides        = new byte[6];
     private byte[]                      sidePages    = new byte[6];

@@ -2,15 +2,20 @@ package thut.tech.common;
 
 import static thut.tech.common.network.PacketPipeline.packetPipeline;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -25,8 +30,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.api.ThutBlocks;
+import thut.api.maths.Vector3;
+import thut.api.network.PacketHandler;
 import thut.core.common.CreativeTabThut;
+import thut.lib.CompatWrapper;
 import thut.tech.Reference;
+import thut.tech.common.blocks.lift.BlockLift;
+import thut.tech.common.blocks.lift.BlockLift.EnumType;
+import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.BlockHandler;
 import thut.tech.common.handlers.ConfigHandler;
@@ -111,45 +123,36 @@ public class TechCore
         new TeslaHandler();
     }
 
-    @Optional.Method(modid = "EnderIO")
-    @EventHandler
-    public void postInitEIO(FMLPostInitializationEvent e)
+    @SubscribeEvent
+    public void interactRightClickBlock(PlayerInteractEvent.RightClickBlock evt)
     {
-        // try
-        // {
-        // System.out.println("ADDING ELEVATOR TO EIO BLACKLIST");
-        // Class<?> soulVessel =
-        // Class.forName("crazypants.enderio.item.ItemSoulVessel");
-        // Class<?> enderIO = Class.forName("crazypants.enderio.EnderIO");
-        // Field soulVesselItemField =
-        // enderIO.getDeclaredField("itemSoulVessel");
-        // Object soulVesselItem = soulVesselItemField.get(null);
-        // Field blacklistField = soulVessel.getDeclaredField("blackList");
-        // blacklistField.setAccessible(true);
-        // String liftName =
-        // EntityList.getEntityStringFromClass(EntityLift.class);
-        // @SuppressWarnings("unchecked")
-        // List<String> blacklist = (List<String>)
-        // blacklistField.get(soulVesselItem);
-        // boolean has = false;
-        // for (String s : blacklist)
-        // {
-        // if (s != null && s.equals(liftName))
-        // {
-        // has = true;
-        // break;
-        // }
-        // }
-        // if (!has)
-        // {
-        // blacklist.add(liftName);
-        // }
-        // }
-        // catch (Exception e1)
-        // {
-        // System.err.println("ERROR ADDING ELEVATOR TO EIO BLACKLIST");
-        // e1.printStackTrace();
-        // }
+        if (evt.getHand() == EnumHand.OFF_HAND || evt.getWorld().isRemote || !CompatWrapper.isValid(evt.getItemStack())
+                || !evt.getEntityPlayer().isSneaking() || evt.getItemStack().getItem() != Items.STICK
+                || evt.getFace() == EnumFacing.DOWN || evt.getFace() == EnumFacing.UP)
+            return;
+        IBlockState state = evt.getWorld().getBlockState(evt.getPos());
+        if (state.getBlock() == ThutBlocks.lift && state.getValue(BlockLift.VARIANT) == EnumType.CONTROLLER)
+        {
+            TileEntityLiftAccess te = (TileEntityLiftAccess) evt.getWorld().getTileEntity(evt.getPos());
+            Vector3 hit = Vector3.getNewVector().set(evt.getHitVec());
+            hit.x -= evt.getPos().getX();
+            hit.y -= evt.getPos().getY();
+            hit.z -= evt.getPos().getZ();
+            if (te.lift != null)
+            {
+                int button = te.getButtonFromClick(evt.getFace(), (float) hit.x, (float) hit.y, (float) hit.z);
+                if (te.lift.floors[button - 1] != -1 && button == te.floor)
+                {
+                    te.lift.floors[button - 1] = -1;
+                    Entity lift = te.lift;
+                    te.lift = null;
+                    te.liftID = null;
+                    te.floor = 0;
+                    PacketHandler.sendTileUpdate(te);
+                    PacketHandler.sendEntityUpdate(lift);
+                }
+            }
+        }
     }
 
     @EventHandler
