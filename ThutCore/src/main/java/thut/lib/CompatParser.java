@@ -12,6 +12,9 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 public class CompatParser
 {
 
@@ -35,28 +38,37 @@ public class CompatParser
             File scannedDir = new File(
                     java.net.URLDecoder.decode(scannedUrl.getFile(), Charset.defaultCharset().name()));
 
-            List<Class<?>> classes = new ArrayList<Class<?>>();
+            Set<Class<?>> classes = Sets.newHashSet();
+
+            classes.addAll(findInFolder(new File("./mods/"), scannedPackage));
+
             if (scannedDir.exists()) for (File file : scannedDir.listFiles())
             {
                 classes.addAll(findInFolder(file, scannedPackage));
             }
-            else if (scannedDir.toString().contains("file:") && scannedDir.toString().contains(".jar"))
+            return Lists.newArrayList(classes);
+        }
+
+        private static List<Class<?>> findInFolder(File file, String scannedPackage)
+        {
+            List<Class<?>> classes = new ArrayList<Class<?>>();
+
+            if (file.toString().endsWith(".jar"))
             {
-                String name = scannedDir.toString();
-                String pack = name.split("!")[1].replace(File.separatorChar, SLASH).substring(1) + SLASH;
-                name = name.replace("file:", "");
-                name = name.replaceAll("(.jar)(.*)", ".jar");
-                scannedDir = new File(name);
                 try
                 {
-                    ZipFile zip = new ZipFile(scannedDir);
+                    String name = file.toString();
+                    String pack = scannedPackage.replace(DOT, SLASH) + SLASH;
+                    name = name.replace("file:", "");
+                    name = name.replaceAll("(.jar)(.*)", ".jar");
+                    file = new File(name);
+                    ZipFile zip = new ZipFile(file);
                     Enumeration<? extends ZipEntry> entries = zip.entries();
-                    int n = 0;
-                    while (entries.hasMoreElements() && n < 10)
+                    while (entries.hasMoreElements())
                     {
                         ZipEntry entry = entries.nextElement();
                         String s = entry.getName();
-                        if (s.contains(pack) && s.endsWith(CLASS_SUFFIX))
+                        if (s.startsWith(pack) && s.endsWith(CLASS_SUFFIX))
                         {
                             try
                             {
@@ -74,30 +86,30 @@ public class CompatParser
                     e.printStackTrace();
                 }
             }
-            return classes;
-        }
-
-        private static List<Class<?>> findInFolder(File file, String scannedPackage)
-        {
-            List<Class<?>> classes = new ArrayList<Class<?>>();
-            String resource = scannedPackage + DOT + file.getName();
-            if (file.isDirectory())
+            else
             {
-                for (File child : file.listFiles())
+                String resource = file.toString().replaceAll("\\" + System.getProperty("file.separator"), ".");
+                if (resource.indexOf(scannedPackage) != -1)
+                    resource = resource.substring(resource.indexOf(scannedPackage), resource.length());
+                if (file.isDirectory())
                 {
-                    classes.addAll(findInFolder(child, resource));
+                    for (File child : file.listFiles())
+                    {
+                        classes.addAll(findInFolder(child, scannedPackage));
+                    }
                 }
-            }
-            else if (resource.endsWith(CLASS_SUFFIX))
-            {
-                int endIndex = resource.length() - CLASS_SUFFIX.length();
-                String className = resource.substring(0, endIndex);
-                try
+                else if (resource.endsWith(CLASS_SUFFIX))
                 {
-                    classes.add(Class.forName(className));
-                }
-                catch (Throwable ignore)
-                {
+                    int endIndex = resource.length() - CLASS_SUFFIX.length();
+                    String className = resource.substring(0, endIndex);
+                    try
+                    {
+                        classes.add(Class.forName(className));
+                    }
+                    catch (Throwable ignore)
+                    {
+                        System.out.println(ignore);
+                    }
                 }
             }
             return classes;
