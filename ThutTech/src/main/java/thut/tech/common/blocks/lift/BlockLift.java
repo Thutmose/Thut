@@ -1,7 +1,6 @@
 package thut.tech.common.blocks.lift;
 
 import java.util.Random;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -27,7 +26,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -38,7 +36,6 @@ import thut.api.network.PacketHandler;
 import thut.lib.CompatWrapper;
 import thut.tech.Reference;
 import thut.tech.common.TechCore;
-import thut.tech.common.entity.EntityLift;
 import thut.tech.common.items.ItemLinker;
 
 public class BlockLift extends Block implements ITileEntityProvider
@@ -215,23 +212,17 @@ public class BlockLift extends Block implements ITileEntityProvider
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
             EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)
     {
-        boolean linkerOrStick = heldItem != null
+        boolean linkerOrStick = CompatWrapper.isValid(heldItem)
                 && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
                         || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                         || heldItem.getItem() instanceof ItemLinker || heldItem.getItem() == Items.STICK);
 
-        if (heldItem != null && playerIn.isSneaking() && !linkerOrStick)
-        {
-            System.out.println(heldItem);
-            return false;
-        }
-        else if (heldItem != null && !linkerOrStick && side == EnumFacing.DOWN)
+        if (CompatWrapper.isValid(heldItem) && !linkerOrStick && side == EnumFacing.DOWN)
         {
             Block b = Block.getBlockFromItem(heldItem.getItem());
             if (b != null && state.getValue(VARIANT) == EnumType.CONTROLLER)
             {
                 IBlockState newState = CompatWrapper.getBlockStateFromMeta(b, heldItem.getItemDamage());
-                System.out.println(newState);
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                 te.copiedState = newState;
                 return true;
@@ -246,7 +237,8 @@ public class BlockLift extends Block implements ITileEntityProvider
         else if (state.getValue(VARIANT) == EnumType.CONTROLLER)
         {
             TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-            if (te != null && (!te.isSideOn(side) || (heldItem != null && heldItem.getItem() == Items.STICK)))
+            if (te != null
+                    && (!te.isSideOn(side) || (CompatWrapper.isValid(heldItem) && heldItem.getItem() == Items.STICK)))
             {
                 if (linkerOrStick)
                 {
@@ -260,40 +252,11 @@ public class BlockLift extends Block implements ITileEntityProvider
             }
             else if (te != null && te.isSideOn(side))
             {
-                if (heldItem != null && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
-                        || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
-                        || heldItem.getItem() instanceof ItemLinker))
+                if (CompatWrapper.isValid(heldItem)
+                        && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
+                                || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
+                                || heldItem.getItem() instanceof ItemLinker))
                 {
-                    if (heldItem.getItem() instanceof ItemLinker && playerIn.isSneaking() && heldItem.hasTagCompound())
-                    {
-                        UUID liftID;
-                        try
-                        {
-                            liftID = UUID.fromString(heldItem.getTagCompound().getString("lift"));
-                            EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
-                            if (lift != null)
-                            {
-                                if (side == EnumFacing.UP)
-                                {
-                                    te.callPanel = !te.callPanel;
-                                    String message = "msg.callPanel.name";
-                                    if (!worldIn.isRemote)
-                                        playerIn.sendMessage(new TextComponentTranslation(message, te.callPanel));
-                                    return true;
-                                }
-                                te.setLift(lift);
-                                int floor = te.getButtonFromClick(side, hitX, hitY, hitZ);
-                                te.setFloor(floor);
-                                String message = "msg.floorSet.name";
-                                if (!worldIn.isRemote)
-                                    playerIn.sendMessage(new TextComponentTranslation(message, floor));
-                                return true;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                        }
-                    }
                     if (!worldIn.isRemote)
                     {
                         te.setSidePage(side, (te.getSidePage(side) + 1) % 4);
