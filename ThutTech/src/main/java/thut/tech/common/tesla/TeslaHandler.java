@@ -3,7 +3,9 @@ package thut.tech.common.tesla;
 import net.darkhax.tesla.api.ITeslaConsumer;
 import net.darkhax.tesla.api.ITeslaHolder;
 import net.darkhax.tesla.api.ITeslaProducer;
+import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -33,9 +35,9 @@ public class TeslaHandler
     }
 
     @SubscribeEvent
-    public void onTileEntityCapabilityAttach(AttachCapabilitiesEvent.TileEntity event)
+    public void onTileEntityCapabilityAttach(AttachCapabilitiesEvent<TileEntity> event)
     {
-        if (event.getTileEntity() instanceof TileEntityLiftAccess)
+        if (event.getObject() instanceof TileEntityLiftAccess)
         {
             class Provider
                     implements ICapabilitySerializable<NBTTagCompound>, ITeslaConsumer, ITeslaProducer, ITeslaHolder
@@ -134,9 +136,9 @@ public class TeslaHandler
     }
 
     @SubscribeEvent
-    public void onEntityCapabilityAttach(AttachCapabilitiesEvent.Entity event)
+    public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
     {
-        if (event.getEntity() instanceof EntityLift)
+        if (event.getObject() instanceof EntityLift)
         {
             class Provider implements ICapabilitySerializable<NBTTagCompound>, ITeslaConsumer, ITeslaHolder
             {
