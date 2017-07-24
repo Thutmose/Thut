@@ -20,6 +20,8 @@ public class Config extends ConfigBase
     public boolean       cooldownMeter = true;
     @Configure(category = "misc")
     public boolean       autoThrow     = true;
+    @Configure(category = "misc")
+    public boolean       trainerCard   = false;
 
     public Config()
     {

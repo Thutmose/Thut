@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -31,6 +30,7 @@ import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
 import pokecube.core.interfaces.PokecubeMod;
+import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.moves.MovesUtils;
 import pokecube.core.utils.Tools;
 import thut.lib.CompatWrapper;
@@ -53,7 +53,7 @@ public class GuiBattleHandler
         GuiDisplayPokecubeInfo.guiDims[0] = 60;
         GuiDisplayPokecubeInfo.applyTransform(PokecubeCore.core.getConfig().guiRef, PokecubeMod.core.getConfig().guiPos,
                 GuiDisplayPokecubeInfo.guiDims, PokecubeMod.core.getConfig().guiSize);
-        EntityLivingBase entity = (EntityLivingBase) pokemob;
+        EntityLivingBase entity = pokemob.getEntity();
         float scale = 1.5f;
         GlStateManager.scale(scale, scale, scale);
         GL11.glTranslated(9, -2, 0);
@@ -197,7 +197,7 @@ public class GuiBattleHandler
     {
         IPokemob pokemob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
         if (pokemob == null) return;
-        EntityLivingBase entity = ((EntityLiving) pokemob).getAttackTarget();
+        EntityLivingBase entity = pokemob.getEntity().getAttackTarget();
         if (entity == null) return;
         GlStateManager.pushMatrix();
         GL11.glTranslated(27, 6, 0);
@@ -255,8 +255,7 @@ public class GuiBattleHandler
 
     private void drawHealth(EntityLivingBase entity)
     {
-        IPokemob pokemob = null;
-        if (entity instanceof IPokemob) pokemob = (IPokemob) entity;
+        IPokemob pokemob = CapabilityPokemob.getPokemobFor(entity);
         if (entity == null) { return; }
         Minecraft mc = Minecraft.getMinecraft();
         processing:
@@ -416,8 +415,8 @@ public class GuiBattleHandler
             if (isOwner) mc.fontRenderer.drawString(healthStr,
                     (int) (size / (s * s1)) - mc.fontRenderer.getStringWidth(healthStr) / 2, h, 0xFFFFFFFF);
             mc.fontRenderer.drawString(lvlStr, 2, h, 0xFFFFFF);
-            mc.fontRenderer.drawString(gender,
-                    (int) (size / (s * s1) * 2) - 2 - mc.fontRenderer.getStringWidth(gender), h - 1, colour);
+            mc.fontRenderer.drawString(gender, (int) (size / (s * s1) * 2) - 2 - mc.fontRenderer.getStringWidth(gender),
+                    h - 1, colour);
             GlStateManager.popMatrix();
 
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);

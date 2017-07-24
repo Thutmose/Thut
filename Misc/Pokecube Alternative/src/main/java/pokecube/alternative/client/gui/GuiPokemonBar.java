@@ -87,7 +87,7 @@ public class GuiPokemonBar extends Gui
                 try
                 {
                     pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
-                    entity = (EntityLiving) pokemob;
+                    entity = pokemob.getEntity();
                 }
                 catch (Exception e)
                 {
@@ -98,11 +98,11 @@ public class GuiPokemonBar extends Gui
             if (pokemob == null || entity == null) continue;
 
             // Set the mob's stance and rotation
-            ((EntityLiving) pokemob).rotationYaw = 0;
-            ((EntityLiving) pokemob).rotationPitch = 0;
-            ((EntityLiving) pokemob).rotationYawHead = 0;
+            entity.rotationYaw = 0;
+            entity.rotationPitch = 0;
+            entity.rotationYawHead = 0;
             pokemob.setPokemonAIState(IMoveConstants.SITTING, true);
-            ((EntityLiving) pokemob).onGround = true;
+            entity.onGround = true;
 
             // Get the amount to scale the mob by
             float mobScale = pokemob.getSize();
@@ -172,10 +172,9 @@ public class GuiPokemonBar extends Gui
             GL11.glScalef(-zoom, zoom, zoom);
             GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
             RenderHelper.enableStandardItemLighting();
-            GL11.glTranslatef(0.0F, (float) ((EntityLiving) pokemob).getYOffset(), 0.0F);
+            GL11.glTranslatef(0.0F, (float) entity.getYOffset(), 0.0F);
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
-            Minecraft.getMinecraft().getRenderManager().doRenderEntity(((EntityLiving) pokemob), 0, 0, 0, 0, 1.5F,
-                    false);
+            Minecraft.getMinecraft().getRenderManager().doRenderEntity(entity, 0, 0, 0, 0, 1.5F, false);
             RenderHelper.disableStandardItemLighting();
             GlStateManager.disableRescaleNormal();
             GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);

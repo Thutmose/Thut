@@ -107,7 +107,7 @@ public class GuiCard extends InventoryEffectRenderer
             if (!CompatWrapper.isValid(pokemonItemstack)) continue;
             IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.world);
             if (pokemob == null) continue;
-            EntityLiving entity = (EntityLiving) pokemob;
+            EntityLiving entity = pokemob.getEntity();
 
             // Set the mob's stance and rotation
             entity.rotationYaw = 0;

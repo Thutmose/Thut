@@ -33,6 +33,7 @@ import pokecube.core.events.RecallEvent;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokecube;
 import pokecube.core.interfaces.IPokemob;
+import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.api.maths.Vector3;
 import thut.core.common.handlers.PlayerDataHandler;
@@ -154,7 +155,7 @@ public class EventHandlerCommon
     public void EntityHurt(LivingHurtEvent event)
     {
         if (Config.instance.autoThrow && event.getEntityLiving() instanceof EntityPlayer
-                && event.getSource().getImmediateSource() instanceof IPokemob)
+                && CapabilityPokemob.getPokemobFor(event.getSource().getImmediateSource()) != null)
         {
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
@@ -272,7 +273,7 @@ public class EventHandlerCommon
                 InventoryPC.addPokecubeToPC(pokemonStack, player.getEntityWorld());
             }
             syncPokemon(player);
-            ((Entity) pokemon).setDead();
+            pokemon.getEntity().setDead();
             pokemon.setPokemonOwner((UUID) null);
             MinecraftForge.EVENT_BUS.post(new AddCube.OnRecall(player, pokemonStack));
             event.setCanceled(true);

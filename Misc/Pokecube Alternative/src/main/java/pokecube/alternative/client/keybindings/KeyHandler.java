@@ -6,13 +6,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.Entity;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import pokecube.alternative.Config;
 import pokecube.alternative.client.gui.GuiPokemonBar;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
@@ -76,7 +76,7 @@ public class KeyHandler
             IPokemob pokemob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
             if (pokemob != null)
             {
-                PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.USEITEM, ((Entity) pokemob).getEntityId());
+                PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.USEITEM, pokemob.getEntity().getEntityId());
                 PacketHandler.INSTANCE.sendToServer(packet);
             }
         }
@@ -90,7 +90,7 @@ public class KeyHandler
             GuiPokemonBar.showAllTags = (state & 2) > 0;
             GuiPokemonBar.showSelectedTag = (state & 1) > 0;
         }
-        if (openCard.isPressed())
+        if (Config.instance.trainerCard && openCard.isPressed())
         {
             PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.OPENCARD, -1);
             PacketHandler.INSTANCE.sendToServer(packet);
@@ -111,7 +111,7 @@ public class KeyHandler
                 {
                     if (mob != null)
                     {
-                        PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.RECALL, ((Entity) mob).getEntityId());
+                        PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.RECALL, mob.getEntity().getEntityId());
                         PacketHandler.INSTANCE.sendToServer(packet);
                     }
                     ticks = 0;

@@ -14,6 +14,7 @@ import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokemob;
+import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import thut.lib.CompatWrapper;
 
 public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMessage>
@@ -107,9 +108,10 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
             else
             {
                 Entity mob = player.world.getEntityByID(id);
-                if (mob instanceof IPokemob)
+                IPokemob pokemob = CapabilityPokemob.getPokemobFor(mob);
+                if (pokemob != null)
                 {
-                    ((IPokemob) mob).returnToPokecube();
+                    pokemob.returnToPokecube();
                 }
                 else
                 {
