@@ -51,22 +51,24 @@ public class GuiPokemonBar extends Gui
                 new int[] { 130, 25 }, Config.instance.scale);
         ResourceLocation bar = new ResourceLocation(Reference.MODID, "textures/gui/pokemon_hotbar.png");
         this.mc.renderEngine.bindTexture(bar);
-        int texW = 25;
-        int texH = 130;
+        int texW = 27;
+        int texH = 167;
         // Render the bar
-        int xPos = 0; // Distance from left to start
+        int xPos = 6; // Distance from left to start
         int yPos = -texH / 2; // Distance from top to start
 
+        int x0 = 11;
+        int y0 = 0;
         // yPos = 0;
 
-        this.drawTexturedModalRect(xPos, yPos, 0, 0, texW, texH);
+        this.drawTexturedModalRect(xPos, yPos, x0, y0, texW, texH);
         // Render the arrow
         IPokemobBelt capability = BeltPlayerData.getBelt(Minecraft.getMinecraft().player);
         int selected = capability.getSlot();
-        int selectorSize = 21;
+        int selectorSize = 28;
         int selectorXPos = 0;
         int selectorYPos = (yPos + 0) + selectorSize * (selected);
-        this.drawTexturedModalRect(selectorXPos, selectorYPos, 0, 130, 25, 25);
+        this.drawTexturedModalRect(selectorXPos, selectorYPos, -xPos-1, texH+1, 25, 25);
 
         boolean infoBarsForAll = showAllTags;
         boolean infoBarForSelected = showSelectedTag;
@@ -75,7 +77,7 @@ public class GuiPokemonBar extends Gui
         for (int pokemonNumber = 0; pokemonNumber < 6; pokemonNumber++)
         {
             // Set the amount to shift by for the mob's index
-            i = 12 + xPos;
+            i = 14 + xPos;
             j = (yPos - 1) + (21 + selectorSize * pokemonNumber);
 
             EntityLiving entity = null;
@@ -118,12 +120,12 @@ public class GuiPokemonBar extends Gui
             if (infoBarsForAll || (infoBarForSelected && selected == pokemonNumber))
             {
                 this.mc.renderEngine.bindTexture(bar);
-                selectorXPos = i + 12;
+                selectorXPos = i + 9;
                 selectorYPos = j - 20;
                 ITextComponent nameComp = pokemob.getPokemonDisplayName();
                 float s = 0.75F;
                 float plateSize = 31;
-                this.drawTexturedModalRect(selectorXPos, selectorYPos, 25, 0, 71, 25);
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 40, 0, 71, 26);
                 GL11.glPushMatrix();
                 // translate to start, then scale.
                 GL11.glTranslatef(i + 12 + 0.5f, j - 14, 0);
@@ -150,11 +152,11 @@ public class GuiPokemonBar extends Gui
                 GL11.glPopMatrix();
 
                 // Draw health
-                selectorXPos = i + 13;
-                selectorYPos = j - 7;
+                selectorXPos = i + 18;
+                selectorYPos = j - 6;
                 this.mc.renderEngine.bindTexture(bar);
                 float relHp = entity.getHealth() / entity.getMaxHealth();
-                this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 159, (int) (56 * relHp), 3);
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 197, (int) (56 * relHp), 3);
 
                 // Draw EXP
                 int exp = pokemob.getExp() - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
@@ -162,7 +164,7 @@ public class GuiPokemonBar extends Gui
                         - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
                 if (pokemob.getLevel() == 100) maxExp = exp = 1;
                 float expSize = exp / maxExp;
-                this.drawTexturedModalRect(selectorXPos, selectorYPos + 3, 2, 167, (int) (53 * expSize), 2);
+                this.drawTexturedModalRect(selectorXPos - 2, selectorYPos + 6, 8, 205, (int) (53 * expSize), 2);
             }
 
             // GL Calls to actually draw pokemob
