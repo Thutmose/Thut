@@ -1,6 +1,7 @@
 package thut.lib;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -180,7 +181,7 @@ public class CompatWrapper
 
     public static Type getBiomeType(String name)
     {
-        return byName.get(name.toUpperCase());
+        return byName.get(name.toUpperCase(Locale.ENGLISH));
     }
 
     public static boolean isOfType(Biome biome, BiomeDictionary.Type type)
