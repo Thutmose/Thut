@@ -62,16 +62,18 @@ public class GuiPokemonBar extends Gui
         // yPos = 0;
 
         this.drawTexturedModalRect(xPos, yPos, x0, y0, texW, texH);
-        // Render the arrow
-        IPokemobBelt capability = BeltPlayerData.getBelt(Minecraft.getMinecraft().player);
-        int selected = capability.getSlot();
-        int selectorSize = 28;
-        int selectorXPos = 0;
-        int selectorYPos = (yPos + 0) + selectorSize * (selected);
-        this.drawTexturedModalRect(selectorXPos, selectorYPos, -xPos-1, texH+1, 25, 25);
 
         boolean infoBarsForAll = showAllTags;
         boolean infoBarForSelected = showSelectedTag;
+
+        IPokemobBelt capability = BeltPlayerData.getBelt(Minecraft.getMinecraft().player);
+        int selected = capability.getSlot();
+        int selectorSize = 28;
+
+        // Render the arrow
+        int selectorXPos = 0;
+        int selectorYPos = (yPos + 0) + selectorSize * (selected);
+        this.drawTexturedModalRect(selectorXPos, selectorYPos, -xPos - 1, texH + 1, 30, 25);
 
         // Render the pokemon
         for (int pokemonNumber = 0; pokemonNumber < 6; pokemonNumber++)
@@ -116,16 +118,35 @@ public class GuiPokemonBar extends Gui
             int i1 = 15728880;
             int j1 = i1 % 65536;
             int k1 = i1 / 65536;
-
             if (infoBarsForAll || (infoBarForSelected && selected == pokemonNumber))
             {
+                // Draw background plate.
                 this.mc.renderEngine.bindTexture(bar);
-                selectorXPos = i + 9;
+                selectorXPos = i + 7;
                 selectorYPos = j - 20;
                 ITextComponent nameComp = pokemob.getPokemonDisplayName();
                 float s = 0.75F;
-                float plateSize = 31;
-                this.drawTexturedModalRect(selectorXPos, selectorYPos, 40, 0, 71, 26);
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 38, 0, 75, 26);
+                this.drawTexturedModalRect(0, selectorYPos, 0, 0, 10, 26);
+
+                // Draw health
+                selectorXPos = i + 18;
+                selectorYPos = j - 6;
+                this.mc.renderEngine.bindTexture(bar);
+                int healthLength = 56;
+                float relHp = entity.getHealth() / entity.getMaxHealth();
+                this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 197, (int) (healthLength * relHp), 3);
+
+                // Draw EXP
+                int exp = pokemob.getExp() - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
+                float maxExp = Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel() + 1)
+                        - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
+                if (pokemob.getLevel() == 100) maxExp = exp = 1;
+                int expLength = 52;
+                float expSize = exp / maxExp;
+                this.drawTexturedModalRect(selectorXPos - 2, selectorYPos + 6, 3, 205, (int) (expLength * expSize), 2);
+
+                // Draw text things over
                 GL11.glPushMatrix();
                 // translate to start, then scale.
                 GL11.glTranslatef(i + 12 + 0.5f, j - 14, 0);
@@ -134,37 +155,27 @@ public class GuiPokemonBar extends Gui
                 String name = I18n.format(nameComp.getFormattedText());
                 name = mc.fontRenderer.trimStringToWidth(name, 55);
                 mc.fontRenderer.drawString(name, 2, 0, 0xFFFFFF);
+                // Undo scaling
+                GL11.glScaled(1 / s, 1 / s, 1 / s);
+
                 // Draw gender
-                int colour = pokemob.getSexe() == IPokemob.MALE ? 0x0011CC : 0xCC5555;
+                int colour = pokemob.getSexe() == IPokemob.MALE ? 0x0011FF : 0xCC5555;
                 String gender = pokemob.getSexe() == IPokemob.MALE ? "\u2642"
                         : pokemob.getSexe() == IPokemob.FEMALE ? "\u2640" : "";
-                mc.fontRenderer.drawString(gender,
-                        (int) (plateSize / (s * 1) * 2) - 2 - mc.fontRenderer.getStringWidth(gender), 8, colour);
+                int sexX = -30;
+                int sexY = 10;
+                mc.fontRenderer.drawString(gender, sexX, sexY, colour);
 
                 // Draw Level
-                GL11.glScaled(1 / s, 1 / s, 1 / s);
-                s = 0.5f;
+                s = 0.75f;
                 GL11.glScaled(s, s, s);
                 GL11.glTranslatef(0, 0.5f, 0);
                 String lvlStr = "L." + pokemob.getLevel();
-                int lvlLength = mc.fontRenderer.getStringWidth(lvlStr);
-                mc.fontRenderer.drawString(lvlStr, (int) (plateSize / (s * 1) * 2) - 3 - lvlLength, 3, 0xFFFFFF);
+
+                int lvlx = (int) 85 - mc.fontRenderer.getStringWidth(lvlStr);
+                int lvly = 0;
+                mc.fontRenderer.drawString(lvlStr, lvlx, lvly, 0xffb80e);
                 GL11.glPopMatrix();
-
-                // Draw health
-                selectorXPos = i + 18;
-                selectorYPos = j - 6;
-                this.mc.renderEngine.bindTexture(bar);
-                float relHp = entity.getHealth() / entity.getMaxHealth();
-                this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 197, (int) (56 * relHp), 3);
-
-                // Draw EXP
-                int exp = pokemob.getExp() - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
-                float maxExp = Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel() + 1)
-                        - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
-                if (pokemob.getLevel() == 100) maxExp = exp = 1;
-                float expSize = exp / maxExp;
-                this.drawTexturedModalRect(selectorXPos - 2, selectorYPos + 6, 8, 205, (int) (53 * expSize), 2);
             }
 
             // GL Calls to actually draw pokemob

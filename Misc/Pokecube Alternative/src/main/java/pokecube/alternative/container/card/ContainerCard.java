@@ -12,11 +12,12 @@ public class ContainerCard extends Container
     {
         InventoryBasic inv = PlayerDataHandler.getInstance().getPlayerData(player)
                 .getData(CardPlayerData.class).inventory;
-        int dx = 9;
+        int dx = 14;
         int dy = 69;
+        int size = 19;
         for (int i1 = 0; i1 < 8; ++i1)
         {
-            this.addSlotToContainer(new Slot(inv, i1, dx + i1 * 20, dy)
+            this.addSlotToContainer(new Slot(inv, i1, dx + i1 * size, dy)
             {
                 @Override
                 public boolean canTakeStack(EntityPlayer playerIn)

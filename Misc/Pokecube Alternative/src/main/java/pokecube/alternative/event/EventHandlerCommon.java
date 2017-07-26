@@ -57,7 +57,8 @@ public class EventHandlerCommon
         if (CompatWrapper.isValid(item) && item.hasTagCompound())
         {
         }
-        if (CompatWrapper.isValid(item) && item.getItem() instanceof ItemBadge && item.hasTagCompound())
+        if (Config.instance.trainerCard && CompatWrapper.isValid(item) && item.getItem() instanceof ItemBadge
+                && item.hasTagCompound())
         {
             CardPlayerData data = PlayerDataHandler.getInstance().getPlayerData(player).getData(CardPlayerData.class);
             NBTTagCompound tag = item.getTagCompound();
@@ -65,28 +66,28 @@ public class EventHandlerCommon
             int index = -1;
             switch (type)
             {
-            case "badgeelectric":
+            case "badgesteel":
                 index = 0;
                 break;
-            case "badgerock":
+            case "badgefighting":
                 index = 1;
                 break;
-            case "badgegrass":
+            case "badgeflying":
                 index = 2;
                 break;
-            case "badgenormal":
+            case "badgeground":
                 index = 3;
                 break;
-            case "badgefire":
+            case "badgeice":
                 index = 4;
                 break;
-            case "badgepsychic":
+            case "badgeghost":
                 index = 5;
                 break;
-            case "badgedragon":
+            case "badgefire":
                 index = 6;
                 break;
-            case "badgewater":
+            case "badgebug":
                 index = 7;
                 break;
             }

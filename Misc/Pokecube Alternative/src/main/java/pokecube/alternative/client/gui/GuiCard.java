@@ -88,21 +88,28 @@ public class GuiCard extends InventoryEffectRenderer
         int i = this.guiLeft;
         int j = this.guiTop;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
-        GuiInventory.drawEntityOnScreen(i + 155, j + 58, 25, i + 51 - this.oldMouseX, j + 75 - 50 - this.oldMouseY,
-                this.mc.player);
+
+        int playerX = 100;
+        int playerY = 63;
+        GuiInventory.drawEntityOnScreen(i + playerX, j + playerY, 25, i + 51 - this.oldMouseX,
+                j + 75 - 50 - this.oldMouseY, this.mc.player);
         IPokemobBelt belt = BeltPlayerData.getBelt(this.mc.player);
-        int xPos = 135;
-        int yPos = 15;
-        int selectorSize = 9;
         String name = this.mc.player.getDisplayNameString();
         drawString(fontRenderer, name, i + 7, j + 28, 0xffffff);
         String num = "" + CaptureStats.getNumberUniqueCaughtBy(this.mc.player.getUniqueID());
         drawString(fontRenderer, num, i + 7, j + 45, 0xffffff);
-
+        float scaleA = 12;
+        int selectorSize = 20;
+        int x0 = 133;
+        int y0 = 20;
+        int xPos = x0;
+        int yPos = y0;
+        int columnGap = 5;
         for (int i1 = 0; i1 < 6; i1++)
         {
             // Set the amount to shift by for the mob's index
-            yPos = 15 + i1 * selectorSize;
+            yPos = y0 + (i1 % 3) * selectorSize;
+            xPos = x0 + selectorSize * (i1 / 3) + (i1 / 3) * columnGap;
             ItemStack pokemonItemstack = belt.getCube(i1);
             if (!CompatWrapper.isValid(pokemonItemstack)) continue;
             IPokemob pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack, mc.world);
@@ -120,7 +127,7 @@ public class GuiCard extends InventoryEffectRenderer
             float mobScale = pokemob.getSize();
             float size = Math.max(pokemob.getPokedexEntry().width * mobScale,
                     pokemob.getPokedexEntry().height * mobScale);
-            float zoom = (float) (7f / Math.pow(size, 0.7));
+            float zoom = (float) (scaleA / Math.pow(size, 0.7));
 
             // Brightness
             int i2 = 15728880;
