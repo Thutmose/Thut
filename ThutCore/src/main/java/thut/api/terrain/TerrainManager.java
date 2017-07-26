@@ -53,7 +53,6 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkLoadEvent(ChunkDataEvent.Load evt)
     {
-        PokecubeMod.log(evt.getChunk().xPosition + " " + evt.getChunk().zPosition);
         try
         {
             WorldTerrain terrain = TerrainManager.getInstance().getTerrain(evt.getWorld());
