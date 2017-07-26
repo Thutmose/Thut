@@ -43,17 +43,17 @@ public class WorldTerrain
         }
     }
 
-    World                world;
-    public final int     dimID;
+    World            world;
+    public final int dimID;
 
-    private TerrainMap   terrainMap = new TerrainMap();
-    protected TerrainMap spawnMap   = new TerrainMap();
+    TerrainMap       terrainMap = new TerrainMap();
 
     public WorldTerrain(int dimID)
     {
         this.dimID = dimID;
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) this.world = server.worldServerForDimension(dimID);
+        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
+            this.world = server.worldServerForDimension(dimID);
         else this.world = ThutCore.proxy.getWorld();
     }
 
@@ -61,8 +61,7 @@ public class WorldTerrain
     {
         if (terrain != null)
         {
-            if (world.isSpawnChunk(terrain.chunkX, terrain.chunkZ)) spawnMap.setSegment(terrain, terrain.pos);
-            else terrainMap.setSegment(terrain, terrain.pos);
+            terrainMap.setSegment(terrain, terrain.pos);
         }
     }
 
@@ -82,9 +81,7 @@ public class WorldTerrain
     public TerrainSegment getTerrain(BlockPos pos, boolean saving)
     {
         TerrainSegment ret = null;
-        boolean spawn = world.isSpawnChunk(pos.getX(), pos.getZ());
-        if (spawn) ret = spawnMap.getSegment(pos);
-        else ret = terrainMap.getSegment(pos);
+        ret = terrainMap.getSegment(pos);
         if (ret == null && !saving)
         {
             // TODO here we need to check the appropriate mca file for data, and
@@ -138,8 +135,7 @@ public class WorldTerrain
             if (ret == null)
             {
                 ret = new TerrainSegment(pos.getX(), pos.getY(), pos.getZ());
-                if (spawn) spawnMap.setSegment(ret, pos.toImmutable());
-                else terrainMap.setSegment(ret, pos.toImmutable());
+                terrainMap.setSegment(ret, pos.toImmutable());
             }
         }
         return ret;

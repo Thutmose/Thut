@@ -175,13 +175,13 @@ public class ThutCore
 
             }
         }, DefaultGenetics.class);
+        TerrainManager.getInstance();
     }
 
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event)
     {
         event.registerServerCommand(new ConfigCommand());
-        TerrainManager.getInstance();
     }
 
     @EventHandler
