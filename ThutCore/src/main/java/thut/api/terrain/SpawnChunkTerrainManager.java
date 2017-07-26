@@ -3,18 +3,13 @@ package thut.api.terrain;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.PooledMutableBlockPos;
 import thut.api.terrain.WorldTerrain.TerrainMap;
 import thut.core.common.handlers.PlayerDataHandler;
@@ -31,41 +26,6 @@ public class SpawnChunkTerrainManager
         lastSaves.clear();
     }
 
-    public static void save(int dim, WorldTerrain world) throws IOException
-    {
-        long last = lastSaves.get(dim) != null ? lastSaves.get(dim) : 0;
-        if (last > System.currentTimeMillis()) return;
-        lastSaves.put(dim, System.currentTimeMillis() + 1000);
-        TerrainMap terrain = world.spawnMap;
-        NBTTagCompound data = new NBTTagCompound();
-        NBTTagList terrainList = new NBTTagList();
-        Set<BlockPos> keys = Sets.newHashSet();
-        synchronized (terrain.terrain.keySet())
-        {
-            keys.addAll(terrain.terrain.keySet());
-        }
-        int i = 0;
-        for (BlockPos pos : keys)
-        {
-            TerrainSegment segment = terrain.terrain.get(pos);
-            if (segment == null) continue;
-            NBTTagCompound tag = new NBTTagCompound();
-            segment.saveToNBT(tag);
-            if (!tag.hasKey("x")) continue;
-            if (i != 0) tag.removeTag("ids");
-            terrainList.appendTag(tag);
-            i++;
-        }
-        data.setTag("Terrain", terrainList);
-        File file = PlayerDataHandler.getFileForUUID("Terrain", "dim-" + dim);
-        if (file != null)
-        {
-            FileOutputStream fileoutputstream = new FileOutputStream(file);
-            CompressedStreamTools.writeCompressed(data, fileoutputstream);
-            fileoutputstream.close();
-        }
-    }
-
     public static void load(int dim, WorldTerrain world)
     {
         try
@@ -76,7 +36,7 @@ public class SpawnChunkTerrainManager
                 FileInputStream fileinputstream = new FileInputStream(file);
                 NBTTagCompound data = CompressedStreamTools.readCompressed(fileinputstream);
                 NBTTagList list = (NBTTagList) data.getTag("Terrain");
-                TerrainMap terrain = world.spawnMap;
+                TerrainMap terrain = world.terrainMap;
                 PooledMutableBlockPos pos = PooledMutableBlockPos.retain(0, 0, 0);
                 for (int i = 0; i < list.tagCount(); i++)
                 {
