@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import pokecube.core.interfaces.PokecubeMod;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 import thut.api.network.PacketHandler.MessageClient;
@@ -30,8 +31,7 @@ public class TerrainManager
 
     public static void clear()
     {
-        if (terrain != null) MinecraftForge.EVENT_BUS.unregister(terrain);
-        terrain = null;
+        terrain.map.clear();
     }
 
     public static TerrainManager getInstance()
@@ -53,6 +53,7 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkLoadEvent(ChunkDataEvent.Load evt)
     {
+        PokecubeMod.log(evt.getChunk().xPosition + " " + evt.getChunk().zPosition);
         try
         {
             WorldTerrain terrain = TerrainManager.getInstance().getTerrain(evt.getWorld());
@@ -87,11 +88,6 @@ public class TerrainManager
         if (terrain.world == null || terrain.world.isRemote) return;
         try
         {
-            if (terrain.world.isSpawnChunk(evt.getChunk().x, evt.getChunk().z))
-            {
-                SpawnChunkTerrainManager.save(terrain.dimID, terrain);
-                return;
-            }
             NBTTagCompound nbt = evt.getData();
             NBTTagCompound terrainData = new NBTTagCompound();
             terrain.saveTerrain(terrainData, evt.getChunk().x, evt.getChunk().z);
@@ -181,8 +177,7 @@ public class TerrainManager
     @SubscribeEvent
     public void WorldSaveEvent(Save evt) throws IOException
     {
-        SpawnChunkTerrainManager.save(evt.getWorld().provider.getDimension(),
-                TerrainManager.getInstance().getTerrain(evt.getWorld()));
+
     }
 
 }
