@@ -34,9 +34,15 @@ public class SkeletonAnimation
             String[] args = line.split(" ");
             int id = Integer.parseInt(args[0]);
             Matrix4f matrix;
-            matrix = VectorMath.fromVector6f(//
-                    Float.parseFloat(args[1]), Float.parseFloat(args[2]), Float.parseFloat(args[3]),
-                    Float.parseFloat(args[4]), Float.parseFloat(args[5]), Float.parseFloat(args[6]));
+
+            float xl = Float.parseFloat(args[1]);
+            float yl = Float.parseFloat(args[2]);
+            float zl = Float.parseFloat(args[3]);
+
+            float xr = Float.parseFloat(args[4]);
+            float yr = Float.parseFloat(args[5]);
+            float zr = Float.parseFloat(args[6]);
+            matrix = VectorMath.fromVector6f(xl, yl, zl, xr, yr, zr);
             positions.put(id, matrix);
             inversePositions.put(id, Matrix4f.invert(matrix, null));
             positionsOriginal.put(id, new Matrix4f(matrix));
@@ -77,6 +83,7 @@ public class SkeletonAnimation
             return time + "=" + positions;
         }
     }
+
     public final Skeleton           skeleton;
     public int                      currentIndex   = 0;
     public int                      lastIndex;

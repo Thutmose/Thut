@@ -143,6 +143,7 @@ public class Skeleton
             return id + " " + name + " " + parentId;
         }
     }
+
     public static class BoneVertex extends Vertex
     {
         private final Vector4f originalPos;
@@ -223,6 +224,7 @@ public class Skeleton
             return id + ":" + x + "," + y + "," + z;
         }
     }
+
     public static void ensureIndex(ArrayList<?> a, int i)
     {
         while (a.size() <= i)
@@ -230,6 +232,7 @@ public class Skeleton
             a.add(null);
         }
     }
+
     public HashMap<Integer, Bone> boneMap = new HashMap<>();
 
     public final SMDModel         model;
@@ -297,9 +300,9 @@ public class Skeleton
 
     private void initPose()
     {
-        System.out.println(pose.animationName + " " + pose.frames.size());
 
         SkeletonFrame frame = pose.frames.get(0);
+        System.out.println(pose.animationName + " " + pose.frames.size());
         pose.reset();
         pose.precalculateAnimation();
         for (Integer i : frame.positions.keySet())

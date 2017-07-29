@@ -2,11 +2,19 @@ package thut.core.client.render.smd;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
+import org.lwjgl.opengl.GL11;
+
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.util.ResourceLocation;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.model.IModel;
@@ -33,10 +41,47 @@ public class SMDModel implements IModelCustom, IModel, IRetexturableModel, IFake
         nullPartsMap.put(getName(), this);
     }
 
+    public SMDModel(ResourceLocation model)
+    {
+        this();
+        try
+        {
+            IResource res = Minecraft.getMinecraft().getResourceManager().getResource(model);
+            SMDParser parser = new SMDParser(res.getInputStream());
+            res.close();
+
+            List<String> anims = Lists.newArrayList("idle");
+            for (String s : anims)
+            {
+                String anim = model.toString().replace(".smd", "/" + s + ".smd");
+                ResourceLocation animation = new ResourceLocation(anim);
+                try
+                {
+                    res = Minecraft.getMinecraft().getResourceManager().getResource(animation);
+                    parser.parseAnimation(res.getInputStream(), s);
+                    res.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            this.triangles = parser.model.triangles;
+            this.skeleton = parser.model.skeleton;
+            this.poses = parser.model.poses;
+            this.vertexID = parser.model.vertexID;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     public void animate()
     {
         if (skeleton.pose == null) return;
-        // skeleton.pose.nextFrame();
+        skeleton.pose.nextFrame();
         skeleton.applyPose();
     }
 
@@ -47,8 +92,12 @@ public class SMDModel implements IModelCustom, IModel, IRetexturableModel, IFake
 
     public void render()
     {
+        GL11.glScaled(0.01, 0.01, 0.01);
+        this.setAnimation("default");
+        GlStateManager.disableTexture2D();
         animate();
         triangles.render();
+        GlStateManager.enableTexture2D();
     }
 
     public void setAnimation(String animation)
