@@ -58,9 +58,11 @@ public class TabulaWrapper extends ModelBase
         {
             phase = modelj.changer.modifyAnimation((EntityLiving) entityIn, partialTick, phase);
         }
-        if (modelj.animationMap.containsKey(phase))
+        boolean inSet = false;
+        if (modelj.animationMap.containsKey(phase) || (inSet = renderer.getAnimations().containsKey(phase)))
         {
-            modelj.startAnimation(phase);
+            if (!inSet) modelj.startAnimation(phase);
+            else modelj.startAnimation(renderer.getAnimations().get(phase));
         }
         else if (modelj.isAnimationInProgress())
         {
