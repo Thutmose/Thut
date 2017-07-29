@@ -3,7 +3,6 @@ package thut.core.client.render.tabula.model.modelbase;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GLAllocation;
@@ -15,8 +14,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.entity.IMobColourable;
 import thut.core.client.render.model.IAnimationChanger;
+import thut.core.client.render.model.IModel.HeadInfo;
 import thut.core.client.render.model.IPartTexturer;
 import thut.core.client.render.model.IRetexturableModel;
+import thut.core.client.render.tabula.components.ModelJson;
 
 @SideOnly(Side.CLIENT)
 public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
@@ -49,6 +50,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
     public String             identifier;
 
     private IAnimationChanger set;
+    final ModelJson           model;
     IPartTexturer             texturer;
     double[]                  texOffsets   = { 0, 0 };
     boolean                   offset       = true;
@@ -61,14 +63,16 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 
     public boolean            transluscent = false;
 
-    public TabulaRenderer(ModelBase modelBase)
+    public TabulaRenderer(ModelJson modelBase)
     {
         super(modelBase);
+        model = modelBase;
     }
 
-    public TabulaRenderer(ModelBase modelBase, int x, int y)
+    public TabulaRenderer(ModelJson modelBase, int x, int y)
     {
         super(modelBase, x, y);
+        model = modelBase;
         if (modelBase instanceof TabulaModelBase)
         {
             TabulaModelBase mowzieModelBase = (TabulaModelBase) modelBase;
@@ -76,9 +80,10 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         }
     }
 
-    public TabulaRenderer(ModelBase modelBase, String name)
+    public TabulaRenderer(ModelJson modelBase, String name)
     {
         super(modelBase, name);
+        model = modelBase;
     }
 
     @Override
@@ -138,9 +143,9 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
             int i;
 
             /** Rotate the head */
-            if (set.isHeadRoot(identifier) && entity instanceof EntityLivingBase)
+            if (entity instanceof EntityLivingBase && model.tabulaModel.getHeadParts().contains(identifier))
             {
-                rotateHead((EntityLivingBase) entity, set.getHeadInfo(), scale);
+                rotateHead((EntityLivingBase) entity, model.tabulaModel.getHeadInfo(), scale);
             }
 
             GL11.glPushMatrix();
@@ -231,7 +236,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 
     }
 
-    private void rotateHead(EntityLivingBase entity, float[] headInfo, float scale)
+    private void rotateHead(EntityLivingBase entity, HeadInfo headInfo, float scale)
     {
         float ang;
         float partialTicks = Minecraft.getMinecraft().getRenderPartialTicks();
@@ -241,18 +246,18 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         float headPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
         float head = headYaw % 360 + 180;
         float diff = 0;
-        if (headInfo[2] != 1) head *= -1;
+        if (headInfo.headDirection != 1) head *= -1;
         diff = (head) % 360;
         diff = (diff + 360) % 360;
         diff = (diff - 180) % 360;
-        diff = Math.max(diff, headInfo[0]);
-        diff = Math.min(diff, headInfo[1]);
+        diff = Math.max(diff, headInfo.yawCapMin);
+        diff = Math.min(diff, headInfo.yawCapMax);
         ang = diff;
-        float ang2 = Math.max(headPitch, headInfo[3]);
-        ang2 = Math.min(ang2, headInfo[4]);
+        float ang2 = Math.max(headPitch, headInfo.pitchCapMin);
+        ang2 = Math.min(ang2, headInfo.pitchCapMax);
         GL11.glTranslatef(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
         rotateToParent();
-        if (headInfo[5] == 2) GlStateManager.rotate(ang, 0, 0, 1);
+        if (headInfo.headDirection1 == 2) GlStateManager.rotate(ang, 0, 0, 1);
         else GlStateManager.rotate(ang, 0, 1, 0);
         GlStateManager.rotate(ang2, 1, 0, 0);
         unRotateToParent();
