@@ -35,6 +35,8 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
 {
     public HashMap<String, IExtendedModelPart> parts = new HashMap<String, IExtendedModelPart>();
     Map<String, Material>                      mats  = Maps.newHashMap();
+    Set<String>                                heads = Sets.newHashSet();
+    final HeadInfo                             info  = new HeadInfo();
     public String                              name;
 
     public X3dModel()
@@ -251,7 +253,6 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         for (IExtendedModelPart part : parts.values())
         {
             if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setAnimationChanger(changer);
-            ;
         }
     }
 
@@ -262,5 +263,17 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         {
             if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(texturer);
         }
+    }
+
+    @Override
+    public Set<String> getHeadParts()
+    {
+        return heads;
+    }
+
+    @Override
+    public HeadInfo getHeadInfo()
+    {
+        return info;
     }
 }

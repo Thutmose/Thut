@@ -22,14 +22,14 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IPartTexturer;
-import thut.core.client.render.tabula.json.JsonTabulaModel;
 import thut.core.client.render.tabula.model.modelbase.TabulaModelBase;
 import thut.core.client.render.tabula.model.modelbase.TabulaRenderer;
+import thut.core.client.render.tabula.model.tabula.TabulaModel;
 
 @SideOnly(Side.CLIENT)
 public class ModelJson extends TabulaModelBase
 {
-    private JsonTabulaModel                        tabulaModel;
+    public TabulaModel                             tabulaModel;
 
     public Map<String, TabulaRenderer>             nameMap       = Maps.newHashMap();
     public Map<String, TabulaRenderer>             identifierMap = Maps.newHashMap();
@@ -54,7 +54,7 @@ public class ModelJson extends TabulaModelBase
     private float                                  animationTimer;
     private int                                    animationLength;
 
-    public ModelJson(JsonTabulaModel model)
+    public ModelJson(TabulaModel model)
     {
         tabulaModel = model;
 

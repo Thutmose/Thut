@@ -32,6 +32,7 @@ public class AnimationRandomizer implements IAnimationChanger
         }
 
     }
+
     private static class LoadedAnimSet
     {
         String name;
@@ -62,11 +63,11 @@ public class AnimationRandomizer implements IAnimationChanger
     }
 
     // TODO way to clean this up.
-    Map<Integer, AnimationSet>         running = Maps.newHashMap();
+    Map<Integer, AnimationSet>         running    = Maps.newHashMap();
 
-    Map<String, List<RandomAnimation>> sets    = Maps.newHashMap();
+    Map<String, List<RandomAnimation>> sets       = Maps.newHashMap();
 
-    Map<String, Set<LoadedAnimSet>> loadedSets = Maps.newHashMap();
+    Map<String, Set<LoadedAnimSet>>    loadedSets = Maps.newHashMap();
 
     public AnimationRandomizer(Node node)
     {
@@ -100,13 +101,6 @@ public class AnimationRandomizer implements IAnimationChanger
         return default_;
     }
 
-    @Override
-    public float[] getHeadInfo()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     public void init(Set<Animation> existingAnimations)
     {
         Set<String> animations = Sets.newHashSet();
@@ -129,13 +123,6 @@ public class AnimationRandomizer implements IAnimationChanger
                 }
             }
         }
-    }
-
-    @Override
-    public boolean isHeadRoot(String part)
-    {
-        // TODO Auto-generated method stub
-        return false;
     }
 
     @Override

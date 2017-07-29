@@ -12,6 +12,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Beta
 public interface IModelParser<T extends IModel> {
 
+    
+    
     T decode(ByteBuf buf);
 
     void encode(ByteBuf buf, T model);
