@@ -4,6 +4,7 @@ import static thut.api.terrain.BiomeDatabase.contains;
 import static thut.api.terrain.BiomeType.LAKE;
 import static thut.api.terrain.BiomeType.VILLAGE;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -372,17 +373,6 @@ public class TerrainSegment
         toSave = false;
     }
 
-    /** Applies all of the effects onto the mob
-     * 
-     * @param hungrymob */
-    public void doEffects(String effect, EntityLivingBase entity, boolean firstEntry)
-    {
-        if (effects.containsKey(effect))
-        {
-            effects.get(effect).doEffect(entity, firstEntry);
-        }
-    }
-
     @Override
     public boolean equals(Object o)
     {
@@ -478,6 +468,11 @@ public class TerrainSegment
     public ITerrainEffect geTerrainEffect(String name)
     {
         return effects.get(name);
+    }
+    
+    public Collection<ITerrainEffect> getEffects()
+    {
+        return effects.values();
     }
 
     public void initBiomes(World world)
