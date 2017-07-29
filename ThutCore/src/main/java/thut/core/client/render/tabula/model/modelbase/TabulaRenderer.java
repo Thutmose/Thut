@@ -250,7 +250,6 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         diff = (head) % 360;
         diff = (diff + 360) % 360;
         diff = (diff - 180) % 360;
-        System.out.println(headInfo.yawCapMin+" "+headInfo.yawCapMax+" "+diff);
         diff = Math.max(diff, headInfo.yawCapMin);
         diff = Math.min(diff, headInfo.yawCapMax);
         ang = diff;
