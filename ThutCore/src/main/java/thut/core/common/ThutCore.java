@@ -53,12 +53,14 @@ import thut.core.common.commands.ConfigCommand;
 import thut.core.common.genetics.DefaultGenetics;
 import thut.core.common.handlers.ConfigHandler;
 import thut.core.common.handlers.PlayerDataHandler;
+import thut.core.common.terrain.CapabilityTerrainAffected;
+import thut.core.common.terrain.CapabilityTerrainAffected.DefaultAffected;
+import thut.core.common.terrain.CapabilityTerrainAffected.ITerrainAffected;
 import thut.reference.Reference;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, acceptableRemoteVersions = Reference.MINVERSION, guiFactory = "thut.core.client.config.ModGuiFactory")
 public class ThutCore
 {
-
     @SidedProxy(clientSide = Reference.CLIENT_PROXY_CLASS, serverSide = Reference.COMMON_PROXY_CLASS)
     public static CommonProxy     proxy;
 
@@ -88,6 +90,7 @@ public class ThutCore
         proxy.initClient();
         proxy.registerEntities();
         proxy.registerTEs();
+        new CapabilityTerrainAffected();
     }
 
     @EventHandler
@@ -135,6 +138,20 @@ public class ThutCore
                 return true;
             }
         }.getClass());
+        CapabilityManager.INSTANCE.register(ITerrainAffected.class, new Capability.IStorage<ITerrainAffected>()
+        {
+            @Override
+            public NBTBase writeNBT(Capability<ITerrainAffected> capability, ITerrainAffected instance, EnumFacing side)
+            {
+                return null;
+            }
+
+            @Override
+            public void readNBT(Capability<ITerrainAffected> capability, ITerrainAffected instance, EnumFacing side,
+                    NBTBase nbt)
+            {
+            }
+        }, DefaultAffected.class);
         CapabilityManager.INSTANCE.register(IMobGenetics.class, new Capability.IStorage<IMobGenetics>()
         {
 

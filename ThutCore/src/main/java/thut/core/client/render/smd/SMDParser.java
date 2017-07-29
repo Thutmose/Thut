@@ -1,8 +1,6 @@
 package thut.core.client.render.smd;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,12 +14,10 @@ public class SMDParser
     // private ResourceLocation resource;
     public SMDModel model;
 
-    public SMDParser(File model)
+    public SMDParser(InputStream stream)
     {
-        InputStream stream = null;
         try
         {
-            stream = new FileInputStream(model);
             parseModel(stream);
             stream.close();
         }

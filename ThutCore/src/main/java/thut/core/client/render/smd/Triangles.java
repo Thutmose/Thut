@@ -53,9 +53,16 @@ public class Triangles
         {
             line = line.replaceAll("\\s+", " ");
             String[] args = line.split(" ");
-            BoneVertex vertex = new BoneVertex(Float.parseFloat(args[1]), Float.parseFloat(args[2]),
-                    Float.parseFloat(args[3]), Float.parseFloat(args[4]), Float.parseFloat(args[5]),
-                    Float.parseFloat(args[6]), triangles.model.getNextVertexID());
+
+            float x = Float.parseFloat(args[1]);
+            float y = Float.parseFloat(args[2]);
+            float z = Float.parseFloat(args[3]);
+
+            float xn = Float.parseFloat(args[4]);
+            float yn = Float.parseFloat(args[5]);
+            float zn = Float.parseFloat(args[6]);
+
+            BoneVertex vertex = new BoneVertex(x, y, z, xn, yn, zn, triangles.model.getNextVertexID());
             int links = Integer.parseInt(args[9]);
             float[] weights = new float[links];
             float sum = 0.0F;
@@ -108,6 +115,7 @@ public class Triangles
             return Arrays.toString(vertices) + " " + faceNormal;
         }
     }
+
     ArrayList<Triangle> triangles = new ArrayList<>();
 
     final SMDModel      model;
@@ -120,8 +128,8 @@ public class Triangles
     public void render()
     {
         GL11.glPushMatrix();
-        GL11.glBegin(GL11.GL_TRIANGLES);
         boolean smooth = true;
+        GL11.glBegin(GL11.GL_TRIANGLES);
         for (Triangle t : triangles)
         {
             if (t != null)
