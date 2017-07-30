@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
+
 import thut.api.maths.Vector3;
 import thut.core.client.render.tabula.components.Animation;
 
@@ -34,11 +36,18 @@ public interface IModel
         public int   pitchDirection = 1;
     }
 
+    public static ImmutableSet<String> emptyAnims = ImmutableSet.of();
+
     public HashMap<String, IExtendedModelPart> getParts();
 
     public void preProcessAnimations(Collection<Animation> animations);
 
     public Set<String> getHeadParts();
+
+    default Set<String> getBuiltInAnimations()
+    {
+        return emptyAnims;
+    }
 
     default void setOffset(Vector3 offset)
     {
