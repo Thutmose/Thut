@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 
 import net.minecraft.util.ResourceLocation;
 import thut.core.client.render.animation.ModelHolder;
-import thut.core.client.render.collada.DAEModel;
 import thut.core.client.render.x3d.X3dModel;
 
 public class ModelFactory
@@ -18,8 +17,6 @@ public class ModelFactory
     static
     {
         validExtensions.put("x3d", X3dModel.class);
-        // validExtensions.put("smd", SMDModel.class);
-        validExtensions.put("dae", DAEModel.class);
     }
 
     public static void registerIModel(String extension, Class<? extends IModel> clazz)
