@@ -37,9 +37,5 @@ public interface IModel
 
     }
 
-    
-HeadInfo getHeadInfo();
-//    {
-//        return null;
-//    }
+    HeadInfo getHeadInfo();
 }

@@ -8,24 +8,26 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.util.ResourceLocation;
 
 public class Material
 {
-    public final String name;
-    public String       texture;
-    public Vector3f     diffuseColor;
-    public Vector3f     specularColor;
-    public Vector3f     emissiveColor;
-    public float        emissiveMagnitude;
-    public float        ambientIntensity;
-    public float        shininess;
-    public float        transparency;
+    public final String     name;
+    public String           texture;
+    public ResourceLocation texresource;
+    public Vector3f         diffuseColor;
+    public Vector3f         specularColor;
+    public Vector3f         emissiveColor;
+    public float            emissiveMagnitude;
+    public float            ambientIntensity;
+    public float            shininess;
+    public float            transparency;
 
-    boolean             depth;
+    boolean                 depth;
 
-    boolean             colour_mat;
-    boolean             light;
-    float[]             oldLight = { -1, -1 };
+    boolean                 colour_mat;
+    boolean                 light;
+    float[]                 oldLight = { -1, -1 };
 
     public Material(String name)
     {
