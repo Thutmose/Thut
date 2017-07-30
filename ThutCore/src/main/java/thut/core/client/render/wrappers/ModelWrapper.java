@@ -44,6 +44,11 @@ public class ModelWrapper extends ModelBase implements IModel
     {
         GlStateManager.pushMatrix();
         GlStateManager.disableCull();
+        HeadInfo info = imodel.getHeadInfo();
+        if (info != null)
+        {
+            info.currentTick = entityIn.ticksExisted;
+        }
         for (String partName : imodel.getParts().keySet())
         {
             IExtendedModelPart part = imodel.getParts().get(partName);
@@ -71,6 +76,10 @@ public class ModelWrapper extends ModelBase implements IModel
         GlStateManager.color(1, 1, 1, 1);
         GlStateManager.enableCull();
         GlStateManager.popMatrix();
+        if (info != null)
+        {
+            info.lastTick = entityIn.ticksExisted;
+        }
     }
 
     /** Sets the model's various rotation angles. For bipeds, par1 and par2 are
@@ -84,6 +93,12 @@ public class ModelWrapper extends ModelBase implements IModel
         float partialTick = ageInTicks - entityIn.ticksExisted;
         if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
                 .modifyAnimation((EntityLiving) entityIn, partialTick, renderer.getAnimation()));
+        HeadInfo info = imodel.getHeadInfo();
+        if (info != null)
+        {
+            info.headPitch = headPitch;
+            info.headYaw = netHeadYaw;
+        }
         transformGlobal(renderer.getAnimation(), entityIn, Minecraft.getMinecraft().getRenderPartialTicks(), netHeadYaw,
                 headPitch);
         updateAnimation(entityIn, renderer.getAnimation(), partialTick, netHeadYaw, headPitch, limbSwing);
@@ -174,10 +189,10 @@ public class ModelWrapper extends ModelBase implements IModel
         if (info != null && isHead(parent.getName()))
         {
             float ang;
-            float ang2 = -headPitch;
-            float head = headYaw + 180;
+            float ang2 = -info.headPitch;
+            float head = info.headYaw + 180;
             float diff = 0;
-            if (info.headDirection != -1) head *= -1;
+            if (info.yawDirection != -1) head *= -1;
             diff = (head) % 360;
             diff = (diff + 360) % 360;
             diff = (diff - 180) % 360;
@@ -189,28 +204,28 @@ public class ModelWrapper extends ModelBase implements IModel
             Vector4 dir;
             if (info.yawAxis == 0)
             {
-                dir = new Vector4(info.headDirection, 0, 0, ang);
+                dir = new Vector4(info.yawDirection, 0, 0, ang);
             }
             else if (info.yawAxis == 2)
             {
-                dir = new Vector4(0, 0, info.headDirection, ang);
+                dir = new Vector4(0, 0, info.yawDirection, ang);
             }
             else
             {
-                dir = new Vector4(0, info.headDirection, 0, ang);
+                dir = new Vector4(0, info.yawDirection, 0, ang);
             }
             Vector4 dir2;
             if (info.pitchAxis == 2)
             {
-                dir2 = new Vector4(0, 0, info.headDirection, ang2);
+                dir2 = new Vector4(0, 0, info.yawDirection, ang2);
             }
             else if (info.pitchAxis == 1)
             {
-                dir2 = new Vector4(0, info.headDirection, 0, ang2);
+                dir2 = new Vector4(0, info.yawDirection, 0, ang2);
             }
             else
             {
-                dir2 = new Vector4(info.headDirection, 0, 0, ang2);
+                dir2 = new Vector4(info.yawDirection, 0, 0, ang2);
             }
             parent.setPostRotations(dir);
             parent.setPostRotations2(dir2);

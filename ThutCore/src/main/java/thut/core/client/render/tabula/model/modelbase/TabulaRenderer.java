@@ -246,7 +246,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         float headPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
         float head = headYaw % 360 + 180;
         float diff = 0;
-        if (headInfo.headDirection != 1) head *= -1;
+        if (headInfo.yawDirection != 1) head *= -1;
         diff = (head) % 360;
         diff = (diff + 360) % 360;
         diff = (diff - 180) % 360;
@@ -257,7 +257,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         ang2 = Math.min(ang2, headInfo.pitchCapMax);
         GL11.glTranslatef(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
         rotateToParent();
-        if (headInfo.headDirection1 == 2) GlStateManager.rotate(ang, 0, 0, 1);
+        if (headInfo.pitchDirection == 2) GlStateManager.rotate(ang, 0, 0, 1);
         else GlStateManager.rotate(ang, 0, 1, 0);
         GlStateManager.rotate(ang2, 1, 0, 0);
         unRotateToParent();
