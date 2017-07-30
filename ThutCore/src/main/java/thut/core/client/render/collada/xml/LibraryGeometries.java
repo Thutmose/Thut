@@ -29,7 +29,7 @@ public class LibraryGeometries
         @XmlElement(name = "source")
         public List<Source>   source   = Lists.newArrayList();
         public Vertices       vertices;
-        @XmlElement(name = "source")
+        @XmlElement(name = "polylist")
         public List<PolyList> polylist = Lists.newArrayList();
     }
 

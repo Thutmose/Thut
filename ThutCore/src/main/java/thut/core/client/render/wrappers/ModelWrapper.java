@@ -59,7 +59,7 @@ public class ModelWrapper extends ModelBase implements IModel
                 if (part.getParent() == null)
                 {
                     GlStateManager.pushMatrix();
-                    part.renderAll();
+                    part.renderAll(renderer);
                     GlStateManager.popMatrix();
                 }
             }
