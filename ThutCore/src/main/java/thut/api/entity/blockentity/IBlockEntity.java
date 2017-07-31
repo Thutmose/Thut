@@ -94,15 +94,15 @@ public interface IBlockEntity
                         TileEntity tile = toRevert.getFakeWorld().getTileEntity(pos);
                         if (state != null)
                         {
-                            entity.worldObj.setBlockState(pos, state);
+                            entity.getEntityWorld().setBlockState(pos, state);
                             if (tile != null)
                             {
-                                TileEntity newTile = entity.worldObj.getTileEntity(pos);
+                                TileEntity newTile = entity.getEntityWorld().getTileEntity(pos);
                                 if (newTile != null) newTile.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                             }
                         }
                     }
-            List<Entity> possibleInside = entity.worldObj.getEntitiesWithinAABBExcludingEntity(entity,
+            List<Entity> possibleInside = entity.getEntityWorld().getEntitiesWithinAABBExcludingEntity(entity,
                     entity.getEntityBoundingBox());
             for (Entity e : possibleInside)
             {

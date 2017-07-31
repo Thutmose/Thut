@@ -305,7 +305,8 @@ public class Vector3
     public static boolean isVisibleEntityFromEntity(Entity looker, Entity target)
     {
         if (looker == null || target == null) return false;
-        return looker.worldObj.rayTraceBlocks(new Vec3d(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
+        return looker.getEntityWorld().rayTraceBlocks(
+                new Vec3d(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
                 new Vec3d(target.posX, target.posY + target.getEyeHeight(), target.posZ), false, true, false) == null;
     }
 

@@ -86,7 +86,7 @@ public class Transporter
         {
             theEntity = entity;
             theMount = mount;
-            time = entity.worldObj.getTotalWorldTime();
+            time = entity.getEntityWorld().getTotalWorldTime();
             this.dim = dim;
         }
 
@@ -95,7 +95,7 @@ public class Transporter
         {
             if (evt.phase != TickEvent.Phase.END) return;
             if (theEntity.isDead) MinecraftForge.EVENT_BUS.unregister(this);
-            if (theEntity.worldObj.getTotalWorldTime() >= time)
+            if (theEntity.getEntityWorld().getTotalWorldTime() >= time)
             {
                 if (dim != theEntity.dimension)
                 {
@@ -158,7 +158,7 @@ public class Transporter
         for (int i = x - 1; i <= x + 1; i++)
             for (int j = z - 1; j <= z + 1; j++)
             {
-                entity.worldObj.getChunkFromChunkCoords(x, z);
+                entity.getEntityWorld().getChunkFromChunkCoords(x, z);
             }
         doMoveEntity(entity, t2.x, t2.y, t2.z, entity.rotationYaw, entity.rotationPitch);
         List<Entity> passengers = Lists.newArrayList(entity.getPassengers());
@@ -185,10 +185,10 @@ public class Transporter
     // From RFTools.
     private static Entity transferToDimension(Entity entity, Vector3 t2, int dimension)
     {
-        int oldDimension = entity.worldObj.provider.getDimension();
+        int oldDimension = entity.getEntityWorld().provider.getDimension();
         if (oldDimension == dimension) return entity;
         if (!(entity instanceof EntityPlayerMP)) { return changeDimension(entity, t2, dimension); }
-        MinecraftServer server = entity.worldObj.getMinecraftServer();
+        MinecraftServer server = entity.getEntityWorld().getMinecraftServer();
         WorldServer worldServer = server.worldServerForDimension(dimension);
         Teleporter teleporter = new TTeleporter(worldServer, t2.x, t2.y, t2.z);
         EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
@@ -211,12 +211,12 @@ public class Transporter
     public static Entity changeDimension(Entity entityIn, Vector3 t2, int dimensionIn)
     {
         if (entityIn.dimension == dimensionIn) return entityIn;
-        if (!entityIn.worldObj.isRemote && !entityIn.isDead)
+        if (!entityIn.getEntityWorld().isRemote && !entityIn.isDead)
         {
             List<Entity> passengers = entityIn.getPassengers();
 
             if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(entityIn, dimensionIn)) return null;
-            entityIn.worldObj.theProfiler.startSection("changeDimension");
+            entityIn.getEntityWorld().theProfiler.startSection("changeDimension");
             MinecraftServer minecraftserver = entityIn.getServer();
             int i = entityIn.dimension;
             WorldServer worldserver = minecraftserver.worldServerForDimension(i);
@@ -230,10 +230,10 @@ public class Transporter
             }
             NBTTagCompound tag = new NBTTagCompound();
             entityIn.writeToNBT(tag);
-            entityIn.worldObj.removeEntity(entityIn);
+            entityIn.getEntityWorld().removeEntity(entityIn);
             entityIn.readFromNBT(tag);
             entityIn.isDead = false;
-            entityIn.worldObj.theProfiler.startSection("reposition");
+            entityIn.getEntityWorld().theProfiler.startSection("reposition");
 
             double d0 = entityIn.posX;
             double d1 = entityIn.posZ;
@@ -248,7 +248,7 @@ public class Transporter
             Teleporter teleporter = new TTeleporter(worldserver1, t2.x, t2.y, t2.z);
             teleporter.placeInExistingPortal(entityIn, f);
             worldserver.updateEntityWithOptionalForce(entityIn, false);
-            entityIn.worldObj.theProfiler.endStartSection("reloading");
+            entityIn.getEntityWorld().theProfiler.endStartSection("reloading");
             Entity entity = CompatWrapper.createEntity(worldserver1, entityIn);
             if (entity != null)
             {
@@ -269,10 +269,10 @@ public class Transporter
                 }
             }
             entityIn.isDead = true;
-            entityIn.worldObj.theProfiler.endSection();
+            entityIn.getEntityWorld().theProfiler.endSection();
             worldserver.resetUpdateEntityTick();
             worldserver1.resetUpdateEntityTick();
-            entityIn.worldObj.theProfiler.endSection();
+            entityIn.getEntityWorld().theProfiler.endSection();
             return entity;
         }
         return null;
