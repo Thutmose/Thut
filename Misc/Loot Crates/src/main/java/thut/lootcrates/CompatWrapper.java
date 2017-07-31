@@ -63,7 +63,7 @@ public class CompatWrapper
 
     public static void rightClickWith(ItemStack stack, EntityPlayer player, EnumHand hand)
     {
-        stack.getItem().onItemRightClick(stack, player.worldObj, player, hand);
+        stack.getItem().onItemRightClick(stack, player.getEntityWorld(), player, hand);
     }
     
     public static NBTTagCompound getTag(ItemStack stack, String name, boolean create)

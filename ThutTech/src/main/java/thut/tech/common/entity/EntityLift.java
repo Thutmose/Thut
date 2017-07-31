@@ -110,7 +110,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         if (world == null)
         {
-            world = new BlockEntityWorld(this, worldObj);
+            world = new BlockEntityWorld(this, getEntityWorld());
         }
         return world;
     }
@@ -267,8 +267,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int xMax = boundMax.getX();
         int zMax = boundMax.getZ();
 
-        List<?> list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1),
-                posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
+        List<?> list = this.getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(
+                posX + (xMin - 1), posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
         if (list != null && !list.isEmpty())
         {
             if (list.size() == 1 && this.getRecursivePassengers() != null
@@ -470,7 +470,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void passengerCheck()
     {
-        List<Entity> list = worldObj.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
+        List<Entity> list = getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
         if (list.size() > 0)
         {
             hasPassenger = true;
@@ -608,7 +608,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setDead()
     {
-        if (!worldObj.isRemote && !this.isDead && this.addedToChunk)
+        if (!getEntityWorld().isRemote && !this.isDead && this.addedToChunk)
         {
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }

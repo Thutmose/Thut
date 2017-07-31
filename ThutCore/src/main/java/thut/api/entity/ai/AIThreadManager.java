@@ -313,28 +313,29 @@ public class AIThreadManager
         // Run the ILogicRunnables on both server and client side.
         for (ILogicRunnable logic : ai.aiLogic)
         {
-            logic.doServerTick(event.getEntity().worldObj);
+            logic.doServerTick(event.getEntity().getEntityWorld());
         }
         // Run remainder if AI server side only.
-        if (!event.getEntity().worldObj.isRemote) updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
+        if (!event.getEntity().getEntityWorld().isRemote)
+            updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
     }
 
     protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
     {
-        mob.worldObj.theProfiler.startSection("mob tick");
+        mob.getEntityWorld().theProfiler.startSection("mob tick");
         // Run last tick's results from AI stuff
-        ai.runServerThreadTasks(mob.worldObj);
+        ai.runServerThreadTasks(mob.getEntityWorld());
         // Schedule AIStuff to tick for next tick.
         AIThreadManager.scheduleAITick(ai);
-        mob.worldObj.theProfiler.endSection();
-        mob.worldObj.theProfiler.startSection("controls");
-        mob.worldObj.theProfiler.startSection("move");
+        mob.getEntityWorld().theProfiler.endSection();
+        mob.getEntityWorld().theProfiler.startSection("controls");
+        mob.getEntityWorld().theProfiler.startSection("move");
         mob.getMoveHelper().onUpdateMoveHelper();
-        mob.worldObj.theProfiler.endStartSection("look");
+        mob.getEntityWorld().theProfiler.endStartSection("look");
         mob.getLookHelper().onUpdateLook();
-        mob.worldObj.theProfiler.endStartSection("jump");
+        mob.getEntityWorld().theProfiler.endStartSection("jump");
         mob.getJumpHelper().doJump();
-        mob.worldObj.theProfiler.endSection();
-        mob.worldObj.theProfiler.endSection();
+        mob.getEntityWorld().theProfiler.endSection();
+        mob.getEntityWorld().theProfiler.endSection();
     }
 }

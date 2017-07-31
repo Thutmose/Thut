@@ -44,7 +44,7 @@ public class EntityProjectile extends EntityFallingBlock
         {
             if (side.getFrontOffsetY() == 0)
             {
-                Block b = here.getBlock(worldObj, side);
+                Block b = here.getBlock(getEntityWorld(), side);
                 if (b == Blocks.GOLDEN_RAIL)
                 {
                     dir = side;
@@ -62,7 +62,7 @@ public class EntityProjectile extends EntityFallingBlock
         {
             temp1.set(ret).scalarMultBy(n++);
             temp.set(temp1.addTo(here));
-            end = temp.getBlock(worldObj) != Blocks.GOLDEN_RAIL;
+            end = temp.getBlock(getEntityWorld()) != Blocks.GOLDEN_RAIL;
         }
         ret.scalarMultBy(n);
 
@@ -71,7 +71,7 @@ public class EntityProjectile extends EntityFallingBlock
 
     boolean isOnRails(Vector3 here)
     {
-        return here.getBlock(worldObj) == Blocks.GOLDEN_RAIL;
+        return here.getBlock(getEntityWorld()) == Blocks.GOLDEN_RAIL;
     }
 
     /** Called to update the entity's position/logic. */
@@ -93,9 +93,9 @@ public class EntityProjectile extends EntityFallingBlock
             Vector3 velocity = Vector3.getNewVector().setToVelocity(this);
             double d = velocity.mag() + 1;
 
-            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(worldObj);
+            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(getEntityWorld());
 
-            Vector3 hit = here.findNextSolidBlock(worldObj, velocity, d);
+            Vector3 hit = here.findNextSolidBlock(getEntityWorld(), velocity, d);
             d -= 1;
 
             if (isOnRails(here) && !accelerated)
@@ -113,8 +113,8 @@ public class EntityProjectile extends EntityFallingBlock
                 velocity.scalarMultBy(dist);
                 velocity.setVelocities(this);
                 this.moveEntity(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
-                ExplosionCustom boom = new ExplosionCustom(worldObj, this, hit, 100);
-                float h = block.getBlockHardness(worldObj, hit.getPos());
+                ExplosionCustom boom = new ExplosionCustom(getEntityWorld(), this, hit, 100);
+                float h = block.getBlockHardness(getEntityWorld(), hit.getPos());
                 double oldD = d;
                 d /= 100;
                 d = Math.max(d, oldD / 2);
@@ -152,7 +152,7 @@ public class EntityProjectile extends EntityFallingBlock
         AxisAlignedBB box = mainBox.getBoundingBox();
         AxisAlignedBB box1 = box.expand(2 + width, 2 + height, 2 + width);
         box1 = box1.addCoord(motionX, motionY, motionZ);
-        aabbs = mainBox.getCollidingBoxes(box1, worldObj, worldObj);
+        aabbs = mainBox.getCollidingBoxes(box1, getEntityWorld(), getEntityWorld());
         Matrix3.expandAABBs(aabbs, box);
         Matrix3.mergeAABBs(aabbs, 0.01, 0.01, 0.01);
         Vector3 diffs = Vector3.getNewVector().set(x, y, z);
