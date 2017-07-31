@@ -110,7 +110,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     {
         if (fakeWorld == null)
         {
+<<<<<<< HEAD
             fakeWorld = new BlockEntityWorld(this, world);
+=======
+            world = new BlockEntityWorld(this, getEntityWorld());
+>>>>>>> refs/remotes/origin/1.11.x
         }
         return fakeWorld;
     }
@@ -267,8 +271,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int xMax = boundMax.getX();
         int zMax = boundMax.getZ();
 
+<<<<<<< HEAD
         List<?> list = this.world.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1), posY,
                 posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
+=======
+        List<?> list = this.getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(
+                posX + (xMin - 1), posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
+>>>>>>> refs/remotes/origin/1.11.x
         if (list != null && !list.isEmpty())
         {
             if (list.size() == 1 && this.getRecursivePassengers() != null
@@ -470,7 +479,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void passengerCheck()
     {
+<<<<<<< HEAD
         List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
+=======
+        List<Entity> list = getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
+>>>>>>> refs/remotes/origin/1.11.x
         if (list.size() > 0)
         {
             hasPassenger = true;
@@ -604,7 +617,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setDead()
     {
+<<<<<<< HEAD
         if (!world.isRemote && !this.isDead)
+=======
+        if (!getEntityWorld().isRemote && !this.isDead && this.addedToChunk)
+>>>>>>> refs/remotes/origin/1.11.x
         {
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }

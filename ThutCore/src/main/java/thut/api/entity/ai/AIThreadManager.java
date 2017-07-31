@@ -314,28 +314,29 @@ public class AIThreadManager
         // Run the ILogicRunnables on both server and client side.
         for (ILogicRunnable logic : ai.aiLogic)
         {
-            logic.doServerTick(event.getEntity().world);
+            logic.doServerTick(event.getEntity().getEntityWorld());
         }
         // Run remainder if AI server side only.
-        if (!event.getEntity().world.isRemote) updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
+        if (!event.getEntity().getEntityWorld().isRemote)
+            updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
     }
 
     protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
     {
-        mob.world.profiler.startSection("mob tick");
+        mob.getEntityWorld().profiler.startSection("mob tick");
         // Run last tick's results from AI stuff
-        ai.runServerThreadTasks(mob.world);
+        ai.runServerThreadTasks(mob.getEntityWorld());
         // Schedule AIStuff to tick for next tick.
         AIThreadManager.scheduleAITick(ai);
-        mob.world.profiler.endSection();
-        mob.world.profiler.startSection("controls");
-        mob.world.profiler.startSection("move");
+        mob.getEntityWorld().profiler.endSection();
+        mob.getEntityWorld().profiler.startSection("controls");
+        mob.getEntityWorld().profiler.startSection("move");
         mob.getMoveHelper().onUpdateMoveHelper();
-        mob.world.profiler.endStartSection("look");
+        mob.getEntityWorld().profiler.endStartSection("look");
         mob.getLookHelper().onUpdateLook();
-        mob.world.profiler.endStartSection("jump");
+        mob.getEntityWorld().profiler.endStartSection("jump");
         mob.getJumpHelper().doJump();
-        mob.world.profiler.endSection();
-        mob.world.profiler.endSection();
+        mob.getEntityWorld().profiler.endSection();
+        mob.getEntityWorld().profiler.endSection();
     }
 }

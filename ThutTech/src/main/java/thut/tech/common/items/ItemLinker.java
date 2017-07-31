@@ -78,7 +78,11 @@ public class ItemLinker extends Item
         {
             BlockPos pos = event.getTarget().getBlockPos();
             if (pos == null) return;
+<<<<<<< HEAD
             if (!player.world.getBlockState(pos).getMaterial().isSolid())
+=======
+            if (!player.getEntityWorld().getBlockState(pos).getMaterial().isSolid())
+>>>>>>> refs/remotes/origin/1.11.x
             {
                 Vec3d loc = player.getPositionVector().addVector(0, player.getEyeHeight(), 0)
                         .add(player.getLookVec().scale(2));

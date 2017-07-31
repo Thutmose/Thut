@@ -64,17 +64,32 @@ public class LiftInteractHandler
         else if (trace == null || !state.getMaterial().isSolid())
         {
             Vec3d playerLook = playerPos.add(player.getLookVec().scale(4));
+<<<<<<< HEAD
             RayTraceResult result = lift.world.rayTraceBlocks(playerPos, playerLook, false, true, false);
+=======
+            RayTraceResult result = lift.getEntityWorld().rayTraceBlocks(playerPos, playerLook, false, true, false);
+>>>>>>> refs/remotes/origin/1.11.x
             if (result != null && result.typeOfHit == Type.BLOCK)
             {
                 pos = result.getBlockPos();
+<<<<<<< HEAD
                 state = lift.world.getBlockState(pos);
                 hitX = (float) (result.hitVec.x - pos.getX());
                 hitY = (float) (result.hitVec.y - pos.getY());
                 hitZ = (float) (result.hitVec.z - pos.getZ());
+=======
+                state = lift.getEntityWorld().getBlockState(pos);
+                hitX = (float) (result.hitVec.xCoord - pos.getX());
+                hitY = (float) (result.hitVec.yCoord - pos.getY());
+                hitZ = (float) (result.hitVec.zCoord - pos.getZ());
+>>>>>>> refs/remotes/origin/1.11.x
                 activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getEntityWorld(), pos, state, player,
                         hand, stack, result.sideHit, hitX, hitY, hitZ);
+<<<<<<< HEAD
                 if (activate && lift.world.isRemote)
+=======
+                if (activate && lift.getEntityWorld().isRemote)
+>>>>>>> refs/remotes/origin/1.11.x
                 {
                     PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(25));
                     buffer.writeFloat(hitX);
@@ -139,16 +154,28 @@ public class LiftInteractHandler
 
             String message = "msg.liftSet.name";
 
+<<<<<<< HEAD
             if (lift.world.isRemote) player.sendMessage(new TextComponentTranslation(message));
+=======
+            if (lift.getEntityWorld().isRemote) player.addChatMessage(new TextComponentTranslation(message));
+>>>>>>> refs/remotes/origin/1.11.x
             return true;
         }
         else if (stack != null && stack.getItem() instanceof ItemLinker
                 && ((lift.owner != null && player.getUniqueID().equals(lift.owner))
                         || player.capabilities.isCreativeMode))
         {
+<<<<<<< HEAD
             if (!lift.world.isRemote && lift.owner != null)
+=======
+            if (!lift.getEntityWorld().isRemote && lift.owner != null)
+>>>>>>> refs/remotes/origin/1.11.x
             {
+<<<<<<< HEAD
                 Entity ownerentity = lift.world.getPlayerEntityByUUID(lift.owner);
+=======
+                Entity ownerentity = lift.getEntityWorld().getPlayerEntityByUUID(lift.owner);
+>>>>>>> refs/remotes/origin/1.11.x
                 String message = "msg.lift.owner";
 
                 player.sendMessage(new TextComponentTranslation(message, ownerentity.getName()));
@@ -163,7 +190,11 @@ public class LiftInteractHandler
                 && ((lift.owner != null && player.getUniqueID().equals(lift.owner))
                         || player.capabilities.isCreativeMode))
         {
+<<<<<<< HEAD
             if (!lift.world.isRemote)
+=======
+            if (!lift.getEntityWorld().isRemote)
+>>>>>>> refs/remotes/origin/1.11.x
             {
                 String message = "msg.lift.killed";
                 player.sendMessage(new TextComponentTranslation(message));

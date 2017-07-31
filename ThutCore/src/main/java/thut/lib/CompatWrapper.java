@@ -137,7 +137,7 @@ public class CompatWrapper
     {
         ItemStack old = player.getHeldItem(hand);
         player.setHeldItem(hand, stack);
-        stack.getItem().onItemRightClick(player.world, player, hand);
+        stack.getItem().onItemRightClick(player.getEntityWorld(), player, hand);
         player.setHeldItem(hand, old);
     }
 

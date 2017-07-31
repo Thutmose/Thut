@@ -44,7 +44,11 @@ public class EntityProjectile extends EntityFallingBlock
         {
             if (side.getFrontOffsetY() == 0)
             {
+<<<<<<< HEAD
                 Block b = here.getBlock(world, side);
+=======
+                Block b = here.getBlock(getEntityWorld(), side);
+>>>>>>> refs/remotes/origin/1.11.x
                 if (b == Blocks.GOLDEN_RAIL)
                 {
                     dir = side;
@@ -62,7 +66,11 @@ public class EntityProjectile extends EntityFallingBlock
         {
             temp1.set(ret).scalarMultBy(n++);
             temp.set(temp1.addTo(here));
+<<<<<<< HEAD
             end = temp.getBlock(world) != Blocks.GOLDEN_RAIL;
+=======
+            end = temp.getBlock(getEntityWorld()) != Blocks.GOLDEN_RAIL;
+>>>>>>> refs/remotes/origin/1.11.x
         }
         ret.scalarMultBy(n);
 
@@ -71,7 +79,11 @@ public class EntityProjectile extends EntityFallingBlock
 
     boolean isOnRails(Vector3 here)
     {
+<<<<<<< HEAD
         return here.getBlock(world) == Blocks.GOLDEN_RAIL;
+=======
+        return here.getBlock(getEntityWorld()) == Blocks.GOLDEN_RAIL;
+>>>>>>> refs/remotes/origin/1.11.x
     }
 
     /** Called to update the entity's position/logic. */
@@ -93,9 +105,17 @@ public class EntityProjectile extends EntityFallingBlock
             Vector3 velocity = Vector3.getNewVector().setToVelocity(this);
             double d = velocity.mag() + 1;
 
+<<<<<<< HEAD
             IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(world);
+=======
+            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(getEntityWorld());
+>>>>>>> refs/remotes/origin/1.11.x
 
+<<<<<<< HEAD
             Vector3 hit = here.findNextSolidBlock(world, velocity, d);
+=======
+            Vector3 hit = here.findNextSolidBlock(getEntityWorld(), velocity, d);
+>>>>>>> refs/remotes/origin/1.11.x
             d -= 1;
 
             if (isOnRails(here) && !accelerated)
@@ -112,9 +132,15 @@ public class EntityProjectile extends EntityFallingBlock
                 double dist = here.distanceTo(hit);
                 velocity.scalarMultBy(dist);
                 velocity.setVelocities(this);
+<<<<<<< HEAD
                 this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
                 ExplosionCustom boom = new ExplosionCustom(world, this, hit, 100);
                 float h = block.getBlockHardness(world, hit.getPos());
+=======
+                this.moveEntity(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+                ExplosionCustom boom = new ExplosionCustom(getEntityWorld(), this, hit, 100);
+                float h = block.getBlockHardness(getEntityWorld(), hit.getPos());
+>>>>>>> refs/remotes/origin/1.11.x
                 double oldD = d;
                 d /= 100;
                 d = Math.max(d, oldD / 2);
@@ -151,8 +177,13 @@ public class EntityProjectile extends EntityFallingBlock
         mainBox.addOffsetTo(offset).addOffsetTo(vec);
         AxisAlignedBB box = mainBox.getBoundingBox();
         AxisAlignedBB box1 = box.expand(2 + width, 2 + height, 2 + width);
+<<<<<<< HEAD
         box1 = box1.grow(motionX, motionY, motionZ);
         aabbs = mainBox.getCollidingBoxes(box1, world, world);
+=======
+        box1 = box1.addCoord(motionX, motionY, motionZ);
+        aabbs = mainBox.getCollidingBoxes(box1, getEntityWorld(), getEntityWorld());
+>>>>>>> refs/remotes/origin/1.11.x
         Matrix3.expandAABBs(aabbs, box);
         Matrix3.mergeAABBs(aabbs, 0.01, 0.01, 0.01);
         Vector3 diffs = Vector3.getNewVector().set(x, y, z);

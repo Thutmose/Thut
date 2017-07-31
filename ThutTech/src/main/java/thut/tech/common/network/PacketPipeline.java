@@ -112,8 +112,13 @@ public class PacketPipeline
                     @Override
                     public void run()
                     {
+<<<<<<< HEAD
                         IBlockState state = player1.world.getBlockState(pos);
                         CompatWrapper.interactWithBlock(state.getBlock(), player1.world, pos, state, player1,
+=======
+                        IBlockState state = player1.getEntityWorld().getBlockState(pos);
+                        CompatWrapper.interactWithBlock(state.getBlock(), player1.getEntityWorld(), pos, state, player1,
+>>>>>>> refs/remotes/origin/1.11.x
                                 EnumHand.MAIN_HAND, player1.getHeldItemMainhand(), side, hit.x, hit.y, hit.z);
                     }
                 });

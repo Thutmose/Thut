@@ -39,7 +39,7 @@ public class ClientProxy extends CommonProxy
         @SubscribeEvent
         public void onPlayerJoin(TickEvent.PlayerTickEvent event)
         {
-            if (event.player.world.isRemote && event.player == FMLClientHandler.instance().getClientPlayerEntity())
+            if (event.player.getEntityWorld().isRemote && event.player == FMLClientHandler.instance().getClientPlayerEntity())
             {
                 MinecraftForge.EVENT_BUS.unregister(this);
                 Object o = Loader.instance().getIndexedModList().get(Reference.MOD_ID);

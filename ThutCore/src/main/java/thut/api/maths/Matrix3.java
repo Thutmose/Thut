@@ -711,8 +711,8 @@ public class Matrix3
         dx = Math.max(dx, 1.5);
         dy = Math.max(dy, 1.5);
         dz = Math.max(dz, 1.5);
-        AxisAlignedBB b1 = box.boxCentre().getAABB().grow(dx, dy, dz);
-        List<AxisAlignedBB> aabbs = getCollidingBoxes(b1, e.world, world);
+        AxisAlignedBB b1 = box.boxCentre().getAABB().expand(dx, dy, dz);
+        List<AxisAlignedBB> aabbs = getCollidingBoxes(b1, e.getEntityWorld(), world);
         AxisAlignedBB b2;
         AxisAlignedBB[] boxes = aabbs.toArray(new AxisAlignedBB[aabbs.size()]);
         aabbs.clear();
@@ -1046,10 +1046,7 @@ public class Matrix3
                         || ((minX <= aabb.maxX) && (minX >= aabb.minX)) || ((minX <= aabb.minX) && (maxX >= aabb.maxX));
                 collidesZ = collidesZ && (collidesX || collidesY);
                 collidesX = collidesX && (collidesZ || collidesY);
-                if (collidesZ || collidesX || collidesY)
-                {
-                    return true;
-                }
+                if (collidesZ || collidesX || collidesY) { return true; }
             }
         }
         return false;

@@ -107,8 +107,8 @@ public class TerrainManager
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
         NBTTagCompound terrainData = new NBTTagCompound();
-        TerrainManager.getInstance().getTerrain(evt.getPlayer().world).saveTerrain(terrainData, evt.getChunk().x,
-                evt.getChunk().z);
+        TerrainManager.getInstance().getTerrain(evt.getPlayer().getEntityWorld()).saveTerrain(terrainData,
+                evt.getChunk().x, evt.getChunk().z);
         MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
         PacketHandler.packetPipeline.sendTo(message, evt.getPlayer());
     }
@@ -148,7 +148,7 @@ public class TerrainManager
     {
         if (e == null) return null;
 
-        return getTerrain(e.world, e.posX, e.posY, e.posZ);
+        return getTerrain(e.getEntityWorld(), e.posX, e.posY, e.posZ);
     }
 
     public TerrainSegment getTerrian(World world, Vector3 v)

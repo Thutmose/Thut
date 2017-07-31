@@ -72,7 +72,8 @@ public class PacketHandler
                 if (channel == TELEPORTID)
                 {
                     int id = buffer.readInt();
-                    if (player.world.getEntityByID(id) != null) player.world.getEntityByID(id).setDead();
+                    if (player.getEntityWorld().getEntityByID(id) != null)
+                        player.getEntityWorld().getEntityByID(id).setDead();
                     return;
                 }
                 if (channel == TILEUPDATE)
@@ -81,7 +82,7 @@ public class PacketHandler
                     {
                         NBTTagCompound nbt = buffer.readCompoundTag();
                         BlockPos pos = new BlockPos(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
-                        TileEntity tile = player.world.getTileEntity(pos);
+                        TileEntity tile = player.getEntityWorld().getTileEntity(pos);
                         if (tile != null) tile.readFromNBT(nbt);
                         // else System.err.println("No Tile Entity found at " +
                         // pos);
@@ -115,7 +116,7 @@ public class PacketHandler
                     try
                     {
                         NBTTagCompound nbt = buffer.readCompoundTag();
-                        TerrainManager.getInstance().getTerrain(player.world).loadTerrain(nbt);
+                        TerrainManager.getInstance().getTerrain(player.getEntityWorld()).loadTerrain(nbt);
                     }
                     catch (Exception e)
                     {
@@ -129,7 +130,7 @@ public class PacketHandler
                     {
                         int id = buffer.readInt();
                         NBTTagCompound nbt = buffer.readCompoundTag();
-                        Entity e = player.world.getEntityByID(id);
+                        Entity e = player.getEntityWorld().getEntityByID(id);
                         if (e != null) e.readFromNBT(nbt);
                     }
                     catch (IOException e)
@@ -301,8 +302,8 @@ public class PacketHandler
                 Cruncher.fillFromInt(toFill, i);
                 vTemp.set(toFill);
                 vTemp.addTo(vMid);
-                if (provider.getPlayer() == null || provider.getPlayer().world == null) { return; }
-                provider.getPlayer().world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y,
+                if (provider.getPlayer() == null || provider.getPlayer().getEntityWorld() == null) { return; }
+                provider.getPlayer().getEntityWorld().spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y,
                         vTemp.z, 0, 0, 0);
                 if (n > max) break;
             }
@@ -359,7 +360,7 @@ public class PacketHandler
         buffer.writeInt(e.getEntityId());
         buffer.writeCompoundTag(nbt);
         MessageClient message = new MessageClient(buffer);
-        sendToAllNear(message, Vector3.getNewVector().set(e), e.world.provider.getDimension(), 64);
+        sendToAllNear(message, Vector3.getNewVector().set(e), e.getEntityWorld().provider.getDimension(), 64);
     }
 
     public static void sendTileUpdate(TileEntity tile)

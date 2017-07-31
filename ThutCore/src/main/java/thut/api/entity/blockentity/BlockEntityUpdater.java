@@ -64,7 +64,7 @@ public class BlockEntityUpdater
         {
             theEntity.setPosition(theEntity.posX, Math.round(theEntity.posY), theEntity.posZ);
         }
-        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.world.getTotalWorldTime());
+        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.getEntityWorld().getTotalWorldTime());
         MutableBlockPos pos = new MutableBlockPos();
         int xMin = blockEntity.getMin().getX();
         int zMin = blockEntity.getMin().getZ();
@@ -426,7 +426,7 @@ public class BlockEntityUpdater
         {
             EntityPlayer player = (EntityPlayer) entity;
 
-            if (player.world.isRemote)
+            if (player.getEntityWorld().isRemote)
             {
                 // This fixes jitter, need a better way to handle this.
                 if (Minecraft.getMinecraft().gameSettings.viewBobbing
@@ -442,12 +442,12 @@ public class BlockEntityUpdater
                 entity.fallDistance = 0;
             }
             // Meed to set floatingTickCount to prevent being kicked for flying.
-            if (!player.capabilities.isCreativeMode && !player.world.isRemote)
+            if (!player.capabilities.isCreativeMode && !player.getEntityWorld().isRemote)
             {
                 EntityPlayerMP entityplayer = (EntityPlayerMP) player;
                 if (collidedY) entityplayer.connection.floatingTickCount = 0;
             }
-            else if (player.world.isRemote)
+            else if (player.getEntityWorld().isRemote)
             {
                 // PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(12));
                 // MessageServer packet = new MessageServer(buffer);
