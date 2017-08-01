@@ -69,7 +69,7 @@ public class EventHandlerCommon
             case "badgesteel":
                 index = 0;
                 break;
-            case "badgefighting":
+            case "badgeghost":
                 index = 1;
                 break;
             case "badgeflying":
@@ -81,7 +81,7 @@ public class EventHandlerCommon
             case "badgeice":
                 index = 4;
                 break;
-            case "badgeghost":
+            case "badgefighting":
                 index = 5;
                 break;
             case "badgefire":
