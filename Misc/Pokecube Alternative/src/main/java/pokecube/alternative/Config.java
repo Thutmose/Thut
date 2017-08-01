@@ -13,15 +13,22 @@ public class Config extends ConfigBase
     public static Config instance;
 
     @Configure(category = "client")
-    public float         scale         = 1.0f;
+    public float         scale           = 1.0f;
     @Configure(category = "client")
-    public int           shift         = 0;
+    public int           shift           = 0;
     @Configure(category = "client")
-    public boolean       cooldownMeter = true;
+    public String        beltOffset      = "0 0 -0.6";
+    @Configure(category = "client")
+    public String        beltOffsetSneak = "0.0 0.13125 -0.105";
+    @Configure(category = "client")
+    public boolean       cooldownMeter   = true;
     @Configure(category = "misc")
-    public boolean       autoThrow     = true;
+    public boolean       autoThrow       = true;
     @Configure(category = "misc")
-    public boolean       trainerCard   = false;
+    public boolean       trainerCard     = false;
+
+    public final float[] offset          = new float[3];
+    public final float[] sneak           = new float[3];
 
     public Config()
     {
@@ -41,6 +48,16 @@ public class Config extends ConfigBase
     @Override
     protected void applySettings()
     {
+        String[] args = beltOffsetSneak.split(" ");
+        for (int i = 0; i < 3; i++)
+        {
+            sneak[i] = Float.parseFloat(args[i]);
+        }
+        args = beltOffset.split(" ");
+        for (int i = 0; i < 3; i++)
+        {
+            offset[i] = Float.parseFloat(args[i]);
+        }
     }
 
     @SubscribeEvent

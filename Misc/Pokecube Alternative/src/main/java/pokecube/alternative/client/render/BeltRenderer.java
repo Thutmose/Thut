@@ -15,6 +15,7 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import pokecube.alternative.Config;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import thut.core.client.render.model.IExtendedModelPart;
@@ -44,10 +45,13 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
         // First pass of render
         GL11.glPushMatrix();
         ((ModelBiped) this.livingEntityRenderer.getMainModel()).bipedBody.postRender(0.0625F);
+
+        float dx = Config.instance.offset[0], dy = Config.instance.offset[1], dz = Config.instance.offset[2];
         if (player.isSneaking())
         {
-            GlStateManager.translate(0.0F, 0.13125F, -0.105F);
+            GlStateManager.translate(Config.instance.sneak[0], Config.instance.sneak[1], Config.instance.sneak[2]);
         }
+
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableRescaleNormal();
         GlStateManager.alphaFunc(516, 0.1F);
@@ -56,7 +60,6 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
                 GlStateManager.DestFactor.ZERO);
         GlStateManager.pushMatrix();
-        float dx = 0, dy = -.0f, dz = -0.6f;
         float s = 0.52f;
         if (!CompatWrapper.isValid(entitylivingbaseIn.getItemStackFromSlot(EntityEquipmentSlot.LEGS)))
         {
