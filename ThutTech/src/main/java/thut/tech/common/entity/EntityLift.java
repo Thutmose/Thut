@@ -106,11 +106,12 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
+    @Override
     public BlockEntityWorld getFakeWorld()
     {
         if (fakeWorld == null)
         {
-            world = new BlockEntityWorld(this, getEntityWorld());
+            fakeWorld = new BlockEntityWorld(this, getEntityWorld());
         }
         return fakeWorld;
     }
