@@ -314,7 +314,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void doMotion()
     {
-        if (motionX != 0 || motionZ != 0) System.out.println(motionX + " " + motionY + " " + motionZ);
         if (!toMoveX) motionX = 0;
         if (!toMoveY) motionY = 0;
         if (!toMoveZ) motionZ = 0;
