@@ -55,12 +55,11 @@ public class ModelWrapper extends ModelBase implements IModel
             if (part == null) continue;
             try
             {
-                if (renderer.getTexturer() != null && part instanceof IRetexturableModel)
+                if (renderer.getTexturer() != null)
                 {
                     renderer.getTexturer().bindObject(entityIn);
-                    if (!statusRender) ((IRetexturableModel) part).setTexturer(renderer.getTexturer());
-                    else((IRetexturableModel) part).setTexturer(null);
                 }
+                if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(renderer.getTexturer());
                 if (part.getParent() == null)
                 {
                     GlStateManager.pushMatrix();
