@@ -15,8 +15,7 @@ public class TabulaWrapper extends ModelBase
     final IModelRenderer<?> renderer;
     final TabulaModelParser parser;
     final TabulaModel       model;
-    public boolean          statusRender = false;
-    public String           phase        = "";
+    public String           phase = "";
 
     public TabulaWrapper(TabulaModel model, TabulaModelParser parser, IModelRenderer<?> renderer)
     {
@@ -52,8 +51,7 @@ public class TabulaWrapper extends ModelBase
         GlStateManager.disableCull();
         TabulaModelParser pars = ((TabulaModelParser) parser);
         ModelJson modelj = pars.modelMap.get(model);
-        if (!statusRender) modelj.texturer = renderer.getTexturer();
-        else modelj.texturer = null;
+        modelj.texturer = renderer.getTexturer();
         modelj.changer = renderer.getAnimationChanger();
         float partialTick = ageInTicks = entityIn.ticksExisted;
         if (modelj.changer != null)
