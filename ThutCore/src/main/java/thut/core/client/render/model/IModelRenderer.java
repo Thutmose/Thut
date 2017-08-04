@@ -75,6 +75,10 @@ public interface IModelRenderer<T extends EntityLiving>
 
     IAnimationChanger getAnimationChanger();
 
+    void setTexturer(IPartTexturer texturer);
+
+    void setAnimationChanger(IAnimationChanger changer);
+
     String getAnimation();
 
     boolean hasAnimation(String phase);
