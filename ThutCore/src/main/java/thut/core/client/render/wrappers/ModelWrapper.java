@@ -27,7 +27,6 @@ public class ModelWrapper extends ModelBase implements IModel
     public final ModelHolder       model;
     public final IModelRenderer<?> renderer;
     public IModel                  imodel;
-    public boolean                 statusRender   = false;
     protected float                rotationPointX = 0, rotationPointY = 0, rotationPointZ = 0;
     protected float                rotateAngleX   = 0, rotateAngleY = 0, rotateAngleZ = 0, rotateAngle = 0;
 
