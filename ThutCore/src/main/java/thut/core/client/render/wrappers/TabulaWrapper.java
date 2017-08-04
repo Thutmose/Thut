@@ -32,8 +32,10 @@ public class TabulaWrapper extends ModelBase
     {
         if (model == null || parser == null) { return; }
         GlStateManager.pushMatrix();
-        parser.modelMap.get(model).render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch,
-                scale);
+        ModelJson modelj = parser.modelMap.get(model);
+        modelj.changer = renderer.getAnimationChanger();
+        modelj.texturer = renderer.getTexturer();
+        modelj.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         GlStateManager.enableCull();
         GlStateManager.popMatrix();
     }
