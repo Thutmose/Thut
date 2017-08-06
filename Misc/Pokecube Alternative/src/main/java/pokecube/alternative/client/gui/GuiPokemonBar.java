@@ -187,6 +187,7 @@ public class GuiPokemonBar extends Gui
             RenderHelper.enableStandardItemLighting();
             GL11.glTranslatef(0.0F, (float) entity.getYOffset(), 0.0F);
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             Minecraft.getMinecraft().getRenderManager().doRenderEntity(entity, 0, 0, 0, 0, 1.5F, false);
             RenderHelper.disableStandardItemLighting();
             GlStateManager.disableRescaleNormal();
