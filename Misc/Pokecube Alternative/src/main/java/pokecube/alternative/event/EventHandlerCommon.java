@@ -167,7 +167,7 @@ public class EventHandlerCommon
                     if (PokecubeManager.isFilled(cube))
                     {
                         Entity target = event.getSource().getImmediateSource();
-                        Vector3 here = Vector3.getNewVector().set(this);
+                        Vector3 here = Vector3.getNewVector().set(event.getEntityLiving());
                         Vector3 t = Vector3.getNewVector().set(target);
                         t.set(t.subtractFrom(here).scalarMultBy(0.5).addTo(here));
                         ((IPokecube) cube.getItem()).throwPokecubeAt(target.getEntityWorld(), event.getEntityLiving(),
