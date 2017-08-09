@@ -1,6 +1,5 @@
 package thut.core.client.render.model;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,8 +34,7 @@ public class ModelFactory
             {
                 return clazz.getConstructor(ResourceLocation.class).newInstance(model.model);
             }
-            catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                    | InvocationTargetException | NoSuchMethodException | SecurityException e)
+            catch (Exception e)
             {
                 e.printStackTrace();
             }
