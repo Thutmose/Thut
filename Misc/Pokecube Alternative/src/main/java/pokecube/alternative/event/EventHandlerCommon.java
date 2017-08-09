@@ -107,13 +107,14 @@ public class EventHandlerCommon
             {
                 if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
                 {
+                    UUID itemID = PokecubeManager.getUUID(item);
                     IPokemobBelt cap = BeltPlayerData.getBelt(player);
                     boolean toBelt = false;
                     for (int i = 0; i < 6; i++)
                     {
                         ItemStack stack = cap.getCube(i);
-                        if (!CompatWrapper.isValid(stack)) continue;
-                        if (PokecubeManager.getUUID(item).equals(PokecubeManager.getUUID(stack)))
+                        if (CompatWrapper.isValid(stack)) continue;
+                        if (itemID.equals(cap.getSlotID(i)))
                         {
                             cap.setCube(i, item);
                             toBelt = true;
@@ -161,22 +162,28 @@ public class EventHandlerCommon
             if (PCEventsHandler.getOutMobs(event.getEntityLiving()).isEmpty())
             {
                 IPokemobBelt cap = BeltPlayerData.getBelt(event.getEntityLiving());
-                if (CompatWrapper.isValid(cap.getCube(cap.getSlot())))
+                for (int i = 0; i < 6; i++)
                 {
-                    ItemStack cube = cap.getCube(cap.getSlot());
-                    if (PokecubeManager.isFilled(cube))
+                    int index = (cap.getSlot() + i) % 6;
+                    if (CompatWrapper.isValid(cap.getCube(index)))
                     {
-                        Entity target = event.getSource().getImmediateSource();
-                        Vector3 here = Vector3.getNewVector().set(event.getEntityLiving());
-                        Vector3 t = Vector3.getNewVector().set(target);
-                        t.set(t.subtractFrom(here).scalarMultBy(0.5).addTo(here));
-                        ((IPokecube) cube.getItem()).throwPokecubeAt(target.getEntityWorld(), event.getEntityLiving(),
-                                cube, t, null);
-                        ITextComponent text = new TextComponentTranslation("pokecube.trainer.toss",
-                                event.getEntityLiving().getDisplayName(), cube.getDisplayName());
-                        cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
-                        syncPokemon((EntityPlayer) event.getEntityLiving());
-                        target.sendMessage(text);
+                        ItemStack cube = cap.getCube(index);
+                        if (PokecubeManager.isFilled(cube) && PokecubeManager
+                                .itemToPokemob(cube, event.getEntity().getEntityWorld()).getEntity().getHealth() > 0)
+                        {
+                            Entity target = event.getSource().getImmediateSource();
+                            Vector3 here = Vector3.getNewVector().set(event.getEntityLiving());
+                            Vector3 t = Vector3.getNewVector().set(target);
+                            t.set(t.subtractFrom(here).scalarMultBy(0.5).addTo(here));
+                            ((IPokecube) cube.getItem()).throwPokecubeAt(target.getEntityWorld(),
+                                    event.getEntityLiving(), cube, t, null);
+                            ITextComponent text = new TextComponentTranslation("pokecube.trainer.toss",
+                                    event.getEntityLiving().getDisplayName(), cube.getDisplayName());
+                            cap.setCube(index, CompatWrapper.nullStack);
+                            syncPokemon((EntityPlayer) event.getEntityLiving());
+                            target.sendMessage(text);
+                            return;
+                        }
                     }
                 }
             }
@@ -239,31 +246,32 @@ public class EventHandlerCommon
                 pokemon = pokemon.megaEvolve(pokemon.getPokedexEntry().getBaseForme());
             ItemStack pokemonStack = PokecubeManager.pokemobToItem(pokemon);
             EntityPlayer player = (EntityPlayer) pokemon.getPokemonOwner();
+            UUID itemID = PokecubeManager.getUUID(pokemonStack);
             IPokemobBelt cap = BeltPlayerData.getBelt(player);
-            boolean added = false;
+            boolean toBelt = false;
             for (int i = 0; i < 6; i++)
             {
                 ItemStack stack = cap.getCube(i);
-                if (!CompatWrapper.isValid(stack)) continue;
-                if (PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
+                if (CompatWrapper.isValid(stack)) continue;
+                if (itemID.equals(cap.getSlotID(i)))
                 {
                     cap.setCube(i, pokemonStack);
-                    added = true;
+                    toBelt = true;
                     break;
                 }
             }
-            if (!added) for (int i = 0; i < 6; i++)
+            if (!toBelt) for (int i = 0; i < 6; i++)
             {
                 ItemStack stack = cap.getCube(i);
                 if (!CompatWrapper.isValid(stack)
                         || PokecubeManager.getUUID(pokemonStack).equals(PokecubeManager.getUUID(stack)))
                 {
                     cap.setCube(i, pokemonStack);
-                    added = true;
+                    toBelt = true;
                     break;
                 }
             }
-            if (added)
+            if (toBelt)
             {
                 ITextComponent mess = new TextComponentTranslation("pokemob.action.return",
                         pokemon.getPokemonDisplayName().getFormattedText());

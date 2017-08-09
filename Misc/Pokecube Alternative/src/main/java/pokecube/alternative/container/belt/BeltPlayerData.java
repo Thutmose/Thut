@@ -1,6 +1,7 @@
 package pokecube.alternative.container.belt;
 
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -77,8 +78,9 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
         setSlot(compound.getInteger("selectedSlot"));
     }
 
-    List<ItemStack> cubes = CompatWrapper.makeList(6);
-    int             slot  = 0;
+    List<ItemStack> cubes   = CompatWrapper.makeList(6);
+    int             slot    = 0;
+    UUID[]          slotIDs = new UUID[6];
 
     @Override
     public ItemStack getCube(int index)
@@ -102,5 +104,17 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt
     public void setSlot(int index)
     {
         slot = index;
+    }
+
+    @Override
+    public void setSlotID(int index, UUID id)
+    {
+        slotIDs[index] = id;
+    }
+
+    @Override
+    public UUID getSlotID(int index)
+    {
+        return slotIDs[index];
     }
 }

@@ -1,10 +1,11 @@
 package pokecube.alternative.network;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -19,9 +20,8 @@ import pokecube.alternative.container.belt.IPokemobBelt;
 public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt, IMessage>
 {
 
-    int         playerId;
-    byte        selectedSlot;
-    ItemStack[] pokemon = new ItemStack[6];
+    int          playerId;
+    IPokemobBelt belt = new BeltPlayerData();
 
     public PacketSyncBelt()
     {
@@ -29,11 +29,7 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
 
     public PacketSyncBelt(IPokemobBelt belt, int playerId)
     {
-        this.selectedSlot = (byte) belt.getSlot();
-        for (int i = 0; i < 6; i++)
-        {
-            pokemon[i] = belt.getCube(i);
-        }
+        this.belt = belt;
         this.playerId = playerId;
     }
 
@@ -41,18 +37,31 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
     public void toBytes(ByteBuf buffer)
     {
         buffer.writeInt(playerId);
-        buffer.writeByte(selectedSlot);
+        buffer.writeByte(belt.getSlot());
         for (int i = 0; i < 6; i++)
-            ByteBufUtils.writeItemStack(buffer, pokemon[i]);
+            ByteBufUtils.writeItemStack(buffer, belt.getCube(i));
+        for (int i = 0; i < 6; i++)
+        {
+            UUID id = belt.getSlotID(i);
+            ByteBufUtils.writeUTF8String(buffer, id == null ? "" : id.toString());
+        }
     }
 
     @Override
     public void fromBytes(ByteBuf buffer)
     {
         playerId = buffer.readInt();
-        selectedSlot = buffer.readByte();
+        belt.setSlot(buffer.readByte());
         for (int i = 0; i < 6; i++)
-            pokemon[i] = ByteBufUtils.readItemStack(buffer);
+            belt.setCube(i, ByteBufUtils.readItemStack(buffer));
+        for (int i = 0; i < 6; i++)
+        {
+            String id = ByteBufUtils.readUTF8String(buffer);
+            if (!id.isEmpty())
+            {
+                belt.setSlotID(i, UUID.fromString(id));
+            }
+        }
     }
 
     @SideOnly(Side.CLIENT)
@@ -81,9 +90,10 @@ public class PacketSyncBelt implements IMessage, IMessageHandler<PacketSyncBelt,
             IPokemobBelt cap = BeltPlayerData.getBelt(p);
             for (int i = 0; i < 6; i++)
             {
-                cap.setCube(i, message.pokemon[i]);                                                                                                                                                                 
+                cap.setCube(i, message.belt.getCube(i));
+                cap.setSlotID(i, message.belt.getSlotID(i));
             }
-            cap.setSlot(message.selectedSlot);
+            cap.setSlot(message.belt.getSlot());
         }
         return;
     }

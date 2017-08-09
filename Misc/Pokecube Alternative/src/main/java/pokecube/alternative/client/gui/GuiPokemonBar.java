@@ -1,5 +1,7 @@
 package pokecube.alternative.client.gui;
 
+import java.util.UUID;
+
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -84,13 +86,15 @@ public class GuiPokemonBar extends Gui
 
             EntityLiving entity = null;
             ItemStack pokemonItemstack = capability.getCube(pokemonNumber);
-            if (!CompatWrapper.isValid(pokemonItemstack)) continue;
+            if (!CompatWrapper.isValid(pokemonItemstack) && capability.getSlotID(pokemonNumber) == null) continue;
             IPokemob pokemob = null;
-            if (pokemob == null)
+            IPokemob realMob = null;
+            boolean inWorld = false;
+            if (pokemob == null && CompatWrapper.isValid(pokemonItemstack))
             {
                 try
                 {
-                    pokemob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
+                    pokemob = realMob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
                     entity = pokemob.getEntity();
                 }
                 catch (Exception e)
@@ -99,19 +103,44 @@ public class GuiPokemonBar extends Gui
                     e.printStackTrace();
                 }
             }
+
+            if (pokemob == null && capability.getSlotID(pokemonNumber) != null)
+            {
+                UUID id = capability.getSlotID(pokemonNumber);
+                for (IPokemob testMob : GuiDisplayPokecubeInfo.instance().getPokemobsToDisplay())
+                {
+                    if (testMob != null && testMob.getEntity().getUniqueID().equals(id))
+                    {
+                        pokemob = realMob = testMob;
+                        entity = testMob.getEntity();
+                        inWorld = true;
+                        break;
+                    }
+                }
+            }
+            if (pokemob != null)
+            {
+                pokemob = EventsHandlerClient.getRenderMob(pokemob.getPokedexEntry(), mc.world);
+            }
+
             if (pokemob == null || entity == null) continue;
 
             // Set the mob's stance and rotation
-            entity.rotationYaw = 0;
-            entity.rotationPitch = 0;
-            entity.rotationYawHead = 0;
+            pokemob.getEntity().rotationYaw = 0;
+            pokemob.getEntity().renderYawOffset = 0;
+            pokemob.getEntity().prevRenderYawOffset = 0;
+            pokemob.getEntity().prevRotationPitch = 0;
+            pokemob.getEntity().ticksExisted = 0;
+            pokemob.getEntity().rotationPitch = 0;
+            pokemob.getEntity().prevRotationYawHead = 0;
+            pokemob.getEntity().rotationYawHead = 0;
             pokemob.setPokemonAIState(IMoveConstants.SITTING, true);
-            entity.onGround = true;
+            pokemob.getEntity().onGround = true;
 
             // Get the amount to scale the mob by
-            float mobScale = pokemob.getSize();
-            float size = Math.max(pokemob.getPokedexEntry().width * mobScale,
-                    pokemob.getPokedexEntry().height * mobScale);
+            float mobScale = realMob.getSize();
+            float size = Math.max(realMob.getPokedexEntry().width * mobScale,
+                    realMob.getPokedexEntry().height * mobScale);
             float zoom = (float) (15f / Math.pow(size, 0.7));
 
             // Brightness
@@ -124,7 +153,7 @@ public class GuiPokemonBar extends Gui
                 this.mc.renderEngine.bindTexture(bar);
                 selectorXPos = i + 7;
                 selectorYPos = j - 20;
-                ITextComponent nameComp = pokemob.getPokemonDisplayName();
+                ITextComponent nameComp = realMob.getPokemonDisplayName();
                 float s = 0.75F;
                 this.drawTexturedModalRect(selectorXPos, selectorYPos, 38, 0, 75, 26);
                 this.drawTexturedModalRect(0, selectorYPos, 0, 0, 10, 26);
@@ -138,10 +167,10 @@ public class GuiPokemonBar extends Gui
                 this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 197, (int) (healthLength * relHp), 3);
 
                 // Draw EXP
-                int exp = pokemob.getExp() - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
-                float maxExp = Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel() + 1)
-                        - Tools.levelToXp(pokemob.getExperienceMode(), pokemob.getLevel());
-                if (pokemob.getLevel() == 100) maxExp = exp = 1;
+                int exp = realMob.getExp() - Tools.levelToXp(realMob.getExperienceMode(), realMob.getLevel());
+                float maxExp = Tools.levelToXp(realMob.getExperienceMode(), realMob.getLevel() + 1)
+                        - Tools.levelToXp(realMob.getExperienceMode(), realMob.getLevel());
+                if (realMob.getLevel() == 100) maxExp = exp = 1;
                 int expLength = 52;
                 float expSize = exp / maxExp;
                 this.drawTexturedModalRect(selectorXPos - 2, selectorYPos + 6, 3, 205, (int) (expLength * expSize), 2);
@@ -154,14 +183,14 @@ public class GuiPokemonBar extends Gui
                 // Draw name
                 String name = I18n.format(nameComp.getFormattedText());
                 name = mc.fontRenderer.trimStringToWidth(name, 55);
-                mc.fontRenderer.drawString(name, 2, 0, 0xFFFFFF);
+                mc.fontRenderer.drawString(name, 2, 0, inWorld ? 0x8888FF : relHp == 0 ? 0xFF8888 : 0xFFFFFF);
                 // Undo scaling
                 GL11.glScaled(1 / s, 1 / s, 1 / s);
 
                 // Draw gender
-                int colour = pokemob.getSexe() == IPokemob.MALE ? 0x0011FF : 0xCC5555;
-                String gender = pokemob.getSexe() == IPokemob.MALE ? "\u2642"
-                        : pokemob.getSexe() == IPokemob.FEMALE ? "\u2640" : "";
+                int colour = realMob.getSexe() == IPokemob.MALE ? 0x0011FF : 0xCC5555;
+                String gender = realMob.getSexe() == IPokemob.MALE ? "\u2642"
+                        : realMob.getSexe() == IPokemob.FEMALE ? "\u2640" : "";
                 int sexX = -30;
                 int sexY = 10;
                 mc.fontRenderer.drawString(gender, sexX, sexY, colour);
@@ -170,7 +199,7 @@ public class GuiPokemonBar extends Gui
                 s = 0.75f;
                 GL11.glScaled(s, s, s);
                 GL11.glTranslatef(0, 0.5f, 0);
-                String lvlStr = "L." + pokemob.getLevel();
+                String lvlStr = "L." + realMob.getLevel();
 
                 int lvlx = (int) 85 - mc.fontRenderer.getStringWidth(lvlStr);
                 int lvly = 0;
@@ -185,10 +214,16 @@ public class GuiPokemonBar extends Gui
             GL11.glScalef(-zoom, zoom, zoom);
             GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
             RenderHelper.enableStandardItemLighting();
-            GL11.glTranslatef(0.0F, (float) entity.getYOffset(), 0.0F);
+            GL11.glTranslatef(0.0F, (float) pokemob.getEntity().getYOffset(), 0.0F);
+            if (entity.getHealth() == 0)
+            {
+                pokemob.getEntity().deathTime = 2;
+                GL11.glTranslatef(-pokemob.getSize() * pokemob.getPokedexEntry().height * 0.5f, 0.0f, 0.0F);
+            }
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            Minecraft.getMinecraft().getRenderManager().doRenderEntity(entity, 0, 0, 0, 0, 1.5F, false);
+            Minecraft.getMinecraft().getRenderManager().doRenderEntity(pokemob.getEntity(), 0, 0, 0, 0, 1.5F, false);
+            pokemob.getEntity().deathTime = 0;
             RenderHelper.disableStandardItemLighting();
             GlStateManager.disableRescaleNormal();
             GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);

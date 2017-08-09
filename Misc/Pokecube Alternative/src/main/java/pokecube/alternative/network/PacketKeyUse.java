@@ -1,5 +1,7 @@
 package pokecube.alternative.network;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,6 +17,7 @@ import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
+import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.lib.CompatWrapper;
 
 public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMessage>
@@ -96,6 +99,8 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
                 cube.getItem().onPlayerStoppedUsing(cube, player.world, player, message.ticks);
                 CompatWrapper.setStackSize(cube, 1);
                 cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
+                UUID id = PokecubeManager.getUUID(cube);
+                cap.setSlotID(cap.getSlot(), id);
             }
         }
         else if (message.messageId == RECALL)
