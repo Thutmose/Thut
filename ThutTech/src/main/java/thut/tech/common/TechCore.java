@@ -2,6 +2,12 @@ package thut.tech.common;
 
 import static thut.tech.common.network.PacketPipeline.packetPipeline;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -59,7 +65,28 @@ public class TechCore
     @Instance(Reference.MOD_ID)
     public static TechCore        instance;
 
-    public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
+    public static CreativeTabThut tabThut    = CreativeTabThut.tabThut;
+    public static Logger          logger     = Logger.getLogger("thuttech");
+    protected static FileHandler  logHandler = null;
+
+    private static void initLogger()
+    {
+        logger.setLevel(Level.ALL);
+        try
+        {
+            File logfile = new File("." + File.separator + "logs", "thuttech.log");
+            if ((logfile.exists() || logfile.createNewFile()) && logfile.canWrite() && logHandler == null)
+            {
+                logHandler = new FileHandler(logfile.getPath());
+                logHandler.setFormatter(new LogFormatter());
+                logger.addHandler(logHandler);
+            }
+        }
+        catch (SecurityException | IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
 
     public static ItemStack getInfoBook()
     {
@@ -88,6 +115,7 @@ public class TechCore
     public void load(FMLInitializationEvent evt)
     {
         proxy.initClient();
+        initLogger();
     }
 
     @EventHandler
