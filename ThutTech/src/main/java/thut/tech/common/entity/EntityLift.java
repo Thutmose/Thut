@@ -81,6 +81,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     int                                 n                  = 0;
     int                                 passengertime      = 10;
     boolean                             first              = true;
+    private boolean                     shouldRevert       = true;
     Random                              r                  = new Random();
     public UUID                         id                 = null;
     public UUID                         owner;
@@ -604,11 +605,17 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void setDead()
     {
-        if (!getEntityWorld().isRemote && !this.isDead && this.addedToChunk)
+        if (!getEntityWorld().isRemote && !this.isDead && this.addedToChunk && shouldRevert)
         {
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }
         super.setDead();
+    }
+
+    @Override
+    public void setDropItemsWhenDead(boolean dropWhenDead)
+    {
+        shouldRevert = dropWhenDead;
     }
 
     @Override
