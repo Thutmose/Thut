@@ -20,4 +20,4 @@ msg.floorSet.name=Dieses Stockwerk wurde auf Nummer %s gesetzt
 msg.floorError.name=Stockwerk %s existiert bereits.
 
 # Misc
-entity.thuttech.thuttechlift.name=Aufzug
+entity.thuttech.lift.name=Aufzug
