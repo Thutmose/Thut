@@ -22,4 +22,4 @@ msg.lift.killed=Výtah zrušen
 msg.lift.owner=Vlastníkem výtahu je %s
 
 #Misc
-entity.thuttech.thuttechlift.name=Výtah
+entity.thuttech.lift.name=Výtah

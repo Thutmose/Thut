@@ -391,6 +391,9 @@ public class BlockEntityUpdater
                 if (diff > 0 || diff < -0.5 || Math.abs(diff) > check)
                 {
                     entity.motionY = 0;
+                    entity.onGround = true;
+                    entity.fall(entity.fallDistance, 0);
+                    entity.fallDistance = 0;
                 }
             }
 
@@ -401,8 +404,8 @@ public class BlockEntityUpdater
             if (temp1.y >= 0)
             {
                 entity.onGround = true;
-                entity.fallDistance = 0;
                 entity.fall(entity.fallDistance, 0);
+                entity.fallDistance = 0;
             }
             else if (temp1.y < 0)
             {
@@ -420,6 +423,14 @@ public class BlockEntityUpdater
             // (float) entity.posZ));
             // entity.setPosition(temp1.x, temp1.y, temp1.z);
             CompatWrapper.moveEntitySelf(entity, temp1.x, temp1.y, temp1.z);
+
+            // Attempt to also set previous positions to prevent desync like
+            // issues on servers.
+            entity.prevPosX = entity.posX;
+            entity.prevPosY = entity.posY;
+            entity.prevPosZ = entity.posZ;
+            entity.prevRotationPitch = entity.rotationPitch;
+            entity.prevRotationYaw = entity.rotationYaw;
         }
         // Extra stuff to do with players.
         if (entity instanceof EntityPlayer)
@@ -439,6 +450,7 @@ public class BlockEntityUpdater
             if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
             {
                 entity.onGround = true;
+                entity.fall(entity.fallDistance, 0);
                 entity.fallDistance = 0;
             }
             // Meed to set floatingTickCount to prevent being kicked for flying.

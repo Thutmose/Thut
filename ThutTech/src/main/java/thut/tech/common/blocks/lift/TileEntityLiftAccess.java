@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 
+import io.netty.buffer.Unpooled;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -18,6 +19,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -36,6 +38,8 @@ import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 import thut.lib.CompatWrapper;
 import thut.tech.common.entity.EntityLift;
+import thut.tech.common.network.PacketPipeline;
+import thut.tech.common.network.PacketPipeline.ServerPacket;
 
 @net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
@@ -95,67 +99,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
     }
 
-    /*
-     * Calls lift to specified Floor
-     */
-    @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] callFloor(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            lift.call(args.checkInteger(0));
-            return new Object[] {};
-        }
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Calls lift to specified Y value
-     */
-    @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] callYValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            lift.setDestY(args.checkInteger(0));
-            return new Object[] {};
-        }
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Calls lift to specified Y value
-     */
-    @Callback(doc = "function(xValue:number) -- Calls the Lift to the specified X location")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] callXValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            lift.setDestX(args.checkInteger(0));
-            return new Object[] {};
-        }
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Calls lift to specified Y value
-     */
-    @Callback(doc = "function(zValue:number) -- Calls the Lift to the specified Z location")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] callZValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            lift.setDestZ(args.checkInteger(0));
-            return new Object[] {};
-        }
-        throw new Exception("no connected lift");
-    }
-
-    /** Sets the world for this tileEntity. */
+    /** Sets the worldObj for this tileEntity. */
     public void setWorldObj(World worldIn)
     {
         this.world = worldIn;
@@ -188,22 +132,24 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return ret;
     }
 
-    public void doButtonClick(EntityLivingBase clicker, EnumFacing side, float hitX, float hitY, float hitZ)
+    public boolean doButtonClick(EntityLivingBase clicker, EnumFacing side, float hitX, float hitY, float hitZ)
     {
         if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, world))
         {
             lift = EntityLift.getLiftFromUUID(liftID, world);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        if (!world.isRemote && lift != null)
+        boolean valid = lift != null && lift.floors[button - 1] > 0;
+        if (lift != null && getWorld().isRemote && isSideOn(side))
         {
-            if (isSideOn(side))
-            {
-                buttonPress(button);
-                calledFloor = lift.getDestinationFloor();
-            }
+            PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
+            buffer.writeBlockPos(getPos());
+            buffer.writeInt(button);
+            ServerPacket packet = new ServerPacket(buffer);
+            PacketPipeline.sendToServer(packet);
         }
         if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
+        return valid;
     }
 
     public int getButtonFromClick(EnumFacing side, float hitX, float hitY, float hitZ)
@@ -268,38 +214,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return 0;
     }
 
-    /*
-     * Returns floor associated with this block
-     */
-    @Callback(doc = "returns the Floor assigned to the Controller")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getFloor(Context context, Arguments args)
-    {
-        return new Object[] { floor };
-    }
-
-    /*
-     * Returns the Y value of the controller for the specified floor
-     */
-    @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getFloorYValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null)
-        {
-            int floor = args.checkInteger(0);
-
-            if (floor > 0 && floor <= 64)
-            {
-                int value = lift.floors[floor - 1];
-                if (value == -1) throw new Exception("floor " + floor + " is not assigned");
-                return new Object[] { value };
-            }
-            throw new Exception("floor out of bounds");
-        }
-        throw new Exception("no connected lift");
-    }
-
     public TileEntityLiftAccess getRoot()
     {
         if (here == null || here.isEmpty())
@@ -321,42 +235,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public int getSidePage(EnumFacing side)
     {
         return sidePages[side.getIndex()];
-    }
-
-    /*
-     * Returns the Yvalue of the lift.
-     */
-    @Callback(doc = "returns the current Y value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getYValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null) return new Object[] { (float) lift.posY };
-
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Returns the Yvalue of the lift.
-     */
-    @Callback(doc = "returns the current X value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getXValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null) return new Object[] { (float) lift.posX };
-
-        throw new Exception("no connected lift");
-    }
-
-    /*
-     * Returns the Yvalue of the lift.
-     */
-    @Callback(doc = "returns the current Z value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] getZValue(Context context, Arguments args) throws Exception
-    {
-        if (lift != null) return new Object[] { (float) lift.posZ };
-
-        throw new Exception("no connected lift");
     }
 
     /** Called from Chunk.setBlockIDWithMetadata and Chunk.fillChunk, determines
@@ -432,17 +310,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public void setEnergy(double energy)
     {
-    }
-
-    /*
-     * Sets floor associated with this block
-     */
-    @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
-    @Optional.Method(modid = "OpenComputers")
-    public Object[] setFloor(Context context, Arguments args)
-    {
-        floor = args.checkInteger(0);
-        return new Object[] { floor };
     }
 
     public void setFloor(int floor)
@@ -640,5 +507,149 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public NBTTagCompound getUpdateTag()
     {
         return writeToNBT(new NBTTagCompound());
+    }
+
+    // Open Computers stuff here, possibly will move this to a compat class or
+    // something?
+    /*
+     * Calls lift to specified Floor
+     */
+    @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callFloor(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.call(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Calls lift to specified Y value
+     */
+    @Callback(doc = "function(yValue:number) -- Calls the Lift to thespecified Y level")
+
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.setDestY(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Calls lift to specified Y value
+     */
+    @Callback(doc = "function(xValue:number) -- Calls the Lift to thespecified X location")
+
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callXValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.setDestX(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Calls lift to specified Y value
+     */
+    @Callback(doc = "function(zValue:number) -- Calls the Lift to thespecified Z location")
+
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] callZValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            lift.setDestZ(args.checkInteger(0));
+            return new Object[] {};
+        }
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Sets floor associated with this block
+     */
+    @Callback(doc = "function(floor:number) -- Sets the floor assosiated tothe Controller")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] setFloor(Context context, Arguments args)
+    {
+        floor = args.checkInteger(0);
+        return new Object[] { floor };
+    }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current Y value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (float) lift.posY };
+
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current X value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getXValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (float) lift.posX };
+
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Returns the Yvalue of the lift.
+     */
+    @Callback(doc = "returns the current Z value of the lift.")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getZValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) return new Object[] { (float) lift.posZ };
+
+        throw new Exception("no connected lift");
+    }
+
+    /*
+     * Returns floor associated with this block
+     */
+    @Callback(doc = "returns the Floor assigned to the Controller")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getFloor(Context context, Arguments args)
+    {
+        return new Object[] { floor };
+    }
+
+    /*
+     * Returns the Y value of the controller for the specified floor
+     */
+    @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
+    @Optional.Method(modid = "OpenComputers")
+    public Object[] getFloorYValue(Context context, Arguments args) throws Exception
+    {
+        if (lift != null)
+        {
+            int floor = args.checkInteger(0);
+
+            if (floor > 0 && floor <= 64)
+            {
+                int value = lift.floors[floor - 1];
+                if (value == -1) throw new Exception("floor " + floor + " is not assigned");
+                return new Object[] { value };
+            }
+            throw new Exception("floor out of bounds");
+        }
+        throw new Exception("no connected lift");
     }
 }

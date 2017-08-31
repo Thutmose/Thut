@@ -3,18 +3,15 @@
  */
 package thut.tech.common.network;
 
-import javax.vecmath.Vector3f;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -22,8 +19,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import thut.api.maths.Vector3;
-import thut.core.common.ThutCore;
-import thut.lib.CompatWrapper;
+import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 
 public class PacketPipeline
 {
@@ -35,17 +31,6 @@ public class PacketPipeline
             @Override
             public ServerPacket onMessage(ClientPacket message, MessageContext ctx)
             {
-                ByteBuf buffer = message.buffer;
-                byte mess = buffer.readByte();
-                if (mess == 0)
-                {
-                    double y = buffer.readDouble();
-                    double dy = buffer.readDouble();
-                    EntityPlayer player = ThutCore.proxy.getPlayer();
-                    y += player.getYOffset();
-                    player.motionY = Math.max(dy, player.motionY);
-                    ThutCore.proxy.getPlayer().setPosition(player.posX, y, player.posZ);
-                }
                 return null;
             }
         }
@@ -102,19 +87,23 @@ public class PacketPipeline
 
             public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
             {
-
-                final Vector3f hit = new Vector3f(buffer.readFloat(), buffer.readFloat(), buffer.readFloat());
-                final EnumFacing side = EnumFacing.values()[buffer.readByte()];
                 final BlockPos pos = buffer.readBlockPos();
-                final EntityPlayer player1 = player;
+                final int button = buffer.readInt();
+                final World world = player.getEntityWorld();
+
                 FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(new Runnable()
                 {
                     @Override
                     public void run()
                     {
-                        IBlockState state = player1.getEntityWorld().getBlockState(pos);
-                        CompatWrapper.interactWithBlock(state.getBlock(), player1.getEntityWorld(), pos, state, player1,
-                                EnumHand.MAIN_HAND, player1.getHeldItemMainhand(), side, hit.x, hit.y, hit.z);
+                        TileEntity tile = world.getTileEntity(pos);
+                        if (tile instanceof TileEntityLiftAccess)
+                        {
+                            TileEntityLiftAccess te = (TileEntityLiftAccess) tile;
+                            if (te.lift == null) return;
+                            te.buttonPress(button);
+                            te.calledFloor = te.lift.getDestinationFloor();
+                        }
                     }
                 });
             }
@@ -124,7 +113,6 @@ public class PacketPipeline
             {
                 EntityPlayer player = ctx.getServerHandler().player;
                 handleServerSide(player, message.buffer);
-
                 return null;
             }
         }

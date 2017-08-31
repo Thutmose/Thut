@@ -1,32 +1,23 @@
-# Thut's Tech Language Properties
-# @author Thutmose
+# Thut's Concrete Language Properties (German Translation)
+# @author Thutmose and Vexatos
+
+
+children=
 
 # Blocks
 tile.liftRail.name=Aufzugsschiene
 tile.lift.name=Aufzug
 tile.liftcontroller.name=Aufzugskontrollblock
-tile.railgun.name=Plattformschiene [WIP]
+tile.platformRail.name=Plattformschiene [WIP]
 
 # Items
 item.devicelinker.name=Verbindungsgerät
 
-#Chat Messages
-msg.liftSet.name=Lift mit Verbindungsgerät verbunden
-msg.floorSet.name=Stockwerk auf Stock %s gesetzt
-msg.callPanel.name=Steuerung auf %s gesetzt
-msg.lift.killed=Aufzug aufgelöst
-msg.lift.owner=Dieser Aufzug gehört %s
-msg.lift.create=Aufzug erfolgreich erstellt
-msg.lift.setcorner=Erste Ecke des Aufzuges auf %s gesetzt
-msg.lift.toobig=Der Aufzug darf leider nicht so groß sein.
-msg.lift.noblock=Du benötigst %s Aufzugsblöcke in deinem Inventar für einen Aufzug dieser Größe.
+# Messages
 
-msg.linker.reset=Verbindungsgerät zurücksetzen
+msg.liftSet.name=Aufzug ausgewähkt
+msg.floorSet.name=Dieses Stockwerk wurde auf Nummer %s gesetzt
+msg.floorError.name=Stockwerk %s existiert bereits.
 
-#InfoBook json
-
-ttinfobook.json={pages:["[\"\",{\"text\":\"Willkommen bei ThutTech's Bedienungsanleitung.\",\"color\":\"dark_green\"},{\"text\":\"\\n\\nDie folgenden Seiten zeigen wie du den Aufzug baust und benutzt.\",\"color\":\"none\"}]","[\"\",{\"text\":\"Erste Schritte\",\"color\":\"dark_green\"},{\"text\":\"\\n\\nAls erstes musst du mehrere Aufzugsblöcke, zwei oder mehr Aufzugskontrollblöcke und ein Verbindungsgerät bauen.\",\"color\":\"none\"}]","[\"\",{\"text\":\"Am Anfang baust du am besten die Liftplatform aus Blöcken deiner Wahl.\\n\\nWähle das Verbindungsgerät und klicke mit der rechten Maustaste auf einen Eckblock der Plattform. Sie bekommt einen Rahmen in \"},{\"text\":\"rot\",\"color\":\"red\"}]","[\"\",{\"text\":\"schleiche und klicke mit der rechten Maustaste auf den anderen Eckpunkt, die Plattform sollte ein rotes Reckeck umschließen.\\n\\nWenn du nicht genügend Liftblöcke hast erscheint eine Fehlermeldung mit der benötigten Anzahl.\"}]","[\"\",{\"text\":\"Umschalt-Rechtsklick mit dem Verbindungsgerät auf die Liftplattform. Das Verbindungsgerät wird mit diesem Lift verbunden.\\n\\nWenn du den Lift entfernen möchtest, nimm einen Stock und führe einen Umschalt-Rechtsklick darauf aus, die ursprünglichen Blöcke bleiben erhalten.\"}]","[\"\",{\"text\":\"Als nächstes die Kontrollblöcke.\\n\\nDie Kontrollblöcke müssen 2 Blöcke über der jeweiligen Lift-Bodenebene plaziert werden.\\n\\nRechts-Klick mit dem Verbindungsgerät auf den Kontrollblock um die Stockwerke dort anzuzeigen.\"}]","[\"\",{\"text\":\"Erneute Rechtsklicks zeigen 4 unterschiedliche Stockwerksbereiche.\\n\\nWenn du mit eine Stock einen Rechts-Klick durchführst werden die Stockwerke ein- oder ausgeblendet.\"}]","[\"\",{\"text\":\"Nebeneinand plazierte Kontrollblöcke werden dem selben Stockwerk zugeordnet.\\n\\nMit einem Umschalt-Rechtsklick mit dem Verbindungsgerät auf die Oberseite des Kontrollblocks wird er zu einem Rufknopf für den Lift.\"}]","[\"\",{\"text\":\"Um den Lift mit dem Kontrollblock zu verbinden, Umschalt-Rechtsklick auf die gewünschte Stockwerksnummer mit dem Verbindungsgerät. Eine Nachricht bestätigt die Aktion.\"}]","[\"\",{\"text\":\"Um den Lift zu benutzen, einfach das gewünschte Stockwerk mit einem Rechtsklick wählen (ohne einen Stock oder das Verbindungsgerät in der Hand).\"}]","[\"\",{\"text\":\"Du kannst auch Kisten oder Kontrollblöcke in der Aufzugsplattform plazieren.\\n\\nWenn du einen Kontrollblock im Lift haben möchtest, aktiviere unbedingt zuerst die Stockwerksanzeige darauf bevor du den Aufzug erstellst.\"}]","[\"\",{\"text\":\"Der Kontrollblock unterstützt OpenComputers und stellt die folgenden Methoden bereit:\\n\\nsetFloor(nummer)\\ngetFloor(nummer)\\ncallFloor(nummer)\\ncall(X/Y/Z)Value(nummer)\\nget(X/Y/Z)Value()\\ngetFloorYValue(nummer)\"}]"],title:"ThutTech's Bedienungsanleitung",author:Thutmose}
-
-
-#Misc
-entity.thuttech.thuttechlift.name=Aufzug
+# Misc
+entity.thuttech.lift.name=Aufzug
