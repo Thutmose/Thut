@@ -16,6 +16,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.common.ForgeHooks;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.lib.CompatWrapper;
 import thut.tech.common.items.ItemLinker;
@@ -69,9 +70,21 @@ public class LiftInteractHandler
                 hitX = (float) (result.hitVec.xCoord - pos.getX());
                 hitY = (float) (result.hitVec.yCoord - pos.getY());
                 hitZ = (float) (result.hitVec.zCoord - pos.getZ());
+                if (player.isSneaking())
+                {
+                    EnumActionResult itemUse = ForgeHooks.onPlaceItemIntoWorld(stack, player, player.getEntityWorld(),
+                            pos, result.sideHit, hitX, hitY, hitZ, hand);
+                    if (itemUse != EnumActionResult.PASS) return itemUse;
+                }
                 activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getEntityWorld(), pos, state, player,
                         hand, stack, result.sideHit, hitX, hitY, hitZ);
                 if (activate) return EnumActionResult.SUCCESS;
+                else if (!player.isSneaking())
+                {
+                    EnumActionResult itemUse = ForgeHooks.onPlaceItemIntoWorld(stack, player, player.getEntityWorld(),
+                            pos, result.sideHit, hitX, hitY, hitZ, hand);
+                    if (itemUse != EnumActionResult.PASS) return itemUse;
+                }
             }
             return EnumActionResult.PASS;
         }

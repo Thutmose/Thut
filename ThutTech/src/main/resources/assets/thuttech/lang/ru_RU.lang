@@ -24,4 +24,4 @@ msg.lift.noblock=You need to have %s Elevator blocks in your inventory to make a
 msg.linker.reset=Сброс связывателя устройств
 
 #Misc
-entity.thuttech.thuttechlift.name=Лифт
+entity.thuttech.lift.name=Лифт
