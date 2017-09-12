@@ -209,6 +209,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public void applyEntityCollision(Entity entity)
     {
+        if (entity instanceof IBlockEntity) return;
         if (collider == null)
         {
             collider = new BlockEntityUpdater(this);
