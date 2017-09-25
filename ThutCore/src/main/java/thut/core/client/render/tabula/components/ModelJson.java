@@ -94,9 +94,6 @@ public class ModelJson extends TabulaModelBase
         cube.name = cubeInfo.name;
         cube.identifier = cubeInfo.identifier;
         cube.setRotationPoint((float) cubeInfo.position[0], (float) cubeInfo.position[1], (float) cubeInfo.position[2]);
-        // Use cubeInfo.mcScale as the scale, this lets it work properly.
-        cube.addBox((float) cubeInfo.offset[0], (float) cubeInfo.offset[1], (float) cubeInfo.offset[2],
-                cubeInfo.dimensions[0], cubeInfo.dimensions[1], cubeInfo.dimensions[2], (float) cubeInfo.mcScale);
         cube.rotateAngleX = (float) Math.toRadians((float) cubeInfo.rotation[0]);
         cube.rotateAngleY = (float) Math.toRadians((float) cubeInfo.rotation[1]);
         cube.rotateAngleZ = (float) Math.toRadians((float) cubeInfo.rotation[2]);
@@ -125,6 +122,9 @@ public class ModelJson extends TabulaModelBase
                 }
             }
         }
+        // Use cubeInfo.mcScale as the scale, this lets it work properly.
+        cube.addBox((float) cubeInfo.offset[0], (float) cubeInfo.offset[1], (float) cubeInfo.offset[2],
+                cubeInfo.dimensions[0], cubeInfo.dimensions[1], cubeInfo.dimensions[2], (float) cubeInfo.mcScale);
 
         return cube;
     }
