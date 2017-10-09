@@ -153,6 +153,8 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
                     Float.parseFloat(offset[2]), (float) toDegrees(Float.parseFloat(offset[3])));
             Set<String> children = t.getChildNames();
             t = t.getIfsTransform();
+            // Probably a lamp or camera in this case?
+            if (t == null) continue;
             X3dXML.Group group = t.group;
             String name = t.getGroupName();
             List<Shape> shapes = Lists.newArrayList();
