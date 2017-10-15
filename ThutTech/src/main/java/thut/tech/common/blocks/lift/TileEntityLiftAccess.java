@@ -41,7 +41,7 @@ import thut.tech.common.entity.EntityLift;
 import thut.tech.common.network.PacketPipeline;
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 
-@net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")
+@net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
 {
     public int                          power        = 0;
@@ -515,7 +515,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Calls lift to specified Floor
      */
     @Callback(doc = "function(floor:number) -- Calls the Lift to the specified Floor")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] callFloor(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -531,7 +531,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      */
     @Callback(doc = "function(yValue:number) -- Calls the Lift to thespecified Y level")
 
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] callYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -547,7 +547,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      */
     @Callback(doc = "function(xValue:number) -- Calls the Lift to thespecified X location")
 
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] callXValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -563,7 +563,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      */
     @Callback(doc = "function(zValue:number) -- Calls the Lift to thespecified Z location")
 
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] callZValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
@@ -578,7 +578,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Sets floor associated with this block
      */
     @Callback(doc = "function(floor:number) -- Sets the floor assosiated tothe Controller")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] setFloor(Context context, Arguments args)
     {
         floor = args.checkInteger(0);
@@ -589,7 +589,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Returns the Yvalue of the lift.
      */
     @Callback(doc = "returns the current Y value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] getYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null) return new Object[] { (float) lift.posY };
@@ -601,7 +601,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Returns the Yvalue of the lift.
      */
     @Callback(doc = "returns the current X value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] getXValue(Context context, Arguments args) throws Exception
     {
         if (lift != null) return new Object[] { (float) lift.posX };
@@ -613,7 +613,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Returns the Yvalue of the lift.
      */
     @Callback(doc = "returns the current Z value of the lift.")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] getZValue(Context context, Arguments args) throws Exception
     {
         if (lift != null) return new Object[] { (float) lift.posZ };
@@ -625,7 +625,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Returns floor associated with this block
      */
     @Callback(doc = "returns the Floor assigned to the Controller")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] getFloor(Context context, Arguments args)
     {
         return new Object[] { floor };
@@ -635,7 +635,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Returns the Y value of the controller for the specified floor
      */
     @Callback(doc = "function(floor:number) -- returns the y value of the specified floor")
-    @Optional.Method(modid = "OpenComputers")
+    @Optional.Method(modid = "opencomputers")
     public Object[] getFloorYValue(Context context, Arguments args) throws Exception
     {
         if (lift != null)
