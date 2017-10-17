@@ -218,7 +218,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         for (IExtendedModelPart o : parts.values())
         {
-            o.renderAll();
+            if (o.getParent() == null) o.renderAll();
         }
     }
 
@@ -227,7 +227,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         for (IExtendedModelPart o : parts.values())
         {
-            o.renderAllExcept(excludedGroupNames);
+            if (o.getParent() == null) o.renderAllExcept(excludedGroupNames);
         }
     }
 
@@ -236,7 +236,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         for (IExtendedModelPart o : parts.values())
         {
-            o.renderOnly(groupNames);
+            if (o.getParent() == null) o.renderOnly(groupNames);
         }
     }
 
@@ -245,7 +245,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         for (IExtendedModelPart o : parts.values())
         {
-            o.renderPart(partName);
+            if (o.getParent() == null) o.renderPart(partName);
         }
     }
 
