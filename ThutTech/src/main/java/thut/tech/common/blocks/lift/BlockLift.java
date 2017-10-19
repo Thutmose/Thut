@@ -140,6 +140,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     /** Convert the BlockState into the correct metadata value */
     public int getMetaFromState(IBlockState state)
     {
+        if (state.getBlock() != this) return state.getBlock().getMetaFromState(state);
         int ret = state.getValue(VARIANT).ordinal();
         if ((state.getValue(CALLED))) ret += 4;
         if ((state.getValue(CURRENT))) ret += 8;
@@ -225,6 +226,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                 IBlockState newState = CompatWrapper.getBlockStateFromMeta(b, heldItem.getItemDamage());
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                 te.copiedState = newState;
+                if (!te.getWorld().isRemote) PacketHandler.sendTileUpdate(te);
                 return true;
             }
 
@@ -288,7 +290,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos)
     {
         TileEntityLiftAccess tile = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-        if (tile != null && tile.copiedState != null) return tile.copiedState;
+        if (tile != null && tile.copiedState != null && tile.getWorld().isRemote) return tile.copiedState;
         return state;
     }
 
