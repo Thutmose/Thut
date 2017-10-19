@@ -60,10 +60,12 @@ public class WorldCache implements IBlockAccess
         }
     }
 
-    public final World                       world;
-    private final Long2ObjectMap<ChunkCache> map   = new Long2ObjectOpenHashMap<>();
+    public static boolean                    synchronizeWorlds = true;
 
-    final Set<ChunkCache>                    cache = Sets.newConcurrentHashSet();
+    public final World                       world;
+    private final Long2ObjectMap<ChunkCache> map               = new Long2ObjectOpenHashMap<>();
+
+    final Set<ChunkCache>                    cache             = Sets.newConcurrentHashSet();
 
     public WorldCache(World world_)
     {
@@ -98,6 +100,13 @@ public class WorldCache implements IBlockAccess
     @Override
     public IBlockState getBlockState(BlockPos pos)
     {
+        if (synchronizeWorlds)
+        {
+            synchronized (world)
+            {
+                return world.getBlockState(pos);
+            }
+        }
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
         long key = asLong(l, i1);
@@ -108,6 +117,13 @@ public class WorldCache implements IBlockAccess
 
     public Chunk getChunk(int chunkX, int chunkZ)
     {
+        if (synchronizeWorlds)
+        {
+            synchronized (world)
+            {
+                return world.getChunkFromChunkCoords(chunkX, chunkZ);
+            }
+        }
         long key = asLong(chunkX, chunkZ);
         ChunkCache chunkcache = map.get(key);
         if (chunkcache == null) return null;
@@ -129,6 +145,13 @@ public class WorldCache implements IBlockAccess
     @Override
     public TileEntity getTileEntity(BlockPos pos)
     {
+        if (synchronizeWorlds)
+        {
+            synchronized (world)
+            {
+                return world.getTileEntity(pos);
+            }
+        }
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);
         long key = asLong(l, i1);
