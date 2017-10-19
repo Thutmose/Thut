@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.vecmath.Vector3f;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
@@ -92,7 +93,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public int[]                        floors             = new int[64];
     public IBlockState[][][]            blocks             = null;
     public TileEntity[][][]             tiles              = null;
-    BlockEntityUpdater                  collider;
+    public BlockEntityUpdater           collider;
+    private Vector3f                    velocity           = new Vector3f();
     LiftInteractHandler                 interacter;
 
     public EntityLift(World par1World)
@@ -182,25 +184,33 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (!toMoveZ) motionZ *= 0.5;
         if (!toMoveY) motionY *= 0.5;
 
+        if (!toMoveX) velocity.x *= 0.5;
+        if (!toMoveZ) velocity.z *= 0.5;
+        if (!toMoveY) velocity.y *= 0.5;
+
+        motionX = velocity.x;
+        motionY = velocity.y;
+        motionZ = velocity.z;
+
         if (getCalled())
         {
             if (toMoveY)
             {
                 float destY = getDestY();
-                double dy = getSpeed(posY, destY, motionY, speedUp, speedDown);
-                motionY = dy;
+                double dy = getSpeed(posY, destY, velocity.y, speedUp, speedDown);
+                velocity.y = (float) (motionY = dy);
             }
             if (toMoveX)
             {
                 float destX = getDestX();
-                double dx = getSpeed(posX, destX, motionX, speedHoriz, speedHoriz);
-                motionX = dx;
+                double dx = getSpeed(posX, destX, velocity.x, speedHoriz, speedHoriz);
+                velocity.x = (float) (motionX = dx);
             }
             if (toMoveZ)
             {
                 float destZ = getDestZ();
-                double dz = getSpeed(posZ, destZ, motionZ, speedHoriz, speedHoriz);
-                motionZ = dz;
+                double dz = getSpeed(posZ, destZ, velocity.z, speedHoriz, speedHoriz);
+                velocity.z = (float) (motionZ = dz);
             }
         }
     }
@@ -316,10 +326,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void doMotion()
     {
-        if (!toMoveX) motionX = 0;
-        if (!toMoveY) motionY = 0;
-        if (!toMoveZ) motionZ = 0;
-        if (getCalled()) CompatWrapper.moveEntitySelf(this, motionX, motionY, motionZ);
+        if (!toMoveX) motionX = velocity.x = 0;
+        if (!toMoveY) motionY = velocity.y = 0;
+        if (!toMoveZ) motionZ = velocity.z = 0;
+        if (getCalled())
+        {
+            CompatWrapper.moveEntitySelf(this, velocity.x, velocity.y, velocity.z);
+        }
     }
 
     @Override
@@ -458,7 +471,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             doMotion();
         }
-        else// if (!world.isRemote)
+        else
         {
             setCalled(false);
             BlockPos pos = getPosition();

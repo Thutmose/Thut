@@ -21,8 +21,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.world.World;
 import thut.api.TickHandler;
-import thut.api.maths.Matrix3;
 import thut.lib.CompatWrapper;
 
 public class BlockEntityUpdater
@@ -58,6 +58,13 @@ public class BlockEntityUpdater
 
     public void onUpdate()
     {
+        if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks().length)
+            World.MAX_ENTITY_RADIUS = blockEntity.getBlocks().length;
+        if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0].length)
+            World.MAX_ENTITY_RADIUS = blockEntity.getBlocks()[0].length;
+        if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0][0].length)
+            World.MAX_ENTITY_RADIUS = blockEntity.getBlocks()[0][0].length;
+
         theEntity.height = blockEntity.getMax().getY();
         theEntity.width = 1 + blockEntity.getMax().getX() - blockEntity.getMin().getX();
         if (theEntity.motionY == 0)
@@ -107,6 +114,8 @@ public class BlockEntityUpdater
     public void applyEntityCollision(Entity entity)
     {
         if ((theEntity.rotationYaw + 360) % 90 > 5 || theEntity.isPassenger(entity)) return;
+        // if(entity.ticksExisted%50==0)
+        // System.out.println(theEntity+" "+entity);
         blockBoxes.clear();
         int sizeX = blockEntity.getBlocks().length;
         int sizeY = blockEntity.getBlocks()[0].length;
@@ -119,46 +128,6 @@ public class BlockEntityUpdater
         // Expand by velociteis as well.
         // Adds AABBS for contained blocks
         BlockPos origin = theEntity.getPosition();
-        for (int i = 0; i < sizeX; i++)
-            for (int j = 0; j < sizeY; j++)
-                for (int k = 0; k < sizeZ; k++)
-                {
-                    List<AxisAlignedBB> toAdd = Lists.newArrayList();
-                    pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
-                    IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
-                    try
-                    {
-                        toAdd.add(state.getCollisionBoundingBox(blockEntity.getFakeWorld(), pos));
-                        // TODO find collsion box list instead.
-                    }
-                    catch (Exception e)
-                    {
-                        // blockBox = block.getBoundingBox(state, world,
-                        // pos);
-                    }
-                    for (AxisAlignedBB blockBox : toAdd)
-                    {
-                        if (blockBox != null)
-                        {
-                            float dx = 0.5f;
-                            float dz = 0.5f;
-                            AxisAlignedBB box = Matrix3.getAABB(
-                                    theEntity.posX + blockBox.minX - dx + blockEntity.getMin().getX() + i,
-                                    theEntity.posY + blockBox.minY + j,
-                                    theEntity.posZ + blockBox.minZ - dz + blockEntity.getMin().getZ() + k,
-                                    theEntity.posX + blockBox.maxX - dx + blockEntity.getMin().getX() + i,
-                                    theEntity.posY + blockBox.maxY + j,
-                                    theEntity.posZ + blockBox.maxZ - dz + blockEntity.getMin().getZ() + k);
-                            blockBoxes.add(box);
-                            topY.add(box.maxY);
-                        }
-                    }
-                }
-
-        pos.setPos(theEntity.getPosition());
-        Vector3f temp1 = new Vector3f();
-        Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
-                (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionY - entity.motionY));
 
         double minX = entity.getEntityBoundingBox().minX;
         double minY = entity.getEntityBoundingBox().minY;
@@ -186,6 +155,48 @@ public class BlockEntityUpdater
         }
 
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+        AxisAlignedBB testBox = boundingBox.grow(0.25);
+
+        for (int i = 0; i < sizeX; i++)
+            for (int j = 0; j < sizeY; j++)
+                for (int k = 0; k < sizeZ; k++)
+                {
+                    List<AxisAlignedBB> toAdd = Lists.newArrayList();
+                    pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
+                    IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
+                    try
+                    {
+                        state.addCollisionBoxToList(blockEntity.getFakeWorld(), pos, TileEntity.INFINITE_EXTENT_AABB,
+                                toAdd, entity, false);
+                    }
+                    catch (Exception e)
+                    {
+                        // blockBox = block.getBoundingBox(state, world,
+                        // pos);
+                    }
+                    for (AxisAlignedBB blockBox : toAdd)
+                    {
+                        if (blockBox != null)
+                        {
+                            float dx2 = (float) (theEntity.posX - origin.getX()) - 0.5f;
+                            float dy2 = (float) (theEntity.posY - origin.getY());
+                            float dz2 = (float) (theEntity.posZ - origin.getZ()) - 0.5f;
+                            AxisAlignedBB box = blockBox.offset(dx2, dy2, dz2);
+                            if (box.intersects(testBox))
+                            {
+                                blockBoxes.add(box);
+                                topY.add(box.maxY);
+                            }
+                        }
+                    }
+                }
+        // No boxes, no need to process further.
+        if (blockBoxes.isEmpty()) return;
+
+        pos.setPos(theEntity.getPosition());
+        Vector3f temp1 = new Vector3f();
+        Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
+                (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionZ - entity.motionZ));
 
         boolean merge = false;
 
@@ -302,11 +313,18 @@ public class BlockEntityUpdater
         }
         // Finished merging the boxes.
 
-        double yTop = Math.min(entity.stepHeight + entity.posY + theEntity.motionY, maxY);
+        // Server and client have different values of this for the player, so
+        // just fix it to 0.6 for entity players
+        float stepheight = entity.stepHeight;
+        if (entity instanceof EntityPlayer) stepheight = 0.6f;
+
+        double yTop = Math.min(stepheight + entity.posY + theEntity.motionY, maxY);
 
         boolean floor = false;
         boolean ceiling = false;
         double yMaxFloor = minY;
+        // if(entity.ticksExisted%100==0)
+        // System.out.println(blockBoxes);
 
         // for each box, compute collision.
         for (AxisAlignedBB aabb : blockBoxes)
@@ -328,7 +346,7 @@ public class BlockEntityUpdater
             collidesX = collidesX && (collidesZ || collidesY);
 
             if (collidesX && collidesZ && yTop >= aabb.maxY
-                    && boundingBox.minY - entity.stepHeight - theEntity.motionY <= aabb.maxY - diffs.y)
+                    && boundingBox.minY - stepheight - theEntity.motionY <= aabb.maxY - diffs.y)
             {
                 if (!floor)
                 {

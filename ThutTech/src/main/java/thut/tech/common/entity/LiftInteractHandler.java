@@ -166,6 +166,12 @@ public class LiftInteractHandler
             {
                 String message = "msg.lift.killed";
                 player.sendMessage(new TextComponentTranslation(message));
+                int dw = Math.max(lift.boundMax.getX() - lift.boundMin.getX(),
+                        lift.boundMax.getZ() - lift.boundMin.getZ());
+                int num = (dw + 1) * (lift.boundMin.getY() - lift.boundMin.getY() + 1);
+                ItemStack toGive = ItemLinker.liftblocks.copy();
+                CompatWrapper.setStackSize(toGive, num);
+                player.addItemStackToInventory(toGive);
                 lift.setHealth(0);
                 lift.setDead();
             }

@@ -150,8 +150,16 @@ public class ItemLinker extends Item
     public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World worldIn, EntityPlayer playerIn,
             EnumHand hand)
     {
-        if (itemstack.hasTagCompound() && playerIn.isSneaking() && itemstack.getTagCompound().hasKey("min"))
+        if (itemstack.hasTagCompound() && itemstack.getTagCompound().hasKey("min") && hand == EnumHand.MAIN_HAND)
         {
+            if (!playerIn.isSneaking())
+            {
+                itemstack.setTagCompound(new NBTTagCompound());
+                String message = "msg.linker.reset";
+                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
+                return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
+            }
+
             NBTTagCompound minTag = itemstack.getTagCompound().getCompoundTag("min");
             Vec3d loc = playerIn.getPositionVector().addVector(0, playerIn.getEyeHeight(), 0)
                     .add(playerIn.getLookVec().scale(2));
@@ -203,6 +211,7 @@ public class ItemLinker extends Item
                 playerIn.sendMessage(new TextComponentTranslation(message));
             }
             itemstack.getTagCompound().removeTag("min");
+            return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
         }
         return new ActionResult<>(EnumActionResult.PASS, itemstack);
     }
@@ -398,7 +407,7 @@ public class ItemLinker extends Item
                 stack.setTagCompound(new NBTTagCompound());
                 String message = "msg.linker.reset";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
-                return EnumActionResult.FAIL;
+                return EnumActionResult.SUCCESS;
             }
             EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
             if (playerIn.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
@@ -426,6 +435,7 @@ public class ItemLinker extends Item
                 stack.setTagCompound(new NBTTagCompound());
                 String message = "msg.linker.reset";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
+                return EnumActionResult.SUCCESS;
             }
         }
         return EnumActionResult.PASS;
