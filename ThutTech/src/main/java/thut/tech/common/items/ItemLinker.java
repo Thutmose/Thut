@@ -195,7 +195,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.noblock";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, num));
-                return new ActionResult<>(EnumActionResult.PASS, itemstack);
+                return new ActionResult<>(EnumActionResult.FAIL, itemstack);
             }
             else if (!playerIn.capabilities.isCreativeMode)
             {
@@ -328,7 +328,8 @@ public class ItemLinker extends Item
             if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, pos));
             return EnumActionResult.SUCCESS;
         }
-        else if (playerIn.isSneaking() && stack.hasTagCompound() && stack.getTagCompound().hasKey("min"))
+        else if (playerIn.isSneaking() && stack.hasTagCompound() && stack.getTagCompound().hasKey("min")
+                && hand == EnumHand.MAIN_HAND)
         {
 
             NBTTagCompound minTag = stack.getTagCompound().getCompoundTag("min");

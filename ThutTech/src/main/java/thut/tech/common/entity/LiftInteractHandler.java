@@ -138,7 +138,7 @@ public class LiftInteractHandler
 
             String message = "msg.liftSet.name";
 
-            if (lift.getEntityWorld().isRemote) player.sendMessage(new TextComponentTranslation(message));
+            if (!lift.getEntityWorld().isRemote) player.sendMessage(new TextComponentTranslation(message));
             return true;
         }
         else if (stack != null && stack.getItem() instanceof ItemLinker
