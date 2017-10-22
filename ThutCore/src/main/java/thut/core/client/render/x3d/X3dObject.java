@@ -173,17 +173,15 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
     @Override
     public void renderAllExcept(String... excludedGroupNames)
     {
-        boolean rendered = false;
+        boolean skip = false;
         for (String s1 : excludedGroupNames)
-            if (rendered = s1.equalsIgnoreCase(name))
+            if (skip = s1.equalsIgnoreCase(name))
             {
-                render();
                 break;
             }
-        if (!rendered)
+        if (!skip)
         {
-            preRender();
-            postRender();
+            render();
         }
         for (IExtendedModelPart o : childParts.values())
         {

@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
@@ -48,6 +50,15 @@ public class ModelWrapper extends ModelBase implements IModel
         {
             info.currentTick = entityIn.ticksExisted;
         }
+
+        Set<String> excluded = Sets.newHashSet();
+        if (renderer.getAnimationChanger() != null) for (String partName : imodel.getParts().keySet())
+        {
+            if (renderer.getAnimationChanger().isPartHidden(partName, entityIn, false))
+            {
+                excluded.add(partName);
+            }
+        }
         for (String partName : imodel.getParts().keySet())
         {
             IExtendedModelPart part = imodel.getParts().get(partName);
@@ -62,7 +73,7 @@ public class ModelWrapper extends ModelBase implements IModel
                 if (part.getParent() == null)
                 {
                     GlStateManager.pushMatrix();
-                    part.renderAll(renderer);
+                    part.renderAllExcept(renderer, excluded.toArray(new String[excluded.size()]));
                     GlStateManager.popMatrix();
                 }
             }
