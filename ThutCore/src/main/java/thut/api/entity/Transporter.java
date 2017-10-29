@@ -1,5 +1,6 @@
 package thut.api.entity;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -77,44 +78,65 @@ public class Transporter
 
     public static class ReMounter
     {
-        final Entity theEntity;
-        final Entity theMount;
-        final int    dim;
-        final long   time;
+        final Entity[] riders;
+        final Entity   theMount;
+        final int      dim;
+        final long     time;
 
-        public ReMounter(Entity entity, Entity mount, int dim)
+        public ReMounter(Entity mount, int dim, Entity... entities)
         {
-            theEntity = entity;
+            riders = entities;
             theMount = mount;
-            time = entity.getEntityWorld().getTotalWorldTime();
+            time = mount.getEntityWorld().getTotalWorldTime();
             this.dim = dim;
+            System.out.println(Arrays.toString(riders));
         }
 
         @SubscribeEvent
         public void tick(TickEvent.ServerTickEvent evt)
         {
             if (evt.phase != TickEvent.Phase.END) return;
-            if (theEntity.isDead) MinecraftForge.EVENT_BUS.unregister(this);
-            if (theEntity.getEntityWorld().getTotalWorldTime() >= time)
+            if (theMount.isDead) MinecraftForge.EVENT_BUS.unregister(this);
+            if (theMount.getEntityWorld().getTotalWorldTime() > time)
             {
-                if (dim != theEntity.dimension)
+                boolean doneAll = true;
+                for (int i = riders.length - 1; i >= 0; i--)
                 {
-                    if (theEntity instanceof EntityPlayerMP)
+                    Entity theEntity = riders[i];
+                    if (theEntity == null) continue;
+                    if (dim != theEntity.dimension)
                     {
-                        ReflectionHelper.setPrivateValue(EntityPlayerMP.class, (EntityPlayerMP) theEntity, true,
-                                "invulnerableDimensionChange", "field_184851_cj", "ck");
-                        theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity, dim,
-                                new TTeleporter(theEntity.getServer().getWorld(dim)));
+                        doneAll = false;
+                        if (theEntity instanceof EntityPlayerMP)
+                        {
+                            ReflectionHelper.setPrivateValue(EntityPlayerMP.class, (EntityPlayerMP) theEntity, true,
+                                    "invulnerableDimensionChange", "field_184851_cj", "ck");
+                            theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity,
+                                    dim, new TTeleporter(theEntity.getServer().getWorld(dim)));
+                        }
+                        else
+                        {
+                            // Handle moving non players.
+                        }
                     }
                     else
                     {
-                        // Handle moving non players.
+
                     }
                 }
-                doMoveEntity(theEntity, theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
-                        theEntity.rotationPitch);
-                theEntity.startRiding(theMount);
-                MinecraftForge.EVENT_BUS.unregister(this);
+                if (doneAll) for (int i = riders.length - 1; i >= 0; i--)
+                {
+                    Entity theEntity = riders[i];
+                    if (theEntity == null) continue;
+                    doMoveEntity(theEntity, theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
+                            theEntity.rotationPitch);
+                    boolean mounted = theEntity.startRiding(theMount);
+                    doneAll = doneAll && mounted;
+                    System.out.println(mounted + " " + theEntity);
+                    if (mounted) riders[i] = null;
+                }
+                if (doneAll || theMount.getEntityWorld().getTotalWorldTime() >= (time + 20))
+                    MinecraftForge.EVENT_BUS.unregister(this);
             }
         }
     }
@@ -166,8 +188,9 @@ public class Transporter
         {
             e.dismountRidingEntity();
             doMoveEntity(e, t2.x, t2.y, t2.z, e.rotationYaw, e.rotationPitch);
-            MinecraftForge.EVENT_BUS.register(new ReMounter(e, entity, dimension));
         }
+        if (!passengers.isEmpty()) MinecraftForge.EVENT_BUS
+                .register(new ReMounter(entity, dimension, passengers.toArray(new Entity[passengers.size()])));
         WorldServer world = entity.getServer().getWorld(dimension);
         EntityTracker tracker = world.getEntityTracker();
         if (tracker.getTrackingPlayers(entity).getClass().getSimpleName().equals("EmptySet"))
@@ -197,7 +220,7 @@ public class Transporter
         entityPlayerMP.addExperienceLevel(0);
         worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(entityPlayerMP, dimension,
                 teleporter);
-        if (oldDimension == 1)
+        if (oldDimension >= 1)
         {
             // For some reason teleporting out of the end does weird things.
             worldServer.spawnEntity(entityPlayerMP);
@@ -256,17 +279,15 @@ public class Transporter
                 entity.forceSpawn = true;
                 worldserver1.spawnEntity(entity);
                 worldserver1.updateEntityWithOptionalForce(entity, true);
-                for (Entity e : passengers)
-                {
-                    // Fix that darn random crash?
-                    worldserver.resetUpdateEntityTick();
-                    worldserver1.resetUpdateEntityTick();
-                    // Transfer the player if applicable
-                    // Need to handle our own removal to avoid race condition
-                    // where player is mounted on client on the old entity but
-                    // is already mounted to the new one on server
-                    MinecraftForge.EVENT_BUS.register(new ReMounter(e, entity, dimensionIn));
-                }
+                // Fix that darn random crash?
+                worldserver.resetUpdateEntityTick();
+                worldserver1.resetUpdateEntityTick();
+                // Transfer the player if applicable
+                // Need to handle our own removal to avoid race condition
+                // where player is mounted on client on the old entity but
+                // is already mounted to the new one on server
+                MinecraftForge.EVENT_BUS.register(
+                        new ReMounter(entity, dimensionIn, passengers.toArray(new Entity[passengers.size()])));
             }
             entityIn.isDead = true;
             entityIn.getEntityWorld().profiler.endSection();

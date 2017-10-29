@@ -151,7 +151,7 @@ public class TechCore
         packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Side.SERVER);
 
         EntityRegistry.registerModEntity(new ResourceLocation(Reference.MOD_ID, "lift"), EntityLift.class, "lift", 0,
-                this, 32, 1, true);
+                this, 256, 1, true);
     }
 
     @SubscribeEvent

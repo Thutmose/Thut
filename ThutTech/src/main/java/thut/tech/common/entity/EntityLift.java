@@ -37,6 +37,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.entity.blockentity.BlockEntityUpdater;
 import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.api.entity.blockentity.IBlockEntity;
@@ -898,4 +900,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
+    @SideOnly(Side.CLIENT)
+    @Override
+    public boolean isInRangeToRenderDist(double distance)
+    {
+        return true;
+    }
 }

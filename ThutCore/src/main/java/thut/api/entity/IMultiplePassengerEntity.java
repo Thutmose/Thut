@@ -1,15 +1,91 @@
 package thut.api.entity;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializer;
 import net.minecraft.util.math.MathHelper;
 
 public interface IMultiplePassengerEntity
 {
+    public static class Seat
+    {
+        public static final UUID BLANK = new UUID(0, 0);
+        public Vector3f          seat;
+        public UUID              entityId;
+
+        public Seat(Vector3f vector3f, UUID readInt)
+        {
+            seat = vector3f;
+            entityId = readInt != null ? readInt : BLANK;
+        }
+
+        public Seat(PacketBuffer buf)
+        {
+            seat = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            entityId = new UUID(buf.readLong(), buf.readLong());
+        }
+
+        public void writeToBuf(PacketBuffer buf)
+        {
+            buf.writeFloat(seat.x);
+            buf.writeFloat(seat.y);
+            buf.writeFloat(seat.z);
+            buf.writeLong(entityId.getMostSignificantBits());
+            buf.writeLong(entityId.getLeastSignificantBits());
+        }
+
+        public void writeToNBT(NBTTagCompound tag)
+        {
+            PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(8));
+            writeToBuf(buffer);
+            tag.setByteArray("v", buffer.array());
+        }
+
+        public static Seat readFromNBT(NBTTagCompound tag)
+        {
+            byte[] arr = tag.getByteArray("v");
+            PacketBuffer buf = new PacketBuffer(Unpooled.copiedBuffer(arr));
+            return new Seat(buf);
+        }
+    }
+
+    public static final DataSerializer<Seat> SEATSERIALIZER = new DataSerializer<Seat>()
+    {
+        @Override
+        public void write(PacketBuffer buf, Seat value)
+        {
+            value.writeToBuf(buf);
+        }
+
+        @Override
+        public Seat read(PacketBuffer buf) throws IOException
+        {
+            return new Seat(buf);
+        }
+
+        @Override
+        public DataParameter<Seat> createKey(int id)
+        {
+            return new DataParameter<>(id, this);
+        }
+
+        @Override
+        public Seat copyValue(Seat value)
+        {
+            return new Seat((Vector3f) value.seat.clone(), value.entityId);
+        }
+    };
+
     public static class MultiplePassengerManager
     {
         public static void managePassenger(Entity passenger, IMultiplePassengerEntity multipassenger)

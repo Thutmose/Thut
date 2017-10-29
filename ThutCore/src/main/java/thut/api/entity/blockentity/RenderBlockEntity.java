@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -36,7 +37,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
     boolean                  up    = true;
 
     static final Tessellator t     = new Tessellator(2097152);
-    BufferBuilder             b     = t.getBuffer();
+    BufferBuilder            b     = t.getBuffer();
 
     ResourceLocation         texture;
 
@@ -145,6 +146,12 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             GlStateManager.disableRescaleNormal();
             GL11.glPopMatrix();
         }
+    }
+
+    @Override
+    public boolean shouldRender(T entityIn, ICamera camera, double camX, double camY, double camZ)
+    {
+        return true;
     }
 
     @Override
