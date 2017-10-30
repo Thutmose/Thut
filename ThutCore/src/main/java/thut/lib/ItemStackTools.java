@@ -7,12 +7,18 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
+import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.wrapper.InvWrapper;
 
 public class ItemStackTools
 {
+    public static boolean addItemStackToInventory(ItemStack itemStackIn, IInventory toAddTo, int minIndex)
+    {
+        return addItemStackToInventory(itemStackIn, new InvWrapper(toAddTo), minIndex);
+    }
     /** Adds the item stack to the inventory, returns false if it is
      * impossible. */
-    public static boolean addItemStackToInventory(ItemStack itemStackIn, IInventory toAddTo, int minIndex)
+    public static boolean addItemStackToInventory(ItemStack itemStackIn, IItemHandlerModifiable toAddTo, int minIndex)
     {
         if (CompatWrapper.isValid(itemStackIn))
         {
@@ -24,7 +30,7 @@ public class ItemStackTools
 
                     if (j >= 0)
                     {
-                        toAddTo.setInventorySlotContents(j, CompatWrapper.copy(itemStackIn));
+                        toAddTo.setStackInSlot(j, CompatWrapper.copy(itemStackIn));
                         CompatWrapper.setAnimationToGo(toAddTo.getStackInSlot(j), 5);
                         CompatWrapper.setStackSize(itemStackIn, 0);
                         return true;
@@ -73,11 +79,15 @@ public class ItemStackTools
                 && (!stack1.getHasSubtypes() || stack1.getMetadata() == stack2.getMetadata())
                 && ItemStack.areItemStackTagsEqual(stack1, stack2);
     }
-
-    /** Returns the first item stack that is empty. */
     public static int getFirstEmptyStack(IInventory inventory, int minIndex)
     {
-        for (int i = minIndex; i < inventory.getSizeInventory(); ++i)
+        return getFirstEmptyStack(new InvWrapper(inventory), minIndex);
+    }
+
+    /** Returns the first item stack that is empty. */
+    public static int getFirstEmptyStack(IItemHandlerModifiable inventory, int minIndex)
+    {
+        for (int i = minIndex; i < inventory.getSlots(); ++i)
         {
             if (!CompatWrapper.isValid(inventory.getStackInSlot(i))) { return i; }
         }
@@ -85,9 +95,9 @@ public class ItemStackTools
     }
 
     /** stores an itemstack in the users inventory */
-    private static int storeItemStack(ItemStack itemStackIn, IInventory inventory, int minIndex)
+    private static int storeItemStack(ItemStack itemStackIn, IItemHandlerModifiable inventory, int minIndex)
     {
-        for (int i = minIndex; i < inventory.getSizeInventory(); ++i)
+        for (int i = minIndex; i < inventory.getSlots(); ++i)
         {
             if (canMergeStacks(inventory.getStackInSlot(i), itemStackIn)) { return i; }
         }
@@ -96,7 +106,7 @@ public class ItemStackTools
 
     /** This function stores as many items of an ItemStack as possible in a
      * matching slot and returns the quantity of left over items. */
-    private static int storePartialItemStack(ItemStack itemStackIn, IInventory inventory, int minIndex)
+    private static int storePartialItemStack(ItemStack itemStackIn, IItemHandlerModifiable inventory, int minIndex)
     {
         int i = CompatWrapper.getStackSize(itemStackIn);
         int j = storeItemStack(itemStackIn, inventory, minIndex);
@@ -117,7 +127,7 @@ public class ItemStackTools
             {
                 itemstack.setTagCompound((NBTTagCompound) itemStackIn.getTagCompound().copy());
             }
-            inventory.setInventorySlotContents(j, itemstack);
+            inventory.setStackInSlot(j, itemstack);
         }
 
         int k = i;
@@ -127,9 +137,9 @@ public class ItemStackTools
             k = inventory.getStackInSlot(j).getMaxStackSize() - size;
         }
 
-        if (k > inventory.getInventoryStackLimit() - size)
+        if (k > inventory.getSlotLimit(j) - size)
         {
-            k = inventory.getInventoryStackLimit() - size;
+            k = inventory.getSlotLimit(j) - size;
         }
 
         if (k == 0) { return i; }

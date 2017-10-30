@@ -1,6 +1,5 @@
 package thut.api.entity;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -89,7 +88,6 @@ public class Transporter
             theMount = mount;
             time = mount.getEntityWorld().getTotalWorldTime();
             this.dim = dim;
-            System.out.println(Arrays.toString(riders));
         }
 
         @SubscribeEvent
@@ -132,7 +130,6 @@ public class Transporter
                             theEntity.rotationPitch);
                     boolean mounted = theEntity.startRiding(theMount);
                     doneAll = doneAll && mounted;
-                    System.out.println(mounted + " " + theEntity);
                     if (mounted) riders[i] = null;
                 }
                 if (doneAll || theMount.getEntityWorld().getTotalWorldTime() >= (time + 20))
