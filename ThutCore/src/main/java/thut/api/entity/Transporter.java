@@ -145,13 +145,8 @@ public class Transporter
             Set<SPacketPlayerPosLook.EnumFlags> set = EnumSet.<SPacketPlayerPosLook.EnumFlags> noneOf(
                     SPacketPlayerPosLook.EnumFlags.class);
             theEntity.dismountRidingEntity();
-            ((EntityPlayerMP) theEntity).connection.firstGoodX = x;
-            ((EntityPlayerMP) theEntity).connection.firstGoodY = y;
-            ((EntityPlayerMP) theEntity).connection.firstGoodZ = z;
             ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch, set);
             theEntity.setRotationYawHead(yaw);
-            theEntity.motionY = 0.0D;
-            theEntity.onGround = true;
         }
         else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
