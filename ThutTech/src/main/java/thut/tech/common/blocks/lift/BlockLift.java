@@ -261,7 +261,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                 {
                     if (!worldIn.isRemote)
                     {
-                        te.setSidePage(side, (te.getSidePage(side) + 1) % 4);
+                        te.setSidePage(side, (te.getSidePage(side) + 1) % 8);
                         if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);
                         PacketHandler.sendTileUpdate(te);
                     }

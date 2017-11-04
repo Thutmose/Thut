@@ -71,13 +71,14 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public boolean                      read         = false;
     public boolean                      redstone     = true;
     public boolean                      powered      = false;
+    public boolean[]                    callFaces    = new boolean[6];
     public boolean                      callPanel    = false;
 
     public TileEntityLiftAccess()
     {
     }
 
-    public void buttonPress(int button)
+    public void buttonPress(int button, boolean callPanel)
     {
         if (callPanel && lift != null)
         {
@@ -85,7 +86,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
         else
         {
-            if (button != 0 && button <= 64 && lift != null && lift.floors[button - 1] > 0)
+            if (button != 0 && button <= lift.floors.length && lift != null && lift.floors[button - 1] > 0)
             {
                 if (button == floor)
                 {
@@ -145,6 +146,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
             buffer.writeBlockPos(getPos());
             buffer.writeInt(button);
+            buffer.writeBoolean(callFaces[side.ordinal()]);
             ServerPacket packet = new ServerPacket(buffer);
             PacketPipeline.sendToServer(packet);
         }
@@ -294,7 +296,10 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         root = Vector3.getNewVector();
         root = Vector3.readFromNBT(par1, "root");
         sides = par1.getByteArray("sides");
-        callPanel = par1.getBoolean("callPanel");
+        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        {
+            callFaces[face.ordinal()] = par1.getBoolean(face + "Call");
+        }
         if (sides.length != 6) sides = new byte[6];
         sidePages = par1.getByteArray("sidePages");
         if (sidePages.length != 6) sidePages = new byte[6];
@@ -314,7 +319,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
     public void setFloor(int floor)
     {
-        if (lift != null && floor <= 64 && floor > 0)
+        if (lift != null && floor <= lift.floors.length && floor > 0)
         {
             lift.setFoor(getRoot(), floor);
             getRoot().floor = floor;
@@ -376,7 +381,11 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             boolean check = lift.getCurrentFloor() == this.floor && (int) (lift.motionY * 16) == 0;
             IBlockState state = world.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
-
+            boolean callPanel = false;
+            if (!old && !lift.getCalled()) for (EnumFacing face : EnumFacing.HORIZONTALS)
+            {
+                callPanel |= callFaces[face.ordinal()];
+            }
             if (callPanel && !old && !lift.getCalled())
             {
                 if (world.isBlockPowered(getPos())) lift.call(floor);
@@ -469,7 +478,10 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         par1.setInteger("floor", floor);
         par1.setByteArray("sides", sides);
         par1.setByteArray("sidePages", sidePages);
-        par1.setBoolean("callPanel", callPanel);
+        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        {
+            par1.setBoolean(face + "Call", callFaces[face.ordinal()]);
+        }
         if (root != null) root.writeToNBT(par1, "root");
         if (lift != null)
         {
@@ -642,7 +654,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             int floor = args.checkInteger(0);
 
-            if (floor > 0 && floor <= 64)
+            if (floor > 0 && floor <= lift.floors.length)
             {
                 int value = lift.floors[floor - 1];
                 if (value == -1) throw new Exception("floor " + floor + " is not assigned");

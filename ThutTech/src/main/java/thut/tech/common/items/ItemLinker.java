@@ -150,16 +150,8 @@ public class ItemLinker extends Item
     public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World worldIn, EntityPlayer playerIn,
             EnumHand hand)
     {
-        if (itemstack.hasTagCompound() && itemstack.getTagCompound().hasKey("min") && hand == EnumHand.MAIN_HAND)
+        if (itemstack.hasTagCompound() && playerIn.isSneaking() && itemstack.getTagCompound().hasKey("min"))
         {
-            if (!playerIn.isSneaking())
-            {
-                itemstack.setTagCompound(new NBTTagCompound());
-                String message = "msg.linker.reset";
-                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
-                return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
-            }
-
             NBTTagCompound minTag = itemstack.getTagCompound().getCompoundTag("min");
             Vec3d loc = playerIn.getPositionVector().addVector(0, playerIn.getEyeHeight(), 0)
                     .add(playerIn.getLookVec().scale(2));
@@ -195,7 +187,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.noblock";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, num));
-                return new ActionResult<>(EnumActionResult.FAIL, itemstack);
+                return new ActionResult<>(EnumActionResult.PASS, itemstack);
             }
             else if (!playerIn.capabilities.isCreativeMode)
             {
@@ -211,7 +203,6 @@ public class ItemLinker extends Item
                 playerIn.sendMessage(new TextComponentTranslation(message));
             }
             itemstack.getTagCompound().removeTag("min");
-            return new ActionResult<>(EnumActionResult.SUCCESS, itemstack);
         }
         return new ActionResult<>(EnumActionResult.PASS, itemstack);
     }
@@ -328,8 +319,7 @@ public class ItemLinker extends Item
             if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, pos));
             return EnumActionResult.SUCCESS;
         }
-        else if (playerIn.isSneaking() && stack.hasTagCompound() && stack.getTagCompound().hasKey("min")
-                && hand == EnumHand.MAIN_HAND)
+        else if (playerIn.isSneaking() && stack.hasTagCompound() && stack.getTagCompound().hasKey("min"))
         {
 
             NBTTagCompound minTag = stack.getTagCompound().getCompoundTag("min");
@@ -405,38 +395,42 @@ public class ItemLinker extends Item
             }
             catch (Exception e)
             {
-                stack.setTagCompound(new NBTTagCompound());
-                String message = "msg.linker.reset";
-                if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
-                return EnumActionResult.SUCCESS;
+                liftID = new UUID(0000, 0000);
             }
             EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
             if (playerIn.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
             {
-                TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-                if (facing == EnumFacing.UP)
+                if (facing != EnumFacing.UP && facing != EnumFacing.DOWN)
                 {
-                    te.callPanel = !te.callPanel;
-                    String message = "msg.callPanel.name";
-                    if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, te.callPanel));
-                }
-                else
-                {
+                    TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                     te.setLift(lift);
                     int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
                     te.setFloor(floor);
+                    if (floor >= 64) floor = 64 - floor;
                     String message = "msg.floorSet.name";
                     if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message, floor));
+                    return EnumActionResult.SUCCESS;
                 }
-                return EnumActionResult.SUCCESS;
+            }
+            else if (playerIn.isSneaking() && state.getBlock() == ThutBlocks.lift
+                    && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
+            {
+                if (facing != EnumFacing.UP && facing != EnumFacing.DOWN)
+                {
+                    TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+                    te.callFaces[facing.ordinal()] = !te.callFaces[facing.ordinal()];
+                    String message = "msg.callPanel.name";
+                    if (!worldIn.isRemote)
+                        playerIn.sendMessage(new TextComponentTranslation(message, te.callFaces[facing.ordinal()]));
+                    return EnumActionResult.SUCCESS;
+                }
             }
             else if (playerIn.isSneaking())
             {
                 stack.setTagCompound(new NBTTagCompound());
                 String message = "msg.linker.reset";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TextComponentTranslation(message));
-                return EnumActionResult.SUCCESS;
             }
         }
         return EnumActionResult.PASS;
@@ -457,7 +451,7 @@ public class ItemLinker extends Item
     @SideOnly(Side.CLIENT)
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems)
     {
-        if (!this.isInCreativeTab(tab)) return;
+        if (tab != getCreativeTab()) return;
         subItems.add(new ItemStack(this, 1, 0));
         subItems.add(TechCore.getInfoBook());
     }
