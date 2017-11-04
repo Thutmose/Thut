@@ -89,6 +89,7 @@ public class PacketPipeline
             {
                 final BlockPos pos = buffer.readBlockPos();
                 final int button = buffer.readInt();
+                final boolean callPanel = buffer.readBoolean();
                 final World world = player.getEntityWorld();
 
                 FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(new Runnable()
@@ -101,7 +102,7 @@ public class PacketPipeline
                         {
                             TileEntityLiftAccess te = (TileEntityLiftAccess) tile;
                             if (te.lift == null) return;
-                            te.buttonPress(button);
+                            te.buttonPress(button, callPanel);
                             te.calledFloor = te.lift.getDestinationFloor();
                         }
                     }

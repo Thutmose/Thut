@@ -395,31 +395,36 @@ public class ItemLinker extends Item
             }
             catch (Exception e)
             {
-                stack.setTagCompound(new NBTTagCompound());
-                String message = "msg.linker.reset";
-                if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message));
-                return EnumActionResult.FAIL;
+                liftID = new UUID(0000, 0000);
             }
             EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
             if (playerIn.isSneaking() && lift != null && state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
             {
-                TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-                if (facing == EnumFacing.UP)
+                if (facing != EnumFacing.UP && facing != EnumFacing.DOWN)
                 {
-                    te.callPanel = !te.callPanel;
-                    String message = "msg.callPanel.name";
-                    if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, te.callPanel));
-                }
-                else
-                {
+                    TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                     te.setLift(lift);
                     int floor = te.getButtonFromClick(facing, hitX, hitY, hitZ);
                     te.setFloor(floor);
+                    if (floor >= 64) floor = 64 - floor;
                     String message = "msg.floorSet.name";
                     if (!worldIn.isRemote) playerIn.addChatMessage(new TextComponentTranslation(message, floor));
+                    return EnumActionResult.SUCCESS;
                 }
-                return EnumActionResult.SUCCESS;
+            }
+            else if (playerIn.isSneaking() && state.getBlock() == ThutBlocks.lift
+                    && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER)
+            {
+                if (facing != EnumFacing.UP && facing != EnumFacing.DOWN)
+                {
+                    TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
+                    te.callFaces[facing.ordinal()] = !te.callFaces[facing.ordinal()];
+                    String message = "msg.callPanel.name";
+                    if (!worldIn.isRemote)
+                        playerIn.addChatMessage(new TextComponentTranslation(message, te.callFaces[facing.ordinal()]));
+                    return EnumActionResult.SUCCESS;
+                }
             }
             else if (playerIn.isSneaking())
             {

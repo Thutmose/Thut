@@ -2,93 +2,24 @@ package thut.tech.common.entity;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.common.ForgeHooks;
-import thut.api.entity.blockentity.IBlockEntity;
-import thut.lib.CompatWrapper;
+import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.tech.common.items.ItemLinker;
 
-public class LiftInteractHandler
+public class LiftInteractHandler extends BlockEntityInteractHandler
 {
     final EntityLift lift;
 
     public LiftInteractHandler(EntityLift lift)
     {
+        super(lift);
         this.lift = lift;
-    }
-
-    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
-            EnumHand hand)
-    {
-        vec = vec.addVector(vec.xCoord > 0 ? -0.01 : 0.01, vec.yCoord > 0 ? -0.01 : 0.01,
-                vec.zCoord > 0 ? -0.01 : 0.01);
-        Vec3d playerPos = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
-        Vec3d start = playerPos.subtract(lift.getPositionVector());
-        RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start.add(lift.getPositionVector()),
-                vec.add(lift.getPositionVector()), lift);
-        BlockPos pos;
-        float hitX, hitY, hitZ;
-        EnumFacing side = EnumFacing.DOWN;
-        if (trace == null)
-        {
-            pos = new BlockPos(0, 0, 0);
-            hitX = hitY = hitZ = 0;
-        }
-        else
-        {
-            pos = trace.getBlockPos();
-            hitX = (float) (trace.hitVec.xCoord - pos.getX());
-            hitY = (float) (trace.hitVec.yCoord - pos.getY());
-            hitZ = (float) (trace.hitVec.zCoord - pos.getZ());
-            side = trace.sideHit;
-        }
-        IBlockState state = lift.getFakeWorld().getBlockState(pos);
-        boolean activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getFakeWorld(), pos, state, player,
-                hand, stack, side, hitX, hitY, hitZ);
-        if (activate) return EnumActionResult.SUCCESS;
-        else if (trace == null || !state.getMaterial().isSolid())
-        {
-            Vec3d playerLook = playerPos.add(player.getLookVec().scale(4));
-            RayTraceResult result = lift.getEntityWorld().rayTraceBlocks(playerPos, playerLook, false, true, false);
-            if (result != null && result.typeOfHit == Type.BLOCK)
-            {
-                pos = result.getBlockPos();
-                state = lift.getEntityWorld().getBlockState(pos);
-                hitX = (float) (result.hitVec.xCoord - pos.getX());
-                hitY = (float) (result.hitVec.yCoord - pos.getY());
-                hitZ = (float) (result.hitVec.zCoord - pos.getZ());
-                if (player.isSneaking())
-                {
-                    EnumActionResult itemUse = ForgeHooks.onPlaceItemIntoWorld(stack, player, player.getEntityWorld(),
-                            pos, result.sideHit, hitX, hitY, hitZ, hand);
-                    if (itemUse != EnumActionResult.PASS) return itemUse;
-                }
-                activate = CompatWrapper.interactWithBlock(state.getBlock(), lift.getEntityWorld(), pos, state, player,
-                        hand, stack, result.sideHit, hitX, hitY, hitZ);
-                if (activate) return EnumActionResult.SUCCESS;
-                else if (!player.isSneaking())
-                {
-                    EnumActionResult itemUse = ForgeHooks.onPlaceItemIntoWorld(stack, player, player.getEntityWorld(),
-                            pos, result.sideHit, hitX, hitY, hitZ, hand);
-                    if (itemUse != EnumActionResult.PASS) return itemUse;
-                }
-            }
-            return EnumActionResult.PASS;
-        }
-        return EnumActionResult.PASS;
     }
 
     public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)

@@ -89,7 +89,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public double                       prevFloor          = 0;
     TileEntityLiftAccess                current;
     public List<AxisAlignedBB>          blockBoxes         = Lists.newArrayList();
-    public int[]                        floors             = new int[64];
+    public int[]                        floors             = new int[128];
     public IBlockState[][][]            blocks             = null;
     public TileEntity[][][]             tiles              = null;
     BlockEntityUpdater                  collider;
@@ -101,7 +101,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this.ignoreFrustumCheck = true;
         this.hurtResistantTime = 0;
         this.isImmuneToFire = true;
-        for (int i = 0; i < 64; i++)
+        for (int i = 0; i < floors.length; i++)
         {
             floors[i] = -1;
         }
@@ -227,7 +227,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void call(int floor)
     {
-        if (floor == 0 || floor > 64) { return; }
+        if (floor == 0 || floor > floors.length) { return; }
         if (floors[floor - 1] > 0)
         {
             callYValue(floors[floor - 1]);
@@ -567,7 +567,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void readList(NBTTagCompound nbt)
     {
-        if (nbt.hasKey("floors 0")) for (int i = 0; i < 64; i++)
+        if (nbt.hasKey("floors 0")) for (int i = 0; i < floors.length; i++)
         {
             floors[i] = nbt.getInteger("floors " + i);
             if (floors[i] == 0) floors[i] = -1;
@@ -757,7 +757,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void writeList(NBTTagCompound nbt)
     {
         NBTTagCompound floorTag = new NBTTagCompound();
-        for (int i = 0; i < 64; i++)
+        for (int i = 0; i < floors.length; i++)
         {
             floorTag.setInteger("" + i, floors[i]);
         }
