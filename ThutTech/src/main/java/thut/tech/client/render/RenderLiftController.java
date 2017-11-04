@@ -85,6 +85,9 @@ public class RenderLiftController extends TileEntitySpecialRenderer
             renderengine.bindTexture(font);
         }
 
+        boolean minus = number >= 64;
+        if (minus) number -= 64;
+
         Tessellator t = Tessellator.getInstance();
         t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
         double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
@@ -95,17 +98,31 @@ public class RenderLiftController extends TileEntitySpecialRenderer
         if (actFloor > 8)
         {
             GL11.glTranslated(x + 0.01, y + 0.06, -0.001 * (5 + 1));
-            t.getBuffer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
-            t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
+            float dx = minus ? -0.03f : 0;
+            float dy = -0.0f;
+            t.getBuffer().pos(0.15 + dx, 0.15 + dy, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0.15 + dx, 0.0 + dy, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
 
-            t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
-            t.getBuffer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0 + dx, 0.0 + dy, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0 + dx, 0.15 + dy, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
 
-            t.getBuffer().pos(0.15 + 0.1, 0.15, 0).tex(uvs1[0], uvs1[2]).color(0, 0, 0, 255).endVertex();
-            t.getBuffer().pos(0.15 + 0.1, 0, 0).tex(uvs1[0], uvs1[3]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0.15 + dx + 0.1, 0.15 + dy, 0).tex(uvs1[0], uvs1[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0.15 + dx + 0.1, 0 + dy, 0).tex(uvs1[0], uvs1[3]).color(0, 0, 0, 255).endVertex();
 
-            t.getBuffer().pos(0 + 0.1, 0, 0).tex(uvs1[1], uvs1[3]).color(0, 0, 0, 255).endVertex();
-            t.getBuffer().pos(0 + 0.1, 0.15, 0).tex(uvs1[1], uvs1[2]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0 + dx + 0.1, 0 + dy, 0).tex(uvs1[1], uvs1[3]).color(0, 0, 0, 255).endVertex();
+            t.getBuffer().pos(0 + dx + 0.1, 0.15 + dy, 0).tex(uvs1[1], uvs1[2]).color(0, 0, 0, 255).endVertex();
+
+            if (minus)
+            {
+                uvs = locationFromNumber(-3);
+                dx = 0.135f;
+                dy = -0.0175f;
+                t.getBuffer().pos(0.15 + dx, 0.15 + dy, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+                t.getBuffer().pos(0.15 + dx, 0.0 + dy, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
+
+                t.getBuffer().pos(0 + dx, 0.0 + dy, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+                t.getBuffer().pos(0 + dx, 0.15 + dy, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
+            }
         }
         else
         {
@@ -115,6 +132,17 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
             t.getBuffer().pos(0, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
             t.getBuffer().pos(0, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
+
+            if (minus)
+            {
+                uvs = locationFromNumber(-3);
+                float dx = 0.075f;
+                t.getBuffer().pos(0.15 + dx, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
+                t.getBuffer().pos(0.15 + dx, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
+
+                t.getBuffer().pos(0 + dx, 0.0, 0).tex(uvs[1], uvs[3]).color(0, 0, 0, 255).endVertex();
+                t.getBuffer().pos(0 + dx, 0.15, 0).tex(uvs[1], uvs[2]).color(0, 0, 0, 255).endVertex();
+            }
         }
         t.draw();
         GL11.glPopMatrix();
@@ -242,7 +270,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                 if (renderengine != null)
                 {
                     ResourceLocation texture;
-                    if (monitor.callPanel)
+                    if (monitor.callFaces[dir.ordinal()])
                     {
                         texture = texture_2;
                     }
@@ -266,7 +294,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
                 t.draw();
                 GL11.glPopMatrix();
 
-                if (monitor.callPanel)
+                if (monitor.callFaces[dir.ordinal()])
                 {
                     GL11.glPushMatrix();
                     GL11.glTranslated(-0.11, -0.1, 0);
