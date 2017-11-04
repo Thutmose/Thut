@@ -1,8 +1,6 @@
 package thut.api.entity;
 
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -12,7 +10,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.SPacketPlayerPosLook;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -142,11 +139,8 @@ public class Transporter
     {
         if (theEntity instanceof EntityPlayerMP)
         {
-            Set<SPacketPlayerPosLook.EnumFlags> set = EnumSet.<SPacketPlayerPosLook.EnumFlags> noneOf(
-                    SPacketPlayerPosLook.EnumFlags.class);
             theEntity.dismountRidingEntity();
-            ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch, set);
-            theEntity.setRotationYawHead(yaw);
+            ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch);
         }
         else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
