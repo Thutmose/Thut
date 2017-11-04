@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import thut.api.TickHandler;
+import thut.core.common.ThutCore;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 /** This is the main manager for the multi-threaded mob AI code. It creates the
@@ -58,6 +59,11 @@ public class AIThreadManager
          * @param world */
         public void runServerThreadTasks(World world)
         {
+            if (!ThutCore.instance.config.multithreadedAI)
+            {
+                tick();
+            }
+
             for (IAIRunnable ai : aiTasks)
             {
                 ai.doMainThreadTick(world);
@@ -237,6 +243,8 @@ public class AIThreadManager
      * @param task */
     public static void scheduleAITick(AIStuff ai)
     {
+        if (!ThutCore.instance.config.multithreadedAI) { return; }
+
         int id = ai.entity.getEntityId() % AIThread.threadCount;
         AIThread thread = AIThread.threads.get(id);
         thread.aiStuff.add(ai);

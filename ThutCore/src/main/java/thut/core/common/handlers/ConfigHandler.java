@@ -38,6 +38,8 @@ public class ConfigHandler extends ConfigBase
     public String[]             customBiomeMappings = {};
     @Configure(category = AI, needsMcRestart = true)
     public int                  threadCount         = 1;
+    @Configure(category = AI, needsMcRestart = true)
+    public boolean              multithreadedAI     = true;
 
     @Configure(category = BLOCKENTITY)
     private String[]            whitelist           = { "Chest", "DLDetector", "FlowerPot", "EnchantTable", "warppad",

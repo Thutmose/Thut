@@ -108,7 +108,7 @@ public class ThutCore
         proxy.loadSounds();
         DataSerializers.registerSerializer(IMultiplePassengerEntity.SEATSERIALIZER);
         AIThreadManager.AIThread.threadCount = config.threadCount;
-        AIThreadManager.AIThread.createThreads();
+        if (config.multithreadedAI) AIThreadManager.AIThread.createThreads();
         AIThreadManager aiTicker = new AIThreadManager();
         MinecraftForge.EVENT_BUS.register(aiTicker);
         MinecraftForge.EVENT_BUS.register(this);
