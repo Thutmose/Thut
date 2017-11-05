@@ -27,10 +27,12 @@ import thut.lib.CompatWrapper;
 
 public class BlockEntityUpdater
 {
+    public static boolean autoBlacklist = false;
+
     public static boolean isWhitelisted(TileEntity tile)
     {
         ResourceLocation id = TileEntity.getKey(tile.getClass());
-        return id == null ? false : IBlockEntity.TEWHITELIST.contains(id.toString());
+        return id == null ? true : !IBlockEntity.TEBLACKLIST.contains(id.toString());
     }
 
     final IBlockEntity  blockEntity;
@@ -86,26 +88,28 @@ public class BlockEntityUpdater
                     pos.setPos(i + xMin + theEntity.posX, j + yMin + theEntity.posY, k + zMin + theEntity.posZ);
 
                     // TODO rotate here by entity rotation.
-
-                    if (blockEntity.getTiles()[i][j][k] != null)
+                    TileEntity tile = blockEntity.getTiles()[i][j][k];
+                    if (tile != null)
                     {
-                        blockEntity.getTiles()[i][j][k].setPos(pos.toImmutable());
-                        blockEntity.getTiles()[i][j][k].setWorld(blockEntity.getFakeWorld());
+                        tile.setPos(pos.toImmutable());
+                        tile.setWorld(blockEntity.getFakeWorld());
                     }
-                    if (blockEntity.getTiles()[i][j][k] instanceof ITickable)
+                    if (tile instanceof ITickable)
                     {
-                        if (erroredSet.contains(blockEntity.getTiles()[i][j][k])
-                                || !isWhitelisted(blockEntity.getTiles()[i][j][k]))
-                            continue;
+                        if (erroredSet.contains(tile) || !isWhitelisted(tile)) continue;
                         try
                         {
-                            ((ITickable) blockEntity.getTiles()[i][j][k]).update();
+                            ((ITickable) tile).update();
                         }
-                        catch (Exception e)
+                        catch (Throwable e)
                         {
                             e.printStackTrace();
-                            System.err.println("Error with Tile Entity " + blockEntity.getTiles()[i][j][k]);
-                            erroredSet.add(blockEntity.getTiles()[i][j][k]);
+                            System.err.println("Error with Tile Entity " + tile);
+                            erroredSet.add(tile);
+                            if (autoBlacklist && TileEntity.getKey(tile.getClass()) != null)
+                            {
+                                IBlockEntity.TEBLACKLIST.add(TileEntity.getKey(tile.getClass()).toString());
+                            }
                         }
                     }
                 }
@@ -164,6 +168,8 @@ public class BlockEntityUpdater
                     List<AxisAlignedBB> toAdd = Lists.newArrayList();
                     pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
                     IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
+                    state = state.getActualState(blockEntity.getFakeWorld(), pos);
+                    state = state.getBlock().getExtendedState(state, blockEntity.getFakeWorld(), pos);
                     try
                     {
                         state.addCollisionBoxToList(blockEntity.getFakeWorld(), pos, TileEntity.INFINITE_EXTENT_AABB,

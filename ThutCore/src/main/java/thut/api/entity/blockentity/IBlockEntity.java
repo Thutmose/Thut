@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Sets;
 
-import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -26,7 +25,7 @@ import net.minecraft.world.World;
 
 public interface IBlockEntity
 {
-    public static Set<String> TEWHITELIST = Sets.newHashSet();
+    public static Set<String> TEBLACKLIST = Sets.newHashSet();
 
     public static class BlockEntityFormer
     {
@@ -125,16 +124,12 @@ public interface IBlockEntity
                     for (int k = zMin; k <= zMax; k++)
                     {
                         BlockPos temp = pos.add(i, j, k);
-                        IBlockState state = world.getBlockState(temp);
-                        if (((state.getBlock()) instanceof ITileEntityProvider))
+                        TileEntity old = world.getTileEntity(temp);
+                        if (old != null)
                         {
-                            TileEntity old = world.getTileEntity(temp);
-                            if (old != null)
-                            {
-                                NBTTagCompound tag = new NBTTagCompound();
-                                tag = old.writeToNBT(tag);
-                                ret[i - xMin][j - yMin][k - zMin] = makeTile(tag);
-                            }
+                            NBTTagCompound tag = new NBTTagCompound();
+                            tag = old.writeToNBT(tag);
+                            ret[i - xMin][j - yMin][k - zMin] = makeTile(tag);
                         }
                     }
             return ret;

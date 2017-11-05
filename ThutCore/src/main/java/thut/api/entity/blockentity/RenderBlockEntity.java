@@ -8,13 +8,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.tileentity.TileEntity;
@@ -23,6 +25,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -51,6 +54,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
     {
         try
         {
+            b = Tessellator.getInstance().getBuffer();
             IBlockEntity blockEntity = (IBlockEntity) entity;
             GL11.glPushMatrix();
             GL11.glTranslated(x, y, z);
@@ -70,12 +74,20 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             int zMax = MathHelper.floor(blockEntity.getMax().getZ() + entity.posZ);
             int yMin = (int) Math.round(blockEntity.getMin().getY() + entity.posY);
             int yMax = (int) Math.round(blockEntity.getMax().getY() + entity.posY);
+            
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
                         pos.setPos(i, j, k);
                         drawBlockAt(pos, blockEntity);
+                    }
+            
+            for (int i = xMin; i <= xMax; i++)
+                for (int j = yMin; j <= yMax; j++)
+                    for (int k = zMin; k <= zMax; k++)
+                    {
+                        pos.setPos(i, j, k);
                         drawTileAt(pos, blockEntity, partialTicks);
                     }
             GL11.glPopMatrix();
@@ -92,31 +104,53 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
         IBlockState iblockstate = entity.getFakeWorld().getBlockState(pos);
         if (iblockstate.getMaterial() != Material.AIR)
         {
-            GL11.glPushMatrix();
-            BlockPos liftPos = ((Entity) entity).getPosition();
-            GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(),
-                    pos.getZ() - liftPos.getZ());
             BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
-            iblockstate = iblockstate.getActualState(entity.getFakeWorld(), pos);
-            GlStateManager.enableRescaleNormal();
-            GlStateManager.pushMatrix();
-            GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
-            GlStateManager.translate(0.5F, 0.5F, 0.5F);
-            float f7 = 1.0F;
-            GlStateManager.scale(-f7, -f7, f7);
-            int i1 = ((Entity) entity).getBrightnessForRender();
-            int j1 = i1 % 65536;
-            int k1 = i1 / 65536;
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-            if (iblockstate.getRenderType() != EnumBlockRenderType.ENTITYBLOCK_ANIMATED)
-                blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
-            GlStateManager.popMatrix();
-            GlStateManager.disableRescaleNormal();
-            GL11.glPopMatrix();
+            IBlockState actualstate = iblockstate.getActualState(entity.getFakeWorld(), pos);
+            iblockstate = actualstate.getBlock().getExtendedState(actualstate, entity.getFakeWorld(), pos);
+            if (iblockstate.getRenderType() == EnumBlockRenderType.MODEL)
+            {
+                BlockPos liftPos = ((Entity) entity).getPosition();
+                GlStateManager.pushMatrix();
+                GL11.glTranslated(-liftPos.getX(), 0.5 - liftPos.getY(), -liftPos.getZ());
+                GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+                GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
+                GlStateManager.translate(0.5F, 0.5F, 0.5F);
+                RenderHelper.disableStandardItemLighting();
+                GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+                GlStateManager.enableBlend();
+                GlStateManager.disableCull();
+
+                if (Minecraft.isAmbientOcclusionEnabled())
+                {
+                    GlStateManager.shadeModel(7425);
+                }
+                else
+                {
+                    GlStateManager.shadeModel(7424);
+                }
+                float f7 = 1.0F;
+                GlStateManager.scale(-f7, -f7, f7);
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
+                renderBakedBlockModel(entity, model, iblockstate, entity.getFakeWorld(), pos);
+                RenderHelper.enableStandardItemLighting();
+                GlStateManager.popMatrix();
+            }
         }
+    }
+
+    private void renderBakedBlockModel(IBlockEntity entity, IBakedModel model, IBlockState state, IBlockAccess world,
+            BlockPos pos)
+    {
+        GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+        Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
+                .renderModelSmooth(entity.getFakeWorld().world, model, state, pos, buffer, false, 0);
+        tessellator.draw();
+        return;
     }
 
     private void drawTileAt(BlockPos pos, IBlockEntity entity, float partialTicks)
@@ -128,7 +162,6 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             BlockPos liftPos = ((Entity) entity).getPosition();
             GL11.glTranslated(pos.getX() - liftPos.getX(), pos.getY() + 0.5 - liftPos.getY(),
                     pos.getZ() - liftPos.getZ());
-            GlStateManager.enableRescaleNormal();
             GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
             GlStateManager.pushMatrix();
             GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
@@ -136,14 +169,19 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             GlStateManager.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
             float f7 = 1.0F;
             GlStateManager.scale(-f7, -f7, f7);
-            int i1 = ((Entity) entity).getBrightnessForRender();
-            int j1 = i1 % 65536;
-            int k1 = i1 / 65536;
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
+            boolean fast = tile.hasFastRenderer();
+            if (fast)
+            {
+                TileEntityRendererDispatcher.instance.preDrawBatch();
+                TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
+                TileEntityRendererDispatcher.instance.drawBatch(0);
+                TileEntityRendererDispatcher.instance.preDrawBatch();
+                TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
+                TileEntityRendererDispatcher.instance.drawBatch(1);
+            }
+            else TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
             GlStateManager.popMatrix();
-            GlStateManager.disableRescaleNormal();
             GL11.glPopMatrix();
         }
     }

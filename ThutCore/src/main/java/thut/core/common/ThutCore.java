@@ -1,5 +1,6 @@
 package thut.core.common;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,7 @@ import thut.api.entity.IMultiplePassengerEntity;
 import thut.api.entity.ai.AIThreadManager;
 import thut.api.entity.ai.AIThreadManager.AIStuff;
 import thut.api.entity.ai.IAIMob;
+import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.entity.genetics.Alleles;
 import thut.api.entity.genetics.IMobGenetics;
 import thut.api.maths.Cruncher;
@@ -218,6 +220,16 @@ public class ThutCore
         TerrainManager.clear();
         PlayerDataHandler.clear();
         AIThreadManager.clear();
+        if (config.autoBlacklistErroredTEs)
+        {
+            if (config.teblacklist.length != IBlockEntity.TEBLACKLIST.size())
+            {
+                config.teblacklist = IBlockEntity.TEBLACKLIST.toArray(new String[0]);
+                Arrays.sort(config.teblacklist);
+                config.get("blockentity", "teblacklist", config.teblacklist).set(config.teblacklist);
+                config.save();
+            }
+        }
     }
 
     @SubscribeEvent
