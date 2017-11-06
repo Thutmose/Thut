@@ -39,8 +39,7 @@ import thut.tech.common.entity.EntityLift;
 import thut.tech.common.network.PacketPipeline;
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 
-// @net.minecraftforge.fml.common.Optional.Interface(iface =
-// "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
+@net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
 {
     public int                          power        = 0;
