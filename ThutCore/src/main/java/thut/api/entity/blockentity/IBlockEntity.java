@@ -2,12 +2,17 @@ package thut.api.entity.blockentity;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.state.IBlockState;
@@ -25,7 +30,62 @@ import net.minecraft.world.World;
 
 public interface IBlockEntity
 {
-    public static Set<String> TEBLACKLIST = Sets.newHashSet();
+    static Set<String>                   TEBLACKLIST    = Sets.newHashSet();
+    static BiMap<Class<?>, ITileRemover> CUSTOMREMOVERS = HashBiMap.create();
+    List<ITileRemover>                   SORTEDREMOVERS = Lists.newArrayList();
+
+    static final ITileRemover            DEFAULTREMOVER = new ITileRemover()
+                                                        {
+
+                                                            @Override
+                                                            public void preBlockRemoval(TileEntity tileIn)
+                                                            {
+                                                                tileIn.invalidate();
+                                                            }
+
+                                                            @Override
+                                                            public void postBlockRemoval(TileEntity tileIn)
+                                                            {
+                                                            }
+                                                        };
+
+    public static void addRemover(ITileRemover remover, Class<?> clas)
+    {
+        CUSTOMREMOVERS.put(clas, remover);
+        SORTEDREMOVERS.add(remover);
+        Collections.sort(SORTEDREMOVERS, new Comparator<ITileRemover>()
+        {
+            @Override
+            public int compare(ITileRemover o1, ITileRemover o2)
+            {
+                return o1.getPriority() - o2.getPriority();
+            }
+        });
+    }
+
+    public static interface ITileRemover
+    {
+        void preBlockRemoval(TileEntity tileIn);
+
+        void postBlockRemoval(TileEntity tileIn);
+
+        default int getPriority()
+        {
+            return 0;
+        }
+    }
+
+    public static ITileRemover getRemover(TileEntity tile)
+    {
+        ITileRemover ret = CUSTOMREMOVERS.get(tile.getClass());
+        if (ret != null) return ret;
+        for (ITileRemover temp : SORTEDREMOVERS)
+        {
+            Class<?> key = CUSTOMREMOVERS.inverse().get(temp);
+            if (key.isInstance(tile)) return temp;
+        }
+        return DEFAULTREMOVER;
+    }
 
     public static class BlockEntityFormer
     {
@@ -50,8 +110,26 @@ public interface IBlockEntity
                     {
                         BlockPos temp = pos.add(i, j, k);
                         TileEntity tile = world.getTileEntity(temp);
-                        if (tile != null) tile.invalidate();
+                        ITileRemover tileHandler = null;
+                        if (tile != null)
+                        {
+                            tileHandler = getRemover(tile);
+                            tileHandler.preBlockRemoval(tile);
+                        }
+                    }
+            for (int i = xMin; i <= xMax; i++)
+                for (int j = yMin; j <= yMax; j++)
+                    for (int k = zMin; k <= zMax; k++)
+                    {
+                        BlockPos temp = pos.add(i, j, k);
+                        TileEntity tile = world.getTileEntity(temp);
+                        ITileRemover tileHandler = null;
+                        if (tile != null)
+                        {
+                            tileHandler = getRemover(tile);
+                        }
                         world.setBlockState(temp, Blocks.AIR.getDefaultState(), 2);
+                        if (tileHandler != null) tileHandler.postBlockRemoval(tile);
                     }
         }
 

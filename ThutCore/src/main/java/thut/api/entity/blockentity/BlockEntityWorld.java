@@ -32,6 +32,7 @@ public class BlockEntityWorld extends World
     final World                  world;
     final IBlockEntity           blockEntity;
     final Entity                 entity;
+    public boolean               creating;
 
     private Map<BlockPos, Chunk> chunks     = Maps.newHashMap();
     private BlockPos             lastOrigin = null;
@@ -96,10 +97,10 @@ public class BlockEntityWorld extends World
         TileEntity tile = blockEntity.getTiles()[i][j][k];
         if (tile != null)
         {
+            tile.setWorld(this);
             boolean invalid = tile.isInvalid();
             if (!invalid) tile.invalidate();
             tile.setPos(pos.toImmutable());
-            tile.setWorld(this);
             tile.validate();
         }
         return tile;

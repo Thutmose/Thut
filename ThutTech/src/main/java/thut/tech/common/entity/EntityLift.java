@@ -335,6 +335,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         {
             CompatWrapper.moveEntitySelf(this, velocity.x, velocity.y, velocity.z);
         }
+        else
+        {
+            BlockPos pos = getPosition();
+            setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
+        }
     }
 
     @Override

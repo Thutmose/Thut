@@ -1,7 +1,5 @@
 package thut.tech.common.blocks.lift;
 
-import static net.minecraft.util.EnumFacing.DOWN;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +39,8 @@ import thut.tech.common.entity.EntityLift;
 import thut.tech.common.network.PacketPipeline;
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 
-@net.minecraftforge.fml.common.Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
+// @net.minecraftforge.fml.common.Optional.Interface(iface =
+// "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
 public class TileEntityLiftAccess extends TileEntity implements ITickable, SimpleComponent
 {
     public int                          power        = 0;
@@ -51,7 +50,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     boolean                             listNull     = false;
     List<Entity>                        list         = new ArrayList<Entity>();
     Vector3                             here;
-    public Vector3                      root         = Vector3.getNewVector();
     public TileEntityLiftAccess         rootNode;
     public Vector<TileEntityLiftAccess> connected    = new Vector<TileEntityLiftAccess>();
     EnumFacing                          sourceSide;
@@ -211,29 +209,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return new SPacketUpdateTileEntity(this.getPos(), 3, getUpdateTag());
     }
 
-    public double getEnergy()
-    {
-        return 0;
-    }
-
-    public TileEntityLiftAccess getRoot()
-    {
-        if (here == null || here.isEmpty())
-        {
-            here = Vector3.getNewVector().set(this);
-        }
-
-        if (rootNode != null) return rootNode;
-
-        Block b = here.getBlock(world, DOWN);
-        if (b == getBlockType())
-        {
-            TileEntityLiftAccess te = (TileEntityLiftAccess) here.getTileEntity(world, DOWN);
-            if (te != null && te != this) { return rootNode = te.getRoot(); }
-        }
-        return rootNode = this;
-    }
-
     public int getSidePage(EnumFacing side)
     {
         return sidePages[side.getIndex()];
@@ -293,8 +268,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         super.readFromNBT(par1);
         floor = par1.getInteger("floor");
         liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
-        root = Vector3.getNewVector();
-        root = Vector3.readFromNBT(par1, "root");
         sides = par1.getByteArray("sides");
         for (EnumFacing face : EnumFacing.HORIZONTALS)
         {
@@ -321,9 +294,9 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (lift != null && floor <= lift.floors.length && floor > 0)
         {
-            lift.setFoor(getRoot(), floor);
-            getRoot().floor = floor;
-            getRoot().markDirty();
+            lift.setFoor(this, floor);
+            this.floor = floor;
+            this.markDirty();
         }
     }
 
@@ -332,11 +305,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         this.lift = lift;
         this.liftID = lift.getUniqueID();
         if (!world.isRemote) PacketHandler.sendTileUpdate(this);
-    }
-
-    public void setRoot(TileEntityLiftAccess root)
-    {
-        this.rootNode = root;
     }
 
     public void setSide(EnumFacing side, boolean flag)
@@ -378,7 +346,10 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
         if (lift != null && !world.isRemote)
         {
+            // This is whether the lift is currently at this floor, so redstone
+            // should be emitted.
             boolean check = lift.getCurrentFloor() == this.floor && (int) (lift.motionY * 16) == 0;
+
             IBlockState state = world.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
             boolean callPanel = false;
@@ -386,16 +357,22 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             {
                 callPanel |= callFaces[face.ordinal()];
             }
-            if (callPanel && !old && !lift.getCalled())
+            // Call panels should only respond to redstone signals if they are
+            // not supposed to be emitting one themselves.
+            if (callPanel && !old && !lift.getCalled() && !check)
             {
                 if (world.isBlockPowered(getPos())) lift.call(floor);
             }
 
+            // If state has changed, change the blockstate as well. only do this
+            // if it has changed to prevent too many changes to state.
             if (check != old)
             {
                 state = state.withProperty(BlockLift.CURRENT, check);
                 world.setBlockState(getPos(), state);
             }
+
+            // Check to see if the called state needs to be changed.
             if (lift.motionY == 0 || lift.getDestinationFloor() == floor)
             {
                 old = state.getValue(BlockLift.CALLED);
@@ -411,38 +388,49 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
         if (lift != null && floor > 0)
         {
-            if ((int) lift.posY == getPos().getY() - 2)
+            // Set lifts current floor to this if it is in the area of the
+            // floor.
+            if ((int) (Math.round(lift.posY)) == lift.floors[floor - 1])
             {
                 lift.setCurrentFloor(floor);
             }
+            // If lift thinks it is currently on this floor, and is not, set it
+            // otherwise.
             else if (lift.getCurrentFloor() == floor)
             {
                 lift.setCurrentFloor(-1);
             }
+
+            // Make sure that lift's floor is this one if it doesn't have one
+            // defined.
             if (lift.floors[floor - 1] < 0)
             {
                 lift.setFoor(this, floor);
             }
+
+            // Sets the values used for rendering colours over numbers on the
+            // display.
             calledFloor = lift.getDestinationFloor();
             currentFloor = lift.getCurrentFloor();
         }
+
+        // Find lift if existing lift isn't found.
         EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, world);
         if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead || tempLift != lift))
         {
             lift = tempLift;
             if (lift == null || lift.isDead) return;
         }
-        if (getRoot().floor != floor)
-        {
-            this.floor = getRoot().floor;
-            this.lift = getRoot().lift;
-            markDirty();
-        }
+
+        // Cleanup floor if the lift is gone.
         if (floor > 0 && (lift == null || lift.isDead))
         {
             lift = null;
             floor = 0;
         }
+
+        // Scan sides for a controller which actually has a lift attached, and
+        // attach self to that floor.
         if (lift == null)
         {
             for (EnumFacing side : EnumFacing.values())
@@ -482,7 +470,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             par1.setBoolean(face + "Call", callFaces[face.ordinal()]);
         }
-        if (root != null) root.writeToNBT(par1, "root");
         if (lift != null)
         {
             liftID = lift.getPersistentID();
@@ -541,8 +528,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(yValue:number) -- Calls the Lift to thespecified Y level")
-
+    @Callback(doc = "function(yValue:number) -- Calls the Lift tothespecified Y level")
     @Optional.Method(modid = "opencomputers")
     public Object[] callYValue(Context context, Arguments args) throws Exception
     {
@@ -557,8 +543,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(xValue:number) -- Calls the Lift to thespecified X location")
-
+    @Callback(doc = "function(xValue:number) -- Calls the Lift tothespecified X location")
     @Optional.Method(modid = "opencomputers")
     public Object[] callXValue(Context context, Arguments args) throws Exception
     {
@@ -573,8 +558,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(zValue:number) -- Calls the Lift to thespecified Z location")
-
+    @Callback(doc = "function(zValue:number) -- Calls the Lift tothespecified Z location")
     @Optional.Method(modid = "opencomputers")
     public Object[] callZValue(Context context, Arguments args) throws Exception
     {
@@ -589,7 +573,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Sets floor associated with this block
      */
-    @Callback(doc = "function(floor:number) -- Sets the floor assosiated tothe Controller")
+    @Callback(doc = "function(floor:number) -- Sets the floor assosiatedtothe Controller")
     @Optional.Method(modid = "opencomputers")
     public Object[] setFloor(Context context, Arguments args)
     {
