@@ -157,7 +157,7 @@ public class WorldCache implements IBlockAccess
         long key = asLong(l, i1);
         ChunkCache chunk = map.get(key);
         if (chunk == null) return null;
-        return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
+        return chunk.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
     }
 
     @Override
