@@ -60,6 +60,7 @@ public class BlockEntityUpdater
 
     public void onUpdate()
     {
+        if (blockEntity.getBlocks() == null) return;
         if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks().length)
             World.MAX_ENTITY_RADIUS = blockEntity.getBlocks().length;
         if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0].length)

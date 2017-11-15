@@ -149,7 +149,7 @@ public class WorldCache implements IBlockAccess
         {
             synchronized (world)
             {
-                return world.getTileEntity(pos);
+                return world.getChunkFromBlockCoords(pos).getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
             }
         }
         int l = (pos.getX() >> 4);

@@ -23,6 +23,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryNamespaced;
@@ -104,11 +105,12 @@ public interface IBlockEntity
             int zMax = max.getZ();
             int yMin = min.getY();
             int yMax = max.getY();
+            MutableBlockPos temp = new MutableBlockPos();
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
-                        BlockPos temp = pos.add(i, j, k);
+                        temp.setPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k);
                         TileEntity tile = world.getTileEntity(temp);
                         ITileRemover tileHandler = null;
                         if (tile != null)
@@ -121,15 +123,23 @@ public interface IBlockEntity
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
-                        BlockPos temp = pos.add(i, j, k);
+                        temp.setPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k);
                         TileEntity tile = world.getTileEntity(temp);
                         ITileRemover tileHandler = null;
                         if (tile != null)
                         {
                             tileHandler = getRemover(tile);
+                            System.out.println(tile.isInvalid() + " " + tile + " " + tile.getWorld());
                         }
                         world.setBlockState(temp, Blocks.AIR.getDefaultState(), 2);
                         if (tileHandler != null) tileHandler.postBlockRemoval(tile);
+                    }
+            for (int i = xMin; i <= xMax; i++)
+                for (int j = yMin; j <= yMax; j++)
+                    for (int k = zMin; k <= zMax; k++)
+                    {
+                        temp.setPos(pos.getX() + i, pos.getY() + j, pos.getZ() + k);
+                        world.setBlockState(temp, Blocks.AIR.getDefaultState(), 3);
                     }
         }
 
