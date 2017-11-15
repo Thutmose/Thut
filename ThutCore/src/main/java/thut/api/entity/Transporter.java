@@ -72,6 +72,32 @@ public class Transporter
         }
     }
 
+    public static class DeSticker
+    {
+        final EntityPlayerMP player;
+        final long           tick;
+        final int            dimension;
+
+        public DeSticker(EntityPlayerMP player, int delay)
+        {
+            this.player = player;
+            this.tick = player.getEntityWorld().getTotalWorldTime() + delay;
+            this.dimension = player.dimension;
+        }
+
+        @SubscribeEvent
+        public void tick(TickEvent.ServerTickEvent evt)
+        {
+            boolean done = dimension != player.dimension || tick < player.getEntityWorld().getTotalWorldTime();
+            if (done)
+            {
+                MinecraftForge.EVENT_BUS.unregister(this);
+                player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw,
+                        player.rotationPitch);
+            }
+        }
+    }
+
     public static class ReMounter
     {
         final Entity[] riders;
@@ -141,6 +167,7 @@ public class Transporter
         {
             theEntity.dismountRidingEntity();
             ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch);
+            MinecraftForge.EVENT_BUS.register(new DeSticker((EntityPlayerMP) theEntity, 10));
         }
         else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
