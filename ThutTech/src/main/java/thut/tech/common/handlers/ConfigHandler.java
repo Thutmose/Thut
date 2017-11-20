@@ -2,6 +2,7 @@ package thut.tech.common.handlers;
 
 import net.minecraftforge.common.config.Configuration;
 import thut.tech.common.entity.EntityLift;
+import thut.tech.common.entity.LiftInteractHandler;
 
 public class ConfigHandler
 {
@@ -34,6 +35,7 @@ public class ConfigHandler
                 "T/t produced by the controller blocks");
         maxHeight = conf.get("Lift Settings", "maxHeight", 5, "Max allowed height of a lift.").getInt();
         maxRadius= conf.get("Lift Settings", "maxRadius", 2, "Max allowed radius of a lift (2 gives 5x5 as maximum).").getInt();
+        LiftInteractHandler.DROPSPARTS = conf.getBoolean("dropsParts", "Lift Settings", true, "Does lift drop elevator blocks on disassemble");
         conf.save();
     }
 
