@@ -8,13 +8,17 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
+import thut.lib.CompatWrapper;
 import thut.tech.common.items.ItemLinker;
 
 public class LiftInteractHandler extends BlockEntityInteractHandler
 {
-    final EntityLift lift;
+    public static boolean DROPSPARTS = true;
+
+    final EntityLift      lift;
 
     public LiftInteractHandler(EntityLift lift)
     {
@@ -98,6 +102,16 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             {
                 String message = "msg.lift.killed";
                 player.addChatMessage(new TextComponentTranslation(message));
+                if (DROPSPARTS)
+                {
+                    BlockPos max = lift.boundMax;
+                    BlockPos min = lift.boundMin;
+                    int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
+                    int num = (dw + 1) * (max.getY() - min.getY() + 1);
+                    stack = ItemLinker.liftblocks.copy();
+                    CompatWrapper.setStackSize(stack, num);
+                    player.dropItem(stack, false, true);
+                }
                 lift.setHealth(0);
                 lift.setDead();
             }
