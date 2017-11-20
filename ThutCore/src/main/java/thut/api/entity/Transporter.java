@@ -17,6 +17,7 @@ import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.maths.Vector3;
@@ -76,19 +77,31 @@ public class Transporter
     {
         final EntityPlayerMP player;
         final long           tick;
+        final BlockPos       initialPos;
         final int            dimension;
 
         public DeSticker(EntityPlayerMP player, int delay)
         {
             this.player = player;
             this.tick = player.getEntityWorld().getTotalWorldTime() + delay;
+            this.initialPos = player.getPosition();
             this.dimension = player.dimension;
+        }
+
+        @SubscribeEvent
+        public void logout(PlayerLoggedOutEvent evt)
+        {
+            if (evt.player.getUniqueID().equals(player.getUniqueID()))
+            {
+                MinecraftForge.EVENT_BUS.unregister(this);
+            }
         }
 
         @SubscribeEvent
         public void tick(TickEvent.ServerTickEvent evt)
         {
-            boolean done = dimension != player.dimension || tick < player.getEntityWorld().getTotalWorldTime();
+            boolean done = dimension != player.dimension
+                    || (tick < player.getEntityWorld().getTotalWorldTime() && !player.getPosition().equals(initialPos));
             if (done)
             {
                 MinecraftForge.EVENT_BUS.unregister(this);
