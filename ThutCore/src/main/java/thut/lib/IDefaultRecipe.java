@@ -15,7 +15,7 @@ public interface IDefaultRecipe extends IRecipe
         for (int i = 0; i < nonnulllist.size(); ++i)
         {
             ItemStack itemstack = inv.getStackInSlot(i);
-            nonnulllist.set(i, net.minecraftforge.common.ForgeHooks.getContainerItem(itemstack));
+            nonnulllist.set(i, toKeep(i, itemstack, inv));
         }
         return nonnulllist;
     }
