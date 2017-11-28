@@ -180,7 +180,7 @@ public class Transporter
         {
             theEntity.dismountRidingEntity();
             ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch);
-            MinecraftForge.EVENT_BUS.register(new DeSticker((EntityPlayerMP) theEntity, 10));
+            MinecraftForge.EVENT_BUS.register(new DeSticker((EntityPlayerMP) theEntity, 100));
         }
         else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
