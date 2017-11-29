@@ -18,14 +18,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -33,7 +31,6 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -50,9 +47,7 @@ import thut.api.entity.genetics.IMobGenetics;
 import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
 import thut.api.terrain.BiomeDatabase;
-import thut.api.terrain.SpawnChunkTerrainManager;
 import thut.api.terrain.TerrainManager;
-import thut.api.terrain.WorldTerrain;
 import thut.core.common.commands.CommandConfig;
 import thut.core.common.genetics.DefaultGenetics;
 import thut.core.common.handlers.ConfigHandler;
@@ -204,14 +199,6 @@ public class ThutCore
     public void serverLoad(FMLServerStartingEvent event)
     {
         event.registerServerCommand(new CommandConfig("thutcoresettings", config));
-    }
-
-    @EventHandler
-    public void serverLoad(FMLServerStartedEvent event)
-    {
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
-        WorldTerrain terrain = TerrainManager.getInstance().getTerrain(world);
-        SpawnChunkTerrainManager.load(terrain.dimID, terrain);
     }
 
     @EventHandler

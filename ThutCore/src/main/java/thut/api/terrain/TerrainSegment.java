@@ -11,14 +11,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -27,8 +25,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.BiomeDictionary.Type;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
 import thut.api.maths.Vector3;
 
 public class TerrainSegment
@@ -197,7 +193,7 @@ public class TerrainSegment
     public static List<ISubBiomeChecker>               biomeCheckers        = Lists.newArrayList();
     public static Set<Class<? extends ITerrainEffect>> terrainEffectClasses = Sets.newHashSet();
     public static boolean                              noLoad               = false;
-    static Map<Integer, Integer>                       idReplacements       = Maps.newHashMap();
+    public Map<Integer, Integer>                       idReplacements;
 
     public static int count(World world, Block b, Vector3 v, int range)
     {
@@ -260,35 +256,19 @@ public class TerrainSegment
     {
         if (noLoad) return;
         int[] biomes = nbt.getIntArray("biomes");
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) if (nbt.hasKey("ids"))
-        {
-            idReplacements.clear();
-            NBTTagList tags = (NBTTagList) nbt.getTag("ids");
-            for (int i = 0; i < tags.tagCount(); i++)
-            {
-                NBTTagCompound tag = tags.getCompoundTagAt(i);
-                String name = tag.getString("name");
-                int id = tag.getInteger("id");
-                BiomeType type = BiomeType.getBiome(name, false);
-                if (type.getType() != id)
-                {
-                    idReplacements.put(id, type.getType());
-                }
-            }
-            boolean replacements = false;
-            for (int i = 0; i < biomes.length; i++)
-            {
-                if (idReplacements.containsKey(biomes[i]))
-                {
-                    biomes[i] = idReplacements.get(biomes[i]);
-                    replacements = true;
-                }
-            }
-            if (replacements)
-                System.out.println("Replacement subbiomes found for " + t.chunkX + " " + t.chunkY + " " + t.chunkZ);
-        }
         t.toSave = nbt.getBoolean("toSave");
         t.init = false;
+        boolean replacements = false;
+        if (t.idReplacements != null) for (int i = 0; i < biomes.length; i++)
+        {
+            if (t.idReplacements.containsKey(biomes[i]))
+            {
+                biomes[i] = t.idReplacements.get(biomes[i]);
+                replacements = true;
+            }
+        }
+        if (replacements)
+            System.out.println("Replacement subbiomes found for " + t.chunkX + " " + t.chunkY + " " + t.chunkZ);
         t.setBiome(biomes);
     }
 
@@ -466,7 +446,7 @@ public class TerrainSegment
     {
         return effects.get(name);
     }
-    
+
     public Collection<ITerrainEffect> getEffects()
     {
         return effects.values();
@@ -520,15 +500,6 @@ public class TerrainSegment
         nbt.setInteger("y", chunkY);
         nbt.setInteger("z", chunkZ);
         nbt.setBoolean("toSave", toSave);
-        NBTTagList biomeList = new NBTTagList();
-        for (BiomeType t : BiomeType.values())
-        {
-            NBTTagCompound tag = new NBTTagCompound();
-            tag.setString("name", t.name);
-            tag.setInteger("id", t.getType());
-            biomeList.appendTag(tag);
-        }
-        nbt.setTag("ids", biomeList);
     }
 
     public void setBiome(BlockPos p, int type)

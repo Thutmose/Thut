@@ -20,6 +20,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -36,10 +38,20 @@ import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler.MessageClient.MessageHandlerClient;
 import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
 import thut.api.terrain.BiomeType;
-import thut.api.terrain.TerrainManager;
+import thut.api.terrain.CapabilityTerrain;
+import thut.api.terrain.CapabilityTerrain.ITerrainProvider;
 
 public class PacketHandler
 {
+    public static void sendTerrainToClient(World world, ChunkPos pos, EntityPlayerMP player)
+    {
+        ITerrainProvider provider = world.getChunkFromChunkCoords(pos.x, pos.z)
+                .getCapability(CapabilityTerrain.TERRAIN_CAP, null);
+        NBTTagCompound terrainData = (NBTTagCompound) CapabilityTerrain.TERRAIN_CAP.writeNBT(provider, null);
+        MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
+        PacketHandler.packetPipeline.sendTo(message, player);
+    }
+
     public static class MessageClient implements IMessage
     {
         public static class MessageHandlerClient implements IMessageHandler<MessageClient, MessageServer>
@@ -69,14 +81,14 @@ public class PacketHandler
                     }
                     return;
                 }
-                if (channel == TELEPORTID)
+                else if (channel == TELEPORTID)
                 {
                     int id = buffer.readInt();
                     if (player.getEntityWorld().getEntityByID(id) != null)
                         player.getEntityWorld().getEntityByID(id).setDead();
                     return;
                 }
-                if (channel == TILEUPDATE)
+                else if (channel == TILEUPDATE)
                 {
                     try
                     {
@@ -93,7 +105,7 @@ public class PacketHandler
                     }
                     return;
                 }
-                if (channel == TERRAINVALUES)
+                else if (channel == TERRAINVALUES)
                 {
                     try
                     {
@@ -111,20 +123,7 @@ public class PacketHandler
                     }
                     return;
                 }
-                if (channel == TERRAINSYNC)
-                {
-                    try
-                    {
-                        NBTTagCompound nbt = buffer.readCompoundTag();
-                        TerrainManager.getInstance().getTerrain(player.getEntityWorld()).loadTerrain(nbt);
-                    }
-                    catch (Exception e)
-                    {
-                        System.err.println("Error with Dim " + player.dimension);
-                    }
-                    return;
-                }
-                if (channel == ENTITYUPDATE)
+                else if (channel == ENTITYUPDATE)
                 {
                     try
                     {
@@ -137,8 +136,24 @@ public class PacketHandler
                     {
                         e.printStackTrace();
                     }
+                    return;
                 }
-                return;
+                if (channel == TERRAINSYNC)
+                {
+                    try
+                    {
+                        NBTTagCompound nbt = buffer.readCompoundTag();
+                        ITerrainProvider terrain = player.getEntityWorld()
+                                .getChunkFromChunkCoords(nbt.getInteger("x"), nbt.getInteger("z"))
+                                .getCapability(CapabilityTerrain.TERRAIN_CAP, null);
+                        CapabilityTerrain.TERRAIN_CAP.readNBT(terrain, null, nbt);
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    return;
+                }
             }
 
             @Override
@@ -160,8 +175,8 @@ public class PacketHandler
         public static final byte TELEPORTID    = 2;
         public static final byte TILEUPDATE    = 3;
         public static final byte TERRAINVALUES = 4;
-        public static final byte TERRAINSYNC   = 5;
-        public static final byte ENTITYUPDATE  = 6;
+        public static final byte ENTITYUPDATE  = 5;
+        public static final byte TERRAINSYNC   = 6;
 
         PacketBuffer             buffer;
 
