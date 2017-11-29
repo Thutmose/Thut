@@ -1,7 +1,5 @@
 package thut.api.terrain;
 
-import java.util.HashMap;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +13,6 @@ import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -31,7 +28,6 @@ public class TerrainManager
 
     public static void clear()
     {
-        terrain.map.clear();
     }
 
     public static TerrainManager getInstance()
@@ -42,8 +38,6 @@ public class TerrainManager
         }
         return terrain;
     }
-
-    public HashMap<Integer, WorldTerrain> map = new HashMap<Integer, WorldTerrain>();
 
     private TerrainManager()
     {
@@ -61,6 +55,7 @@ public class TerrainManager
         event.addCapability(TERRAINCAP, terrain);
     }
 
+    @SuppressWarnings("deprecation")
     @SubscribeEvent
     public void ChunkLoadEvent(ChunkDataEvent.Load evt)
     {
@@ -82,8 +77,7 @@ public class TerrainManager
                         + " " + terrainData);
                 return;
             }
-            WorldTerrain terrain = TerrainManager.getInstance().getTerrain(evt.getWorld());
-            terrain.loadTerrain(terrainData);
+            new WorldTerrain(evt.getWorld().provider.getDimension()).loadTerrain(terrainData);
         }
         catch (Exception e)
         {
@@ -96,21 +90,6 @@ public class TerrainManager
     {
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
         PacketHandler.sendTerrainToClient(evt.getPlayer().getEntityWorld(), evt.getChunk(), evt.getPlayer());
-    }
-
-    public WorldTerrain getTerrain(int id)
-    {
-        if (map.get(id) == null)
-        {
-            map.put(id, new WorldTerrain(id));
-        }
-        return map.get(id);
-    }
-
-    public WorldTerrain getTerrain(World world)
-    {
-        int id = world.provider.getDimension();
-        return getTerrain(id);
     }
 
     public TerrainSegment getTerrain(World world, BlockPos p)
@@ -136,14 +115,5 @@ public class TerrainManager
     public TerrainSegment getTerrian(World world, Vector3 v)
     {
         return getTerrain(world, v.x, v.y, v.z);
-    }
-
-    @SubscribeEvent
-    public void PlayerLoggout(PlayerLoggedOutEvent evt)
-    {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
-        {
-            TerrainManager.clear();
-        }
     }
 }

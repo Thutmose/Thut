@@ -204,7 +204,6 @@ public class ThutCore
     @EventHandler
     public void serverLoad(FMLServerStoppedEvent event)
     {
-        TerrainManager.clear();
         PlayerDataHandler.clear();
         AIThreadManager.clear();
         if (config.autoBlacklistErroredTEs)
