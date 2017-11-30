@@ -4,6 +4,7 @@ import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
 
+import net.minecraft.client.renderer.GlStateManager;
 import thut.core.client.render.model.IPartTexturer;
 import thut.core.client.render.model.TextureCoordinate;
 import thut.core.client.render.model.Vertex;
@@ -11,6 +12,7 @@ import thut.core.client.render.model.Vertex;
 public class Shape
 {
     private int                meshId  = 0;
+    private boolean            hasTextures;
     public Vertex[]            vertices;
     public Vertex[]            normals;
     public TextureCoordinate[] textureCoordinates;
@@ -25,6 +27,7 @@ public class Shape
         this.vertices = vert;
         this.normals = norm;
         this.textureCoordinates = tex;
+        hasTextures = tex != null;
     }
 
     void addTris(IPartTexturer texturer)
@@ -65,12 +68,20 @@ public class Shape
             GL11.glShadeModel(GL11.GL_SMOOTH);
         }
 
+        if (!hasTextures)
+        {
+            GlStateManager.disableTexture2D();
+        }
+
         GL11.glBegin(GL11.GL_TRIANGLES);
         int n = 0;
         for (Integer i : order)
         {
-            textureCoordinate = textureCoordinates[i];
-            GL11.glTexCoord2d(textureCoordinate.u, textureCoordinate.v);
+            if (hasTextures)
+            {
+                textureCoordinate = textureCoordinates[i];
+                GL11.glTexCoord2d(textureCoordinate.u, textureCoordinate.v);
+            }
             vertex = vertices[i];
             if (flat)
             {
@@ -86,6 +97,11 @@ public class Shape
             GL11.glVertex3f(vertex.x, vertex.y, vertex.z);
         }
         GL11.glEnd();
+
+        if (!hasTextures)
+        {
+            GlStateManager.enableTexture2D();
+        }
     }
 
     private void compileList(IPartTexturer texturer)
