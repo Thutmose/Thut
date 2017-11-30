@@ -131,46 +131,51 @@ public class Transporter
         {
             if (evt.phase != TickEvent.Phase.END) return;
             if (theMount.isDead) MinecraftForge.EVENT_BUS.unregister(this);
-            if (theMount.getEntityWorld().getTotalWorldTime() > time)
+            boolean doneAll = theMount.getEntityWorld().getTotalWorldTime() > time;
+            for (int i = riders.length - 1; i >= 0; i--)
             {
-                boolean doneAll = true;
-                for (int i = riders.length - 1; i >= 0; i--)
+                Entity theEntity = riders[i];
+                if (theEntity == null) continue;
+                if (dim != theEntity.dimension)
                 {
-                    Entity theEntity = riders[i];
-                    if (theEntity == null) continue;
-                    if (dim != theEntity.dimension)
+                    doneAll = false;
+                    if (theEntity instanceof EntityPlayerMP)
                     {
-                        doneAll = false;
-                        if (theEntity instanceof EntityPlayerMP)
-                        {
-                            ReflectionHelper.setPrivateValue(EntityPlayerMP.class, (EntityPlayerMP) theEntity, true,
-                                    "invulnerableDimensionChange", "field_184851_cj", "ck");
-                            theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity,
-                                    dim, new TTeleporter(theEntity.getServer().getWorld(dim)));
-                        }
-                        else
-                        {
-                            // Handle moving non players.
-                        }
+                        ReflectionHelper.setPrivateValue(EntityPlayerMP.class, (EntityPlayerMP) theEntity, true,
+                                "invulnerableDimensionChange", "field_184851_cj", "ck");
+                        theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity, dim,
+                                new TTeleporter(theEntity.getServer().getWorld(dim)));
                     }
                     else
                     {
-
+                        // Handle moving non players.
                     }
                 }
-                if (doneAll) for (int i = riders.length - 1; i >= 0; i--)
+                else
                 {
-                    Entity theEntity = riders[i];
-                    if (theEntity == null) continue;
-                    doMoveEntity(theEntity, theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
-                            theEntity.rotationPitch);
-                    boolean mounted = theEntity.startRiding(theMount);
-                    doneAll = doneAll && mounted;
-                    if (mounted) riders[i] = null;
+
                 }
-                if (doneAll || theMount.getEntityWorld().getTotalWorldTime() >= (time + 20))
-                    MinecraftForge.EVENT_BUS.unregister(this);
             }
+            int num = 0;
+            if (doneAll) for (int i = riders.length - 1; i >= 0; i--)
+            {
+                Entity theEntity = riders[i];
+                if (theEntity == null)
+                {
+                    num++;
+                    continue;
+                }
+                doMoveEntity(theEntity, theMount.posX, theMount.posY, theMount.posZ, theEntity.rotationYaw,
+                        theEntity.rotationPitch);
+                boolean mounted = theEntity.startRiding(theMount);
+                doneAll = doneAll && mounted;
+                if (mounted)
+                {
+                    riders[i] = null;
+                    num++;
+                }
+            }
+            if (doneAll || riders.length == num) MinecraftForge.EVENT_BUS.unregister(this);
         }
     }
 
