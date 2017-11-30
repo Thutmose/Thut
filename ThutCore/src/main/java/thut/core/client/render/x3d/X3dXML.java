@@ -158,6 +158,7 @@ public class X3dXML
 
         public thut.core.client.render.model.TextureCoordinate[] getTexture()
         {
+            if (textures == null) return null;
             return textures.getTexture();
         }
 
