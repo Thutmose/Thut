@@ -5,6 +5,7 @@ import static thut.api.terrain.BiomeType.LAKE;
 import static thut.api.terrain.BiomeType.VILLAGE;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -320,6 +321,7 @@ public class TerrainSegment
     int[]                           biomes  = new int[GRIDSIZE * GRIDSIZE * GRIDSIZE];
 
     HashMap<String, ITerrainEffect> effects = new HashMap<String, ITerrainEffect>();
+    public final ITerrainEffect[]   effectArr;
 
     public TerrainSegment(int x, int y, int z)
     {
@@ -340,6 +342,16 @@ public class TerrainSegment
                 e.printStackTrace();
             }
         }
+        List<ITerrainEffect> toSort = Lists.newArrayList(effects.values());
+        toSort.sort(new Comparator<ITerrainEffect>()
+        {
+            @Override
+            public int compare(ITerrainEffect o1, ITerrainEffect o2)
+            {
+                return o1.getIdenitifer().compareTo(o2.getIdenitifer());
+            }
+        });
+        effectArr = toSort.toArray(new ITerrainEffect[0]);
     }
 
     private void addEffect(ITerrainEffect effect, String name)
@@ -469,7 +481,7 @@ public class TerrainSegment
     {
         return effects.get(name);
     }
-    
+
     public Collection<ITerrainEffect> getEffects()
     {
         return effects.values();
