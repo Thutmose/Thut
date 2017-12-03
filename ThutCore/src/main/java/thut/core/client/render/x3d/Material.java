@@ -66,6 +66,7 @@ public class Material
     public void postRender()
     {
         if (depth && transparency > 0) GL11.glEnable(GL11.GL_DEPTH_TEST);
+        else if (!depth) GL11.glDisable(GL11.GL_DEPTH_TEST);
         if (!colour_mat) GL11.glDisable(GL11.GL_COLOR_MATERIAL);
         if (!light) GL11.glDisable(GL11.GL_LIGHTING);
         else GL11.glEnable(GL11.GL_LIGHTING);
@@ -82,6 +83,7 @@ public class Material
         light = GL11.glGetBoolean(GL11.GL_LIGHTING);
         old_cull = GL11.glGetBoolean(GL11.GL_CULL_FACE);
         if (transparency > 0) GL11.glDisable(GL11.GL_DEPTH_TEST);
+        else GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         GL11.glMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT, makeBuffer(ambientIntensity));
         GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, makeBuffer(diffuseColor));
