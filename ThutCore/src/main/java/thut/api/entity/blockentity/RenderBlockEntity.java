@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.ResourceLocation;
@@ -26,23 +27,28 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
+import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.entity.IMultiplePassengerEntity;
+import thut.core.common.ThutCore;
 
 @SideOnly(Side.CLIENT)
 public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingBase<T>
 {
-    float                    pitch = 0.0f;
-    float                    yaw   = 0.0f;
-    long                     time  = 0;
-    boolean                  up    = true;
+    private static IBakedModel crate_model;
+    float                      pitch = 0.0f;
+    float                      yaw   = 0.0f;
+    long                       time  = 0;
+    boolean                    up    = true;
 
-    static final Tessellator t     = new Tessellator(2097152);
-    BufferBuilder            b     = t.getBuffer();
+    static final Tessellator   t     = new Tessellator(2097152);
+    BufferBuilder              b     = t.getBuffer();
 
-    ResourceLocation         texture;
+    ResourceLocation           texture;
 
     public RenderBlockEntity(RenderManager manager)
     {
@@ -74,21 +80,22 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
             int zMax = MathHelper.floor(blockEntity.getMax().getZ() + entity.posZ);
             int yMin = (int) Math.round(blockEntity.getMin().getY() + entity.posY);
             int yMax = (int) Math.round(blockEntity.getMax().getY() + entity.posY);
-            
+
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
                         pos.setPos(i, j, k);
-                        drawBlockAt(pos, blockEntity);
+                        if (!blockEntity.shouldHide(pos)) drawBlockAt(pos, blockEntity);
+                        else drawCrateAt(pos, blockEntity);
                     }
-            
+
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
                         pos.setPos(i, j, k);
-                        drawTileAt(pos, blockEntity, partialTicks);
+                        if (!blockEntity.shouldHide(pos)) drawTileAt(pos, blockEntity, partialTicks);
                     }
             GL11.glPopMatrix();
 
@@ -97,6 +104,50 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
         {
             e.printStackTrace();
         }
+    }
+
+    private void drawCrateAt(MutableBlockPos pos, IBlockEntity blockEntity)
+    {
+        BlockPos origin = ((Entity) blockEntity).getPosition();
+        GlStateManager.pushMatrix();
+        GL11.glTranslated(-origin.getX(), 0.5 - origin.getY(), -origin.getZ());
+        GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+        GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
+        GlStateManager.translate(0.5F, 0.5F, 0.5F);
+        RenderHelper.disableStandardItemLighting();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        GlStateManager.enableBlend();
+        GlStateManager.disableCull();
+
+        if (Minecraft.isAmbientOcclusionEnabled())
+        {
+            GlStateManager.shadeModel(7425);
+        }
+        else
+        {
+            GlStateManager.shadeModel(7424);
+        }
+        float f7 = 1.0F;
+        GlStateManager.scale(-f7, -f7, f7);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        IBakedModel model = getCrateModel();
+        renderBakedBlockModel(blockEntity, model, Blocks.STONE.getDefaultState(), blockEntity.getFakeWorld(), pos);
+        RenderHelper.enableStandardItemLighting();
+        GlStateManager.popMatrix();
+    }
+
+    private IBakedModel getCrateModel()
+    {
+        if (crate_model == null)
+        {
+            IModel model = ModelLoaderRegistry
+                    .getModelOrLogError(new ResourceLocation(ThutCore.modid, "block/craft_crate"), "derp?");
+            crate_model = model.bake(model.getDefaultState(), DefaultVertexFormats.BLOCK,
+                    ModelLoader.defaultTextureGetter());
+        }
+
+        return crate_model;
     }
 
     private void drawBlockAt(BlockPos pos, IBlockEntity entity)
@@ -116,7 +167,8 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                 GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
                 GlStateManager.translate(0.5F, 0.5F, 0.5F);
                 RenderHelper.disableStandardItemLighting();
-                GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+                GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
                 GlStateManager.enableBlend();
                 GlStateManager.disableCull();
 

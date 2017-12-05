@@ -328,4 +328,11 @@ public interface IBlockEntity
 
     void setFakeWorld(BlockEntityWorld world);
 
+    default boolean shouldHide(BlockPos pos)
+    {
+        TileEntity tile = getFakeWorld().getTileEntity(pos);
+        if (tile != null && !BlockEntityUpdater.isWhitelisted(tile)) { return true; }
+        return false;
+    }
+
 }
