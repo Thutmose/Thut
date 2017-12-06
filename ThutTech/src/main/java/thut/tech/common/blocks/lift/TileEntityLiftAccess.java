@@ -86,7 +86,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
         else
         {
-            if (button != 0 && button <= lift.floors.length && lift != null && lift.floors[button - 1] > 0)
+            if (button != 0 && button <= lift.floors.length && lift != null && lift.hasFloors[button - 1])
             {
                 if (button == floor)
                 {
@@ -140,7 +140,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             lift = EntityLift.getLiftFromUUID(liftID, worldObj);
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
-        boolean valid = lift != null && lift.floors[button - 1] > 0;
+        boolean valid = lift != null && lift.hasFloors[button - 1];
         if (lift != null && getWorld().isRemote && isSideOn(side))
         {
             PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
@@ -419,7 +419,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             {
                 lift.setCurrentFloor(-1);
             }
-            if (lift.floors[floor - 1] < 0)
+            if (!lift.hasFloors[floor - 1])
             {
                 lift.setFoor(this, floor);
             }
@@ -657,7 +657,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             if (floor > 0 && floor <= lift.floors.length)
             {
                 int value = lift.floors[floor - 1];
-                if (value == -1) throw new Exception("floor " + floor + " is not assigned");
+                if (!lift.hasFloors[floor - 1]) throw new Exception("floor " + floor + " is not assigned");
                 return new Object[] { value };
             }
             throw new Exception("floor out of bounds");
