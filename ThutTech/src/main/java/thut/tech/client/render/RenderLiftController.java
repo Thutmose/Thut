@@ -327,7 +327,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
                         for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
                         {
                             colour = new Color(10, 10, 10, 255);
-                            if ((monitor.lift.floors[j] < 0))
+                            if (!monitor.lift.hasFloors[j])
                             {
                                 drawOverLay(monitor, j + 1, colour, dir, false);
                             }

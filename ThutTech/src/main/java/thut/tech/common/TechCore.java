@@ -194,9 +194,10 @@ public class TechCore
             if (te.lift != null)
             {
                 int button = te.getButtonFromClick(evt.getFace(), (float) hit.x, (float) hit.y, (float) hit.z);
-                if (te.lift.floors[button - 1] != -1 && button == te.floor)
+                if (te.lift.hasFloors[button - 1] && button == te.floor)
                 {
-                    te.lift.floors[button - 1] = -1;
+                    te.lift.hasFloors[button - 1] = false;
+                    te.lift.floors[button - 1] = 0;
                     Entity lift = te.lift;
                     te.lift = null;
                     te.liftID = null;
