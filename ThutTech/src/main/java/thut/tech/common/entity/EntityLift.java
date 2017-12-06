@@ -90,6 +90,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     TileEntityLiftAccess                current;
     public List<AxisAlignedBB>          blockBoxes         = Lists.newArrayList();
     public int[]                        floors             = new int[128];
+    public boolean[]                    hasFloors          = new boolean[128];
     public IBlockState[][][]            blocks             = null;
     public TileEntity[][][]             tiles              = null;
     BlockEntityUpdater                  collider;
@@ -101,10 +102,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this.ignoreFrustumCheck = true;
         this.hurtResistantTime = 0;
         this.isImmuneToFire = true;
-        for (int i = 0; i < floors.length; i++)
-        {
-            floors[i] = -1;
-        }
     }
 
     public BlockEntityWorld getFakeWorld()
@@ -228,7 +225,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void call(int floor)
     {
         if (floor == 0 || floor > floors.length) { return; }
-        if (floors[floor - 1] > 0)
+        if (hasFloors[floor - 1])
         {
             callYValue(floors[floor - 1]);
             setDestinationFloor(floor);
@@ -567,19 +564,15 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     public void readList(NBTTagCompound nbt)
     {
-        if (nbt.hasKey("floors 0")) for (int i = 0; i < floors.length; i++)
+        NBTTagCompound floorTag = nbt.getCompoundTag("floors");
+        for (int i = 0; i < floors.length; i++)
         {
-            floors[i] = nbt.getInteger("floors " + i);
-            if (floors[i] == 0) floors[i] = -1;
-        }
-        else
-        {
-            NBTTagCompound floorTag = nbt.getCompoundTag("floors");
-            for (int i = 0; i < 64; i++)
+            floors[i] = floorTag.getInteger("" + i);
+            if (floorTag.hasKey("f" + i))
             {
-                floors[i] = floorTag.getInteger("" + i);
-                if (floors[i] == 0) floors[i] = -1;
+                hasFloors[i] = floorTag.getBoolean("f" + i);
             }
+            else hasFloors[i] = floors[i] > 0;
         }
     }
 
@@ -672,11 +665,13 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (te.floor == 0)
         {
             floors[floor - 1] = te.getPos().getY() - 2;
+            hasFloors[floor - 1] = true;
         }
         else if (te.floor != 0)
         {
-            floors[te.floor - 1] = -1;
+            hasFloors[te.floor - 1] = false;
             floors[floor - 1] = te.getPos().getY() - 2;
+            hasFloors[floor - 1] = true;
         }
     }
 
@@ -760,6 +755,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         for (int i = 0; i < floors.length; i++)
         {
             floorTag.setInteger("" + i, floors[i]);
+            floorTag.setBoolean("f" + i, hasFloors[i]);
         }
         nbt.setTag("floors", floorTag);
     }
