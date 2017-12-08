@@ -43,4 +43,19 @@ public interface IAIRunnable
      * 
      * @return */
     boolean shouldRun();
+
+    /** @return an identifier for use with saving this if it is supposed to be
+     *         saved to capability data. */
+    default String getIdentifier()
+    {
+        return "";
+    }
+
+    /** If this is saveable, should tag be synced to clients.
+     * 
+     * @return */
+    default boolean sync()
+    {
+        return false;
+    }
 }
