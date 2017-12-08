@@ -23,6 +23,9 @@ public class TerrainManager
 
     public static final String           TERRAIN    = "pokecubeTerrainData";
     public static final ResourceLocation TERRAINCAP = new ResourceLocation("thutcore", "terrain");
+    public ITerrainProvider              provider   = new ITerrainProvider()
+                                                    {
+                                                    };
 
     private static TerrainManager        terrain;
 
@@ -94,8 +97,7 @@ public class TerrainManager
 
     public TerrainSegment getTerrain(World world, BlockPos p)
     {
-        return world.getChunkFromBlockCoords(p).getCapability(CapabilityTerrain.TERRAIN_CAP, null)
-                .getTerrainSegement(p);
+        return provider.getTerrain(world, p);
     }
 
     public TerrainSegment getTerrain(World world, double x, double y, double z)

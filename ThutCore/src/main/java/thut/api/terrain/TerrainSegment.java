@@ -281,7 +281,7 @@ public class TerrainSegment
 
     public final BlockPos           pos;
 
-    private Chunk                   chunk;
+    public Chunk                    chunk;
 
     public boolean                  toSave  = false;
 
@@ -487,7 +487,7 @@ public class TerrainSegment
     public void refresh(World world)
     {
         long time = System.nanoTime();
-        chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+        if (chunk == null) chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
         for (int i = 0; i < GRIDSIZE; i++)
             for (int j = 0; j < GRIDSIZE; j++)
                 for (int k = 0; k < GRIDSIZE; k++)
@@ -559,6 +559,11 @@ public class TerrainSegment
     public void setBiome(Vector3 v, int i)
     {
         setBiome(v.intX(), v.intY(), v.intZ(), i);
+    }
+
+    public void setBiome(Vector3 v, BiomeType type)
+    {
+        setBiome(v, type.getType());
     }
 
     @Override

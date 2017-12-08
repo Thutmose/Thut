@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
@@ -27,6 +28,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.block.IOwnableTE;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
+import thut.core.common.ThutCore;
 
 public class TickHandler
 {
@@ -175,7 +177,7 @@ public class TickHandler
 
     /** This is a map of dimension to worldcache, it can be used for thread-safe
      * world access */
-    public HashMap<Integer, WorldCache>          worldCaches = new HashMap<Integer, WorldCache>();
+    public HashMap<Integer, IBlockAccess>        worldCaches = new HashMap<Integer, IBlockAccess>();
 
     HashMap<Integer, HashSet<Long>>              toRefresh   = new HashMap<>();
 
@@ -191,16 +193,16 @@ public class TickHandler
     {
         if (evt.getWorld().isRemote) return;
         // Add the chunk to the corresponding world cache.
-        WorldCache world = getWorldCache(evt.getWorld().provider.getDimension());
+        IBlockAccess world = getWorldCache(evt.getWorld().provider.getDimension());
         if (world == null)
         {
-            world = new WorldCache(evt.getWorld());
+            world = ThutCore.instance.config.multithreadedAI ? new WorldCache(evt.getWorld()) : evt.getWorld();
             synchronized (worldCaches)
             {
                 worldCaches.put(evt.getWorld().provider.getDimension(), world);
             }
         }
-        world.addChunk(evt.getChunk());
+        if (world instanceof WorldCache) ((WorldCache) world).addChunk(evt.getChunk());
     }
 
     @SubscribeEvent
@@ -208,10 +210,10 @@ public class TickHandler
     {
         if (evt.getWorld().isRemote) return;
         // Remove the chunk from the cache
-        WorldCache world = getWorldCache(evt.getWorld().provider.getDimension());
-        if (world != null)
+        IBlockAccess world = getWorldCache(evt.getWorld().provider.getDimension());
+        if (world != null && world instanceof WorldCache)
         {
-            world.removeChunk(evt.getChunk());
+            ((WorldCache) world).removeChunk(evt.getChunk());
         }
     }
 
@@ -233,7 +235,7 @@ public class TickHandler
         }
     }
 
-    public WorldCache getWorldCache(int dimension)
+    public IBlockAccess getWorldCache(int dimension)
     {
         synchronized (worldCaches)
         {

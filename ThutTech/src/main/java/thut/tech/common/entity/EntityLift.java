@@ -43,6 +43,7 @@ import thut.api.entity.blockentity.BlockEntityUpdater;
 import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
+import thut.api.network.PacketHandler;
 import thut.lib.CompatWrapper;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
@@ -86,7 +87,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     boolean                             first              = true;
     private boolean                     shouldRevert       = true;
     Random                              r                  = new Random();
-    public UUID                         id                 = null;
     public UUID                         owner;
     public double                       prevFloorY         = 0;
     public double                       prevFloor          = 0;
@@ -485,6 +485,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         checkCollision();
         passengertime = hasPassenger ? 20 : passengertime - 1;
         n++;
+        if (getEntityWorld() instanceof WorldServer && n % 100 == 0)
+        {
+            PacketHandler.sendEntityUpdate(this);
+        }
     }
 
     public void passengerCheck()
@@ -572,7 +576,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
             boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
         }
-        if (nbt.hasKey("higher")) id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
         if (nbt.hasKey("ownerhigher")) owner = new UUID(nbt.getLong("ownerhigher"), nbt.getLong("ownerlower"));
         readList(nbt);
         readBlocks(nbt);

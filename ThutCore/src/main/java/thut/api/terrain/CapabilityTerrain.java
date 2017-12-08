@@ -46,29 +46,28 @@ public class CapabilityTerrain
         @Override
         public TerrainSegment getTerrainSegement(BlockPos blockLocation)
         {
-            int chunkY = blockLocation.getY() / 16;
-            if (chunkY >= segments.length) chunkY = segments.length - 1;
-            if (chunkY < 0) chunkY = 0;
-            return getTerrainSegment(chunkY);
+            int chunkY = (blockLocation.getY() / 16) & 15;
+            TerrainSegment segment = getTerrainSegment(chunkY);
+            segment.getCentre().addTo(0, 256 * ((int) (blockLocation.getY() / 256)), 0);
+            return segment;
         }
 
         @Override
         public void setTerrainSegment(TerrainSegment segment, int chunkY)
         {
-            if (chunkY >= segments.length) chunkY = segments.length - 1;
-            if (chunkY < 0) chunkY = 0;
+            chunkY &= 15;
             segments[chunkY] = segment;
         }
 
         @Override
         public TerrainSegment getTerrainSegment(int chunkY)
         {
-            if (chunkY >= segments.length) chunkY = segments.length - 1;
-            if (chunkY < 0) chunkY = 0;
+            chunkY &= 15;
             TerrainSegment ret = segments[chunkY];
             if (ret == null)
             {
                 ret = segments[chunkY] = new TerrainSegment(getChunkPos().getX(), chunkY, getChunkPos().getZ());
+                ret.chunk = chunk;
             }
             return ret;
         }

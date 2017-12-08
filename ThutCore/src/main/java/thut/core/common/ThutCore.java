@@ -49,6 +49,7 @@ import thut.api.network.PacketHandler;
 import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
 import thut.core.common.commands.CommandConfig;
+import thut.core.common.commands.CommandTerrain;
 import thut.core.common.genetics.DefaultGenetics;
 import thut.core.common.handlers.ConfigHandler;
 import thut.core.common.handlers.PlayerDataHandler;
@@ -199,6 +200,7 @@ public class ThutCore
     public void serverLoad(FMLServerStartingEvent event)
     {
         event.registerServerCommand(new CommandConfig("thutcoresettings", config));
+        event.registerServerCommand(new CommandTerrain());
     }
 
     @EventHandler
