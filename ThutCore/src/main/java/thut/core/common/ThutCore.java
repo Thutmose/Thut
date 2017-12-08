@@ -22,6 +22,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -117,12 +118,21 @@ public class ThutCore
             @Override
             public NBTBase writeNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side)
             {
+                if(instance instanceof INBTSerializable<?>)
+                {
+                    return INBTSerializable.class.cast(instance).serializeNBT();
+                }
                 return null;
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public void readNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side, NBTBase nbt)
             {
+                if(instance instanceof INBTSerializable<?>)
+                {
+                    INBTSerializable.class.cast(instance).deserializeNBT(nbt);
+                }
             }
         }, new IAIMob()
         {

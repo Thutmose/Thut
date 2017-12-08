@@ -16,6 +16,7 @@ public class ItemStackTools
     {
         return addItemStackToInventory(itemStackIn, new InvWrapper(toAddTo), minIndex);
     }
+
     /** Adds the item stack to the inventory, returns false if it is
      * impossible. */
     public static boolean addItemStackToInventory(ItemStack itemStackIn, IItemHandlerModifiable toAddTo, int minIndex)
@@ -79,6 +80,7 @@ public class ItemStackTools
                 && (!stack1.getHasSubtypes() || stack1.getMetadata() == stack2.getMetadata())
                 && ItemStack.areItemStackTagsEqual(stack1, stack2);
     }
+
     public static int getFirstEmptyStack(IInventory inventory, int minIndex)
     {
         return getFirstEmptyStack(new InvWrapper(inventory), minIndex);
