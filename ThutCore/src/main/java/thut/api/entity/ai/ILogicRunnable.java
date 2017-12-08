@@ -14,4 +14,19 @@ public interface ILogicRunnable
     /** Runs this logic on the main thread, dispite the name, this is called on
      * both server and client threads, but not on the AI thread. */
     void doServerTick(World world);
+
+    /** @return an identifier for use with saving this if it is supposed to be
+     *         saved to capability data. */
+    default String getIdentifier()
+    {
+        return "";
+    }
+
+    /** If this is saveable, should tag be synced to clients.
+     * 
+     * @return */
+    default boolean sync()
+    {
+        return false;
+    }
 }
