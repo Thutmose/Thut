@@ -56,8 +56,6 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
         }
     }
 
-    private ResourceLocation texture_1 = new ResourceLocation("thuttech:textures/blocks/controlPanel_1.png");
-    private ResourceLocation texture_2 = new ResourceLocation("thuttech:textures/blocks/controlPanel_2.png");
     private ResourceLocation overlay   = new ResourceLocation("thuttech:textures/blocks/overlay.png");
     private ResourceLocation overlay_1 = new ResourceLocation("thuttech:textures/blocks/overlay_1.png");
     private ResourceLocation font      = new ResourceLocation("thuttech:textures/blocks/font.png");
@@ -262,53 +260,32 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
                     GL11.glTranslatef(0, 0, 1);
                     GL11.glRotatef(90, 0, 1, 0);
                 }
-
-                TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
-
-                GL11.glPushMatrix();
-                if (renderengine != null)
-                {
-                    ResourceLocation texture;
-                    if (monitor.callFaces[dir.ordinal()])
-                    {
-                        texture = texture_2;
-                    }
-                    else
-                    {
-                        texture = texture_1;
-                    }
-                    renderengine.bindTexture(texture);
-                }
-
-                Tessellator t = Tessellator.getInstance();
-                t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-
-                GL11.glTranslated(0, 0, -0.001 * (0 + 0.5));
-                t.getBuffer().pos(1, 1, 0).tex(0, 0).endVertex();
-                t.getBuffer().pos(1, 0, 0).tex(0, 1).endVertex();
-
-                t.getBuffer().pos(0, 0, 0).tex(1, 1).endVertex();
-                t.getBuffer().pos(0, 1, 0).tex(1, 0).endVertex();
-
-                t.draw();
-                GL11.glPopMatrix();
-
+                int a = 64;
                 if (monitor.callFaces[dir.ordinal()])
                 {
+                    // Draw the white background
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(-0.5, -0.095, 0);
+                    Color colour = new Color(255, 255, 255, 255);
+                    drawOverLay(monitor, 1, colour, dir, true);
+                    GL11.glPopMatrix();
+
                     GL11.glPushMatrix();
                     GL11.glTranslated(-0.11, -0.1, 0);
                     drawNumber(monitor.floor - 1, 1);
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
                     GL11.glTranslated(-0.5, -0.095, 0);
+
+                    // Draw highlight over the background.
                     if (monitor.calledFloor == monitor.floor)
                     {
-                        Color colour = new Color(255, 255, 0, 255);
+                        colour = new Color(255, 255, 0, a);
                         drawOverLay(monitor, 1, colour, dir, true);
                     }
                     else if (monitor.currentFloor == monitor.floor)
                     {
-                        Color colour = new Color(0, 128, 255, 255);
+                        colour = new Color(0, 128, 255, a);
                         drawOverLay(monitor, 1, colour, dir, true);
                     }
                     GL11.glPopMatrix();
@@ -316,17 +293,23 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
                 else
                 {
                     drawFloorNumbers(monitor.getSidePage(dir));
+                    // Draw background slots
+                    Color colour = new Color(255, 255, 255, 255);
+                    for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
+                    {
+                        drawOverLay(monitor, j + 1, colour, dir, false);
+                    }
                     if (monitor.lift != null)
                     {
-                        Color colour = new Color(0, 255, 0, 255);
+                        colour = new Color(0, 255, 0, a);
                         drawOverLay(monitor, monitor.floor, colour, dir, false);
-                        colour = new Color(255, 255, 0, 255);
+                        colour = new Color(255, 255, 0, a);
                         drawOverLay(monitor, monitor.lift.getDestinationFloor(), colour, dir, false);
-                        colour = new Color(0, 128, 255, 255);
+                        colour = new Color(0, 128, 255, a);
                         drawOverLay(monitor, monitor.lift.getCurrentFloor(), colour, dir, false);
                         for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
                         {
-                            colour = new Color(10, 10, 10, 255);
+                            colour = new Color(10, 10, 10, 128);
                             if (!monitor.lift.hasFloors[j])
                             {
                                 drawOverLay(monitor, j + 1, colour, dir, false);
