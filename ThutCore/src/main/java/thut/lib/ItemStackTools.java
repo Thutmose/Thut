@@ -139,10 +139,10 @@ public class ItemStackTools
             k = inventory.getStackInSlot(j).getMaxStackSize() - size;
         }
 
-//        if (k > inventory.getSlotLimit(j) - size)
-//        {TODO uncomment this in 1.12.2
-//            k = inventory.getSlotLimit(j) - size;
-//        }
+        if (k > inventory.getSlotLimit(j) - size)
+        {
+            k = inventory.getSlotLimit(j) - size;
+        }
 
         if (k == 0) { return i; }
         i = i - k;
