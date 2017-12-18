@@ -76,16 +76,20 @@ public class Transporter
     public static class DeSticker
     {
         final EntityPlayerMP player;
-        final long           tick;
-        final BlockPos       initialPos;
+        final float          x0;
+        final float          y0;
+        final float          z0;
+        final float          yaw;
         final int            dimension;
 
-        public DeSticker(EntityPlayerMP player, int delay)
+        public DeSticker(EntityPlayerMP player)
         {
             this.player = player;
-            this.tick = player.getEntityWorld().getTotalWorldTime() + delay;
-            this.initialPos = player.getPosition();
             this.dimension = player.dimension;
+            this.x0 = (float) player.posX;
+            this.y0 = (float) player.posY;
+            this.z0 = (float) player.posZ;
+            this.yaw = player.rotationYaw;
         }
 
         @SubscribeEvent
@@ -100,12 +104,18 @@ public class Transporter
         @SubscribeEvent
         public void tick(TickEvent.ServerTickEvent evt)
         {
-            boolean done = dimension != player.dimension
-                    || (tick < player.getEntityWorld().getTotalWorldTime() && !player.getPosition().equals(initialPos));
+            boolean done = dimension != player.dimension;
+            float x = (float) player.posX - x0;
+            float z = (float) player.posZ - z0;
+//            float dyaw = player.rotationYaw - yaw;
+            done = done || x != 0 || z != 0;// || dyaw != 0;
             if (done)
             {
                 MinecraftForge.EVENT_BUS.unregister(this);
-                player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw,
+            }
+            else if (player.ticksExisted % 10 == 0)
+            {
+                player.connection.setPlayerLocation(player.posX, y0, player.posZ, player.rotationYaw,
                         player.rotationPitch);
             }
         }
@@ -185,7 +195,7 @@ public class Transporter
         {
             theEntity.dismountRidingEntity();
             ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch);
-            MinecraftForge.EVENT_BUS.register(new DeSticker((EntityPlayerMP) theEntity, 100));
+            MinecraftForge.EVENT_BUS.register(new DeSticker((EntityPlayerMP) theEntity));
         }
         else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
