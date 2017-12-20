@@ -19,6 +19,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.maths.Vector3;
 import thut.lib.CompatWrapper;
@@ -104,16 +105,17 @@ public class Transporter
         @SubscribeEvent
         public void tick(TickEvent.ServerTickEvent evt)
         {
+            if (evt.phase == Phase.START) return;
             boolean done = dimension != player.dimension;
-            float x = (float) player.posX - x0;
-            float z = (float) player.posZ - z0;
-//            float dyaw = player.rotationYaw - yaw;
-            done = done || x != 0 || z != 0;// || dyaw != 0;
+            float dx = (float) player.posX - x0;
+            float dz = (float) player.posZ - z0;
+            float dyaw = player.rotationYaw - yaw;
+            done = done || dx != 0 || dz != 0 || dyaw != 0;
             if (done)
             {
                 MinecraftForge.EVENT_BUS.unregister(this);
             }
-            else if (player.ticksExisted % 10 == 0)
+            else if (player.ticksExisted % 20 == 0)
             {
                 player.connection.setPlayerLocation(player.posX, y0, player.posZ, player.rotationYaw,
                         player.rotationPitch);
