@@ -117,7 +117,7 @@ public class Transporter
             }
             else if (player.ticksExisted % 20 == 0)
             {
-                player.connection.setPlayerLocation(player.posX, y0, player.posZ, player.rotationYaw,
+                player.connection.setPlayerLocation(player.posX, y0 + 0.5, player.posZ, player.rotationYaw,
                         player.rotationPitch);
             }
         }
