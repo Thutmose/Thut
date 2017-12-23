@@ -4,41 +4,38 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumHand;
 
 public class CompatWrapper
 {
-    public static final ItemStack nullStack = null;
+    public static final ItemStack nullStack = ItemStack.EMPTY;
 
     public static ItemStack fromTag(NBTTagCompound tag)
     {
-        return ItemStack.loadItemStackFromNBT(tag);
+        return new ItemStack(tag);
     }
 
     public static ItemStack copy(ItemStack in)
     {
-        return ItemStack.copyItemStack(in);
+        return in.copy();
     }
 
     public static ItemStack setStackSize(ItemStack stack, int amount)
     {
-        if (amount <= 0) { return nullStack; }
-        stack.stackSize = amount;
+        stack.setCount(amount);
+        if (stack.isEmpty()) return ItemStack.EMPTY;
         return stack;
     }
 
     public static int getStackSize(ItemStack stack)
     {
-        if (stack == nullStack || stack.stackSize < 0 || stack.getItem() == null) { return 0; }
-        return stack.stackSize;
+        return stack.getCount();
     }
 
     public static boolean isValid(ItemStack stack)
     {
-        return getStackSize(stack) > 0;
+        return !stack.isEmpty();
     }
 
     public static ItemStack validate(ItemStack in)
@@ -49,8 +46,8 @@ public class CompatWrapper
 
     public static int increment(ItemStack in, int amt)
     {
-        in.stackSize += amt;
-        return in.stackSize;
+        in.grow(amt);
+        return in.getCount();
     }
 
     public static List<ItemStack> makeList(int size)
@@ -59,16 +56,6 @@ public class CompatWrapper
         for (int i = 0; i < size; i++)
             ret.add(nullStack);
         return ret;
-    }
-
-    public static void rightClickWith(ItemStack stack, EntityPlayer player, EnumHand hand)
-    {
-        stack.getItem().onItemRightClick(stack, player.getEntityWorld(), player, hand);
-    }
-    
-    public static NBTTagCompound getTag(ItemStack stack, String name, boolean create)
-    {
-        return stack.getSubCompound(name, create);
     }
 
 }

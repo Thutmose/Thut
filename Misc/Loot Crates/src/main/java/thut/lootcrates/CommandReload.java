@@ -13,13 +13,13 @@ public class CommandReload extends CommandBase
     }
 
     @Override
-    public String getCommandName()
+    public String getName()
     {
         return "lc";
     }
 
     @Override
-    public String getCommandUsage(ICommandSender sender)
+    public String getUsage(ICommandSender sender)
     {
         return "/lc reload";
     }

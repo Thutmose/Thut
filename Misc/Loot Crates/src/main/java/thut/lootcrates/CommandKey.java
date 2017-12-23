@@ -16,13 +16,13 @@ public class CommandKey extends CommandBase
     }
 
     @Override
-    public String getCommandName()
+    public String getName()
     {
         return "lckey";
     }
 
     @Override
-    public String getCommandUsage(ICommandSender sender)
+    public String getUsage(ICommandSender sender)
     {
         return "/lckey <player> <crate>";
     }

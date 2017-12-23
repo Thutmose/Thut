@@ -22,14 +22,14 @@ public class LootCrates
 {
     public static final String MODID      = "loot_crates";
     public static final String VERSION    = "1.0.0";
-    public static boolean      chestOpens = true;
+    public static boolean      chestOpens = false;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         Configuration config = new Configuration(event.getSuggestedConfigurationFile());
         config.load();
-        chestOpens = config.getBoolean("chestOpens", Configuration.CATEGORY_GENERAL, true,
+        chestOpens = config.getBoolean("chestOpens", Configuration.CATEGORY_GENERAL, false,
                 "if the chest opens when used.");
         config.save();
         MinecraftForge.EVENT_BUS.register(this);
@@ -66,7 +66,7 @@ public class LootCrates
                 if (hasKey) hasKey = name.equals(evt.getItemStack().getTagCompound().getString("key"));
                 if (!hasKey)
                 {
-                    evt.getEntityPlayer().addChatMessage(new TextComponentString("You did not use the key"));
+                    evt.getEntityPlayer().sendMessage(new TextComponentString("You did not use the key"));
                     evt.setCanceled(true);
                     return;
                 }
@@ -78,7 +78,7 @@ public class LootCrates
                 if (!rewards.getUnformattedText().isEmpty())
                 {
                     message.appendSibling(rewards).appendSibling(footer);
-                    evt.getEntityPlayer().getServer().getPlayerList().sendChatMsg(message);
+                    evt.getEntityPlayer().getServer().getPlayerList().sendMessage(message);
                 }
                 evt.getItemStack().splitStack(1);
                 evt.getEntityPlayer().inventoryContainer.detectAndSendChanges();
