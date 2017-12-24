@@ -44,9 +44,9 @@ public class ConfigHandler extends ConfigBase
     public boolean              multithreadedAI         = true;
 
     @Configure(category = BLOCKENTITY)
-    public String[]            teblacklist             = {};
+    public String[]             teblacklist             = {};
     @Configure(category = BLOCKENTITY)
-    public boolean             autoBlacklistErroredTEs = true;
+    public boolean              autoBlacklistErroredTEs = true;
 
     public ConfigHandler()
     {

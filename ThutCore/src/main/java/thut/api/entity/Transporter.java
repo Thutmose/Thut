@@ -82,6 +82,7 @@ public class Transporter
         final float          z0;
         final float          yaw;
         final int            dimension;
+        int                  tick = 0;
 
         public DeSticker(EntityPlayerMP player)
         {
@@ -113,13 +114,16 @@ public class Transporter
             done = done || dx != 0 || dz != 0 || dyaw != 0;
             if (done)
             {
+                EntityTracker tracker = player.getServerWorld().getEntityTracker();
+                tracker.updateVisibility(player);
                 MinecraftForge.EVENT_BUS.unregister(this);
             }
-            else if (player.ticksExisted % 20 == 0)
+            else if (tick % 20 == 0)
             {
                 player.connection.setPlayerLocation(player.posX, y0 + 0.5, player.posZ, player.rotationYaw,
                         player.rotationPitch);
             }
+            tick++;
         }
     }
 

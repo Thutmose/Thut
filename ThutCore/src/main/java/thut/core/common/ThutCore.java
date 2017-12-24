@@ -118,10 +118,8 @@ public class ThutCore
             @Override
             public NBTBase writeNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side)
             {
-                if(instance instanceof INBTSerializable<?>)
-                {
-                    return INBTSerializable.class.cast(instance).serializeNBT();
-                }
+                if (instance instanceof INBTSerializable<?>) { return INBTSerializable.class.cast(instance)
+                        .serializeNBT(); }
                 return null;
             }
 
@@ -129,7 +127,7 @@ public class ThutCore
             @Override
             public void readNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side, NBTBase nbt)
             {
-                if(instance instanceof INBTSerializable<?>)
+                if (instance instanceof INBTSerializable<?>)
                 {
                     INBTSerializable.class.cast(instance).deserializeNBT(nbt);
                 }
@@ -244,8 +242,7 @@ public class ThutCore
         if (tile instanceof IOwnableTE)
         {
             IOwnableTE te = (IOwnableTE) tile;
-            NBTTagCompound tag = tile.writeToNBT(new NBTTagCompound());
-            if (tag.hasKey("admin") && tag.getBoolean("admin") && !te.canEdit(player))
+            if (!te.canEdit(player))
             {
                 evt.setCanceled(true);
                 return;
