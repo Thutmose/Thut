@@ -1,6 +1,5 @@
 package thut.core.client.render.animation;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import javax.annotation.Nullable;
@@ -195,19 +194,17 @@ public class AnimationBuilder
                     for (AnimationComponent comp : comps)
                     {
                         AnimationComponent newComp = new AnimationComponent();
-                        for (Field field : AnimationComponent.class.getDeclaredFields())
-                        {
-                            try
-                            {
-                                if (field.getName().contains("Offset")) continue;
-                                field.set(newComp, field.get(comp));
-                            }
-                            catch (IllegalArgumentException | IllegalAccessException e)
-                            {
-                                e.printStackTrace();
-                            }
-                        }
-                        newComp.startKey += length;
+                        newComp.hidden = comp.hidden;
+                        newComp.limbBased = comp.limbBased;
+                        newComp.length = comp.length;
+                        newComp.identifier = comp.identifier + "_merged_" + i;
+                        newComp.name = comp.name + "_merged_" + i;
+                        newComp.opacityChange = comp.opacityChange;
+                        newComp.posChange = comp.posChange;
+                        newComp.progressionCoords = comp.progressionCoords;
+                        newComp.rotChange = comp.rotChange;
+                        newComp.scaleChange = comp.scaleChange;
+                        newComp.startKey = comp.startKey + length;
                         newComps.add(newComp);
                     }
                     comps.addAll(newComps);
@@ -244,18 +241,17 @@ public class AnimationBuilder
                     for (AnimationComponent comp : comps)
                     {
                         AnimationComponent newComp = new AnimationComponent();
-                        for (Field field : AnimationComponent.class.getDeclaredFields())
-                        {
-                            try
-                            {
-                                field.set(newComp, field.get(comp));
-                            }
-                            catch (IllegalArgumentException | IllegalAccessException e)
-                            {
-                                e.printStackTrace();
-                            }
-                        }
-                        newComp.startKey += length;
+                        newComp.hidden = comp.hidden;
+                        newComp.limbBased = comp.limbBased;
+                        newComp.length = comp.length;
+                        newComp.identifier = comp.identifier + "_merged_" + i;
+                        newComp.name = comp.name + "_merged_" + i;
+                        newComp.opacityChange = comp.opacityChange;
+                        newComp.posChange = comp.posChange;
+                        newComp.progressionCoords = comp.progressionCoords;
+                        newComp.rotChange = comp.rotChange;
+                        newComp.scaleChange = comp.scaleChange;
+                        newComp.startKey = comp.startKey + length;
                         newComps.add(newComp);
                     }
                     toComps.addAll(newComps);
