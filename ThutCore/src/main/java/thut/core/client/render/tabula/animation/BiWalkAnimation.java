@@ -96,7 +96,7 @@ public class BiWalkAnimation extends Animation
     {
         for (String s : hr)
         {
-            String ident = "";
+            String ident = "hr";
             AnimationComponent component1 = new AnimationComponent();
             component1.length = duration / 4;
             component1.name = ident + "1";
@@ -116,7 +116,7 @@ public class BiWalkAnimation extends Animation
             component3.name = ident + "3";
             component3.identifier = ident + "3";
             component3.startKey = 3 * duration / 4;
-            component3.rotChange[0] = -legAngle;
+            component3.rotChange[0] = legAngle;
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
@@ -127,7 +127,7 @@ public class BiWalkAnimation extends Animation
         }
         for (String s : hl)
         {
-            String ident = "";
+            String ident = "hl";
             AnimationComponent component1 = new AnimationComponent();
             component1.length = duration / 4;
             component1.name = ident + "1";
@@ -147,7 +147,7 @@ public class BiWalkAnimation extends Animation
             component3.name = ident + "3";
             component3.identifier = ident + "3";
             component3.startKey = 3 * duration / 4;
-            component3.rotChange[0] = legAngle;
+            component3.rotChange[0] = -legAngle;
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
@@ -158,7 +158,7 @@ public class BiWalkAnimation extends Animation
         }
         for (String s : fr)
         {
-            String ident = "";
+            String ident = "fr";
             AnimationComponent component1 = new AnimationComponent();
             component1.length = duration / 4;
             component1.name = ident + "1";
@@ -178,7 +178,7 @@ public class BiWalkAnimation extends Animation
             component3.name = ident + "3";
             component3.identifier = ident + "3";
             component3.startKey = 3 * duration / 4;
-            component3.rotChange[0] = -armAngle;
+            component3.rotChange[0] = armAngle;
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
@@ -189,7 +189,7 @@ public class BiWalkAnimation extends Animation
         }
         for (String s : fl)
         {
-            String ident = "";
+            String ident = "fl";
             AnimationComponent component1 = new AnimationComponent();
             component1.length = duration / 4;
             component1.name = ident + "1";
@@ -209,7 +209,7 @@ public class BiWalkAnimation extends Animation
             component3.name = ident + "3";
             component3.identifier = ident + "3";
             component3.startKey = 3 * duration / 4;
-            component3.rotChange[0] = armAngle;
+            component3.rotChange[0] = -armAngle;
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
