@@ -1,5 +1,6 @@
 package thut.core.client.render.animation;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import javax.annotation.Nullable;
@@ -26,11 +27,11 @@ public class AnimationBuilder
         Animation ret = null;
         if (node.getAttributes().getNamedItem("type") == null) { return null; }
         String animName = node.getAttributes().getNamedItem("type").getNodeValue();
-        
+
         ret = new Animation();
         ret.name = animName;
         ret.loops = true;
-        if(node.getAttributes().getNamedItem("loops")!=null)
+        if (node.getAttributes().getNamedItem("loops") != null)
         {
             ret.loops = Boolean.parseBoolean(node.getAttributes().getNamedItem("loops").getNodeValue());
         }
@@ -141,14 +142,158 @@ public class AnimationBuilder
      * @param to */
     public static void merge(Animation from, Animation to)
     {
-        for (String s1 : from.sets.keySet())
+        to.initLength();
+        from.initLength();
+        int x = to.length;
+        int y = from.length;
+        merge:
+        if (y != x)
         {
-            // Prioritize to, if to already has animations for that part,
-            // skip it.
+            int a;
+            a = (x > y) ? x : y;
+            while (true)
+            {
+                if (a % x == 0 && a % y == 0) break;
+                ++a;
+            }
+            int f = a / y;
+            int t = a / x;
+
+            boolean validLoop = false;
+            from:
+            for (String s : from.sets.keySet())
+            {
+                ArrayList<AnimationComponent> comps = from.sets.get(s);
+                for (AnimationComponent comp : comps)
+                {
+                    if (isValidForMultiple(comp))
+                    {
+                        validLoop = true;
+                        break from;
+                    }
+                }
+            }
+
+            if (!validLoop) break merge;
+            // Start at 1 for here, as we already have to's sets.
+            for (int i = 1; i < t; i++)
+            {
+                int length = i * x;
+                int n = 0;
+                sets:
+                for (String s : to.sets.keySet())
+                {
+                    ArrayList<AnimationComponent> comps = to.sets.get(s);
+                    ArrayList<AnimationComponent> newComps = Lists.newArrayList();
+                    for (AnimationComponent comp : comps)
+                    {
+                        if (!isValidForMultiple(comp) && n++ != 0)
+                        {
+                            continue sets;
+                        }
+                    }
+                    for (AnimationComponent comp : comps)
+                    {
+                        AnimationComponent newComp = new AnimationComponent();
+                        for (Field field : AnimationComponent.class.getDeclaredFields())
+                        {
+                            try
+                            {
+                                if (field.getName().contains("Offset")) continue;
+                                field.set(newComp, field.get(comp));
+                            }
+                            catch (IllegalArgumentException | IllegalAccessException e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+                        newComp.startKey += length;
+                        newComps.add(newComp);
+                    }
+                    comps.addAll(newComps);
+                }
+            }
+            // Start at 1 for here, as we already have to's sets.
+            for (int i = 0; i < f; i++)
+            {
+                int length = i * y;
+                int n = 0;
+                sets:
+                for (String s : from.sets.keySet())
+                {
+                    ArrayList<AnimationComponent> comps = from.sets.get(s);
+                    ArrayList<AnimationComponent> toComps = to.sets.get(s);
+                    if (toComps == null)
+                    {
+                        // Making a new list to merge in.
+                        to.sets.put(s, toComps = Lists.newArrayList());
+                    }
+                    else
+                    {
+                        // Already have animations for this part, we skip it.
+                        continue;
+                    }
+                    ArrayList<AnimationComponent> newComps = Lists.newArrayList();
+                    for (AnimationComponent comp : comps)
+                    {
+                        if (!isValidForMultiple(comp) && n++ != 0)
+                        {
+                            continue sets;
+                        }
+                    }
+                    for (AnimationComponent comp : comps)
+                    {
+                        AnimationComponent newComp = new AnimationComponent();
+                        for (Field field : AnimationComponent.class.getDeclaredFields())
+                        {
+                            try
+                            {
+                                field.set(newComp, field.get(comp));
+                            }
+                            catch (IllegalArgumentException | IllegalAccessException e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+                        newComp.startKey += length;
+                        newComps.add(newComp);
+                    }
+                    toComps.addAll(newComps);
+                }
+            }
+            to.initLength();
+            return;
+        }
+
+        // Prioritize to, if to already has animations for that part,
+        // skip it.
+        for (String s1 : from.sets.keySet())
             if (!to.sets.containsKey(s1))
             {
                 to.sets.put(s1, from.sets.get(s1));
             }
-        }
+    }
+
+    /** @param comp
+     * @return Does this component apply any animations, or just offset the
+     *         position. If the latter, returns false. */
+    private static boolean isValidForMultiple(AnimationComponent comp)
+    {
+        if (comp.startKey != 0) return true;
+        if (!empty(comp.posChange)) return true;
+        if (!empty(comp.rotChange)) return true;
+        if (!empty(comp.scaleChange)) return true;
+        return false;
+    }
+
+    /** Checls if the given array contains all zeros.
+     * 
+     * @param in
+     * @return */
+    private static boolean empty(double[] in)
+    {
+        for (double d : in)
+            if (d != 0) return false;
+        return true;
     }
 }
