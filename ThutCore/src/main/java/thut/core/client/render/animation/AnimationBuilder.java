@@ -135,6 +135,123 @@ public class AnimationBuilder
         return ret;
     }
 
+    public static int lcm(int x, int y)
+    {
+        int a = (x > y) ? x : y;
+        while (true)
+        {
+            if (a % x == 0 && a % y == 0) break;
+            ++a;
+        }
+        return a;
+    }
+
+    private static boolean isValidForMerge(Animation anim)
+    {
+        for (ArrayList<AnimationComponent> comps : anim.sets.values())
+        {
+            for (AnimationComponent comp : comps)
+                if (isValidForMultiple(comp)) return true;
+        }
+        return false;
+    }
+
+    private static boolean checkValidForMerge(Animation to, Animation from)
+    {
+        return isValidForMerge(to) && isValidForMerge(from);
+    }
+
+    private static void mergeTo(Animation to, int times)
+    {
+        int x = to.length;
+        for (int i = 1; i < times; i++)
+        {
+            int length = i * x;
+            int n = 0;
+            sets:
+            for (String s : to.sets.keySet())
+            {
+                ArrayList<AnimationComponent> comps = to.sets.get(s);
+                ArrayList<AnimationComponent> newComps = Lists.newArrayList();
+                for (AnimationComponent comp : comps)
+                {
+                    if (!isValidForMultiple(comp) && n++ != 0)
+                    {
+                        continue sets;
+                    }
+                }
+                for (AnimationComponent comp : comps)
+                {
+                    AnimationComponent newComp = new AnimationComponent();
+                    newComp.hidden = comp.hidden;
+                    newComp.limbBased = comp.limbBased;
+                    newComp.length = comp.length;
+                    newComp.identifier = comp.identifier;
+                    newComp.name = comp.name;
+                    newComp.opacityChange = comp.opacityChange;
+                    newComp.posChange = comp.posChange;
+                    newComp.progressionCoords = comp.progressionCoords;
+                    newComp.rotChange = comp.rotChange;
+                    newComp.scaleChange = comp.scaleChange;
+                    newComp.startKey = comp.startKey + length;
+                    newComps.add(newComp);
+                }
+                comps.addAll(newComps);
+            }
+        }
+    }
+
+    private static void mergeTo(Animation to, Animation from, int times)
+    {
+        int y = from.length;
+        for (int i = 0; i < times; i++)
+        {
+            int length = i * y;
+            int n = 0;
+            sets:
+            for (String s : from.sets.keySet())
+            {
+                ArrayList<AnimationComponent> comps = from.sets.get(s);
+                ArrayList<AnimationComponent> toComps = to.sets.get(s);
+                if (toComps == null)
+                {
+                    // Making a new list to merge in.
+                    to.sets.put(s, toComps = Lists.newArrayList());
+                }
+                else
+                {
+                    // Already have animations for this part, we skip it.
+                    continue;
+                }
+                ArrayList<AnimationComponent> newComps = Lists.newArrayList();
+                for (AnimationComponent comp : comps)
+                {
+                    if (!isValidForMultiple(comp) && n++ != 0)
+                    {
+                        continue sets;
+                    }
+                }
+                for (AnimationComponent comp : comps)
+                {
+                    AnimationComponent newComp = new AnimationComponent();
+                    newComp.hidden = comp.hidden;
+                    newComp.limbBased = comp.limbBased;
+                    newComp.length = comp.length;
+                    newComp.identifier = comp.identifier;
+                    newComp.name = comp.name;
+                    newComp.opacityChange = comp.opacityChange;
+                    newComp.posChange = comp.posChange;
+                    newComp.progressionCoords = comp.progressionCoords;
+                    newComp.rotChange = comp.rotChange;
+                    newComp.scaleChange = comp.scaleChange;
+                    newComp.startKey = comp.startKey + length;
+                    newComps.add(newComp);
+                }
+                toComps.addAll(newComps);
+            }
+        }
+    }
+
     /** Merges animation data from from to to.
      * 
      * @param from
@@ -148,115 +265,17 @@ public class AnimationBuilder
         merge:
         if (y != x)
         {
-            int a;
-            a = (x > y) ? x : y;
-            while (true)
-            {
-                if (a % x == 0 && a % y == 0) break;
-                ++a;
-            }
+            int a = lcm(x, y);
             int f = a / y;
             int t = a / x;
 
-            boolean validLoop = false;
-            from:
-            for (String s : from.sets.keySet())
-            {
-                ArrayList<AnimationComponent> comps = from.sets.get(s);
-                for (AnimationComponent comp : comps)
-                {
-                    if (isValidForMultiple(comp))
-                    {
-                        validLoop = true;
-                        break from;
-                    }
-                }
-            }
-
+            boolean validLoop = checkValidForMerge(to, from);
             if (!validLoop) break merge;
-            // Start at 1 for here, as we already have to's sets.
-            for (int i = 1; i < t; i++)
-            {
-                int length = i * x;
-                int n = 0;
-                sets:
-                for (String s : to.sets.keySet())
-                {
-                    ArrayList<AnimationComponent> comps = to.sets.get(s);
-                    ArrayList<AnimationComponent> newComps = Lists.newArrayList();
-                    for (AnimationComponent comp : comps)
-                    {
-                        if (!isValidForMultiple(comp) && n++ != 0)
-                        {
-                            continue sets;
-                        }
-                    }
-                    for (AnimationComponent comp : comps)
-                    {
-                        AnimationComponent newComp = new AnimationComponent();
-                        newComp.hidden = comp.hidden;
-                        newComp.limbBased = comp.limbBased;
-                        newComp.length = comp.length;
-                        newComp.identifier = comp.identifier + "_merged_" + i;
-                        newComp.name = comp.name + "_merged_" + i;
-                        newComp.opacityChange = comp.opacityChange;
-                        newComp.posChange = comp.posChange;
-                        newComp.progressionCoords = comp.progressionCoords;
-                        newComp.rotChange = comp.rotChange;
-                        newComp.scaleChange = comp.scaleChange;
-                        newComp.startKey = comp.startKey + length;
-                        newComps.add(newComp);
-                    }
-                    comps.addAll(newComps);
-                }
-            }
-            // Start at 1 for here, as we already have to's sets.
-            for (int i = 0; i < f; i++)
-            {
-                int length = i * y;
-                int n = 0;
-                sets:
-                for (String s : from.sets.keySet())
-                {
-                    ArrayList<AnimationComponent> comps = from.sets.get(s);
-                    ArrayList<AnimationComponent> toComps = to.sets.get(s);
-                    if (toComps == null)
-                    {
-                        // Making a new list to merge in.
-                        to.sets.put(s, toComps = Lists.newArrayList());
-                    }
-                    else
-                    {
-                        // Already have animations for this part, we skip it.
-                        continue;
-                    }
-                    ArrayList<AnimationComponent> newComps = Lists.newArrayList();
-                    for (AnimationComponent comp : comps)
-                    {
-                        if (!isValidForMultiple(comp) && n++ != 0)
-                        {
-                            continue sets;
-                        }
-                    }
-                    for (AnimationComponent comp : comps)
-                    {
-                        AnimationComponent newComp = new AnimationComponent();
-                        newComp.hidden = comp.hidden;
-                        newComp.limbBased = comp.limbBased;
-                        newComp.length = comp.length;
-                        newComp.identifier = comp.identifier + "_merged_" + i;
-                        newComp.name = comp.name + "_merged_" + i;
-                        newComp.opacityChange = comp.opacityChange;
-                        newComp.posChange = comp.posChange;
-                        newComp.progressionCoords = comp.progressionCoords;
-                        newComp.rotChange = comp.rotChange;
-                        newComp.scaleChange = comp.scaleChange;
-                        newComp.startKey = comp.startKey + length;
-                        newComps.add(newComp);
-                    }
-                    toComps.addAll(newComps);
-                }
-            }
+            // merge the values for to.
+            mergeTo(to, t);
+            to.initLength();
+            // merge the values for from.
+            mergeTo(to, from, f);
             to.initLength();
             return;
         }
@@ -268,6 +287,8 @@ public class AnimationBuilder
             {
                 to.sets.put(s1, from.sets.get(s1));
             }
+        to.initLength();
+        to.length = -1;
     }
 
     /** @param comp
