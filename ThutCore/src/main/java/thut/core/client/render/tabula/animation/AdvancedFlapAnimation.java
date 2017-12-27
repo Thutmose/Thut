@@ -92,6 +92,7 @@ public class AdvancedFlapAnimation extends Animation
     public AdvancedFlapAnimation init(Set<String> lw, Set<String> rw, int duration, float[] angle, float start,
             int axis, boolean reverse)
     {
+        duration = duration + duration % 4;
         int dir = reverse ? -1 : 1;
 
         for (String s : rw)

@@ -94,6 +94,7 @@ public class BiWalkAnimation extends Animation
     public BiWalkAnimation init(Set<String> hl, Set<String> hr, Set<String> fl, Set<String> fr, int duration,
             float legAngle, float armAngle)
     {
+        duration = duration + duration % 4;
         for (String s : hr)
         {
             String ident = "hr";

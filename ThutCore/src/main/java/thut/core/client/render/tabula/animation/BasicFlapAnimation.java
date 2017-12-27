@@ -83,6 +83,7 @@ public class BasicFlapAnimation extends Animation
      * @return */
     public BasicFlapAnimation init(Set<String> lw, Set<String> rw, int duration, float angle, float start, int axis)
     {
+        duration = duration + duration % 4;
         for (String s : rw)
         {
             String ident = "";
