@@ -40,7 +40,6 @@ import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
 import thut.api.entity.IMultiplePassengerEntity;
 import thut.api.entity.ai.AIThreadManager;
-import thut.api.entity.ai.AIThreadManager.AIStuff;
 import thut.api.entity.ai.IAIMob;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.entity.genetics.Alleles;
@@ -132,21 +131,7 @@ public class ThutCore
                     INBTSerializable.class.cast(instance).deserializeNBT(nbt);
                 }
             }
-        }, new IAIMob()
-        {
-
-            @Override
-            public AIStuff getAI()
-            {
-                return null;
-            }
-
-            @Override
-            public boolean selfManaged()
-            {
-                return true;
-            }
-        }.getClass());
+        }, IAIMob.Default::new);
         CapabilityManager.INSTANCE.register(ITerrainAffected.class, new Capability.IStorage<ITerrainAffected>()
         {
             @Override
@@ -160,7 +145,7 @@ public class ThutCore
                     NBTBase nbt)
             {
             }
-        }, DefaultAffected.class);
+        }, DefaultAffected::new);
         CapabilityManager.INSTANCE.register(IMobGenetics.class, new Capability.IStorage<IMobGenetics>()
         {
 
@@ -200,7 +185,7 @@ public class ThutCore
                 }
 
             }
-        }, DefaultGenetics.class);
+        }, DefaultGenetics::new);
         TerrainManager.getInstance();
     }
 

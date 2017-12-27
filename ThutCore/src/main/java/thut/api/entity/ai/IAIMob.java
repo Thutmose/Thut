@@ -26,4 +26,21 @@ public interface IAIMob
      * 
      * @return */
     boolean selfManaged();
+
+    public static class Default implements IAIMob
+    {
+
+        @Override
+        public AIStuff getAI()
+        {
+            return null;
+        }
+
+        @Override
+        public boolean selfManaged()
+        {
+            return false;
+        }
+
+    }
 }

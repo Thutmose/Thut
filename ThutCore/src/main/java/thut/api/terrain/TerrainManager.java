@@ -46,7 +46,7 @@ public class TerrainManager
     {
         MinecraftForge.EVENT_BUS.register(this);
         CapabilityManager.INSTANCE.register(CapabilityTerrain.ITerrainProvider.class, new CapabilityTerrain.Storage(),
-                CapabilityTerrain.DefaultProvider.class);
+                CapabilityTerrain.DefaultProvider::new);
     }
 
     @SubscribeEvent

@@ -38,6 +38,11 @@ public class CapabilityTerrain
         private final Chunk      chunk;
         private TerrainSegment[] segments = new TerrainSegment[16];
 
+        public DefaultProvider()
+        {
+            this.chunk = null;
+        }
+
         public DefaultProvider(Chunk chunk)
         {
             this.chunk = chunk;
