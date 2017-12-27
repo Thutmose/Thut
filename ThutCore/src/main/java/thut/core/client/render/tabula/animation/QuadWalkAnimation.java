@@ -90,6 +90,7 @@ public class QuadWalkAnimation extends Animation
     public QuadWalkAnimation init(Set<String> hl, Set<String> hr, Set<String> fl, Set<String> fr, int duration,
             float legAngle, float armAngle)
     {
+        duration = duration + duration % 4;
         for (String s : hr)
         {
             String ident = "";

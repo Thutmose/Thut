@@ -20,6 +20,7 @@ public class SnakeMovement extends Animation
 
     public SnakeMovement init(ArrayList<String> parts, int duration, float maxAngle, int axis)
     {
+        duration = duration + duration % 4;
         float angle = maxAngle;
         int num = parts.size();
         int mod = num > 6 ? 3 : 2;
