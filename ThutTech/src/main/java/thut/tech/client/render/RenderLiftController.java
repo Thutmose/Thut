@@ -148,7 +148,7 @@ public class RenderLiftController extends TileEntitySpecialRenderer
 
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, EnumFacing side, boolean wide)
     {
-        floor = floor - monitor.getSidePage(side) * 16;
+        if (!wide) floor = floor - monitor.getSidePage(side) * 16;
         IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
         boolean isMonitor = state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER;
         if (isMonitor && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
