@@ -139,7 +139,7 @@ public class CompatParser
                 }
                 catch (Throwable e)
                 {
-                    System.err.println("Error with " + c);
+//                    System.err.println("Error with " + c);
                 }
             }
         }
