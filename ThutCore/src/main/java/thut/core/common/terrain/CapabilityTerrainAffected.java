@@ -90,11 +90,10 @@ public class CapabilityTerrainAffected
             return capability == TERRAIN_CAP;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public <T> T getCapability(Capability<T> capability, EnumFacing facing)
         {
-            return hasCapability(capability, facing) ? (T) this : null;
+            return hasCapability(capability, facing) ? TERRAIN_CAP.cast(this) : null;
         }
 
     }
