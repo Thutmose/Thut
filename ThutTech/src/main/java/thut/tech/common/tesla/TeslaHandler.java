@@ -72,14 +72,13 @@ public class TeslaHandler
                     if (this.stored > this.capacity) this.stored = this.capacity;
                 }
 
-                @SuppressWarnings("unchecked") // There isnt anything sane we
-                                               // can do about this.
                 @Override
                 public <T> T getCapability(Capability<T> capability, EnumFacing facing)
                 {
-                    if (TESLA_HOLDER != null && capability == TESLA_HOLDER) return (T) this;
-                    if (TESLA_PRODUCER != null && capability == TESLA_PRODUCER && facing == null) return (T) this;
-                    if (TESLA_CONSUMER != null && capability == TESLA_CONSUMER) return (T) this;
+                    if (TESLA_HOLDER != null && capability == TESLA_HOLDER) return TESLA_HOLDER.cast(this);
+                    if (TESLA_PRODUCER != null && capability == TESLA_PRODUCER && facing == null)
+                        return TESLA_PRODUCER.cast(this);
+                    if (TESLA_CONSUMER != null && capability == TESLA_CONSUMER) return TESLA_CONSUMER.cast(this);
                     return null;
                 }
 
@@ -167,13 +166,11 @@ public class TeslaHandler
                     if (this.stored > this.capacity) this.stored = this.capacity;
                 }
 
-                @SuppressWarnings("unchecked") // There isnt anything sane we
-                                               // can do about this.
                 @Override
                 public <T> T getCapability(Capability<T> capability, EnumFacing facing)
                 {
-                    if (TESLA_HOLDER != null && capability == TESLA_HOLDER) return (T) this;
-                    if (TESLA_CONSUMER != null && capability == TESLA_CONSUMER) return (T) this;
+                    if (TESLA_HOLDER != null && capability == TESLA_HOLDER) return TESLA_HOLDER.cast(this);
+                    if (TESLA_CONSUMER != null && capability == TESLA_CONSUMER) return TESLA_CONSUMER.cast(this);
                     return null;
                 }
 
@@ -197,7 +194,6 @@ public class TeslaHandler
                 @Override
                 public long getStoredPower()
                 {
-
                     return this.stored;
                 }
 
