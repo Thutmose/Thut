@@ -25,6 +25,7 @@ public class ConfigHandler extends ConfigBase
     private static final String BIOMES                  = "biomes";
     private static final String BLOCKENTITY             = "blockentity";
     private static final String AI                      = "ai";
+    private static final String MISC                    = "misc";
 
     @Configure(category = BOOMS)
     private int                 explosionRadius         = 127;
@@ -47,6 +48,8 @@ public class ConfigHandler extends ConfigBase
     public String[]             teblacklist             = {};
     @Configure(category = BLOCKENTITY)
     public boolean              autoBlacklistErroredTEs = true;
+    @Configure(category = MISC)
+    public boolean              debug                   = true;
 
     public ConfigHandler()
     {

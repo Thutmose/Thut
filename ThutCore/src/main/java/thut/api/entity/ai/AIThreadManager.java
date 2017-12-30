@@ -229,7 +229,9 @@ public class AIThreadManager
     /** Clears things for world unload */
     public static void clear()
     {
-        for (Queue v : aiStuffLists)
+        /** This can be null if server was started with multithreaded AI
+         * disabled. */
+        if (aiStuffLists != null) for (Queue v : aiStuffLists)
         {
             v.clear();
         }

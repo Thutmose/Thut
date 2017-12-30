@@ -108,7 +108,6 @@ public class CompatParser
                     }
                     catch (Throwable ignore)
                     {
-                        System.out.println(ignore);
                     }
                 }
             }
@@ -139,7 +138,6 @@ public class CompatParser
                 }
                 catch (Throwable e)
                 {
-                    System.err.println(c + " Will not be loaded for compat. " + e);
                 }
             }
         }
