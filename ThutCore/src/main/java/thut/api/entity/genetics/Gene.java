@@ -1,5 +1,6 @@
 package thut.api.entity.genetics;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
@@ -26,6 +27,15 @@ public interface Gene
     /** @param value
      *            Sets the value of the gene. */
     <T> void setValue(T value);
+
+    /** This is called whenever the mob associated with this gene ticks. This is
+     * only called if this gene is expressed.
+     * 
+     * @param genes */
+    default void onUpdateTick(EntityLivingBase mob)
+    {
+
+    }
 
     /** This is how frequently the expressed gene is used instead of the
      * parent's genes.

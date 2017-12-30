@@ -6,10 +6,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -18,7 +16,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -69,12 +66,6 @@ public class ThutCore
 
     public static final String    modid   = Reference.MOD_ID;
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
-
-    public static Block[]         blocks;
-    public static Item[]          items;
-
-    public static Biome           volcano;
-    public static Biome           chalk;
 
     // Configuration Handler that handles the config file
     public ConfigHandler          config;

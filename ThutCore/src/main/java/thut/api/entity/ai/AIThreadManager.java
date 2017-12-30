@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import thut.api.TickHandler;
+import thut.api.entity.genetics.IMobGenetics;
 import thut.core.common.ThutCore;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -317,6 +318,9 @@ public class AIThreadManager
             mob = event.getEntity().getCapability(IAIMob.THUTMOBAI, null);
             ai = mob.getAI();
         }
+        IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null);
+        if (genes != null) genes.onUpdateTick(event.getEntityLiving());
+
         // If not IAIMob, or self managed, then no need to run AI stuff.
         if (mob == null || mob.selfManaged() || ai == null) return;
         // Run the ILogicRunnables on both server and client side.
@@ -331,20 +335,11 @@ public class AIThreadManager
 
     protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
     {
-        mob.getEntityWorld().profiler.startSection("mob tick");
-        // Run last tick's results from AI stuff
+        mob.getEntityWorld().profiler.startSection("custom_ai");
+        // Run Tick results from AI stuff.
         ai.runServerThreadTasks(mob.getEntityWorld());
         // Schedule AIStuff to tick for next tick.
         AIThreadManager.scheduleAITick(ai);
-        mob.getEntityWorld().profiler.endSection();
-        mob.getEntityWorld().profiler.startSection("controls");
-        mob.getEntityWorld().profiler.startSection("move");
-        mob.getMoveHelper().onUpdateMoveHelper();
-        mob.getEntityWorld().profiler.endStartSection("look");
-        mob.getLookHelper().onUpdateLook();
-        mob.getEntityWorld().profiler.endStartSection("jump");
-        mob.getJumpHelper().doJump();
-        mob.getEntityWorld().profiler.endSection();
         mob.getEntityWorld().profiler.endSection();
     }
 }
