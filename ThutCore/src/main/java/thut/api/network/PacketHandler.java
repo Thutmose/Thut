@@ -22,6 +22,7 @@ import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -48,6 +49,8 @@ public class PacketHandler
         ITerrainProvider provider = world.getChunkFromChunkCoords(pos.x, pos.z)
                 .getCapability(CapabilityTerrain.TERRAIN_CAP, null);
         NBTTagCompound terrainData = (NBTTagCompound) CapabilityTerrain.TERRAIN_CAP.writeNBT(provider, null);
+        terrainData.setInteger("c_x", pos.x);
+        terrainData.setInteger("c_z", pos.z);
         MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
         PacketHandler.packetPipeline.sendTo(message, player);
     }
@@ -143,9 +146,9 @@ public class PacketHandler
                     try
                     {
                         NBTTagCompound nbt = buffer.readCompoundTag();
-                        ITerrainProvider terrain = player.getEntityWorld()
-                                .getChunkFromChunkCoords(nbt.getInteger("x"), nbt.getInteger("z"))
-                                .getCapability(CapabilityTerrain.TERRAIN_CAP, null);
+                        Chunk chunk = player.getEntityWorld().getChunkFromChunkCoords(nbt.getInteger("c_x"),
+                                nbt.getInteger("c_z"));
+                        ITerrainProvider terrain = chunk.getCapability(CapabilityTerrain.TERRAIN_CAP, null);
                         CapabilityTerrain.TERRAIN_CAP.readNBT(terrain, null, nbt);
                     }
                     catch (IOException e)

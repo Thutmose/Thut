@@ -11,9 +11,7 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
 import thut.api.terrain.CapabilityTerrain.DefaultProvider;
@@ -91,7 +89,7 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkWatchEvent(ChunkWatchEvent.Watch evt)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return;
+        if (evt.getPlayer().getEntityWorld().isRemote) return;
         PacketHandler.sendTerrainToClient(evt.getPlayer().getEntityWorld(), evt.getChunk(), evt.getPlayer());
     }
 

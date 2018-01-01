@@ -39,7 +39,8 @@ public class ClientProxy extends CommonProxy
         @SubscribeEvent
         public void onPlayerJoin(TickEvent.PlayerTickEvent event)
         {
-            if (event.player.getEntityWorld().isRemote && event.player == FMLClientHandler.instance().getClientPlayerEntity())
+            if (event.player.getEntityWorld().isRemote
+                    && event.player == FMLClientHandler.instance().getClientPlayerEntity())
             {
                 MinecraftForge.EVENT_BUS.unregister(this);
                 Object o = Loader.instance().getIndexedModList().get(Reference.MOD_ID);
@@ -138,13 +139,8 @@ public class ClientProxy extends CommonProxy
         if (!debug) return;
         TerrainSegment t = TerrainManager.getInstance().getTerrainForEntity(Minecraft.getMinecraft().player);
         Vector3 v = Vector3.getNewVector().set(Minecraft.getMinecraft().player);
-        String msg = "Sub-Biome: " + BiomeDatabase.getReadableNameFromType(t.getBiome(v));
-        // Until forge stops sending the same event, with the same list 8 times,
-        // this is needed
-        for (String s : event.getLeft())
-        {
-            if (s != null && s.equals(msg)) return;
-        }
+        int num = t.getBiome(v);
+        String msg = "Sub-Biome: " + BiomeDatabase.getReadableNameFromType(num);
         event.getLeft().add("");
         event.getLeft().add(msg);
     }
