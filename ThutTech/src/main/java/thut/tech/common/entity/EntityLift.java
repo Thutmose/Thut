@@ -16,6 +16,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -278,9 +279,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         int zMin = boundMin.getZ();
         int xMax = boundMax.getX();
         int zMax = boundMax.getZ();
-
         List<?> list = this.getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(
                 posX + (xMin - 1), posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
+        hasPassenger = false;
         if (list != null && !list.isEmpty())
         {
             if (list.size() == 1 && this.getRecursivePassengers() != null
@@ -289,6 +290,11 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
             {
                 Entity entity = (Entity) list.get(i);
                 applyEntityCollision(entity);
+                if (entity instanceof EntityPlayerMP
+                        && entity.getEntityBoundingBox().grow(2).intersects(getEntityBoundingBox()))
+                {
+                    hasPassenger = true;
+                }
             }
         }
     }
@@ -483,24 +489,10 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
         this.rotationYaw = 0;
         checkCollision();
-        passengertime = hasPassenger ? 20 : passengertime - 1;
         n++;
-        if (getEntityWorld() instanceof WorldServer && n % 100 == 0)
+        if (getEntityWorld() instanceof WorldServer && n % 100 == 0 && !hasPassenger)
         {
             PacketHandler.sendEntityUpdate(this);
-        }
-    }
-
-    public void passengerCheck()
-    {
-        List<Entity> list = getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
-        if (list.size() > 0)
-        {
-            hasPassenger = true;
-        }
-        else
-        {
-            hasPassenger = false;
         }
     }
 

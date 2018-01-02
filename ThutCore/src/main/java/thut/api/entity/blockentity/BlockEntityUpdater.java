@@ -1,7 +1,5 @@
 package thut.api.entity.blockentity;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +21,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import thut.api.TickHandler;
+import thut.api.maths.Matrix3;
 import thut.lib.CompatWrapper;
 
 public class BlockEntityUpdater
@@ -119,8 +118,7 @@ public class BlockEntityUpdater
     public void applyEntityCollision(Entity entity)
     {
         if ((theEntity.rotationYaw + 360) % 90 > 5 || theEntity.isPassenger(entity)) return;
-        // if(entity.ticksExisted%50==0)
-        // System.out.println(theEntity+" "+entity);
+
         blockBoxes.clear();
         int sizeX = blockEntity.getBlocks().length;
         int sizeY = blockEntity.getBlocks()[0].length;
@@ -130,8 +128,6 @@ public class BlockEntityUpdater
         int xMin = blockEntity.getMin().getX();
         int yMin = blockEntity.getMin().getY();
         int zMin = blockEntity.getMin().getZ();
-        // Expand by velociteis as well.
-        // Adds AABBS for contained blocks
         BlockPos origin = theEntity.getPosition();
 
         double minX = entity.getEntityBoundingBox().minX;
@@ -140,28 +136,13 @@ public class BlockEntityUpdater
         double maxX = entity.getEntityBoundingBox().maxX;
         double maxY = entity.getEntityBoundingBox().maxY;
         double maxZ = entity.getEntityBoundingBox().maxZ;
-        double dx = (entity.motionX - theEntity.motionX), dz = (entity.motionZ - theEntity.motionZ),
-                dy = (entity.motionY - theEntity.motionY), r;
-
-        if (Math.abs(dx) > 0.5)
-        {
-            if (dx > 0) maxX += dx;
-            else minX += dx;
-        }
-        if (Math.abs(dy) > 0.5)
-        {
-            if (dy > 0) maxY += dy;
-            else minY += dy;
-        }
-        if (Math.abs(dz) > 0.5)
-        {
-            if (dz > 0) maxZ += dz;
-            else minZ += dz;
-        }
+        double dx, dz, dy, r;
+        Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
+                (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionZ - entity.motionZ));
 
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
-        AxisAlignedBB testBox = boundingBox.grow(0.25);
-
+        /** Expanded box by velocities to test for collision with. */
+        AxisAlignedBB testBox = boundingBox.expand(-diffs.x, -diffs.y, -diffs.z);
         for (int i = 0; i < sizeX; i++)
             for (int j = 0; j < sizeY; j++)
                 for (int k = 0; k < sizeZ; k++)
@@ -202,228 +183,179 @@ public class BlockEntityUpdater
 
         pos.setPos(theEntity.getPosition());
         Vector3f temp1 = new Vector3f();
-        Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
-                (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionZ - entity.motionZ));
 
-        boolean merge = false;
+        boolean merge = true;
 
         // Here we merge the boxes into less boxes, by taking any boxes with
         // shared faces and merging them.
         if (merge)
         {
-            double dx1 = 0;// maxX - minX;
-            double dy1 = 0;// maxY - minY;
-            double dz1 = 0;// maxZ - minZ;
-            Comparator<AxisAlignedBB> comparator = new Comparator<AxisAlignedBB>()
-            {
-                @Override
-                public int compare(AxisAlignedBB arg0, AxisAlignedBB arg1)
-                {
-                    int minX0 = (int) (arg0.minX * 32);
-                    int minY0 = (int) (arg0.minY * 32);
-                    int minZ0 = (int) (arg0.minZ * 32);
-                    int minX1 = (int) (arg1.minX * 32);
-                    int minY1 = (int) (arg1.minY * 32);
-                    int minZ1 = (int) (arg1.minZ * 32);
-                    if (minX0 == minX1)
-                    {
-                        if (minZ0 == minZ1) return minY0 - minY1;
-                        return minZ0 - minZ1;
-                    }
-                    return minX0 - minX1;
-                }
-            };
-            AxisAlignedBB[] boxes = blockBoxes.toArray(new AxisAlignedBB[blockBoxes.size()]);
-            blockBoxes.clear();
-            Arrays.sort(boxes, comparator);
-            AxisAlignedBB b1;
-            AxisAlignedBB b2;
-            for (int i = 0; i < boxes.length; i++)
-            {
-                b1 = boxes[i];
-                if (b1 == null) continue;
-                for (int j = 0; j < boxes.length; j++)
-                {
-                    b2 = boxes[j];
-                    if (i == j || b2 == null) continue;
-                    if (Math.abs(b2.maxY - b1.maxY) < dy1 && Math.abs(b2.minY - b1.minY) < dy1
-                            && Math.abs(b2.maxX - b1.maxX) < dx1 && Math.abs(b2.minX - b1.minX) < dx1
-                            && Math.abs(b2.minZ - b1.maxZ) < dz1)
-                    {
-                        b1 = b1.union(b2);
-                        boxes[i] = b1;
-                        boxes[j] = null;
-                    }
-                }
-            }
-            for (int i = 0; i < boxes.length; i++)
-            {
-                b1 = boxes[i];
-                if (b1 == null) continue;
-                for (int j = 0; j < boxes.length; j++)
-                {
-                    b2 = boxes[j];
-                    if (i == j || b2 == null) continue;
-                    if (Math.abs(b2.maxY - b1.maxY) < dy1 && Math.abs(b2.minY - b1.minY) < dy1
-                            && Math.abs(b2.maxZ - b1.maxZ) < dz1 && Math.abs(b2.minZ - b1.minZ) < dz1
-                            && Math.abs(b2.minX - b1.maxX) < dx1)
-                    {
-                        b1 = b1.union(b2);
-                        boxes[i] = b1;
-                        boxes[j] = null;
-                    }
-                }
-            }
-            for (int i = 0; i < boxes.length; i++)
-            {
-                b1 = boxes[i];
-                if (b1 == null) continue;
-                for (int j = 0; j < boxes.length; j++)
-                {
-                    b2 = boxes[j];
-                    if (i == j || b2 == null) continue;
-                    if (Math.abs(b2.maxX - b1.maxX) < dx1 && Math.abs(b2.minX - b1.minX) < dx1
-                            && Math.abs(b2.maxZ - b1.maxZ) < dz1 && Math.abs(b2.minZ - b1.minZ) < dz1
-                            && Math.abs(b2.minY - b1.maxY) < dy1)
-                    {
-                        b1 = b1.union(b2);
-                        boxes[i] = b1;
-                        boxes[j] = null;
-                    }
-                }
-            }
-
-            for (int i = 0; i < boxes.length; i++)
-            {
-                b1 = boxes[i];
-                if (b1 == null) continue;
-                for (int j = 0; j < boxes.length; j++)
-                {
-                    b2 = boxes[j];
-                    if (i == j || b2 == null) continue;
-                    // Check if subbox after previous passes, if so, combine.
-                    if (b2.maxX <= b1.maxX && b2.maxY <= b1.maxY && b2.maxZ <= b1.maxZ && b2.minX >= b1.minX
-                            && b2.minY >= b1.minY && b2.minZ >= b1.minZ)
-                    {
-                        boxes[i] = b1;
-                        boxes[j] = null;
-                    }
-                }
-            }
-            for (AxisAlignedBB b : boxes)
-            {
-                if (b != null)
-                {
-                    blockBoxes.add(b);
-                }
-            }
+            Matrix3.mergeAABBs(blockBoxes, 0, 0, 0);
         }
         // Finished merging the boxes.
 
-        // Server and client have different values of this for the player, so
-        // just fix it to 0.6 for entity players
-        float stepheight = entity.stepHeight;
-        if (entity instanceof EntityPlayer) stepheight = 0.6f;
+        /** Positions adjusted for velocity. */
+        double lastTickMinY = minY + diffs.y;
+        double nextTickMinY = minY - diffs.y;
 
-        double yTop = Math.min(stepheight + entity.posY + theEntity.motionY, maxY);
+        double lastTickMaxY = maxY + diffs.y;
+        double nextTickMaxY = maxY - diffs.y;
 
-        boolean floor = false;
-        boolean ceiling = false;
-        double yMaxFloor = minY;
-        // if(entity.ticksExisted%100==0)
-        // System.out.println(blockBoxes);
+        double lastTickMinX = minX + diffs.x;
+        double nextTickMinX = minX - diffs.x;
+
+        double lastTickMaxX = maxX + diffs.x;
+        double nextTickMaxX = maxX - diffs.x;
+
+        double lastTickMinZ = minZ + diffs.z;
+        double nextTickMinZ = minZ - diffs.z;
+
+        double lastTickMaxZ = maxZ + diffs.z;
+        double nextTickMaxZ = maxZ - diffs.z;
 
         // for each box, compute collision.
         for (AxisAlignedBB aabb : blockBoxes)
         {
             dx = 10e3;
             dz = 10e3;
-            boolean thisFloor = false;
-            boolean thisCieling = false;
-            boolean collidesX = ((maxZ <= aabb.maxZ) && (maxZ >= aabb.minZ))
-                    || ((minZ <= aabb.maxZ) && (minZ >= aabb.minZ)) || ((minZ <= aabb.minZ) && (maxZ >= aabb.maxZ));
+            dy = 10e3;
 
-            boolean collidesY = ((minY >= aabb.minY) && (minY <= aabb.maxY))
-                    || ((maxY <= aabb.maxY) && (maxY >= aabb.minY)) || ((minY <= aabb.minY) && (maxY >= aabb.maxY));
+            boolean fromAbove = lastTickMinY >= aabb.maxY && nextTickMinY <= aabb.maxY;
+            boolean fromBelow = nextTickMaxY >= aabb.minY && lastTickMaxY <= aabb.minY;
+            boolean yPos = minY <= aabb.maxY && minY >= aabb.minY;
+            boolean yNeg = maxY <= aabb.maxY && maxY >= aabb.minY;
 
-            boolean collidesZ = ((maxX <= aabb.maxX) && (maxX >= aabb.minX))
-                    || ((minX <= aabb.maxX) && (minX >= aabb.minX)) || ((minX <= aabb.minX) && (maxX >= aabb.maxX));
+            boolean fromXPos = lastTickMinX >= aabb.maxX && nextTickMinX <= aabb.maxX;
+            boolean fromXNeg = nextTickMaxX >= aabb.minX && lastTickMaxX <= aabb.minX;
+            boolean xPos = minX <= aabb.maxX && minX >= aabb.minX;
+            boolean xNeg = maxX <= aabb.maxX && maxX >= aabb.minX;
 
-            collidesZ = collidesZ && (collidesX || collidesY);
-            collidesX = collidesX && (collidesZ || collidesY);
+            boolean fromZPos = lastTickMinZ >= aabb.maxZ && nextTickMinZ <= aabb.maxZ;
+            boolean fromZNeg = nextTickMaxZ >= aabb.minZ && lastTickMaxZ <= aabb.minZ;
+            boolean zPos = minZ <= aabb.maxZ && minZ >= aabb.minZ;
+            boolean zNeg = maxZ <= aabb.maxZ && maxZ >= aabb.minZ;
 
-            if (collidesX && collidesZ && yTop >= aabb.maxY
-                    && boundingBox.minY - stepheight - theEntity.motionY <= aabb.maxY - diffs.y)
+            boolean collidesXPos = xPos && zPos && zNeg;
+            boolean collidesXNeg = xNeg && zPos && zNeg;
+
+            boolean collidesZPos = zPos && xPos && xNeg;
+            boolean collidesZNeg = zNeg && xPos && xNeg;
+
+            boolean collidesYNeg = (yNeg && (xPos || xNeg || zPos || zNeg));
+            boolean collidesYPos = (yPos && (xPos || xNeg || zPos || zNeg));
+
+            boolean collided = false;
+            /** Collides with top of box, is standing on it. */
+            if (!collided && fromAbove)
             {
-                if (!floor)
-                {
-                    temp1.y = (float) Math.max(aabb.maxY - boundingBox.minY, temp1.y);
-                }
-                floor = true;
-                thisFloor = aabb.maxY >= yMaxFloor;
-                if (thisFloor) yMaxFloor = aabb.maxY;
+                temp1.y = (float) Math.max(aabb.maxY - diffs.y - nextTickMinY, temp1.y);
+                collided = true;
             }
-            if (collidesX && collidesZ && boundingBox.maxY >= aabb.minY && boundingBox.minY < aabb.minY)
+            /** Collides with bottom of box, is under it. */
+            if (!collided && fromBelow)
             {
-                if (!(floor || ceiling))
-                {
-                    dy = aabb.minY - boundingBox.maxY - diffs.y;
-                    temp1.y = (float) Math.min(dy, temp1.y);
-                }
-                thisCieling = !(thisFloor || floor);
-                ceiling = true;
+                temp1.y = (float) Math.min(aabb.minY - diffs.y - nextTickMaxY, temp1.y);
+                collided = true;
             }
 
-            boolean vert = thisFloor || thisCieling;
-
-            if (collidesX && !vert && collidesY && boundingBox.maxX >= aabb.maxX && boundingBox.minX <= aabb.maxX)
+            /** Collides with middle of +x face. */
+            if (!collided && (fromXPos || collidesXPos))
             {
                 r = Math.max(aabb.maxX - boundingBox.minX, temp1.x);
                 dx = Math.min(dx, r);
+                collided = true;
             }
-            if (collidesX && !vert && collidesY && boundingBox.maxX >= aabb.minX && boundingBox.minX < aabb.minX)
+            /** Collides with middle of -x face. */
+            if (!collided && (fromXNeg || collidesXNeg))
             {
                 r = Math.min(aabb.minX - boundingBox.maxX, temp1.x);
                 dx = Math.min(dx, r);
+                collided = true;
             }
-            if (collidesZ && !vert && collidesY && boundingBox.maxZ >= aabb.maxZ && boundingBox.minZ <= aabb.maxZ)
+            /** Collides with middle of +z face. */
+            if (!collided && (fromZPos || collidesZPos))
             {
                 r = Math.max(aabb.maxZ - boundingBox.minZ, temp1.z);
                 dz = Math.min(dz, r);
+                collided = true;
             }
-            if (collidesZ && !vert && collidesY && boundingBox.maxZ >= aabb.minZ && boundingBox.minZ < aabb.minZ)
+            /** Collides with middle of -z face. */
+            if (!collided && (fromZNeg || collidesZNeg))
             {
                 r = Math.min(aabb.minZ - boundingBox.maxZ, temp1.z);
                 dz = Math.min(dz, r);
+                collided = true;
             }
-            if (Math.abs(dx) > Math.abs(dz) && dx < 10e2 || dx == 10e3 && dz < 10e2)
+            /** Collides with +x, +z corner. */
+            if (!collided && xPos && zPos)
             {
-                temp1.z = (float) dz;
+                r = Math.max(aabb.maxZ - boundingBox.minZ, temp1.z);
+                dz = Math.min(dz, r);
+                r = Math.max(aabb.maxX - boundingBox.minX, temp1.x);
+                dx = Math.min(dx, r);
+                collided = true;
             }
-            else if (dx < 10e2)
+            /** Collides with +x, -z corner. */
+            if (!collided && xPos && zNeg)
+            {
+                r = Math.min(aabb.minZ - boundingBox.maxZ, temp1.z);
+                dz = Math.min(dz, r);
+                r = Math.max(aabb.maxX - boundingBox.minX, temp1.x);
+                dx = Math.min(dx, r);
+                collided = true;
+            }
+            /** Collides with -x, -z corner. */
+            if (!collided && xNeg && zNeg)
+            {
+                r = Math.min(aabb.minZ - boundingBox.maxZ, temp1.z);
+                dz = Math.min(dz, r);
+                r = Math.min(aabb.minX - boundingBox.maxX, temp1.x);
+                dx = Math.min(dx, r);
+                collided = true;
+            }
+            /** Collides with -x, +z corner. */
+            if (!collided && xNeg && zPos)
+            {
+                r = Math.max(aabb.maxZ - boundingBox.minZ, temp1.z);
+                dz = Math.min(dz, r);
+                r = Math.min(aabb.minX - boundingBox.maxX, temp1.x);
+                dx = Math.min(dx, r);
+                collided = true;
+            }
+
+            if (collidesYNeg)
+            {
+                r = (float) Math.min(aabb.minY - diffs.y - nextTickMaxY, temp1.y);
+                dy = Math.min(r, dy);
+            }
+            else if (collidesYPos)
+            {
+                r = (float) Math.max(aabb.maxY - diffs.y - nextTickMinY, temp1.y);
+                dy = Math.min(r, dy);
+            }
+
+            double dy1 = Math.abs(dy);
+            double dz1 = Math.abs(dz);
+            double dx1 = Math.abs(dx);
+
+            /** y minimum penetration. */
+            if (dy1 < dx1 && dy1 < dz1)
+            {
+                temp1.y = (float) dy;
+            }
+            /** x minimum penetration. */
+            else if (dx1 < dy1 && dx1 < dz1)
             {
                 temp1.x = (float) dx;
             }
-        }
-
-        // Figure out top most collsion postion, if it collides, then set
-        // vertical motion to 0.
-        for (Double d : topY)
-            if (entity.posY >= d && entity.posY + entity.motionY <= d && theEntity.motionY <= 0)
+            else if (dz < 10e2)
             {
-                double diff = (entity.posY + entity.motionY) - (d + theEntity.motionY);
-                double check = Math.max(0.5, Math.abs(entity.motionY + theEntity.motionY));
-                if (diff > 0 || diff < -0.5 || Math.abs(diff) > check)
-                {
-                    entity.motionY = 0;
-                    entity.onGround = true;
-                    entity.fall(entity.fallDistance, 0);
-                    entity.fallDistance = 0;
-                }
+                temp1.z = (float) dz;
             }
 
+        }
+
         // If entity has collided, adjust motion accordingly.
-        boolean collidedY = false;
         if (temp1.lengthSquared() > 0)
         {
             if (temp1.y >= 0)
@@ -432,22 +364,11 @@ public class BlockEntityUpdater
                 entity.fall(entity.fallDistance, 0);
                 entity.fallDistance = 0;
             }
-            else if (temp1.y < 0)
-            {
-                boolean below = entity.posY + entity.height - (entity.motionY + theEntity.motionY) < theEntity.posY;
-                if (below)
-                {
-                    temp1.y = 0;
-                }
-            }
+
             if (temp1.x != 0) entity.motionX = theEntity.motionX;
             if (temp1.y != 0) entity.motionY = theEntity.motionY;
             if (temp1.z != 0) entity.motionZ = theEntity.motionZ;
-            if (temp1.y != 0) collidedY = true;
-            // temp1.add(new Vector3f((float) entity.posX, (float) entity.posY,
-            // (float) entity.posZ));
-            // entity.setPosition(temp1.x, temp1.y, temp1.z);
-            CompatWrapper.moveEntitySelf(entity, temp1.x, temp1.y, temp1.z);
+            if (!(entity instanceof EntityPlayerMP)) CompatWrapper.moveEntitySelf(entity, temp1.x, temp1.y, temp1.z);
 
             // Attempt to also set previous positions to prevent desync like
             // issues on servers.
@@ -472,7 +393,7 @@ public class BlockEntityUpdater
                     Minecraft.getMinecraft().gameSettings.viewBobbing = false;
                 }
             }
-            if (Math.abs(player.motionY) < 0.1 && !player.capabilities.isFlying)
+            if (!player.capabilities.isFlying)
             {
                 entity.onGround = true;
                 entity.fall(entity.fallDistance, 0);
@@ -482,16 +403,7 @@ public class BlockEntityUpdater
             if (!player.capabilities.isCreativeMode && !player.getEntityWorld().isRemote)
             {
                 EntityPlayerMP entityplayer = (EntityPlayerMP) player;
-                if (collidedY) entityplayer.connection.floatingTickCount = 0;
-            }
-            else if (player.getEntityWorld().isRemote)
-            {
-                // PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(12));
-                // MessageServer packet = new MessageServer(buffer);
-                // buffer.writeFloat((float) player.posX);
-                // buffer.writeFloat((float) player.posY);
-                // buffer.writeFloat((float) player.posZ);
-                // PacketHandler.packetPipeline.sendToServer(packet);
+                entityplayer.connection.floatingTickCount = 0;
             }
         }
     }

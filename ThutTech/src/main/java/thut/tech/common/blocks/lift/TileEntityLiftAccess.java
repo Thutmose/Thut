@@ -647,4 +647,15 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
         throw new Exception("no connected lift");
     }
+
+    /*
+     * Returns floor associated with this block
+     */
+    @Callback(doc = "returns if the elevator is not currently called to a floor")
+    @Optional.Method(modid = "opencomputers")
+    public Object[] isReady(Context context, Arguments args) throws Exception
+    {
+        if (lift != null) { return new Object[] { !lift.getCalled() }; }
+        throw new Exception("no connected lift");
+    }
 }

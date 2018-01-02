@@ -130,9 +130,9 @@ public class Matrix3
             {
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
-                if (Math.abs(b2.maxY - b1.maxY) < dy && Math.abs(b2.minY - b1.minY) < dy
-                        && Math.abs(b2.maxX - b1.maxX) < dx && Math.abs(b2.minX - b1.minX) < dx
-                        && Math.abs(b2.minZ - b1.maxZ) < dz)
+                if (Math.abs(b2.maxY - b1.maxY) <= dy && Math.abs(b2.minY - b1.minY) <= dy
+                        && Math.abs(b2.maxX - b1.maxX) <= dx && Math.abs(b2.minX - b1.minX) <= dx
+                        && Math.abs(b2.minZ - b1.maxZ) <= dz)
                 {
                     b1 = b1.union(b2);
                     boxes[i] = b1;
@@ -148,9 +148,9 @@ public class Matrix3
             {
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
-                if (Math.abs(b2.maxY - b1.maxY) < dy && Math.abs(b2.minY - b1.minY) < dy
-                        && Math.abs(b2.maxZ - b1.maxZ) < dz && Math.abs(b2.minZ - b1.minZ) < dz
-                        && Math.abs(b2.minX - b1.maxX) < dx)
+                if (Math.abs(b2.maxY - b1.maxY) <= dy && Math.abs(b2.minY - b1.minY) <= dy
+                        && Math.abs(b2.maxZ - b1.maxZ) <= dz && Math.abs(b2.minZ - b1.minZ) <= dz
+                        && Math.abs(b2.minX - b1.maxX) <= dx)
                 {
                     b1 = b1.union(b2);
                     boxes[i] = b1;
@@ -166,9 +166,9 @@ public class Matrix3
             {
                 b2 = boxes[j];
                 if (i == j || b2 == null) continue;
-                if (Math.abs(b2.maxX - b1.maxX) < dx && Math.abs(b2.minX - b1.minX) < dx
-                        && Math.abs(b2.maxZ - b1.maxZ) < dz && Math.abs(b2.minZ - b1.minZ) < dz
-                        && Math.abs(b2.minY - b1.maxY) < dy)
+                if (Math.abs(b2.maxX - b1.maxX) <= dx && Math.abs(b2.minX - b1.minX) <= dx
+                        && Math.abs(b2.maxZ - b1.maxZ) <= dz && Math.abs(b2.minZ - b1.minZ) <= dz
+                        && Math.abs(b2.minY - b1.maxY) <= dy)
                 {
                     b1 = b1.union(b2);
                     boxes[i] = b1;
@@ -1090,7 +1090,9 @@ public class Matrix3
                     if (block.isCollidable())
                     {
                         iblockstate.addCollisionBoxToList(world, blockpos, box, collidingBoundingBoxes, null, false);
-                        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world, null, box, collidingBoundingBoxes));
+                        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+                                .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world, null, box,
+                                        collidingBoundingBoxes));
                     }
                 }
             }
