@@ -527,7 +527,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(yValue:number) -- Calls the Lift tothespecified Y level")
+    @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
     @Optional.Method(modid = "opencomputers")
     public Object[] callYValue(Context context, Arguments args) throws Exception
     {
@@ -542,7 +542,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(xValue:number) -- Calls the Lift tothespecified X location")
+    @Callback(doc = "function(xValue:number) -- Calls the Lift to the specified X location")
     @Optional.Method(modid = "opencomputers")
     public Object[] callXValue(Context context, Arguments args) throws Exception
     {
@@ -557,7 +557,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(zValue:number) -- Calls the Lift tothespecified Z location")
+    @Callback(doc = "function(zValue:number) -- Calls the Lift to the specified Z location")
     @Optional.Method(modid = "opencomputers")
     public Object[] callZValue(Context context, Arguments args) throws Exception
     {
@@ -572,7 +572,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Sets floor associated with this block
      */
-    @Callback(doc = "function(floor:number) -- Sets the floor assosiatedtothe Controller")
+    @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
     @Optional.Method(modid = "opencomputers")
     public Object[] setFloor(Context context, Arguments args)
     {
