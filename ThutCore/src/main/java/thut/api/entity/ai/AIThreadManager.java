@@ -125,7 +125,7 @@ public class AIThreadManager
         {
             threadCount = Math.min(threadCount, Runtime.getRuntime().availableProcessors());
             aiStuffLists = new Queue[threadCount];
-            System.out.println("Creating and starting Pokemob AI Threads.");
+            System.out.println("Creating and starting Mob AI Threads.");
             for (int i = 0; i < threadCount; i++)
             {
                 Queue<AIStuff> set = Queues.newConcurrentLinkedQueue();

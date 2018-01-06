@@ -1,6 +1,7 @@
 package thut.core.client.render.model;
 
 import java.util.HashMap;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -89,7 +90,7 @@ public interface IModelRenderer<T extends EntityLiving>
 
     void scaleEntity(Entity entity, IModel model, float partialTick);
 
-    HashMap<String, Animation> getAnimations();
+    HashMap<String, List<Animation>> getAnimations();
 
     default Vector3 getScale()
     {

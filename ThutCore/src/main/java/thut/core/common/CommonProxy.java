@@ -40,11 +40,7 @@ public class CommonProxy implements IPlayerProvider
     
     public void loadSounds() {}
     
-    public void preinit(FMLPreInitializationEvent e)
-    {
-        // TODO Auto-generated method stub
-        
-    }
+    public void preinit(FMLPreInitializationEvent e) {}
 
 	public void registerEntities()
     {

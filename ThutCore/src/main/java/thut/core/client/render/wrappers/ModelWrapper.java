@@ -2,6 +2,7 @@ package thut.core.client.render.wrappers;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -129,9 +130,9 @@ public class ModelWrapper extends ModelBase implements IModel
     }
 
     @Override
-    public void preProcessAnimations(Collection<Animation> animations)
+    public void preProcessAnimations(Collection<List<Animation>> collection)
     {
-        imodel.preProcessAnimations(animations);
+        imodel.preProcessAnimations(collection);
     }
 
     private final Vector5 rots = new Vector5();
@@ -187,11 +188,6 @@ public class ModelWrapper extends ModelBase implements IModel
             if (AnimationHelper.doAnimation(renderer.getAnimations().get(currentPhase), entity, parent.getName(),
                     parent, partialTick, limbSwing))
             {
-            }
-            else if (renderer.getAnimations().containsKey(IModelRenderer.DEFAULTPHASE))
-            {
-                AnimationHelper.doAnimation(renderer.getAnimations().get(IModelRenderer.DEFAULTPHASE), entity,
-                        parent.getName(), parent, partialTick, limbSwing);
             }
         }
         HeadInfo info = imodel.getHeadInfo();

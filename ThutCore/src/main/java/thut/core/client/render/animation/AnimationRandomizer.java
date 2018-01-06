@@ -1,9 +1,7 @@
 package thut.core.client.render.animation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.w3c.dom.Node;
@@ -17,7 +15,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.tabula.components.Animation;
-import thut.core.client.render.tabula.components.AnimationComponent;
 
 public class AnimationRandomizer implements IAnimationChanger
 {
@@ -49,16 +46,7 @@ public class AnimationRandomizer implements IAnimationChanger
         {
             this.chance = chance;
             this.name = animation.name;
-            for (Entry<String, ArrayList<AnimationComponent>> entry : animation.sets.entrySet())
-            {
-                for (AnimationComponent component : entry.getValue())
-                {
-                    if (component.startKey + component.length > duration)
-                    {
-                        duration = component.startKey + component.length;
-                    }
-                }
-            }
+            duration = animation.getLength();
         }
     }
 

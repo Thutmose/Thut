@@ -2,6 +2,7 @@ package thut.core.client.render.tabula.model.tabula;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
@@ -40,7 +41,7 @@ public class TabulaModel extends JsonTabulaModel implements IModel
     }
 
     @Override
-    public void preProcessAnimations(Collection<Animation> animations)
+    public void preProcessAnimations(Collection<List<Animation>> collection)
     {
     }
 

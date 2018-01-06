@@ -1,6 +1,9 @@
 package thut.core.client.render.animation;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -8,6 +11,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import thut.core.client.render.animation.AnimationRegistry.IPartRenamer;
 import thut.core.client.render.tabula.components.Animation;
@@ -135,182 +139,72 @@ public class AnimationBuilder
         return ret;
     }
 
-    public static int lcm(int x, int y)
+    public static void processAnimations(List<Animation> list)
     {
-        int a = (x > y) ? x : y;
-        while (true)
+        List<Animation> oldList = Lists.newArrayList(list);
+        Map<Integer, List<Animation>> splitAnims = Maps.newHashMap();
+        for (Animation anim : oldList)
         {
-            if (a % x == 0 && a % y == 0) break;
-            ++a;
+            splitAnimation(anim, splitAnims);
         }
-        return a;
-    }
-
-    private static boolean isValidForMerge(Animation anim)
-    {
-        for (ArrayList<AnimationComponent> comps : anim.sets.values())
+        list.clear();
+        for (List<Animation> split : splitAnims.values())
         {
-            for (AnimationComponent comp : comps)
-                if (isValidForMultiple(comp)) return true;
+            list.add(mergeAnimations(split));
         }
-        return false;
     }
 
-    private static boolean checkValidForMerge(Animation to, Animation from)
+    private static void splitAnimation(Animation animIn, Map<Integer, List<Animation>> fill)
     {
-        return isValidForMerge(to) && isValidForMerge(from);
-    }
-
-    private static void mergeTo(Animation to, int times)
-    {
-        int x = to.length;
-        for (int i = 1; i < times; i++)
+        for (Entry<String, ArrayList<AnimationComponent>> entry : animIn.sets.entrySet())
         {
-            int length = i * x;
-            int n = 0;
-            sets:
-            for (String s : to.sets.keySet())
+            String key = entry.getKey();
+            ArrayList<AnimationComponent> comps = entry.getValue();
+            int length = length(comps);
+            List<Animation> anims = fill.get(length);
+            if (anims == null) fill.put(length, anims = Lists.newArrayList());
+            Animation newAnim = new Animation();
+            newAnim.name = animIn.name;
+            newAnim.identifier = animIn.identifier;
+            newAnim.loops = animIn.loops;
+            newAnim.priority = animIn.priority;
+            newAnim.sets.put(key, comps);
+            anims.add(newAnim);
+        }
+    }
+
+    private static void addTo(Animation animation, int priority, String part, ArrayList<AnimationComponent> parts)
+    {
+        if (animation.sets.containsKey(part) && animation.priority > priority)
+        {
+            System.err.println("Already have " + part + ", Skipping.");
+        }
+        else animation.sets.put(part, parts);
+    }
+
+    private static Animation mergeAnimations(List<Animation> list)
+    {
+        if (list.isEmpty()) return null;
+        Animation newAnim = new Animation();
+        newAnim.name = list.get(0).name;
+        newAnim.identifier = list.get(0).identifier;
+        newAnim.loops = list.get(0).loops;
+        newAnim.priority = list.get(0).priority;
+        for (Animation anim : list)
+        {
+            for (String part : anim.sets.keySet())
             {
-                ArrayList<AnimationComponent> comps = to.sets.get(s);
-                ArrayList<AnimationComponent> newComps = Lists.newArrayList();
-                for (AnimationComponent comp : comps)
-                {
-                    if (!isValidForMultiple(comp) && n++ != 0)
-                    {
-                        continue sets;
-                    }
-                }
-                for (AnimationComponent comp : comps)
-                {
-                    AnimationComponent newComp = new AnimationComponent();
-                    newComp.hidden = comp.hidden;
-                    newComp.limbBased = comp.limbBased;
-                    newComp.length = comp.length;
-                    newComp.identifier = comp.identifier;
-                    newComp.name = comp.name;
-                    newComp.opacityChange = comp.opacityChange;
-                    newComp.posChange = comp.posChange;
-                    newComp.progressionCoords = comp.progressionCoords;
-                    newComp.rotChange = comp.rotChange;
-                    newComp.scaleChange = comp.scaleChange;
-                    newComp.startKey = comp.startKey + length;
-                    newComps.add(newComp);
-                }
-                comps.addAll(newComps);
+                addTo(newAnim, anim.priority, part, anim.sets.get(part));
             }
         }
+        return newAnim;
     }
 
-    private static void mergeTo(Animation to, Animation from, int times)
+    private static int length(List<AnimationComponent> comps)
     {
-        int y = from.length;
-        for (int i = 0; i < times; i++)
-        {
-            int length = i * y;
-            int n = 0;
-            sets:
-            for (String s : from.sets.keySet())
-            {
-                ArrayList<AnimationComponent> comps = from.sets.get(s);
-                ArrayList<AnimationComponent> toComps = to.sets.get(s);
-                if (toComps == null)
-                {
-                    // Making a new list to merge in.
-                    to.sets.put(s, toComps = Lists.newArrayList());
-                }
-                else
-                {
-                    // Already have animations for this part, we skip it.
-                    continue;
-                }
-                ArrayList<AnimationComponent> newComps = Lists.newArrayList();
-                for (AnimationComponent comp : comps)
-                {
-                    if (!isValidForMultiple(comp) && n++ != 0)
-                    {
-                        continue sets;
-                    }
-                }
-                for (AnimationComponent comp : comps)
-                {
-                    AnimationComponent newComp = new AnimationComponent();
-                    newComp.hidden = comp.hidden;
-                    newComp.limbBased = comp.limbBased;
-                    newComp.length = comp.length;
-                    newComp.identifier = comp.identifier;
-                    newComp.name = comp.name;
-                    newComp.opacityChange = comp.opacityChange;
-                    newComp.posChange = comp.posChange;
-                    newComp.progressionCoords = comp.progressionCoords;
-                    newComp.rotChange = comp.rotChange;
-                    newComp.scaleChange = comp.scaleChange;
-                    newComp.startKey = comp.startKey + length;
-                    newComps.add(newComp);
-                }
-                toComps.addAll(newComps);
-            }
-        }
-    }
-
-    /** Merges animation data from from to to.
-     * 
-     * @param from
-     * @param to */
-    public static void merge(Animation from, Animation to)
-    {
-        to.initLength();
-        from.initLength();
-        int x = to.length;
-        int y = from.length;
-        merge:
-        if (y != x)
-        {
-            int a = lcm(x, y);
-            int f = a / y;
-            int t = a / x;
-
-            boolean validLoop = checkValidForMerge(to, from);
-            if (!validLoop) break merge;
-            // merge the values for to.
-            mergeTo(to, t);
-            to.initLength();
-            // merge the values for from.
-            mergeTo(to, from, f);
-            to.initLength();
-            return;
-        }
-
-        // Prioritize to, if to already has animations for that part,
-        // skip it.
-        for (String s1 : from.sets.keySet())
-            if (!to.sets.containsKey(s1))
-            {
-                to.sets.put(s1, from.sets.get(s1));
-            }
-        to.initLength();
-        to.length = -1;
-    }
-
-    /** @param comp
-     * @return Does this component apply any animations, or just offset the
-     *         position. If the latter, returns false. */
-    private static boolean isValidForMultiple(AnimationComponent comp)
-    {
-        if (comp.startKey != 0) return true;
-        if (!empty(comp.posChange)) return true;
-        if (!empty(comp.rotChange)) return true;
-        if (!empty(comp.scaleChange)) return true;
-        return false;
-    }
-
-    /** Checls if the given array contains all zeros.
-     * 
-     * @param in
-     * @return */
-    private static boolean empty(double[] in)
-    {
-        for (double d : in)
-            if (d != 0) return false;
-        return true;
+        int length = 0;
+        for (AnimationComponent comp : comps)
+            length = Math.max(length, comp.startKey + comp.length);
+        return length;
     }
 }

@@ -193,23 +193,24 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     }
 
     @Override
-    public void preProcessAnimations(Collection<Animation> animations)
+    public void preProcessAnimations(Collection<List<Animation>> animations)
     {
-        for (Animation animation : animations)
+        for (List<Animation> list : animations)
         {
-            for (String s : animation.sets.keySet())
-            {
-                ArrayList<AnimationComponent> components = animation.sets.get(s);
-                for (AnimationComponent comp : components)
+            for (Animation animation : list)
+                for (String s : animation.sets.keySet())
                 {
-                    comp.posOffset[0] /= -16;
-                    comp.posOffset[1] /= -16;
-                    comp.posOffset[2] /= -16;
-                    comp.posChange[0] /= -16;
-                    comp.posChange[1] /= -16;
-                    comp.posChange[2] /= -16;
+                    ArrayList<AnimationComponent> components = animation.sets.get(s);
+                    for (AnimationComponent comp : components)
+                    {
+                        comp.posOffset[0] /= -16;
+                        comp.posOffset[1] /= -16;
+                        comp.posOffset[2] /= -16;
+                        comp.posChange[0] /= -16;
+                        comp.posChange[1] /= -16;
+                        comp.posChange[2] /= -16;
+                    }
                 }
-            }
         }
     }
 

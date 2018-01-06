@@ -5,6 +5,8 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import thut.core.client.render.animation.CapabilityAnimation;
+import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.tabula.components.ModelJson;
 import thut.core.client.render.tabula.model.tabula.TabulaModel;
@@ -59,14 +61,18 @@ public class TabulaWrapper extends ModelBase
             phase = modelj.changer.modifyAnimation((EntityLiving) entityIn, partialTick, phase);
         }
         boolean inSet = false;
-        if (modelj.animationMap.containsKey(phase) || (inSet = renderer.getAnimations().containsKey(phase)))
+        IAnimationHolder animate = entityIn.getCapability(CapabilityAnimation.CAPABILITY, null);
+        if (animate != null)
         {
-            if (!inSet) modelj.startAnimation(phase);
-            else modelj.startAnimation(renderer.getAnimations().get(phase));
-        }
-        else if (modelj.isAnimationInProgress())
-        {
-            modelj.stopAnimation();
+            if (modelj.animationMap.containsKey(phase) || (inSet = renderer.getAnimations().containsKey(phase)))
+            {
+                if (!inSet) modelj.startAnimation(phase, animate);
+                else modelj.startAnimation(renderer.getAnimations().get(phase), animate);
+            }
+            else if (modelj.isAnimationInProgress())
+            {
+                modelj.stopAnimation(animate);
+            }
         }
         renderer.scaleEntity(entityIn, model, ageInTicks - entityIn.ticksExisted);
     }

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -20,6 +21,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.core.client.render.animation.CapabilityAnimation;
+import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IPartTexturer;
 import thut.core.client.render.tabula.model.modelbase.TabulaModelBase;
@@ -41,18 +44,15 @@ public class ModelJson extends TabulaModelBase
      * the above list to get keys */
     public Map<String, Collection<TabulaRenderer>> groupMap      = Maps.newHashMap();
 
-    public ArrayList<Animation>                    animations    = Lists.newArrayList();
     /** Map of names to animations, used to get animations for rendering more
      * easily */
-    public HashMap<String, Animation>              animationMap  = Maps.newHashMap();
+    public HashMap<String, List<Animation>>        animationMap  = Maps.newHashMap();
 
-    public Set<Animation>                          playing       = Sets.newHashSet();
+    private Set<Animation>                         playing       = Sets.newHashSet();
+    private String                                 playingAnimation;
 
     public IPartTexturer                           texturer;
     public IAnimationChanger                       changer;
-    public Animation                               playingAnimation;
-    private float                                  animationTimer;
-    private int                                    animationLength;
 
     public ModelJson(TabulaModel model)
     {
@@ -61,11 +61,13 @@ public class ModelJson extends TabulaModelBase
         textureWidth = model.getTextureWidth();
         textureHeight = model.getTextureHeight();
 
-        animations = model.getAnimations();
+        ArrayList<Animation> animations = model.getAnimations();
 
         for (Animation animation : animations)
         {
-            animationMap.put(animation.name, animation);
+            List<Animation> anims = animationMap.get(animation.name);
+            if (anims == null) animationMap.put(animation.name, anims = Lists.newArrayList());
+            anims.add(animation);
         }
         for (CubeInfo c : model.getCubes())
         {
@@ -81,11 +83,6 @@ public class ModelJson extends TabulaModelBase
         Collections.reverse(groupIdents);
 
         setInitPose();
-    }
-
-    private boolean canRunConcurrent(Animation toRun)
-    {
-        return toRun == playingAnimation;
     }
 
     private TabulaRenderer createModelRenderer(CubeInfo cubeInfo)
@@ -189,16 +186,6 @@ public class ModelJson extends TabulaModelBase
         }
     }
 
-    public int getAnimationLength()
-    {
-        return animationLength;
-    }
-
-    public float getAnimationTimer()
-    {
-        return animationTimer;
-    }
-
     public TabulaRenderer getCube(String name)
     {
         return nameMap.get(name);
@@ -256,115 +243,77 @@ public class ModelJson extends TabulaModelBase
 
             if (playingAnimation != null || !playing.isEmpty())
             {
-                updateAnimation(entity, ageInTicks - entity.ticksExisted);
+                float partialTick = ageInTicks - entity.ticksExisted;
+                EntityLivingBase living = (EntityLivingBase) entity;
+                float f6 = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
+                IAnimationHolder holder = living.getCapability(CapabilityAnimation.CAPABILITY, null);
+                if (holder != null) for (Animation animation : playing)
+                    updateAnimation(holder, animation, entity.ticksExisted, partialTick, f6);
             }
         }
     }
 
-    /** Starts an animation with the id from the Tabula model. if this is called
-     * when an animation is running, it will stop it, and start the new one.
-     *
-     * @since 0.1.0 */
-    public void startAnimation(Animation animation)
+    /** Starts running the given animation.
+     * 
+     * @param id */
+    public void startAnimation(String id, IAnimationHolder animate)
     {
-        if (!canRunConcurrent(animation)) stopAnimation();
-
+        if (!id.equals(playingAnimation)) stopAnimation(animate);
         if (playingAnimation == null)
         {
-            playingAnimation = animation;
-            animationLength = 0;
-
-            if (animation.getLength() < 0)
-            {
-                animation.initLength();
-            }
-            animationLength = animation.getLength();
+            playingAnimation = id;
+            List<Animation> anims = animationMap.get(id);
+            if (anims == null) stopAnimation(animate);
+            else playing.addAll(anims);
         }
     }
 
-    /** Starts an animation with the id from the Tabula model.
-     *
-     * @see net.ilexiconn.llibrary.client.model.tabula.ModelJson
-     * @see net.ilexiconn.llibrary.client.model.tabula.Animation
-     * @see net.ilexiconn.llibrary.client.model.tabula.AnimationComponent
-     * @since 0.1.0 */
-    public void startAnimation(int id)
+    public void startAnimation(List<Animation> list, IAnimationHolder animate)
     {
-        if (playingAnimation == null)
+        if (list == null || list.isEmpty())
         {
-            playingAnimation = animations.get(id);
-
-            for (Entry<String, ArrayList<AnimationComponent>> entry : playingAnimation.sets.entrySet())
-            {
-                for (AnimationComponent component : entry.getValue())
-                {
-                    if (component.startKey + component.length > animationLength)
-                    {
-                        animationLength = component.startKey + component.length;
-                    }
-                }
-            }
+            stopAnimation(animate);
+            return;
         }
-    }
-
-    /** Starts an animation with the id from the Tabula model.
-     *
-     * @see net.ilexiconn.llibrary.client.model.tabula.ModelJson
-     * @see net.ilexiconn.llibrary.client.model.tabula.Animation
-     * @see net.ilexiconn.llibrary.client.model.tabula.AnimationComponent
-     * @since 0.1.0 */
-    public void startAnimation(String id)
-    {
-        if (playingAnimation != null && !id.equals(playingAnimation.name)) stopAnimation();
-
+        String name = list.get(0).name;
+        if (!name.equals(playingAnimation)) stopAnimation(animate);
         if (playingAnimation == null)
         {
-            playingAnimation = animationMap.get(id);
-            animationLength = 0;
-            for (Entry<String, ArrayList<AnimationComponent>> entry : playingAnimation.sets.entrySet())
-            {
-                for (AnimationComponent component : entry.getValue())
-                {
-                    if (component.startKey + component.length > animationLength)
-                    {
-                        animationLength = component.startKey + component.length;
-                    }
-                }
-            }
+            playingAnimation = name;
+            List<Animation> anims = list;
+            playing.addAll(anims);
         }
     }
 
     /** Stop all current running animations.
      *
      * @since 0.1.0 */
-    public void stopAnimation()
+    public void stopAnimation(IAnimationHolder animate)
     {
         playingAnimation = null;
+        this.playing.clear();
+        animate.clean();
     }
 
-    public void stopAnimation(Animation toStop)
+    public void stopAnimation(Animation toStop, IAnimationHolder animate)
     {
         playing.remove(toStop);
+        animate.setStep(toStop, 0);
     }
 
-    public void updateAnimation(Entity entity, float partialTick)
+    public void updateAnimation(IAnimationHolder animate, Animation animation, int tick, float partialTick,
+            float limbSwing)
     {
-        float time1 = 0;
+        int aniTick = animate.getStep(animation);
+        if (aniTick == 0) aniTick = tick;
+        float time1 = aniTick;
         float time2 = 0;
-        {
-            time1 = entity.ticksExisted + partialTick;
-        }
-        EntityLivingBase living = (EntityLivingBase) entity;
-        float f5 = living.prevLimbSwingAmount + (living.limbSwingAmount - living.prevLimbSwingAmount) * partialTick;
-        float f6 = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
-        if (f5 > 1.0F)
-        {
-            f5 = 1.0F;
-        }
-        time2 = f6;
-        time1 = time1 % animationLength;
-        time2 = time2 % animationLength;
-        for (Entry<String, ArrayList<AnimationComponent>> entry : playingAnimation.sets.entrySet())
+        int animationLength = animation.getLength();
+        time2 = limbSwing;
+        time1 = (time1 + partialTick) % animationLength;
+        time2 = (time2 + partialTick) % animationLength;
+        animate.setStep(animation, tick);
+        for (Entry<String, ArrayList<AnimationComponent>> entry : animation.sets.entrySet())
         {
             TabulaRenderer animating = identifierMap.get(entry.getKey());
             for (AnimationComponent component : entry.getValue())
@@ -403,20 +352,6 @@ public class ModelJson extends TabulaModelBase
                     animating.rotateAngleZ += Math.toRadians(component.rotOffset[2]);
 
                 }
-            }
-        }
-
-        animationTimer = (animationTimer + partialTick) % animationLength;
-
-        if (animationTimer > animationLength)
-        {
-            if (playingAnimation.loops)
-            {
-                animationTimer = 0;
-            }
-            else
-            {
-                stopAnimation();
             }
         }
     }

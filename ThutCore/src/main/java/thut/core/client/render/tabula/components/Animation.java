@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -23,9 +24,15 @@ import thut.core.client.render.animation.AnimationRegistry.IPartRenamer;
 @SideOnly(Side.CLIENT)
 public class Animation
 {
+    public final UUID                                     id         = UUID.randomUUID();
+
     public String                                         name       = "";
     public String                                         identifier = "";
     public int                                            length     = -1;
+    /** This is used for sorting animations for determining which components
+     * should take priority when multiple animations are specified for a single
+     * part. */
+    public int                                            priority   = 10;
 
     public boolean                                        loops      = true;
 
@@ -58,6 +65,7 @@ public class Animation
 
     public int getLength()
     {
+        if (length == -1) initLength();
         return length;
     }
 
@@ -68,14 +76,12 @@ public class Animation
 
     public void initLength()
     {
+        length = -1;
         for (Entry<String, ArrayList<AnimationComponent>> entry : sets.entrySet())
         {
             for (AnimationComponent component : entry.getValue())
             {
-                if (component.startKey + component.length > length)
-                {
-                    length = component.startKey + component.length;
-                }
+                length = Math.max(length, component.startKey + component.length);
             }
         }
     }
@@ -83,6 +89,6 @@ public class Animation
     @Override
     public String toString()
     {
-        return name + "|" + identifier + "|" + loops;
+        return name + "|" + identifier + "|" + loops + "|" + getLength();
     }
 }

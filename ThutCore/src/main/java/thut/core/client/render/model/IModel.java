@@ -2,6 +2,7 @@ package thut.core.client.render.model;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -40,7 +41,7 @@ public interface IModel
 
     public HashMap<String, IExtendedModelPart> getParts();
 
-    public void preProcessAnimations(Collection<Animation> animations);
+    public void preProcessAnimations(Collection<List<Animation>> collection);
 
     public Set<String> getHeadParts();
 

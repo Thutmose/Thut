@@ -23,6 +23,7 @@ import thut.api.network.PacketHandler;
 import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
 import thut.api.terrain.TerrainSegment;
+import thut.core.client.render.animation.CapabilityAnimation;
 import thut.core.client.render.particle.ParticleFactory;
 import thut.core.common.CommonProxy;
 import thut.reference.Reference;
@@ -114,22 +115,13 @@ public class ClientProxy extends CommonProxy
     }
 
     @Override
-    public void loadSounds()
-    {
-        try
-        {
-
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+    public void loadSounds() {}
 
     @Override
     public void preinit(FMLPreInitializationEvent e)
     {
-        // ModelLoaderRegistry.registerLoader(ModelFluid.FluidLoader.instance);
+        super.preinit(e);
+        CapabilityAnimation.setup();
     }
 
     @SubscribeEvent
