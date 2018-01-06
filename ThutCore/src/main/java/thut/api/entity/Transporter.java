@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
@@ -208,6 +209,7 @@ public class Transporter
 
     public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
     {
+        if (!DimensionManager.isDimensionRegistered(dimension)) return entity;
         if (entity.isRiding())
         {
             Entity mount = entity.getRidingEntity();
