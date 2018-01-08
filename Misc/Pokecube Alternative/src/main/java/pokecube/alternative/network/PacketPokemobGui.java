@@ -12,7 +12,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import pokecube.alternative.container.belt.BeltPlayerData;
-import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.lib.CompatWrapper;
 
@@ -62,7 +61,7 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
 
     void processMessage(EntityPlayerMP player, PacketPokemobGui message)
     {
-        IPokemobBelt cap = BeltPlayerData.getBelt(player);
+        BeltPlayerData cap = BeltPlayerData.getBelt(player);
         boolean heal = message.data.getBoolean("H");
         if (heal)
         {
@@ -92,7 +91,6 @@ public class PacketPokemobGui implements IMessage, IMessageHandler<PacketPokemob
         }
         PacketSyncBelt packet = new PacketSyncBelt(cap, player.getEntityId());
         PacketHandler.INSTANCE.sendToAll(packet);
-        return;
     }
 
 }

@@ -13,7 +13,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import pokecube.alternative.PokecubeAlternative;
 import pokecube.alternative.container.belt.BeltPlayerData;
-import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.events.handlers.PCEventsHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
@@ -77,7 +76,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
 
     void processMessage(EntityPlayer player, PacketKeyUse message)
     {
-        IPokemobBelt cap = BeltPlayerData.getBelt(player);
+        BeltPlayerData cap = BeltPlayerData.getBelt(player);
         if (message.messageId == OPENCARD)
         {
             player.openGui(PokecubeAlternative.instance, 0, player.getEntityWorld(), 0, 0, 0);

@@ -17,6 +17,7 @@ public class PacketHandler
         INSTANCE.registerMessage(PacketSyncBelt.class, PacketSyncBelt.class, id++, Side.CLIENT);
         INSTANCE.registerMessage(PacketKeyUse.class, PacketKeyUse.class, id++, Side.SERVER);
         INSTANCE.registerMessage(PacketPokemobGui.class, PacketPokemobGui.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(PacketSyncEnabled.class, PacketSyncEnabled.class, id++, Side.CLIENT);
     }
 
 }

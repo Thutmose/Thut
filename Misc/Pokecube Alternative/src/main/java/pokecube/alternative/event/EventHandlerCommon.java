@@ -8,9 +8,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
@@ -20,14 +22,18 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import pokecube.adventures.PokecubeAdv;
+import pokecube.adventures.entity.helper.capabilities.CapabilityHasPokemobs;
 import pokecube.adventures.items.ItemBadge;
 import pokecube.alternative.Config;
 import pokecube.alternative.Reference;
 import pokecube.alternative.container.belt.BeltPlayerData;
+import pokecube.alternative.container.belt.BeltPlayerData.CapWrapper;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.alternative.container.card.CardPlayerData;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
+import pokecube.alternative.network.PacketSyncEnabled;
 import pokecube.core.blocks.pc.InventoryPC;
 import pokecube.core.events.RecallEvent;
 import pokecube.core.events.handlers.PCEventsHandler;
@@ -41,8 +47,9 @@ import thut.lib.CompatWrapper;
 
 public class EventHandlerCommon
 {
+    final static ResourceLocation POKEMOBSCAP  = new ResourceLocation(PokecubeAdv.ID, "pokemobs");
 
-    static HashSet<UUID> syncSchedule = new HashSet<UUID>();
+    static HashSet<UUID>          syncSchedule = new HashSet<UUID>();
 
     public EventHandlerCommon()
     {
@@ -54,9 +61,6 @@ public class EventHandlerCommon
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
         if (player.world.isRemote) return;
-        if (CompatWrapper.isValid(item) && item.hasTagCompound())
-        {
-        }
         if (Config.instance.trainerCard && CompatWrapper.isValid(item) && item.getItem() instanceof ItemBadge
                 && item.hasTagCompound())
         {
@@ -99,6 +103,7 @@ public class EventHandlerCommon
             event.setCanceled(true);
             return;
         }
+        if (!Config.instance.isEnabled) return;
 
         int slotIndex = event.getEntityPlayer().inventory.currentItem;
         if (slotIndex != 0)
@@ -146,6 +151,9 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void PlayerLoggedInEvent(PlayerLoggedInEvent event)
     {
+        if (event.player instanceof EntityPlayerMP) PacketHandler.INSTANCE
+                .sendTo(new PacketSyncEnabled(Config.instance.isEnabled), (EntityPlayerMP) event.player);
+        if (!Config.instance.isEnabled) return;
         Side side = FMLCommonHandler.instance().getEffectiveSide();
         if (side == Side.SERVER)
         {
@@ -154,8 +162,21 @@ public class EventHandlerCommon
     }
 
     @SubscribeEvent
+    public void attachCap(AttachCapabilitiesEvent<Entity> event)
+    {
+        if (!Config.instance.isEnabled) return;
+        if (event.getObject() instanceof EntityPlayer)
+        {
+            CapWrapper wrapper = new CapWrapper();
+            wrapper.setData(new BeltPlayerData());
+            event.addCapability(POKEMOBSCAP, wrapper);
+        }
+    }
+
+    @SubscribeEvent
     public void EntityHurt(LivingHurtEvent event)
     {
+        if (!Config.instance.isEnabled) return;
         if (Config.instance.autoThrow && event.getEntityLiving() instanceof EntityPlayer
                 && CapabilityPokemob.getPokemobFor(event.getSource().getImmediateSource()) != null)
         {
@@ -193,6 +214,7 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void playerTick(PlayerEvent.LivingUpdateEvent event)
     {
+        if (!Config.instance.isEnabled) return;
         if (event.getEntityLiving().world.isRemote) return;
         if (event.getEntity() instanceof EntityPlayer)
         {
@@ -203,7 +225,7 @@ public class EventHandlerCommon
                 syncPokemon(player);
                 for (EntityPlayer player2 : event.getEntity().world.playerEntities)
                 {
-                    IPokemobBelt cap = BeltPlayerData.getBelt(player2);
+                    BeltPlayerData cap = BeltPlayerData.getBelt(player2);
                     PacketHandler.INSTANCE.sendTo(new PacketSyncBelt(cap, player2.getEntityId()),
                             (EntityPlayerMP) player);
                 }
@@ -219,7 +241,9 @@ public class EventHandlerCommon
             Thread.dumpStack();
             return;
         }
-        IPokemobBelt cap = BeltPlayerData.getBelt(player);
+        BeltPlayerData cap = BeltPlayerData.getBelt(player);
+        BeltPlayerData capData = (BeltPlayerData) player.getCapability(CapabilityHasPokemobs.HASPOKEMOBS_CAP, null);
+        capData.wrapper.setData(cap);
         BeltPlayerData.save(player);
         PacketHandler.INSTANCE.sendToAll(new PacketSyncBelt(cap, player.getEntityId()));
     }
@@ -227,9 +251,10 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void startTracking(StartTracking event)
     {
-        if (event.getTarget() instanceof EntityPlayer && event.getEntityPlayer().isServerWorld())
+        if (!Config.instance.isEnabled) return;
+        if (event.getTarget() instanceof EntityPlayerMP && event.getEntityPlayer().isServerWorld())
         {
-            IPokemobBelt cap = BeltPlayerData.getBelt(event.getTarget());
+            BeltPlayerData cap = BeltPlayerData.getBelt(event.getTarget());
             PacketHandler.INSTANCE.sendTo(new PacketSyncBelt(cap, event.getTarget().getEntityId()),
                     (EntityPlayerMP) event.getEntityPlayer());
         }
@@ -238,6 +263,7 @@ public class EventHandlerCommon
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void recallPokemon(RecallEvent event)
     {
+        if (!Config.instance.isEnabled) return;
         IPokemob pokemon = event.recalled;
         if (pokemon == null) return;
         if (pokemon.getPokemonOwner() instanceof EntityPlayer)

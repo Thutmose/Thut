@@ -12,6 +12,8 @@ public class Config extends ConfigBase
 {
     public static Config instance;
 
+    public boolean       isEnabled       = true;
+
     @Configure(category = "client")
     public float         scale           = 1.0f;
     @Configure(category = "client")
@@ -22,10 +24,13 @@ public class Config extends ConfigBase
     public String        beltOffsetSneak = "0.0 0.13125 -0.105";
     @Configure(category = "client")
     public boolean       cooldownMeter   = true;
+
     @Configure(category = "misc")
     public boolean       autoThrow       = true;
     @Configure(category = "misc")
     public boolean       trainerCard     = false;
+    @Configure(category = "misc")
+    public boolean       use             = true;
 
     public final float[] offset          = new float[3];
     public final float[] sneak           = new float[3];
@@ -58,6 +63,7 @@ public class Config extends ConfigBase
         {
             offset[i] = Float.parseFloat(args[i]);
         }
+        isEnabled = use;
     }
 
     @SubscribeEvent

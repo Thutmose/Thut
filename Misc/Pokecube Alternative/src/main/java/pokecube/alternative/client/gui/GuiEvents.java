@@ -9,18 +9,18 @@ import com.google.common.collect.Maps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent.Post;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.MouseInputEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import pokecube.alternative.Config;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketPokemobGui;
 
@@ -40,20 +40,6 @@ public class GuiEvents
         MinecraftForge.EVENT_BUS.register(new GuiBattleHandler());
     }
 
-    @SideOnly(value = Side.CLIENT)
-    @SubscribeEvent
-    public void guiPostAction(GuiScreenEvent.ActionPerformedEvent.Post event)
-    {
-        if (event.getGui() instanceof GuiInventory)
-        {
-            // if (event.getButton().id == 42)
-            // {
-            // PacketHandler.INSTANCE.sendToServer(new
-            // PacketOpenPokemonInventory());
-            // }
-        }
-    }
-
     GuiScreen        lastcontainer;
     GuiPlayerPokemon gui;
 
@@ -61,6 +47,7 @@ public class GuiEvents
     @SubscribeEvent
     public void guiEvent(GuiScreenEvent event)
     {
+        if (!Config.instance.isEnabled) return;
         if (event.getGui() == gui) return;
         String guiClass;
         if (event.getGui() instanceof GuiContainer

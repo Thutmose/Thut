@@ -54,6 +54,12 @@ public class KeyHandler
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
+        if (Config.instance.trainerCard && openCard.isPressed())
+        {
+            PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.OPENCARD, -1);
+            PacketHandler.INSTANCE.sendToServer(packet);
+        }
+        if (!Config.instance.isEnabled) return;
         sendOutPoke = ClientProxyPokecube.mobBack;
         nextPoke = ClientProxyPokecube.nextMove;
         prevPoke = ClientProxyPokecube.previousMove;
@@ -89,11 +95,6 @@ public class KeyHandler
             else state = (state + 1) % 3;
             GuiPokemonBar.showAllTags = (state & 2) > 0;
             GuiPokemonBar.showSelectedTag = (state & 1) > 0;
-        }
-        if (Config.instance.trainerCard && openCard.isPressed())
-        {
-            PacketKeyUse packet = new PacketKeyUse(PacketKeyUse.OPENCARD, -1);
-            PacketHandler.INSTANCE.sendToServer(packet);
         }
         if (sendOutPoke.isPressed())
         {

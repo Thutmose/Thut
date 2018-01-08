@@ -5,7 +5,6 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 
 import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -14,22 +13,15 @@ import pokecube.alternative.client.render.BeltRenderer;
 
 public class BeltOverlayEventHandler
 {
-
-    private Set<RenderPlayer> addedBaubles = Sets.newHashSet();
-
-    @SubscribeEvent
-    public void renderGameOverlay(RenderGameOverlayEvent event)
-    {
-
-    }
+    private Set<RenderPlayer> renderers = Sets.newHashSet();
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void addBaubleRender(RenderPlayerEvent.Post event)
     {
-        if (addedBaubles.contains(event.getRenderer())) { return; }
+        if (renderers.contains(event.getRenderer())) { return; }
         event.getRenderer().addLayer(new BeltRenderer(event.getRenderer()));
-        addedBaubles.add(event.getRenderer());
+        renderers.add(event.getRenderer());
     }
 
 }

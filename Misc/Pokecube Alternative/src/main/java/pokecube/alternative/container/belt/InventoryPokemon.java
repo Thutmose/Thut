@@ -198,7 +198,7 @@ public class InventoryPokemon implements IInventory
         {
             if (player.get().isServerWorld())
             {
-                IPokemobBelt cap = BeltPlayerData.getBelt(player.get());
+                BeltPlayerData cap = BeltPlayerData.getBelt(player.get());
                 PacketHandler.INSTANCE.sendToAll(new PacketSyncBelt(cap, player.get().getEntityId()));
             }
         }

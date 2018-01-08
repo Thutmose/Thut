@@ -39,6 +39,7 @@ public class BeltRenderer implements LayerRenderer<EntityLivingBase>
     public void doRenderLayer(EntityLivingBase entitylivingbaseIn, float limbSwing, float limbSwingAmount,
             float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale)
     {
+        if (!Config.instance.isEnabled) return;
         EntityPlayer player = (EntityPlayer) entitylivingbaseIn;
         IPokemobBelt cap = BeltPlayerData.getBelt(player);
         int brightness = entitylivingbaseIn.getBrightnessForRender();
