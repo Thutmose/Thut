@@ -45,6 +45,7 @@ public class GuiBattleHandler
     @SubscribeEvent(receiveCanceled = false)
     public void drawSelected(GuiEvent.RenderSelectedInfo evt)
     {
+        if (!Config.instance.isEnabled) return;
         IPokemob pokemob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
         if (pokemob == null) return;
         Minecraft mc = Minecraft.getMinecraft();
@@ -195,6 +196,7 @@ public class GuiBattleHandler
     @SubscribeEvent(receiveCanceled = false)
     public void drawTarget(GuiEvent.RenderTargetInfo evt)
     {
+        if (!Config.instance.isEnabled) return;
         IPokemob pokemob = GuiDisplayPokecubeInfo.instance().getCurrentPokemob();
         if (pokemob == null) return;
         EntityLivingBase entity = pokemob.getEntity().getAttackTarget();
@@ -255,6 +257,7 @@ public class GuiBattleHandler
 
     private void drawHealth(EntityLivingBase entity)
     {
+        if (!Config.instance.isEnabled) return;
         IPokemob pokemob = CapabilityPokemob.getPokemobFor(entity);
         if (entity == null) { return; }
         Minecraft mc = Minecraft.getMinecraft();

@@ -45,7 +45,8 @@ public class GuiPokemonBar extends Gui
     public void onRenderPokemonBar(RenderGameOverlayEvent event)
     {
         // Make sure that the bar renders after the experince bar
-        if (event.isCancelable() || event.getType() != RenderGameOverlayEvent.ElementType.EXPERIENCE
+        if (!Config.instance.isEnabled || event.isCancelable()
+                || event.getType() != RenderGameOverlayEvent.ElementType.EXPERIENCE
                 || mc.currentScreen instanceof GuiChat) { return; }
         int i, j;
         GL11.glPushMatrix();
