@@ -12,7 +12,6 @@ import pokecube.alternative.client.gui.GuiCard;
 import pokecube.alternative.client.gui.GuiEvents;
 import pokecube.alternative.client.gui.GuiPokemonBar;
 import pokecube.alternative.client.keybindings.KeyHandler;
-import pokecube.alternative.event.BeltOverlayEventHandler;
 
 public class ClientProxy extends CommonProxy
 {
@@ -30,7 +29,6 @@ public class ClientProxy extends CommonProxy
         super.init(event);
         MinecraftForge.EVENT_BUS.register(new GuiEvents());
         MinecraftForge.EVENT_BUS.register(new KeyHandler());
-        MinecraftForge.EVENT_BUS.register(new BeltOverlayEventHandler());
     }
 
     @Override
