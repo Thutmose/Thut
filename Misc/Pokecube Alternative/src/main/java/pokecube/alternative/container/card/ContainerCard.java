@@ -4,6 +4,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import pokecube.adventures.items.ItemBadge;
+import pokecube.alternative.Config;
+import pokecube.core.utils.PokeType;
 import thut.core.common.handlers.PlayerDataHandler;
 
 public class ContainerCard extends Container
@@ -19,6 +23,25 @@ public class ContainerCard extends Container
         {
             this.addSlotToContainer(new Slot(inv, i1, dx + i1 * size, dy)
             {
+                @Override
+                public boolean isItemValid(ItemStack stack)
+                {
+                    if (stack.isEmpty()) return true;
+                    if (!(stack.getItem() instanceof ItemBadge)) return false;
+                    int index = -1;
+                    PokeType type = PokeType.values()[stack.getItemDamage()];
+                    for (int i = 0; i < 8; i++)
+                    {
+                        if (Config.instance.badgeOrder[i].equalsIgnoreCase(type.name))
+                        {
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (index != this.getSlotIndex()) return false;
+                    return true;
+                }
+
                 @Override
                 public boolean canTakeStack(EntityPlayer playerIn)
                 {
