@@ -1,11 +1,8 @@
 package pokecube.alternative.client.gui;
 
-import java.io.IOException;
-
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.InventoryEffectRenderer;
@@ -15,6 +12,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import pokecube.alternative.Config;
 import pokecube.alternative.Reference;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
@@ -40,44 +38,15 @@ public class GuiCard extends InventoryEffectRenderer
         super(new ContainerCard(player));
     }
 
-    /** Called from the main game loop to update the screen. */
-    @Override
-    public void updateScreen()
-    {
-        super.updateScreen();
-    }
-
-    /** Adds the buttons (and other controls) to the screen in question. */
-    @Override
-    public void initGui()
-    {
-        this.buttonList.clear();
-        super.initGui();
-    }
-
-    /** Draw the foreground layer for the GuiContainer (everything in front of
-     * the items) */
-    @Override
-    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
-    {
-        super.drawGuiContainerForegroundLayer(mouseX, mouseY);
-    }
-
     /** Draws the screen and all the components in it. */
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks)
     {
+        this.drawDefaultBackground();
         super.drawScreen(mouseX, mouseY, partialTicks);
         this.oldMouseX = mouseX;
         this.oldMouseY = mouseY;
-    }
-
-    /** Draws either a gradient over the background screen (when it exists) or a
-     * flat gradient over background.png */
-    @Override
-    public void drawDefaultBackground()
-    {
-        super.drawDefaultBackground();
+        this.renderHoveredToolTip(mouseX, mouseY);
     }
 
     @Override
@@ -93,6 +62,12 @@ public class GuiCard extends InventoryEffectRenderer
         int playerY = 63;
         GuiInventory.drawEntityOnScreen(i + playerX, j + playerY, 25, i + 51 - this.oldMouseX,
                 j + 75 - 50 - this.oldMouseY, this.mc.player);
+
+        /** If config isn't enabled, there is no belt to render mobs from, so
+         * return early. */
+        if (!Config.instance.isEnabled) return;
+
+        /** Render the mobs in the belt. */
         IPokemobBelt belt = BeltPlayerData.getBelt(this.mc.player);
         String name = this.mc.player.getDisplayNameString();
         drawString(fontRenderer, name, i + 7, j + 28, 0xffffff);
@@ -148,18 +123,5 @@ public class GuiCard extends InventoryEffectRenderer
             GL11.glPopMatrix();
             GL11.glPopMatrix();
         }
-    }
-
-    /** Called when the mouse is clicked. Args : mouseX, mouseY,
-     * clickedButton */
-    @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
-    {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
-    }
-
-    @Override
-    protected void actionPerformed(GuiButton button)
-    {
     }
 }

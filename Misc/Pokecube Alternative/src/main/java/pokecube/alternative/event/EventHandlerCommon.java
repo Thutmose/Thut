@@ -7,7 +7,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -24,13 +23,11 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import pokecube.adventures.PokecubeAdv;
 import pokecube.adventures.entity.helper.capabilities.CapabilityHasPokemobs;
-import pokecube.adventures.items.ItemBadge;
 import pokecube.alternative.Config;
 import pokecube.alternative.Reference;
 import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.BeltPlayerData.CapWrapper;
 import pokecube.alternative.container.belt.IPokemobBelt;
-import pokecube.alternative.container.card.CardPlayerData;
 import pokecube.alternative.network.PacketHandler;
 import pokecube.alternative.network.PacketSyncBelt;
 import pokecube.alternative.network.PacketSyncEnabled;
@@ -42,7 +39,6 @@ import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import thut.api.maths.Vector3;
-import thut.core.common.handlers.PlayerDataHandler;
 import thut.lib.CompatWrapper;
 
 public class EventHandlerCommon
@@ -61,50 +57,6 @@ public class EventHandlerCommon
         ItemStack item = event.getItemStack();
         EntityPlayer player = event.getEntityPlayer();
         if (player.world.isRemote) return;
-        if (Config.instance.trainerCard && CompatWrapper.isValid(item) && item.getItem() instanceof ItemBadge
-                && item.hasTagCompound())
-        {
-            CardPlayerData data = PlayerDataHandler.getInstance().getPlayerData(player).getData(CardPlayerData.class);
-            NBTTagCompound tag = item.getTagCompound();
-            String type = tag.getString("type");
-            int index = -1;
-            switch (type)
-            {
-            case "badgesteel":
-                index = 0;
-                break;
-            case "badgeghost":
-                index = 1;
-                break;
-            case "badgeflying":
-                index = 2;
-                break;
-            case "badgeground":
-                index = 3;
-                break;
-            case "badgeice":
-                index = 4;
-                break;
-            case "badgefighting":
-                index = 5;
-                break;
-            case "badgefire":
-                index = 6;
-                break;
-            case "badgebug":
-                index = 7;
-                break;
-            }
-            if (index == -1 || CompatWrapper.isValid(data.inventory.getStackInSlot(index))) return;
-            int slotIndex = event.getEntityPlayer().inventory.currentItem;
-            data.inventory.setInventorySlotContents(index, item.copy());
-            player.inventory.setInventorySlotContents(slotIndex, CompatWrapper.nullStack);
-            PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), data.getIdentifier());
-            event.setCanceled(true);
-            return;
-        }
-        if (!Config.instance.isEnabled) return;
-
         int slotIndex = event.getEntityPlayer().inventory.currentItem;
         if (slotIndex != 0)
         {
@@ -153,7 +105,6 @@ public class EventHandlerCommon
     {
         if (event.player instanceof EntityPlayerMP) PacketHandler.INSTANCE
                 .sendTo(new PacketSyncEnabled(Config.instance.isEnabled), (EntityPlayerMP) event.player);
-        if (!Config.instance.isEnabled) return;
         Side side = FMLCommonHandler.instance().getEffectiveSide();
         if (side == Side.SERVER)
         {
@@ -164,7 +115,6 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void attachCap(AttachCapabilitiesEvent<Entity> event)
     {
-        if (!Config.instance.isEnabled) return;
         if (event.getObject() instanceof EntityPlayer)
         {
             CapWrapper wrapper = new CapWrapper();
@@ -176,7 +126,6 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void EntityHurt(LivingHurtEvent event)
     {
-        if (!Config.instance.isEnabled) return;
         if (Config.instance.autoThrow && event.getEntityLiving() instanceof EntityPlayer
                 && CapabilityPokemob.getPokemobFor(event.getSource().getImmediateSource()) != null)
         {
@@ -214,7 +163,6 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void playerTick(PlayerEvent.LivingUpdateEvent event)
     {
-        if (!Config.instance.isEnabled) return;
         if (event.getEntityLiving().world.isRemote) return;
         if (event.getEntity() instanceof EntityPlayer)
         {
@@ -251,7 +199,6 @@ public class EventHandlerCommon
     @SubscribeEvent
     public void startTracking(StartTracking event)
     {
-        if (!Config.instance.isEnabled) return;
         if (event.getTarget() instanceof EntityPlayerMP && event.getEntityPlayer().isServerWorld())
         {
             BeltPlayerData cap = BeltPlayerData.getBelt(event.getTarget());
@@ -263,7 +210,6 @@ public class EventHandlerCommon
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void recallPokemon(RecallEvent event)
     {
-        if (!Config.instance.isEnabled) return;
         IPokemob pokemon = event.recalled;
         if (pokemon == null) return;
         if (pokemon.getPokemonOwner() instanceof EntityPlayer)

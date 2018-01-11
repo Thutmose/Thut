@@ -12,6 +12,7 @@ public class ConfigHandler
     public static int     controllerProduction  = 16;
     public static int     maxHeight             = 5;
     public static int     maxRadius             = 2;
+    public static boolean hackyRender           = false;
     public static boolean jitterfix             = true;
 
     public static void load(Configuration conf)
@@ -34,8 +35,13 @@ public class ConfigHandler
         controllerProduction = conf.getInt("controllerProduction", "Lift Settings", 16, 0, 5000,
                 "T/t produced by the controller blocks");
         maxHeight = conf.get("Lift Settings", "maxHeight", 5, "Max allowed height of a lift.").getInt();
-        maxRadius= conf.get("Lift Settings", "maxRadius", 2, "Max allowed radius of a lift (2 gives 5x5 as maximum).").getInt();
-        LiftInteractHandler.DROPSPARTS = conf.getBoolean("dropsParts", "Lift Settings", true, "Does lift drop elevator blocks on disassemble");
+        maxRadius = conf.get("Lift Settings", "maxRadius", 2, "Max allowed radius of a lift (2 gives 5x5 as maximum).")
+                .getInt();
+        LiftInteractHandler.DROPSPARTS = conf.getBoolean("dropsParts", "Lift Settings", true,
+                "Does lift drop elevator blocks on disassemble");
+        hackyRender = conf.getBoolean("hackyRender", "Lift Settings", hackyRender,
+                "Does Lift use abnormal rendering, if true, this fixes a vanilla bug with it going invisible at certain locations, "
+                        + "this is bad for FPS if there are lots of them though.");
         conf.save();
     }
 

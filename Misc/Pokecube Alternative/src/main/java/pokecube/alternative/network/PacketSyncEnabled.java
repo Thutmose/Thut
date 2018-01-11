@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pokecube.alternative.Config;
+import pokecube.core.interfaces.PokecubeMod;
 
 public class PacketSyncEnabled implements IMessage, IMessageHandler<PacketSyncEnabled, IMessage>
 {
@@ -52,6 +53,7 @@ public class PacketSyncEnabled implements IMessage, IMessageHandler<PacketSyncEn
     @SideOnly(Side.CLIENT)
     void processMessage(PacketSyncEnabled message)
     {
+        if (PokecubeMod.debug) PokecubeMod.log("Setting Enabled State to: " + message.var);
         Config.instance.isEnabled = message.var;
     }
 

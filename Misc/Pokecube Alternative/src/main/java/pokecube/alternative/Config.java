@@ -1,39 +1,63 @@
 package pokecube.alternative;
 
 import java.io.File;
+import java.util.logging.Level;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import pokecube.core.interfaces.PokecubeMod;
 import thut.core.common.config.ConfigBase;
 import thut.core.common.config.Configure;
 
 public class Config extends ConfigBase
 {
-    public static Config instance;
+    public static Config    instance;
 
-    public boolean       isEnabled       = true;
+    private static String[] DEFAULTBADGES   = { //@formatter:off
+            "steel", 
+            "ghost", 
+            "flying", 
+            "ground", 
+            "ice", 
+            "fighting", 
+            "fire", 
+            "bug" 
+            };//@formatter:on
+
+    public boolean          isEnabled       = true;
 
     @Configure(category = "client")
-    public float         scale           = 1.0f;
+    public float            scale           = 1.0f;
     @Configure(category = "client")
-    public int           shift           = 0;
+    public int              shift           = 0;
     @Configure(category = "client")
-    public String        beltOffset      = "0 0 -0.6";
+    public String           beltOffset      = "0 0 -0.6";
     @Configure(category = "client")
-    public String        beltOffsetSneak = "0.0 0.13125 -0.105";
+    public String           beltOffsetSneak = "0.0 0.13125 -0.105";
     @Configure(category = "client")
-    public boolean       cooldownMeter   = true;
+    public boolean          cooldownMeter   = true;
 
     @Configure(category = "misc")
-    public boolean       autoThrow       = true;
+    public boolean          autoThrow       = true;
     @Configure(category = "misc")
-    public boolean       trainerCard     = false;
+    public boolean          trainerCard     = false;
+    @Configure(category = "misc", needsMcRestart = true)
+    public boolean          use             = true;
     @Configure(category = "misc")
-    public boolean       use             = true;
+    public String[]         badgeOrder      = { //@formatter:off
+            "steel", 
+            "ghost", 
+            "flying", 
+            "ground", 
+            "ice", 
+            "fighting", 
+            "fire", 
+            "bug" 
+            };//@formatter:on
 
-    public final float[] offset          = new float[3];
-    public final float[] sneak           = new float[3];
+    public final float[]    offset          = new float[3];
+    public final float[]    sneak           = new float[3];
 
     public Config()
     {
@@ -63,7 +87,11 @@ public class Config extends ConfigBase
         {
             offset[i] = Float.parseFloat(args[i]);
         }
-        isEnabled = use;
+        if (badgeOrder.length != DEFAULTBADGES.length)
+        {
+            badgeOrder = DEFAULTBADGES;
+            PokecubeMod.log(Level.WARNING, "badgeOrder must contain 8 badges!");
+        }
     }
 
     @SubscribeEvent

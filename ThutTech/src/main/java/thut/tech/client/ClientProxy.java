@@ -19,7 +19,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import thut.api.ThutBlocks;
-import thut.api.entity.blockentity.RenderBlockEntity;
+import thut.tech.client.render.RenderLift;
 import thut.tech.client.render.RenderLiftController;
 import thut.tech.common.CommonProxy;
 import thut.tech.common.blocks.lift.BlockLift;
@@ -127,7 +127,7 @@ public class ClientProxy extends CommonProxy
             @Override
             public Render<? super EntityLivingBase> createRenderFor(RenderManager manager)
             {
-                return new RenderBlockEntity<>(manager);
+                return new RenderLift(manager);
             }
         });
     }
