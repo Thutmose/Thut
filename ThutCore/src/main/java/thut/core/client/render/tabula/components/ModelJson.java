@@ -16,12 +16,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.core.client.render.animation.CapabilityAnimation;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IPartTexturer;
@@ -48,8 +45,8 @@ public class ModelJson extends TabulaModelBase
      * easily */
     public HashMap<String, List<Animation>>        animationMap  = Maps.newHashMap();
 
-    private Set<Animation>                         playing       = Sets.newHashSet();
-    private String                                 playingAnimation;
+    public Set<Animation>                          playing       = Sets.newHashSet();
+    public String                                  playingAnimation;
 
     public IPartTexturer                           texturer;
     public IAnimationChanger                       changer;
@@ -236,21 +233,6 @@ public class ModelJson extends TabulaModelBase
     {
         super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, rotationYaw, rotationPitch, scaleFactor,
                 entity);
-
-        if (!Minecraft.getMinecraft().isGamePaused())
-        {
-            this.setToInitPose();
-
-            if (playingAnimation != null || !playing.isEmpty())
-            {
-                float partialTick = ageInTicks - entity.ticksExisted;
-                EntityLivingBase living = (EntityLivingBase) entity;
-                float f6 = living.limbSwing - living.limbSwingAmount * (1.0F - partialTick);
-                IAnimationHolder holder = living.getCapability(CapabilityAnimation.CAPABILITY, null);
-                if (holder != null) for (Animation animation : playing)
-                    updateAnimation(holder, animation, entity.ticksExisted, partialTick, f6);
-            }
-        }
     }
 
     /** Starts running the given animation.
@@ -309,9 +291,8 @@ public class ModelJson extends TabulaModelBase
         float time1 = aniTick;
         float time2 = 0;
         int animationLength = animation.getLength();
-        time2 = limbSwing;
+        time2 = limbSwing % animationLength;
         time1 = (time1 + partialTick) % animationLength;
-        time2 = (time2 + partialTick) % animationLength;
         animate.setStep(animation, tick);
         for (Entry<String, ArrayList<AnimationComponent>> entry : animation.sets.entrySet())
         {

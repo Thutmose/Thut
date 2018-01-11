@@ -27,7 +27,7 @@ public class AdvancedFlapAnimation extends Animation
     {
         int flapdur = 0;
         float walkAngle2 = 20;
-        
+
         flapdur = Integer.parseInt(map.getNamedItem("duration").getNodeValue());
         // Can have up to 255 wing segments, more than this would be silly.
         for (int i = 1; i <= 255; i++)
@@ -126,6 +126,9 @@ public class AdvancedFlapAnimation extends Animation
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
+            component1.limbBased = true;
+            component2.limbBased = true;
+            component3.limbBased = true;
             set.add(component1);
             set.add(component2);
             set.add(component3);
@@ -160,6 +163,9 @@ public class AdvancedFlapAnimation extends Animation
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
+            component1.limbBased = true;
+            component2.limbBased = true;
+            component3.limbBased = true;
             set.add(component1);
             set.add(component2);
             set.add(component3);

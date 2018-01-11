@@ -1,5 +1,6 @@
 package thut.core.client.render.wrappers;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
@@ -8,6 +9,7 @@ import net.minecraft.entity.EntityLivingBase;
 import thut.core.client.render.animation.CapabilityAnimation;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IModelRenderer;
+import thut.core.client.render.tabula.components.Animation;
 import thut.core.client.render.tabula.components.ModelJson;
 import thut.core.client.render.tabula.model.tabula.TabulaModel;
 import thut.core.client.render.tabula.model.tabula.TabulaModelParser;
@@ -17,6 +19,8 @@ public class TabulaWrapper extends ModelBase
     final IModelRenderer<?> renderer;
     final TabulaModelParser parser;
     final TabulaModel       model;
+    private ModelJson       modelj;
+    private boolean         init  = false;
     public String           phase = "";
 
     public TabulaWrapper(TabulaModel model, TabulaModelParser parser, IModelRenderer<?> renderer)
@@ -32,10 +36,8 @@ public class TabulaWrapper extends ModelBase
             float headPitch, float scale)
     {
         if (model == null || parser == null) { return; }
+        checkInit();
         GlStateManager.pushMatrix();
-        ModelJson modelj = parser.modelMap.get(model);
-        modelj.changer = renderer.getAnimationChanger();
-        modelj.texturer = renderer.getTexturer();
         modelj.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         GlStateManager.enableCull();
         GlStateManager.popMatrix();
@@ -50,12 +52,9 @@ public class TabulaWrapper extends ModelBase
             float headPitch, float scaleFactor, Entity entityIn)
     {
         if (model == null || parser == null) { return; }
+        checkInit();
         GlStateManager.disableCull();
-        TabulaModelParser pars = ((TabulaModelParser) parser);
-        ModelJson modelj = pars.modelMap.get(model);
-        modelj.texturer = renderer.getTexturer();
-        modelj.changer = renderer.getAnimationChanger();
-        float partialTick = ageInTicks = entityIn.ticksExisted;
+        float partialTick = ageInTicks - entityIn.ticksExisted;
         if (modelj.changer != null)
         {
             phase = modelj.changer.modifyAnimation((EntityLiving) entityIn, partialTick, phase);
@@ -81,11 +80,28 @@ public class TabulaWrapper extends ModelBase
      * float params here are the same second and third as in the
      * setRotationAngles method. */
     @Override
-    public void setLivingAnimations(EntityLivingBase entitylivingbaseIn, float p_78086_2_, float p_78086_3_,
+    public void setLivingAnimations(EntityLivingBase entity, float limbSwing, float limbSwingAmount,
             float partialTickTime)
     {
-        // set.parser.modelMap.get(set.model).setLivingAnimations(entitylivingbaseIn,
-        // p_78086_2_, p_78086_3_,
-        // partialTickTime);
+        checkInit();
+        if (!Minecraft.getMinecraft().isGamePaused())
+        {
+            modelj.setToInitPose();
+            if (modelj.playingAnimation != null || !modelj.playing.isEmpty())
+            {
+                IAnimationHolder holder = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
+                if (holder != null) for (Animation animation : modelj.playing)
+                    modelj.updateAnimation(holder, animation, entity.ticksExisted, partialTickTime, limbSwing);
+            }
+        }
+    }
+
+    private void checkInit()
+    {
+        if (init) return;
+        init = true;
+        modelj = parser.modelMap.get(model);
+        modelj.changer = renderer.getAnimationChanger();
+        modelj.texturer = renderer.getTexturer();
     }
 }

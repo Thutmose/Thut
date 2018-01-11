@@ -121,6 +121,9 @@ public class BiWalkAnimation extends Animation
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
+            component1.limbBased = true;
+            component2.limbBased = true;
+            component3.limbBased = true;
             set.add(component1);
             set.add(component2);
             set.add(component3);
@@ -152,6 +155,9 @@ public class BiWalkAnimation extends Animation
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
+            component1.limbBased = true;
+            component2.limbBased = true;
+            component3.limbBased = true;
             set.add(component1);
             set.add(component2);
             set.add(component3);
@@ -183,6 +189,9 @@ public class BiWalkAnimation extends Animation
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
+            component1.limbBased = true;
+            component2.limbBased = true;
+            component3.limbBased = true;
             set.add(component1);
             set.add(component2);
             set.add(component3);
@@ -214,6 +223,9 @@ public class BiWalkAnimation extends Animation
 
             ArrayList<AnimationComponent> set = Lists.newArrayList();
 
+            component1.limbBased = true;
+            component2.limbBased = true;
+            component3.limbBased = true;
             set.add(component1);
             set.add(component2);
             set.add(component3);

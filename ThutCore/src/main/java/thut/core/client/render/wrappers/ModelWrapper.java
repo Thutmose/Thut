@@ -100,9 +100,6 @@ public class ModelWrapper extends ModelBase implements IModel
     public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
             float headPitch, float scaleFactor, Entity entityIn)
     {
-        float partialTick = ageInTicks - entityIn.ticksExisted;
-        if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
-                .modifyAnimation((EntityLiving) entityIn, partialTick, renderer.getAnimation()));
         HeadInfo info = imodel.getHeadInfo();
         if (info != null)
         {
@@ -111,16 +108,19 @@ public class ModelWrapper extends ModelBase implements IModel
         }
         transformGlobal(renderer.getAnimation(), entityIn, Minecraft.getMinecraft().getRenderPartialTicks(), netHeadYaw,
                 headPitch);
-        updateAnimation(entityIn, renderer.getAnimation(), partialTick, netHeadYaw, headPitch, limbSwing);
     }
 
     /** Used for easily adding entity-dependent animations. The second and third
      * float params here are the same second and third as in the
      * setRotationAngles method. */
     @Override
-    public void setLivingAnimations(EntityLivingBase entitylivingbaseIn, float limbSwing, float limbSwingAmount,
+    public void setLivingAnimations(EntityLivingBase entityIn, float limbSwing, float limbSwingAmount,
             float partialTickTime)
     {
+        if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
+                .modifyAnimation((EntityLiving) entityIn, partialTickTime, renderer.getAnimation()));
+        HeadInfo info = imodel.getHeadInfo();
+        updateAnimation(entityIn, renderer.getAnimation(), partialTickTime, info.headYaw, info.headPitch, limbSwing);
     }
 
     @Override

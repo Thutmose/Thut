@@ -63,8 +63,8 @@ public class PokecubeAlternative
     {
         if (!args.containsKey(Reference.MODID))
         {
-            if (side == Side.CLIENT) Config.instance.isEnabled = false;
-            if (side == Side.SERVER && Config.instance.use) return false;
+            if (side == Side.SERVER) Config.instance.isEnabled = false;
+            if (side == Side.CLIENT && Config.instance.use) return false;
         }
         return true;
     }

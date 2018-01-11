@@ -44,9 +44,8 @@ public class AnimationHelper
         float time1 = aniTick;
         float time2 = 0;
         int animationLength = animation.getLength();
-        time2 = limbSwing;
         time1 = (time1 + partialTick) % animationLength;
-        time2 = (time2 + partialTick) % animationLength;
+        time2 = limbSwing % animationLength;
         animate.setStep(animation, tick);
         if (components != null) for (AnimationComponent component : components)
         {
