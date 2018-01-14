@@ -1,15 +1,10 @@
 package pokecube.alternative.client.gui;
 
-import java.util.UUID;
-
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiChat;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.item.ItemStack;
@@ -23,7 +18,6 @@ import pokecube.alternative.container.belt.BeltPlayerData;
 import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.events.handlers.EventsHandlerClient;
-import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.utils.Tools;
 import thut.lib.CompatWrapper;
@@ -88,15 +82,14 @@ public class GuiPokemonBar extends Gui
             EntityLiving entity = null;
             ItemStack pokemonItemstack = capability.getCube(pokemonNumber);
             if (!CompatWrapper.isValid(pokemonItemstack) && capability.getSlotID(pokemonNumber) == null) continue;
-            IPokemob pokemob = null;
             IPokemob realMob = null;
             boolean inWorld = false;
-            if (pokemob == null && CompatWrapper.isValid(pokemonItemstack))
+            if (CompatWrapper.isValid(pokemonItemstack))
             {
                 try
                 {
-                    pokemob = realMob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
-                    entity = pokemob.getEntity();
+                    realMob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
+                    entity = realMob.getEntity();
                 }
                 catch (Exception e)
                 {
@@ -104,50 +97,8 @@ public class GuiPokemonBar extends Gui
                     e.printStackTrace();
                 }
             }
+            if (entity == null) continue;
 
-            if (pokemob == null && capability.getSlotID(pokemonNumber) != null)
-            {
-                UUID id = capability.getSlotID(pokemonNumber);
-                for (IPokemob testMob : GuiDisplayPokecubeInfo.instance().getPokemobsToDisplay())
-                {
-                    if (testMob != null && testMob.getEntity().getUniqueID().equals(id))
-                    {
-                        pokemob = realMob = testMob;
-                        entity = testMob.getEntity();
-                        inWorld = true;
-                        break;
-                    }
-                }
-            }
-            if (pokemob != null)
-            {
-                pokemob = EventsHandlerClient.getRenderMob(pokemob.getPokedexEntry(), mc.world);
-            }
-
-            if (pokemob == null || entity == null) continue;
-
-            // Set the mob's stance and rotation
-            pokemob.getEntity().rotationYaw = 0;
-            pokemob.getEntity().renderYawOffset = 0;
-            pokemob.getEntity().prevRenderYawOffset = 0;
-            pokemob.getEntity().prevRotationPitch = 0;
-            pokemob.getEntity().ticksExisted = 0;
-            pokemob.getEntity().rotationPitch = 0;
-            pokemob.getEntity().prevRotationYawHead = 0;
-            pokemob.getEntity().rotationYawHead = 0;
-            pokemob.setPokemonAIState(IMoveConstants.SITTING, true);
-            pokemob.getEntity().onGround = true;
-
-            // Get the amount to scale the mob by
-            float mobScale = realMob.getSize();
-            float size = Math.max(realMob.getPokedexEntry().width * mobScale,
-                    realMob.getPokedexEntry().height * mobScale);
-            float zoom = (float) (15f / Math.pow(size, 0.7));
-
-            // Brightness
-            int i1 = 15728880;
-            int j1 = i1 % 65536;
-            int k1 = i1 / 65536;
             if (infoBarsForAll || (infoBarForSelected && selected == pokemonNumber))
             {
                 // Draw background plate.
@@ -208,28 +159,11 @@ public class GuiPokemonBar extends Gui
                 GL11.glPopMatrix();
             }
 
-            // GL Calls to actually draw pokemob
+            // GL Calls to actually draw pokemob's Icon
             GL11.glPushMatrix();
             GL11.glTranslatef(i, j, 10f);
             GL11.glPushMatrix();
-            GL11.glScalef(-zoom, zoom, zoom);
-            GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
-            RenderHelper.enableStandardItemLighting();
-            GL11.glTranslatef(0.0F, (float) pokemob.getEntity().getYOffset(), 0.0F);
-            if (entity.getHealth() == 0)
-            {
-                pokemob.getEntity().deathTime = 2;
-                GL11.glTranslatef(-pokemob.getSize() * pokemob.getPokedexEntry().height * 0.5f, 0.0f, 0.0F);
-            }
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            Minecraft.getMinecraft().getRenderManager().doRenderEntity(pokemob.getEntity(), 0, 0, 0, 0, 1.5F, false);
-            pokemob.getEntity().deathTime = 0;
-            RenderHelper.disableStandardItemLighting();
-            GlStateManager.disableRescaleNormal();
-            GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-            GlStateManager.disableTexture2D();
-            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            EventsHandlerClient.renderIcon(realMob, -10, -12, 16, 16);
             GL11.glPopMatrix();
             GL11.glPopMatrix();
         }
