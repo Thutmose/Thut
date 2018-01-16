@@ -11,9 +11,11 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.registries.GameData;
 import thut.tech.Reference;
 import thut.tech.common.TechCore;
 import thut.tech.common.items.ItemLinker;
+import thut.tech.common.items.RecipeReset;
 
 public class ItemHandler
 {
@@ -29,7 +31,7 @@ public class ItemHandler
     }
 
     public static void registerRecipes()
-    {// TODO 1.12 recipes
+    {
         GameRegistry.addShapedRecipe(new ResourceLocation(Reference.MOD_ID, "linker"),
                 new ResourceLocation(Reference.MOD_ID, "thuttech"), new ItemStack(ItemLinker.instance), "xyx", " x ",
                 "   ", 'x', Items.IRON_INGOT, 'y', Items.REDSTONE);
@@ -41,7 +43,10 @@ public class ItemHandler
                 Items.IRON_INGOT, 'y', Items.REDSTONE);
         GameRegistry.addShapelessRecipe(new ResourceLocation(Reference.MOD_ID, "book"),
                 new ResourceLocation(Reference.MOD_ID, "thuttech"), TechCore.getInfoBook(),
-                Ingredient.fromItems(ItemLinker.instance, Items.BOOK));
+                Ingredient.fromItem(ItemLinker.instance), Ingredient.fromItem(Items.BOOK));
         ItemLinker.liftblocks = new ItemStack(lift, 1, 0);
+        GameData.register_impl(
+                new RecipeReset().setRegistryName(new ResourceLocation(Reference.MOD_ID, "linker_reset")));
+
     }
 }
