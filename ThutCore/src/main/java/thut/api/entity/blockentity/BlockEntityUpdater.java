@@ -354,6 +354,36 @@ public class BlockEntityUpdater
             }
 
         }
+        // Extra stuff to do with players.
+        if (entity instanceof EntityPlayer)
+        {
+            EntityPlayer player = (EntityPlayer) entity;
+
+            if (player.getEntityWorld().isRemote)
+            {
+                // This fixes jitter, need a better way to handle this.
+                if (Minecraft.getMinecraft().gameSettings.viewBobbing
+                        || TickHandler.playerTickTracker.containsKey(player.getUniqueID()))
+                {
+                    TickHandler.playerTickTracker.put(player.getUniqueID(), (int) (System.currentTimeMillis() % 2000));
+                    Minecraft.getMinecraft().gameSettings.viewBobbing = false;
+                }
+            }
+            /** This is for clearing jump values on client. */
+            if (player.getEntityWorld().isRemote) player.getEntityData().setInteger("lastStandTick", player.ticksExisted);
+            if (!player.capabilities.isFlying)
+            {
+                entity.onGround = true;
+                entity.fall(entity.fallDistance, 0);
+                entity.fallDistance = 0;
+            }
+            // Meed to set floatingTickCount to prevent being kicked for flying.
+            if (!player.capabilities.isCreativeMode && !player.getEntityWorld().isRemote)
+            {
+                EntityPlayerMP entityplayer = (EntityPlayerMP) player;
+                entityplayer.connection.floatingTickCount = 0;
+            }
+        }
 
         // If entity has collided, adjust motion accordingly.
         if (temp1.lengthSquared() > 0)
@@ -377,34 +407,6 @@ public class BlockEntityUpdater
             entity.prevPosZ = entity.posZ;
             entity.prevRotationPitch = entity.rotationPitch;
             entity.prevRotationYaw = entity.rotationYaw;
-        }
-        // Extra stuff to do with players.
-        if (entity instanceof EntityPlayer)
-        {
-            EntityPlayer player = (EntityPlayer) entity;
-
-            if (player.getEntityWorld().isRemote)
-            {
-                // This fixes jitter, need a better way to handle this.
-                if (Minecraft.getMinecraft().gameSettings.viewBobbing
-                        || TickHandler.playerTickTracker.containsKey(player.getUniqueID()))
-                {
-                    TickHandler.playerTickTracker.put(player.getUniqueID(), (int) (System.currentTimeMillis() % 2000));
-                    Minecraft.getMinecraft().gameSettings.viewBobbing = false;
-                }
-            }
-            if (!player.capabilities.isFlying)
-            {
-                entity.onGround = true;
-                entity.fall(entity.fallDistance, 0);
-                entity.fallDistance = 0;
-            }
-            // Meed to set floatingTickCount to prevent being kicked for flying.
-            if (!player.capabilities.isCreativeMode && !player.getEntityWorld().isRemote)
-            {
-                EntityPlayerMP entityplayer = (EntityPlayerMP) player;
-                entityplayer.connection.floatingTickCount = 0;
-            }
         }
     }
 }

@@ -233,6 +233,15 @@ public class TickHandler
                 Minecraft.getMinecraft().gameSettings.viewBobbing = true;
             }
         }
+        /** This deals with the massive hunger reduction for standing on the
+         * block entities. */
+        if (event.phase == Phase.END && event.side == Side.CLIENT)
+        {
+            if (event.player.ticksExisted == event.player.getEntityData().getInteger("lastStandTick") + 1)
+            {
+                event.player.onGround = true;
+            }
+        }
     }
 
     public IBlockAccess getWorldCache(int dimension)
