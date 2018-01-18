@@ -1,5 +1,6 @@
 package thut.core.client.render.wrappers;
 
+import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.ModelHolder;
+import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.model.IModel;
 import thut.core.client.render.model.IModelRenderer;
@@ -51,11 +53,11 @@ public class ModelWrapper extends ModelBase implements IModel
         {
             info.currentTick = entityIn.ticksExisted;
         }
-
+        IAnimationChanger animChanger = renderer.getAnimationChanger();
         Set<String> excluded = Sets.newHashSet();
-        if (renderer.getAnimationChanger() != null) for (String partName : imodel.getParts().keySet())
+        if (animChanger != null) for (String partName : imodel.getParts().keySet())
         {
-            if (renderer.getAnimationChanger().isPartHidden(partName, entityIn, false))
+            if (animChanger.isPartHidden(partName, entityIn, false))
             {
                 excluded.add(partName);
             }
@@ -64,6 +66,20 @@ public class ModelWrapper extends ModelBase implements IModel
         {
             IExtendedModelPart part = imodel.getParts().get(partName);
             if (part == null) continue;
+            int[] rgbab = part.getRGBAB();
+            if (animChanger != null)
+            {
+                int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
+                int rgb = animChanger.getColourForPart(partName, entityIn, default_);
+                if (rgb != default_)
+                {
+                    Color col = new Color(rgb);
+                    rgbab[0] = col.getRed();
+                    rgbab[1] = col.getGreen();
+                    rgbab[2] = col.getBlue();
+                }
+            }
+            part.setRGBAB(rgbab);
             try
             {
                 if (renderer.getTexturer() != null)
@@ -106,8 +122,8 @@ public class ModelWrapper extends ModelBase implements IModel
             info.headPitch = headPitch;
             info.headYaw = netHeadYaw;
         }
-        transformGlobal(renderer.getAnimation(), entityIn, Minecraft.getMinecraft().getRenderPartialTicks(), netHeadYaw,
-                headPitch);
+        transformGlobal(renderer.getAnimation(entityIn), entityIn, Minecraft.getMinecraft().getRenderPartialTicks(),
+                netHeadYaw, headPitch);
     }
 
     /** Used for easily adding entity-dependent animations. The second and third
@@ -118,9 +134,10 @@ public class ModelWrapper extends ModelBase implements IModel
             float partialTickTime)
     {
         if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
-                .modifyAnimation((EntityLiving) entityIn, partialTickTime, renderer.getAnimation()));
+                .modifyAnimation((EntityLiving) entityIn, partialTickTime, renderer.getAnimation(entityIn)), entityIn);
         HeadInfo info = imodel.getHeadInfo();
-        updateAnimation(entityIn, renderer.getAnimation(), partialTickTime, info.headYaw, info.headPitch, limbSwing);
+        updateAnimation(entityIn, renderer.getAnimation(entityIn), partialTickTime, info.headYaw, info.headPitch,
+                limbSwing);
     }
 
     @Override
@@ -247,7 +264,30 @@ public class ModelWrapper extends ModelBase implements IModel
             blue = poke.getRGBA()[2];
             alpha = poke.getRGBA()[3];
         }
-        parent.setRGBAB(new int[] { red, green, blue, alpha, brightness });
+        int[] rgbab = parent.getRGBAB();
+        IAnimationChanger animChanger = renderer.getAnimationChanger();
+        if (animChanger != null)
+        {
+            int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
+            int rgb = animChanger.getColourForPart(parent.getName(), entity, default_);
+            if (rgb != default_)
+            {
+                Color col = new Color(rgb);
+                rgbab[0] = col.getRed();
+                rgbab[1] = col.getGreen();
+                rgbab[2] = col.getBlue();
+                rgbab[4] = brightness;
+            }
+        }
+        else
+        {
+            rgbab[0] = red;
+            rgbab[1] = green;
+            rgbab[2] = blue;
+            rgbab[3] = alpha;
+            rgbab[4] = brightness;
+        }
+        parent.setRGBAB(rgbab);
         for (String partName : parent.getSubParts().keySet())
         {
             IExtendedModelPart part = parent.getSubParts().get(partName);

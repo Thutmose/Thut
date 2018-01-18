@@ -42,6 +42,8 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
 
     public int                                 brightness = 15728640;
 
+    private int[]                              rgbab      = new int[5];
+
     public X3dObject(String name)
     {
         this.name = name;
@@ -92,7 +94,12 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
     @Override
     public int[] getRGBAB()
     {
-        return new int[] { red, green, blue, alpha, brightness };
+        rgbab[0] = red;
+        rgbab[1] = green;
+        rgbab[2] = blue;
+        rgbab[3] = alpha;
+        rgbab[4] = brightness;
+        return rgbab;
     }
 
     @Override
@@ -297,8 +304,8 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
     public void setRGBAB(int[] array)
     {
         red = array[0];
-        blue = array[1];
-        green = array[2];
+        green = array[1];
+        blue = array[2];
         alpha = array[3];
         brightness = array[4];
     }

@@ -24,6 +24,26 @@ public class CapabilityAnimation
 {
     public static interface IAnimationHolder
     {
+        /** This is the animation about to be run.
+         * 
+         * @param name */
+        void setPendingAnimation(String name);
+
+        /** Gets the animation about to be run.
+         * 
+         * @return */
+        String getPendingAnimation();
+
+        /** This is the animation that is currently being run.
+         * 
+         * @param name */
+        void setCurrentAnimation(String name);
+
+        /** Gets the animation currently being run.
+         * 
+         * @return */
+        String getCurrentAnimation();
+
         /** the last tick this animation was run. Should return 0 if the
          * animation hasn't been run.
          * 
@@ -38,6 +58,8 @@ public class CapabilityAnimation
          * @param step */
         void setStep(Animation animation, int step);
 
+        Set<Animation> getPlaying();
+
         /** should clear the ticks animations were run on */
         void clean();
     }
@@ -45,6 +67,9 @@ public class CapabilityAnimation
     public static class DefaultImpl implements IAnimationHolder, ICapabilityProvider
     {
         Map<UUID, Integer> stepsMap = Maps.newHashMap();
+        Set<Animation>     playing  = Sets.newHashSet();
+        private String     pending;
+        private String     current;
 
         @Override
         public int getStep(Animation animation)
@@ -63,6 +88,8 @@ public class CapabilityAnimation
         public void clean()
         {
             stepsMap.clear();
+            pending = current = null;
+            this.playing.clear();
         }
 
         @Override
@@ -76,6 +103,36 @@ public class CapabilityAnimation
         {
             if (hasCapability(capability, facing)) return CAPABILITY.cast(this);
             return null;
+        }
+
+        @Override
+        public void setPendingAnimation(String name)
+        {
+            this.pending = name;
+        }
+
+        @Override
+        public String getPendingAnimation()
+        {
+            return this.pending;
+        }
+
+        @Override
+        public Set<Animation> getPlaying()
+        {
+            return playing;
+        }
+
+        @Override
+        public void setCurrentAnimation(String name)
+        {
+            this.current = name;
+        }
+
+        @Override
+        public String getCurrentAnimation()
+        {
+            return this.current;
         }
     }
 

@@ -8,13 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.relauncher.Side;
@@ -44,9 +42,6 @@ public class ModelJson extends TabulaModelBase
     /** Map of names to animations, used to get animations for rendering more
      * easily */
     public HashMap<String, List<Animation>>        animationMap  = Maps.newHashMap();
-
-    public Set<Animation>                          playing       = Sets.newHashSet();
-    public String                                  playingAnimation;
 
     public IPartTexturer                           texturer;
     public IAnimationChanger                       changer;
@@ -188,9 +183,9 @@ public class ModelJson extends TabulaModelBase
         return nameMap.get(name);
     }
 
-    public boolean isAnimationInProgress()
+    public boolean isAnimationInProgress(IAnimationHolder animate)
     {
-        return playingAnimation != null || !playing.isEmpty();
+        return !animate.getPlaying().isEmpty();
     }
 
     @Override
@@ -240,13 +235,13 @@ public class ModelJson extends TabulaModelBase
      * @param id */
     public void startAnimation(String id, IAnimationHolder animate)
     {
-        if (!id.equals(playingAnimation)) stopAnimation(animate);
-        if (playingAnimation == null)
+        if (!id.equals(animate.getCurrentAnimation())) stopAnimation(animate);
+        if (animate.getPlaying().isEmpty())
         {
-            playingAnimation = id;
+            animate.setCurrentAnimation(id);
             List<Animation> anims = animationMap.get(id);
             if (anims == null) stopAnimation(animate);
-            else playing.addAll(anims);
+            else animate.getPlaying().addAll(anims);
         }
     }
 
@@ -258,12 +253,12 @@ public class ModelJson extends TabulaModelBase
             return;
         }
         String name = list.get(0).name;
-        if (!name.equals(playingAnimation)) stopAnimation(animate);
-        if (playingAnimation == null)
+        if (!name.equals(animate.getCurrentAnimation())) stopAnimation(animate);
+        if (animate.getPlaying().isEmpty())
         {
-            playingAnimation = name;
+            animate.setCurrentAnimation(name);
             List<Animation> anims = list;
-            playing.addAll(anims);
+            animate.getPlaying().addAll(anims);
         }
     }
 
@@ -272,14 +267,12 @@ public class ModelJson extends TabulaModelBase
      * @since 0.1.0 */
     public void stopAnimation(IAnimationHolder animate)
     {
-        playingAnimation = null;
-        this.playing.clear();
         animate.clean();
     }
 
     public void stopAnimation(Animation toStop, IAnimationHolder animate)
     {
-        playing.remove(toStop);
+        animate.getPlaying().remove(toStop);
         animate.setStep(toStop, 0);
     }
 

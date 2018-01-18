@@ -20,8 +20,7 @@ public class TabulaWrapper extends ModelBase
     final TabulaModelParser parser;
     final TabulaModel       model;
     private ModelJson       modelj;
-    private boolean         init  = false;
-    public String           phase = "";
+    private boolean         init = false;
 
     public TabulaWrapper(TabulaModel model, TabulaModelParser parser, IModelRenderer<?> renderer)
     {
@@ -55,12 +54,14 @@ public class TabulaWrapper extends ModelBase
         checkInit();
         GlStateManager.disableCull();
         float partialTick = ageInTicks - entityIn.ticksExisted;
+        IAnimationHolder animate = entityIn.getCapability(CapabilityAnimation.CAPABILITY, null);
+        String phase = animate != null ? animate.getPendingAnimation() : "idle";
+        if (phase == null) phase = "idle";
         if (modelj.changer != null)
         {
             phase = modelj.changer.modifyAnimation((EntityLiving) entityIn, partialTick, phase);
         }
         boolean inSet = false;
-        IAnimationHolder animate = entityIn.getCapability(CapabilityAnimation.CAPABILITY, null);
         if (animate != null)
         {
             if (modelj.animationMap.containsKey(phase) || (inSet = renderer.getAnimations().containsKey(phase)))
@@ -68,7 +69,7 @@ public class TabulaWrapper extends ModelBase
                 if (!inSet) modelj.startAnimation(phase, animate);
                 else modelj.startAnimation(renderer.getAnimations().get(phase), animate);
             }
-            else if (modelj.isAnimationInProgress())
+            else if (modelj.isAnimationInProgress(animate))
             {
                 modelj.stopAnimation(animate);
             }
@@ -86,12 +87,12 @@ public class TabulaWrapper extends ModelBase
         checkInit();
         if (!Minecraft.getMinecraft().isGamePaused())
         {
+            IAnimationHolder animate = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
             modelj.setToInitPose();
-            if (modelj.playingAnimation != null || !modelj.playing.isEmpty())
+            if (animate != null && !animate.getPlaying().isEmpty())
             {
-                IAnimationHolder holder = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
-                if (holder != null) for (Animation animation : modelj.playing)
-                    modelj.updateAnimation(holder, animation, entity.ticksExisted, partialTickTime, limbSwing);
+                for (Animation animation : animate.getPlaying())
+                    modelj.updateAnimation(animate, animation, entity.ticksExisted, partialTickTime, limbSwing);
             }
         }
     }

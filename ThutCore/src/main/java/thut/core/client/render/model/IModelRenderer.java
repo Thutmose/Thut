@@ -9,6 +9,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
+import thut.core.client.render.animation.CapabilityAnimation;
+import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.tabula.components.Animation;
 
 public interface IModelRenderer<T extends EntityLiving>
@@ -80,13 +82,22 @@ public interface IModelRenderer<T extends EntityLiving>
 
     void setAnimationChanger(IAnimationChanger changer);
 
-    String getAnimation();
+    default String getAnimation(Entity entityIn)
+    {
+        IAnimationHolder holder = entityIn.getCapability(CapabilityAnimation.CAPABILITY, null);
+        if (holder != null) return holder.getPendingAnimation();
+        return "idle";
+    }
 
-    boolean hasAnimation(String phase);
+    boolean hasAnimation(String phase, Entity entity);
 
     void renderStatus(T entity, double d, double d1, double d2, float f, float partialTick);
 
-    void setAnimation(String phase);
+    default void setAnimation(String phase, Entity entity)
+    {
+        IAnimationHolder holder = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
+        if (holder != null) holder.setPendingAnimation(phase);
+    }
 
     void scaleEntity(Entity entity, IModel model, float partialTick);
 
