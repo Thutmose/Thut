@@ -17,6 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import thut.api.ThutBlocks;
+import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 
@@ -81,7 +82,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
         {
             renderengine.bindTexture(font);
         }
-
+        float dz = -0.001f;
         boolean minus = number >= 64;
         if (minus) number -= 64;
 
@@ -94,7 +95,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
 
         if (actFloor > 8)
         {
-            GL11.glTranslated(x + 0.01, y + 0.06, -0.001 * (5 + 1));
+            GL11.glTranslated(x + 0.01, y + 0.06, dz * (5 + 1));
             float dx = minus ? -0.03f : 0;
             float dy = -0.0f;
             t.getBuffer().pos(0.15 + dx, 0.15 + dy, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
@@ -123,7 +124,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
         }
         else
         {
-            GL11.glTranslated(x + 0.05, y + 0.06, -0.001 * (5 + 1));
+            GL11.glTranslated(x + 0.05, y + 0.06, dz * (5 + 1));
             t.getBuffer().pos(0.15, 0.15, 0).tex(uvs[0], uvs[2]).color(0, 0, 0, 255).endVertex();
             t.getBuffer().pos(0.15, 0.0, 0).tex(uvs[0], uvs[3]).color(0, 0, 0, 255).endVertex();
 
@@ -159,9 +160,11 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
                 if (wide) renderengine.bindTexture(overlay_1);
                 else renderengine.bindTexture(overlay);
             }
+            float dz = -0.001f;
+            if(monitor.getWorld() instanceof BlockEntityWorld) dz = -0.005f;
             floor -= 1;
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
-            GL11.glTranslated(x, y, -0.0006);
+            GL11.glTranslated(x, y, dz);
             Tessellator t = Tessellator.getInstance();
             t.getBuffer().begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 

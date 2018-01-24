@@ -138,14 +138,23 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
         int button = getButtonFromClick(side, hitX, hitY, hitZ);
         boolean valid = lift != null && lift.hasFloors[button - 1];
-        if (lift != null && getWorld().isRemote && isSideOn(side))
+        if (lift != null && isSideOn(side))
         {
-            PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
-            buffer.writeBlockPos(getPos());
-            buffer.writeInt(button);
-            buffer.writeBoolean(callFaces[side.ordinal()]);
-            ServerPacket packet = new ServerPacket(buffer);
-            PacketPipeline.sendToServer(packet);
+            if (getWorld() instanceof BlockEntityWorld)
+            {
+                this.buttonPress(button, callFaces[side.ordinal()]);
+                this.calledFloor = this.lift.getDestinationFloor();
+            }
+            else
+            {
+                PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
+                buffer.writeBlockPos(getPos());
+                buffer.writeInt(button);
+                buffer.writeBoolean(callFaces[side.ordinal()]);
+                ServerPacket packet = new ServerPacket(buffer);
+                PacketPipeline.sendToServer(packet);
+            }
+
         }
         if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
         return valid;
@@ -303,7 +312,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         this.lift = lift;
         this.liftID = lift.getUniqueID();
-        if (!world.isRemote) PacketHandler.sendTileUpdate(this);
+        if (world != null && !world.isRemote) PacketHandler.sendTileUpdate(this);
     }
 
     public void setSide(EnumFacing side, boolean flag)

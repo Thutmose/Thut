@@ -553,6 +553,9 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                             }
                         }
                     }
+            // Call these to set some values for the tiles.
+            this.setTiles(getTiles());
+            this.setBlocks(getBlocks());
         }
     }
 
@@ -831,6 +834,19 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void setTiles(TileEntity[][][] tiles)
     {
         this.tiles = tiles;
+        for (TileEntity[][] tileArrArr : tiles)
+        {
+            for (TileEntity[] tileArr : tileArrArr)
+            {
+                for (TileEntity tile : tileArr)
+                {
+                    if (tile instanceof TileEntityLiftAccess)
+                    {
+                        ((TileEntityLiftAccess) tile).setLift(this);
+                    }
+                }
+            }
+        }
     }
 
     @Override

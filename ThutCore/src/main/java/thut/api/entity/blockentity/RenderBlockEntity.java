@@ -72,7 +72,6 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                 GL11.glRotatef(yaw, 0, 1, 0);
                 GL11.glRotatef(pitch, 0, 0, 1);
             }
-            GL11.glScaled(0.999, 0.999, 0.999);
             MutableBlockPos pos = new MutableBlockPos();
             int xMin = MathHelper.floor(blockEntity.getMin().getX() + entity.posX);
             int zMin = MathHelper.floor(blockEntity.getMin().getZ() + entity.posZ);
