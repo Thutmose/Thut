@@ -8,7 +8,10 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import net.minecraft.entity.Entity;
+import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IExtendedModelPart;
+import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.tabula.components.Animation;
 import thut.core.client.render.tabula.json.JsonTabulaModel;
 import thut.core.client.render.tabula.model.IModel;
@@ -55,5 +58,13 @@ public class TabulaModel extends JsonTabulaModel implements IModel
     public HeadInfo getHeadInfo()
     {
         return info;
+    }
+
+    @Override
+    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
+            float limbSwing)
+    {
+        // TODO Auto-generated method stub
+
     }
 }

@@ -7,7 +7,9 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
+import net.minecraft.entity.Entity;
 import thut.api.maths.Vector3;
+import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.tabula.components.Animation;
 
 public interface IModel
@@ -44,6 +46,9 @@ public interface IModel
     public void preProcessAnimations(Collection<List<Animation>> collection);
 
     public Set<String> getHeadParts();
+
+    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
+            float limbSwing);
 
     default Set<String> getBuiltInAnimations()
     {

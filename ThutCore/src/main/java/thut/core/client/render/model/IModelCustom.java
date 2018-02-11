@@ -2,13 +2,25 @@ package thut.core.client.render.model;
 
 public interface IModelCustom
 {
-    void renderAll();
+    default void renderAll()
+    {
 
-    void renderAllExcept(String... excludedGroupNames);
+    }
 
-    void renderOnly(String... groupNames);
+    default void renderAllExcept(String... excludedGroupNames)
+    {
 
-    void renderPart(String partName);
+    }
+
+    default void renderOnly(String... groupNames)
+    {
+
+    }
+
+    default void renderPart(String partName)
+    {
+
+    }
 
     default void renderAll(IModelRenderer<?> renderer)
     {

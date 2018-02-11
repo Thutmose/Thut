@@ -145,7 +145,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 this.buttonPress(button, callFaces[side.ordinal()]);
                 this.calledFloor = this.lift.getDestinationFloor();
             }
-            else
+            else if (getWorld().isRemote)
             {
                 PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
                 buffer.writeBlockPos(getPos());

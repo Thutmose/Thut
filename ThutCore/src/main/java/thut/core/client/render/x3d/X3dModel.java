@@ -2,6 +2,7 @@ package thut.core.client.render.x3d;
 
 import static java.lang.Math.toDegrees;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,13 +16,18 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResource;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
+import thut.api.entity.IMobColourable;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
+import thut.core.client.render.animation.AnimationHelper;
+import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.model.IModel;
 import thut.core.client.render.model.IModelCustom;
+import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.model.IPartTexturer;
 import thut.core.client.render.model.IRetexturableModel;
 import thut.core.client.render.model.Vertex;
@@ -278,5 +284,130 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     public HeadInfo getHeadInfo()
     {
         return info;
+    }
+
+    private void updateSubParts(Entity entity, IModelRenderer<?> renderer, String currentPhase, float partialTick,
+            IExtendedModelPart parent, float headYaw, float headPitch, float limbSwing)
+    {
+        if (parent == null) return;
+        HeadInfo info = getHeadInfo();
+
+        parent.resetToInit();
+        boolean anim = renderer.getAnimations().containsKey(currentPhase);
+        if (anim)
+        {
+            if (AnimationHelper.doAnimation(renderer.getAnimations().get(currentPhase), entity, parent.getName(),
+                    parent, partialTick, limbSwing))
+            {
+            }
+        }
+        if (info != null && isHead(parent.getName()))
+        {
+            float ang;
+            float ang2 = -info.headPitch;
+            float head = info.headYaw + 180;
+            float diff = 0;
+            if (info.yawDirection != -1) head *= -1;
+            diff = (head) % 360;
+            diff = (diff + 360) % 360;
+            diff = (diff - 180) % 360;
+            diff = Math.max(diff, info.yawCapMin);
+            diff = Math.min(diff, info.yawCapMax);
+            ang = diff;
+            ang2 = Math.max(ang2, info.pitchCapMin);
+            ang2 = Math.min(ang2, info.pitchCapMax);
+            Vector4 dir;
+            if (info.yawAxis == 0)
+            {
+                dir = new Vector4(info.yawDirection, 0, 0, ang);
+            }
+            else if (info.yawAxis == 2)
+            {
+                dir = new Vector4(0, 0, info.yawDirection, ang);
+            }
+            else
+            {
+                dir = new Vector4(0, info.yawDirection, 0, ang);
+            }
+            Vector4 dir2;
+            if (info.pitchAxis == 2)
+            {
+                dir2 = new Vector4(0, 0, info.yawDirection, ang2);
+            }
+            else if (info.pitchAxis == 1)
+            {
+                dir2 = new Vector4(0, info.yawDirection, 0, ang2);
+            }
+            else
+            {
+                dir2 = new Vector4(info.yawDirection, 0, 0, ang2);
+            }
+            parent.setPostRotations(dir);
+            parent.setPostRotations2(dir2);
+        }
+
+        int red = 255, green = 255, blue = 255;
+        int brightness = entity.getBrightnessForRender();
+        int alpha = 255;
+        if (entity instanceof IMobColourable)
+        {
+            IMobColourable poke = (IMobColourable) entity;
+            red = poke.getRGBA()[0];
+            green = poke.getRGBA()[1];
+            blue = poke.getRGBA()[2];
+            alpha = poke.getRGBA()[3];
+        }
+        int[] rgbab = parent.getRGBAB();
+        IAnimationChanger animChanger = renderer.getAnimationChanger();
+        if (animChanger != null)
+        {
+            int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
+            int rgb = animChanger.getColourForPart(parent.getName(), entity, default_);
+            if (rgb != default_)
+            {
+                Color col = new Color(rgb);
+                rgbab[0] = col.getRed();
+                rgbab[1] = col.getGreen();
+                rgbab[2] = col.getBlue();
+                rgbab[4] = brightness;
+            }
+        }
+        else
+        {
+            rgbab[0] = red;
+            rgbab[1] = green;
+            rgbab[2] = blue;
+            rgbab[3] = alpha;
+            rgbab[4] = brightness;
+        }
+        parent.setRGBAB(rgbab);
+        for (String partName : parent.getSubParts().keySet())
+        {
+            IExtendedModelPart part = parent.getSubParts().get(partName);
+            updateSubParts(entity, renderer, currentPhase, partialTick, part, headYaw, headPitch, limbSwing);
+        }
+    }
+
+    protected void updateAnimation(Entity entity, IModelRenderer<?> renderer, String currentPhase, float partialTicks,
+            float headYaw, float headPitch, float limbSwing)
+    {
+        for (String partName : getParts().keySet())
+        {
+            IExtendedModelPart part = getParts().get(partName);
+            updateSubParts(entity, renderer, currentPhase, partialTicks, part, headYaw, headPitch, limbSwing);
+        }
+    }
+
+    private boolean isHead(String partName)
+    {
+        return getHeadParts().contains(partName);
+    }
+
+    @Override
+    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
+            float limbSwing)
+    {
+        updateAnimation(entity, renderer, renderer.getAnimation(entity), partialTicks, getHeadInfo().headYaw,
+                getHeadInfo().headYaw, limbSwing);
     }
 }
