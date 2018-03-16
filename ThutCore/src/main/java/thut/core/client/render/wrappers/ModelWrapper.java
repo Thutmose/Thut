@@ -136,7 +136,7 @@ public class ModelWrapper extends ModelBase implements IModel
         if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
                 .modifyAnimation((EntityLiving) entityIn, partialTickTime, renderer.getAnimation(entityIn)), entityIn);
         applyAnimation(entityIn, entityIn.getCapability(CapabilityAnimation.CAPABILITY, null), renderer,
-                partialTickTime, limbSwingAmount);
+                partialTickTime, limbSwing);
     }
 
     @Override

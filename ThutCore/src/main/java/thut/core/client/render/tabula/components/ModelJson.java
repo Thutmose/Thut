@@ -282,9 +282,10 @@ public class ModelJson extends TabulaModelBase
         int aniTick = animate.getStep(animation);
         if (aniTick == 0) aniTick = tick;
         float time1 = aniTick;
+        float limbSpeedFactor = 2.f;
         float time2 = 0;
         int animationLength = animation.getLength();
-        time2 = limbSwing % animationLength;
+        time2 = (time2 + limbSwing * limbSpeedFactor) % animationLength;
         time1 = (time1 + partialTick) % animationLength;
         animate.setStep(animation, tick);
         for (Entry<String, ArrayList<AnimationComponent>> entry : animation.sets.entrySet())
