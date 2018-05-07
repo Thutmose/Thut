@@ -148,7 +148,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 if (!getWorld().isRemote)
                 {
                     String message = "msg.callPanel.name";
-                    System.out.println(button + "");
                     switch (button)
                     {
                     case 1:
