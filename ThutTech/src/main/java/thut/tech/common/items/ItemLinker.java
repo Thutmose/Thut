@@ -419,10 +419,11 @@ public class ItemLinker extends Item
                 if (facing != EnumFacing.UP && facing != EnumFacing.DOWN)
                 {
                     TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
-                    te.callFaces[facing.ordinal()] = !te.callFaces[facing.ordinal()];
-                    String message = "msg.callPanel.name";
+                    te.editFace[facing.ordinal()] = !te.editFace[facing.ordinal()];
+                    te.setSidePage(facing, 0);
+                    String message = "msg.editMode.name";
                     if (!worldIn.isRemote)
-                        playerIn.sendMessage(new TextComponentTranslation(message, te.callFaces[facing.ordinal()]));
+                        playerIn.sendMessage(new TextComponentTranslation(message, te.editFace[facing.ordinal()]));
                     return EnumActionResult.SUCCESS;
                 }
             }

@@ -259,7 +259,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                                 || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                                 || heldItem.getItem() instanceof ItemLinker))
                 {
-                    if (!worldIn.isRemote)
+                    if (!worldIn.isRemote && !te.editFace[side.ordinal()] && !te.floorDisplay[side.ordinal()])
                     {
                         te.setSidePage(side, (te.getSidePage(side) + 1) % 8);
                         if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);

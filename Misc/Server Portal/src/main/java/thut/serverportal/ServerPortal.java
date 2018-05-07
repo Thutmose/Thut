@@ -26,7 +26,7 @@ public class ServerPortal
 {
     public static final String MODID       = "serverportal";
     public static final String VERSION     = "0.0.1";
-    public final static String MCVERSIONS  = "[1.9.4]";
+    public final static String MCVERSIONS  = "[1.12.2]";
     public static int          PORTALSIDE  = 9;
     public static int          PORTALUP    = 3;
     public static int          CLIENTTICKS = 40;
@@ -155,7 +155,7 @@ public class ServerPortal
                 if (!disconnected)
                 {
                     System.out.println("Disconnecting");
-                    FMLClientHandler.instance().getClient().theWorld.sendQuittingDisconnectingPacket();
+                    FMLClientHandler.instance().getClient().world.sendQuittingDisconnectingPacket();
                     FMLClientHandler.instance().getClient().loadWorld(null);
                     FMLClientHandler.instance().getClient().displayGuiScreen(new GuiMultiplayer(new GuiMainMenu()));
                     disconnected = true;

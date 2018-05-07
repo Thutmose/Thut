@@ -25,6 +25,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Optional;
@@ -69,6 +70,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public boolean                      redstone     = true;
     public boolean                      powered      = false;
     public boolean[]                    callFaces    = new boolean[6];
+    public boolean[]                    editFace     = new boolean[6];
+    public boolean[]                    floorDisplay = new boolean[6];
     public boolean                      callPanel    = false;
 
     public TileEntityLiftAccess()
@@ -140,21 +143,53 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         boolean valid = lift != null && lift.hasFloors[button - 1];
         if (lift != null && isSideOn(side))
         {
-            if (getWorld() instanceof BlockEntityWorld)
+            if (editFace[side.ordinal()])
             {
-                this.buttonPress(button, callFaces[side.ordinal()]);
-                this.calledFloor = this.lift.getDestinationFloor();
+                if (!getWorld().isRemote)
+                {
+                    String message = "msg.callPanel.name";
+                    System.out.println(button + "");
+                    switch (button)
+                    {
+                    case 1:
+                        callFaces[side.ordinal()] = !callFaces[side.ordinal()];
+                        floorDisplay[side.ordinal()] = false;
+                        clicker.sendMessage(new TextComponentTranslation(message, callFaces[side.ordinal()]));
+                        break;
+                    case 2:
+                        floorDisplay[side.ordinal()] = !floorDisplay[side.ordinal()];
+                        callFaces[side.ordinal()] = false;
+                        message = "msg.floorDisplay.name";
+                        clicker.sendMessage(new TextComponentTranslation(message, floorDisplay[side.ordinal()]));
+                        break;
+                    case 16:
+                        editFace[side.ordinal()] = false;
+                        message = "msg.editMode.name";
+                        clicker.sendMessage(new TextComponentTranslation(message, false));
+                        break;
+                    }
+                    if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
+                }
+                return true;
             }
-            else if (getWorld().isRemote)
+            else
             {
-                PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
-                buffer.writeBlockPos(getPos());
-                buffer.writeInt(button);
-                buffer.writeBoolean(callFaces[side.ordinal()]);
-                ServerPacket packet = new ServerPacket(buffer);
-                PacketPipeline.sendToServer(packet);
+                if (floorDisplay[side.ordinal()]) return false;
+                if (getWorld() instanceof BlockEntityWorld)
+                {
+                    this.buttonPress(button, callFaces[side.ordinal()]);
+                    this.calledFloor = this.lift.getDestinationFloor();
+                }
+                else if (getWorld().isRemote)
+                {
+                    PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
+                    buffer.writeBlockPos(getPos());
+                    buffer.writeInt(button);
+                    buffer.writeBoolean(callFaces[side.ordinal()]);
+                    ServerPacket packet = new ServerPacket(buffer);
+                    PacketPipeline.sendToServer(packet);
+                }
             }
-
         }
         if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
         return valid;
@@ -280,6 +315,14 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         for (EnumFacing face : EnumFacing.HORIZONTALS)
         {
             callFaces[face.ordinal()] = par1.getBoolean(face + "Call");
+        }
+        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        {
+            editFace[face.ordinal()] = par1.getBoolean(face + "Edit");
+        }
+        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        {
+            floorDisplay[face.ordinal()] = par1.getBoolean(face + "Display");
         }
         if (sides.length != 6) sides = new byte[6];
         sidePages = par1.getByteArray("sidePages");
@@ -478,6 +521,14 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             par1.setBoolean(face + "Call", callFaces[face.ordinal()]);
         }
+        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        {
+            par1.setBoolean(face + "Edit", editFace[face.ordinal()]);
+        }
+        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        {
+            par1.setBoolean(face + "Display", floorDisplay[face.ordinal()]);
+        }
         if (lift != null)
         {
             liftID = lift.getPersistentID();
@@ -537,6 +588,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * Calls lift to specified Y value
      */
     @Callback(doc = "function(yValue:number) -- Calls the Lift to the specified Y level")
+
     @Optional.Method(modid = "opencomputers")
     public Object[] callYValue(Context context, Arguments args) throws Exception
     {
@@ -551,7 +603,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(xValue:number) -- Calls the Lift to the specified X location")
+    @Callback(doc = "function(xValue:number) -- Calls the Lift to thespecified X location")
+
     @Optional.Method(modid = "opencomputers")
     public Object[] callXValue(Context context, Arguments args) throws Exception
     {
@@ -566,7 +619,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Calls lift to specified Y value
      */
-    @Callback(doc = "function(zValue:number) -- Calls the Lift to the specified Z location")
+    @Callback(doc = "function(zValue:number) -- Calls the Lift to thespecified Z location")
+
     @Optional.Method(modid = "opencomputers")
     public Object[] callZValue(Context context, Arguments args) throws Exception
     {
@@ -581,7 +635,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Sets floor associated with this block
      */
-    @Callback(doc = "function(floor:number) -- Sets the floor assosiated to the Controller")
+    @Callback(doc = "function(floor:number) -- Sets the floor assosiated tothe Controller")
     @Optional.Method(modid = "opencomputers")
     public Object[] setFloor(Context context, Arguments args)
     {
@@ -660,7 +714,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     /*
      * Returns floor associated with this block
      */
-    @Callback(doc = "returns if the elevator is not currently called to a floor")
+    @Callback(doc = "returns if the elevator is not currently called to afloor")
     @Optional.Method(modid = "opencomputers")
     public Object[] isReady(Context context, Arguments args) throws Exception
     {

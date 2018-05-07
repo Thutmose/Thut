@@ -42,7 +42,7 @@ public class ConfigHandler extends ConfigBase
     @Configure(category = AI, needsMcRestart = true)
     public int                  threadCount             = 1;
     @Configure(category = AI, needsMcRestart = true)
-    public boolean              multithreadedAI         = true;
+    public boolean              multithreadedAI         = false;
 
     @Configure(category = BLOCKENTITY)
     public String[]             teblacklist             = {};
@@ -90,6 +90,9 @@ public class ConfigHandler extends ConfigBase
             }
         });
         ConfigTerrainBuilder.process(customBiomeMappings);
+        
+        //TODO figure out what is wrong with this and fix it.
+        multithreadedAI = false;
     }
 
     @SubscribeEvent

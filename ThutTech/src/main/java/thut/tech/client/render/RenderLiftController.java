@@ -146,6 +146,27 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
         GL11.glPopMatrix();
     }
 
+    public void drawEditOverlay(TileEntityLiftAccess monitor, EnumFacing side)
+    {
+        // Call button toggle
+        // Draw the white background
+        GL11.glPushMatrix();
+        Color colour = new Color(255, 255, 255, 255);
+        drawOverLay(monitor, 1, colour, side, false);
+        colour = monitor.callFaces[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
+        drawOverLay(monitor, 1, colour, side, false);
+        GL11.glPopMatrix();
+
+        // Floor Display toggle
+        // Draw the white background
+        GL11.glPushMatrix();
+        colour = new Color(255, 255, 255, 255);
+        drawOverLay(monitor, 2, colour, side, false);
+        colour = monitor.floorDisplay[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
+        drawOverLay(monitor, 2, colour, side, false);
+        GL11.glPopMatrix();
+    }
+
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, EnumFacing side, boolean wide)
     {
         if (!wide) floor = floor - monitor.getSidePage(side) * 16;
@@ -161,7 +182,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
                 else renderengine.bindTexture(overlay);
             }
             float dz = -0.001f;
-            if(monitor.getWorld() instanceof BlockEntityWorld) dz = -0.005f;
+            if (monitor.getWorld() instanceof BlockEntityWorld) dz = -0.005f;
             floor -= 1;
             double x = ((double) (3 - floor & 3)) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
             GL11.glTranslated(x, y, dz);
@@ -264,7 +285,40 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
                     GL11.glRotatef(90, 0, 1, 0);
                 }
                 int a = 64;
-                if (monitor.callFaces[dir.ordinal()])
+                if (monitor.editFace[dir.ordinal()])
+                {
+                    drawEditOverlay(monitor, dir);
+                }
+                else if (monitor.floorDisplay[dir.ordinal()])
+                {
+                    // Draw the white background
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(-0.5, -0.095, 0);
+                    Color colour = new Color(255, 255, 255, 255);
+                    drawOverLay(monitor, 1, colour, dir, true);
+                    GL11.glPopMatrix();
+
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(-0.11, -0.1, 0);
+                    drawNumber(monitor.currentFloor-1, 1);
+                    GL11.glPopMatrix();
+                    GL11.glPushMatrix();
+                    GL11.glTranslated(-0.5, -0.095, 0);
+
+                    // Draw highlight over the background.
+                    if (monitor.calledFloor == monitor.floor)
+                    {
+                        colour = new Color(255, 255, 0, a);
+                        drawOverLay(monitor, 1, colour, dir, true);
+                    }
+                    else if (monitor.currentFloor == monitor.floor)
+                    {
+                        colour = new Color(0, 128, 255, a);
+                        drawOverLay(monitor, 1, colour, dir, true);
+                    }
+                    GL11.glPopMatrix();
+                }
+                else if (monitor.callFaces[dir.ordinal()])
                 {
                     // Draw the white background
                     GL11.glPushMatrix();
