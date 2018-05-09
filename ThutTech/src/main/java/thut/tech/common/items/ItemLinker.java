@@ -307,8 +307,8 @@ public class ItemLinker extends Item
     public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
             EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        boolean hasLift = stack.getTagCompound() != null && stack.getTagCompound().hasKey("lift");
-
+        if (stack.getTagCompound() == null) stack.setTagCompound(new NBTTagCompound());
+        boolean hasLift = stack.getTagCompound().hasKey("lift");
         if (!playerIn.isSneaking() && !hasLift)
         {
             stack.setTagCompound(new NBTTagCompound());
