@@ -19,6 +19,8 @@ import pokecube.alternative.container.belt.IPokemobBelt;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.events.handlers.EventsHandlerClient;
 import pokecube.core.interfaces.IPokemob;
+import pokecube.core.interfaces.IPokemob.Stats;
+import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.core.utils.Tools;
 import thut.lib.CompatWrapper;
 
@@ -88,7 +90,7 @@ public class GuiPokemonBar extends Gui
             {
                 try
                 {
-                    realMob = EventsHandlerClient.getPokemobForRender(pokemonItemstack.copy(), mc.world);
+                    realMob = PokecubeManager.itemToPokemob(pokemonItemstack.copy(), mc.world);
                     entity = realMob.getEntity();
                 }
                 catch (Exception e)
@@ -115,7 +117,7 @@ public class GuiPokemonBar extends Gui
                 selectorYPos = j - 6;
                 this.mc.renderEngine.bindTexture(bar);
                 int healthLength = 56;
-                float relHp = entity.getHealth() / entity.getMaxHealth();
+                float relHp = ((float) realMob.getStat(Stats.HP, true)) / realMob.getStat(Stats.HP, false);
                 this.drawTexturedModalRect(selectorXPos, selectorYPos, 2, 197, (int) (healthLength * relHp), 3);
 
                 // Draw EXP
