@@ -92,7 +92,7 @@ public class ConfigHandler extends ConfigBase
         ConfigTerrainBuilder.process(customBiomeMappings);
         
         //TODO figure out what is wrong with this and fix it.
-        multithreadedAI = false;
+//        multithreadedAI = false;
     }
 
     @SubscribeEvent

@@ -2,8 +2,6 @@ package thut.core.common.commands;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.management.UserListOpsEntry;
 import net.minecraft.tileentity.TileEntityCommandBlock;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -19,10 +17,7 @@ public class CommandTools
 
         if (sender instanceof EntityPlayer)
         {
-            EntityPlayer player = sender.getEntityWorld().getPlayerEntityByName(sender.getName());
-            UserListOpsEntry userentry = ((EntityPlayerMP) player).mcServer.getPlayerList().getOppedPlayers()
-                    .getEntry(player.getGameProfile());
-            return userentry != null && userentry.getPermissionLevel() >= 4;
+            return sender.getServer().getPlayerList().canSendCommands(((EntityPlayer) sender).getGameProfile());
         }
         else if (sender instanceof TileEntityCommandBlock) { return true; }
         return true;
