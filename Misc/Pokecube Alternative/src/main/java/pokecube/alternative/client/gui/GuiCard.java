@@ -118,7 +118,7 @@ public class GuiCard extends InventoryEffectRenderer
             RenderHelper.enableStandardItemLighting();
             GL11.glTranslatef(0.0F, (float) entity.getYOffset(), 0.0F);
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j1 / 1.0F, k1 / 1.0F);
-            Minecraft.getMinecraft().getRenderManager().doRenderEntity(entity, 0, 0, 0, 0, 1.5F, false);
+            Minecraft.getMinecraft().getRenderManager().renderEntity(entity, 0, 0, 0, 0, 1.5F, false);
             RenderHelper.disableStandardItemLighting();
             GL11.glPopMatrix();
             GL11.glPopMatrix();
