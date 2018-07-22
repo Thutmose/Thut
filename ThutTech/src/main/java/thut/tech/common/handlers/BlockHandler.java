@@ -6,10 +6,10 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
+import thut.lib.CompatWrapper;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 
 public class BlockHandler
@@ -57,7 +57,7 @@ public class BlockHandler
     public static void registerBlocks(RegistryEvent.Register<Block> event)
     {
         Block lift = ThutBlocks.lift;
-        GameRegistry.registerTileEntity(TileEntityLiftAccess.class, "liftaccesste");
+        CompatWrapper.registerTileEntity(TileEntityLiftAccess.class, "liftaccesste");
         event.getRegistry().register(lift);
     }
 }

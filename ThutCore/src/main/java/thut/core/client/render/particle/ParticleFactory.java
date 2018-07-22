@@ -20,7 +20,7 @@ public class ParticleFactory
             "field_178932_g", "particleTypes");
     static final Object                                lock          = ReflectionHelper.getPrivateValue(
             net.minecraft.client.particle.ParticleManager.class, Minecraft.getMinecraft().effectRenderer,
-            "field_187241_h", "queueEntityFX");
+            "field_187241_h", "queue");
 
     private static final Map<String, IParticleFactory> factories     = Maps.newHashMap();
 
