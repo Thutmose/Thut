@@ -35,9 +35,10 @@ public class AIThreadManager
      * @author Thutmose */
     public static class AIStuff
     {
+        public static int                      tickRate = 1;
         public final EntityLiving              entity;
-        public final ArrayList<IAIRunnable>    aiTasks = new ArrayList<IAIRunnable>();
-        public final ArrayList<ILogicRunnable> aiLogic = new ArrayList<ILogicRunnable>();
+        public final ArrayList<IAIRunnable>    aiTasks  = new ArrayList<IAIRunnable>();
+        public final ArrayList<ILogicRunnable> aiLogic  = new ArrayList<ILogicRunnable>();
 
         public AIStuff(EntityLiving entity_)
         {
@@ -62,6 +63,11 @@ public class AIThreadManager
         {
             if (!ThutCore.instance.config.multithreadedAI)
             {
+                // Cancel tick based on tick rate config. Use world time so that
+                // all ai ticks are done at the same time, this increases load
+                // for the AI tick, but prevents issues where certain AI tasks
+                // run out of sync across different mobs.
+                if (world.getTotalWorldTime() % tickRate == 0) return;
                 tick();
             }
 

@@ -8,6 +8,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.api.boom.ExplosionCustom;
+import thut.api.entity.ai.AIThreadManager;
 import thut.api.entity.blockentity.BlockEntityUpdater;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.terrain.TerrainSegment;
@@ -43,6 +44,8 @@ public class ConfigHandler extends ConfigBase
     public int                  threadCount             = 1;
     @Configure(category = AI, needsMcRestart = true)
     public boolean              multithreadedAI         = false;
+    @Configure(category = AI)
+    public int                  aiTickRate              = 1;
 
     @Configure(category = BLOCKENTITY)
     public String[]             teblacklist             = {};
@@ -75,6 +78,7 @@ public class ConfigHandler extends ConfigBase
         TerrainSegment.noLoad = resetAllTerrain;
         IBlockEntity.TEBLACKLIST.clear();
         BlockEntityUpdater.autoBlacklist = autoBlacklistErroredTEs;
+        AIThreadManager.AIStuff.tickRate = aiTickRate;
         for (String s : teblacklist)
         {
             if (!s.contains(":")) s = "minecraft:" + s;
@@ -90,9 +94,9 @@ public class ConfigHandler extends ConfigBase
             }
         });
         ConfigTerrainBuilder.process(customBiomeMappings);
-        
-        //TODO figure out what is wrong with this and fix it.
-//        multithreadedAI = false;
+
+        // TODO figure out what is wrong with this and fix it.
+        // multithreadedAI = false;
     }
 
     @SubscribeEvent
