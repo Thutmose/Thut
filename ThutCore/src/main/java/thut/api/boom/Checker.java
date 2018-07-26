@@ -32,7 +32,7 @@ public class Checker
         float resist;
         double str;
         int num = (int) (Math.sqrt(boom.strength * scaleFactor / 0.5));
-        int max = ExplosionCustom.MAX_RADIUS * 2 + 1;
+        int max = boom.radius * 2 + 1;
         num = Math.min(num, max);
         num = Math.min(num, 1000);
         int numCubed = num * num * num;
@@ -181,7 +181,7 @@ public class Checker
         double rMag;
         double str;
         int num = (int) (Math.sqrt(boom.strength * scaleFactor / 0.5));
-        int max = ExplosionCustom.MAX_RADIUS * 2 + 1;
+        int max = boom.radius * 2 + 1;
         num = Math.min(num, max);
         num = Math.min(num, 1000);
         int numCubed = num * num * num;

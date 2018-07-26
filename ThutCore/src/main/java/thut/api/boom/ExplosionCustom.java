@@ -90,6 +90,7 @@ public class ExplosionCustom extends Explosion
     int                          currentIndex           = 0;
     int                          nextIndex              = 0;
     float                        minBlastDamage;
+    int                          radius                 = MAX_RADIUS;
     public int[]                 maxPerTick;
     World                        world;
     Vector3                      centre;
@@ -138,6 +139,12 @@ public class ExplosionCustom extends Explosion
         dimension = world.provider.getDimension();
         minBlastDamage = MINBLASTDAMAGE;
         maxPerTick = MAXPERTICK;
+    }
+
+    public ExplosionCustom setMaxRadius(int radius)
+    {
+        this.radius = radius;
+        return this;
     }
 
     public void addChunkPosition(Vector3 v)
