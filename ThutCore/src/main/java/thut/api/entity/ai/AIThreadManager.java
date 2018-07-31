@@ -67,7 +67,7 @@ public class AIThreadManager
                 // all ai ticks are done at the same time, this increases load
                 // for the AI tick, but prevents issues where certain AI tasks
                 // run out of sync across different mobs.
-                if (world.getTotalWorldTime() % tickRate == 0) return;
+                if (world.getTotalWorldTime() % tickRate != 0) return;
                 tick();
             }
 

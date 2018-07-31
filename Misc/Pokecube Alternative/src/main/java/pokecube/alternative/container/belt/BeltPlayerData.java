@@ -350,4 +350,18 @@ public class BeltPlayerData extends PlayerData implements IPokemobBelt, IHasPoke
     {
         // Nope
     }
+
+    @Override
+    public void setLevelMode(LevelMode type)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public LevelMode getLevelMode()
+    {
+        // TODO Auto-generated method stub
+        return LevelMode.YES;
+    }
 }
