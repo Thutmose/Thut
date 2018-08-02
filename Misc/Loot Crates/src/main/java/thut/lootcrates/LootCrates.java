@@ -74,7 +74,7 @@ public class LootCrates
                         + TextFormatting.RESET + evt.getEntityPlayer().getDisplayNameString() + TextFormatting.GOLD
                         + " has recieved ");
                 ITextComponent footer = new TextComponentString(TextFormatting.GOLD + " from " + name);
-                ITextComponent rewards = crate.getReward().giveRewards(evt.getEntityPlayer());
+                ITextComponent rewards = crate.getReward(evt.getEntityPlayer());
                 if (!rewards.getUnformattedText().isEmpty())
                 {
                     message.appendSibling(rewards).appendSibling(footer);

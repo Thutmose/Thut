@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -78,11 +79,14 @@ public class XMLStuff
         private List<String>  commands = Lists.newArrayList();
         @XmlAttribute
         public int            r;
+        @XmlAttribute
+        public float          p        = 0;
     }
 
     public static class Crate
     {
-        List<Reward>     rewards = Lists.newArrayList();
+        List<Reward>     r_rewards = Lists.newArrayList();
+        List<Reward>     p_rewards = Lists.newArrayList();
         public ItemStack key;
 
         public Crate(XMLCrate crate)
@@ -91,11 +95,13 @@ public class XMLStuff
             {
                 for (int i = 0; i < reward.r; i++)
                 {
-                    rewards.add(new Reward(reward));
+                    r_rewards.add(new Reward(reward));
                 }
+                if (reward.p > 0) p_rewards.add(new Reward(reward));
             }
             key = getStackFromXMLItem(crate.key);
-            if (rewards.isEmpty() || key == null) throw new NullPointerException("Error with crate " + crate.name);
+            if ((r_rewards.isEmpty() && p_rewards.isEmpty()) || key == null)
+                throw new NullPointerException("Error with crate " + crate.name);
 
             TextFormatting colour = TextFormatting.RESET;
             if (crate.key.values.containsKey(COLOUR))
@@ -108,10 +114,46 @@ public class XMLStuff
             key.getTagCompound().setString("key", crate.name);
         }
 
-        public Reward getReward()
+        public ITextComponent getReward(EntityPlayer entityPlayer)
         {
-            Collections.shuffle(rewards);
-            return rewards.get(0);
+            Reward single = getSingleReward();
+            if (single != null) return single.giveRewards(entityPlayer);
+            ITextComponent message = new TextComponentString("");
+            List<Reward> rewards = getRewards(new Random());
+            int n = 0;
+            for (Reward r : rewards)
+            {
+                ITextComponent part = r.giveRewards(entityPlayer);
+                if (!part.getUnformattedText().isEmpty())
+                {
+                    if (n > 0) message.appendSibling(new TextComponentString(", "));
+                    message.appendSibling(part);
+                }
+                else n--;
+                n++;
+            }
+            if (rewards.isEmpty()) message = new TextComponentString("Nothing!");
+            return message;
+        }
+
+        public List<Reward> getRewards(Random rand)
+        {
+            List<Reward> ret = Lists.newArrayList();
+            for (Reward r : p_rewards)
+            {
+                if (r.p > rand.nextFloat())
+                {
+                    ret.add(r);
+                }
+            }
+            return ret;
+        }
+
+        public Reward getSingleReward()
+        {
+            if (r_rewards.isEmpty()) return null;
+            Collections.shuffle(r_rewards);
+            return r_rewards.get(0);
         }
     }
 
@@ -119,9 +161,11 @@ public class XMLStuff
     {
         List<ItemStack> rewards  = Lists.newArrayList();
         List<String>    commands = Lists.newArrayList();
+        float           p        = 0;
 
         public Reward(XMLReward reward)
         {
+            this.p = reward.p;
             for (XMLItem item : reward.items)
             {
                 ItemStack stack = getStackFromXMLItem(item);
