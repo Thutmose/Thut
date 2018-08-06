@@ -18,11 +18,15 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.server.permission.DefaultPermissionLevel;
+import net.minecraftforge.server.permission.PermissionAPI;
 import thut.core.common.config.ConfigBase;
 import thut.core.common.config.Configure;
 
 public class CommandConfig extends CommandBase
 {
+    private final String   editperm;
+
     private List<String>   aliases;
     final ConfigBase       config;
 
@@ -36,6 +40,9 @@ public class CommandConfig extends CommandBase
         this.aliases.add(name);
         this.config = config;
         populateFields();
+        editperm = "command." + name + ".edit";
+        PermissionAPI.registerNode(editperm, DefaultPermissionLevel.OP,
+                "Can the player use " + name + " to edit config values?");
     }
 
     @Override
@@ -47,7 +54,6 @@ public class CommandConfig extends CommandBase
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        boolean op = CommandTools.isOp(sender);
         if (args.length == 0)
         {
             CommandTools.sendBadArgumentsTryTab(sender);
@@ -84,7 +90,7 @@ public class CommandConfig extends CommandBase
                 sender.sendMessage(mess);
                 return;
             }
-            if (!op)
+            if (!CommandTools.isOp(sender, editperm))
             {
                 CommandTools.sendNoPermissions(sender);
                 return;
@@ -273,8 +279,7 @@ public class CommandConfig extends CommandBase
     }
 
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args,
-            BlockPos pos)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
     {
         List<String> ret = new ArrayList<String>();
         if (args.length == 1)
