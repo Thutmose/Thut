@@ -15,7 +15,7 @@ public interface DefaultInventory extends IInventory
     default public void clear()
     {
         for (int i = 0; i < getSizeInventory(); i++)
-            setInventorySlotContents(i, CompatWrapper.nullStack);
+            setInventorySlotContents(i, ItemStack.EMPTY);
     }
 
     @Override
@@ -39,8 +39,8 @@ public interface DefaultInventory extends IInventory
             setInventorySlotContents(slot, getStackInSlot(slot));
             return itemStack;
         }
-        setInventorySlotContents(slot, CompatWrapper.nullStack);
-        return CompatWrapper.nullStack;
+        setInventorySlotContents(slot, ItemStack.EMPTY);
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -49,16 +49,16 @@ public interface DefaultInventory extends IInventory
         if (CompatWrapper.isValid(getStackInSlot(slot)))
         {
             ItemStack stack = getStackInSlot(slot);
-            setInventorySlotContents(slot, CompatWrapper.nullStack);
+            setInventorySlotContents(slot, ItemStack.EMPTY);
             return stack;
         }
-        return CompatWrapper.nullStack;
+        return ItemStack.EMPTY;
     }
 
     @Override
     default public void setInventorySlotContents(int index, ItemStack stack)
     {
-        if (!CompatWrapper.isValid(stack)) getInventory().set(index, CompatWrapper.nullStack);
+        if (!CompatWrapper.isValid(stack)) getInventory().set(index, ItemStack.EMPTY);
         else getInventory().set(index, stack);
     }
 

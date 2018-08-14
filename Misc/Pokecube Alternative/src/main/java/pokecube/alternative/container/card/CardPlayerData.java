@@ -58,7 +58,7 @@ public class CardPlayerData extends PlayerData
             if (temp instanceof NBTTagCompound)
             {
                 NBTTagCompound tag = (NBTTagCompound) temp;
-                inventory.setInventorySlotContents(n, CompatWrapper.fromTag(tag));
+                inventory.setInventorySlotContents(n, new ItemStack(tag));
             }
         }
     }

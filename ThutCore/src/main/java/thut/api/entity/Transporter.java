@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,7 +24,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.maths.Vector3;
-import thut.lib.CompatWrapper;
 
 public class Transporter
 {
@@ -321,7 +321,7 @@ public class Transporter
             teleporter.placeInExistingPortal(entityIn, f);
             worldserver.updateEntityWithOptionalForce(entityIn, false);
             entityIn.getEntityWorld().profiler.endStartSection("reloading");
-            Entity entity = CompatWrapper.createEntity(worldserver1, entityIn);
+            Entity entity = EntityList.createEntityByIDFromName(EntityList.getKey(entityIn), worldserver1);
             if (entity != null)
             {
                 entity.copyDataFromOld(entityIn);

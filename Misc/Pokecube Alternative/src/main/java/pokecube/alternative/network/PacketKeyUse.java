@@ -97,7 +97,7 @@ public class PacketKeyUse implements IMessage, IMessageHandler<PacketKeyUse, IMe
             {
                 cube.getItem().onPlayerStoppedUsing(cube, player.world, player, message.ticks);
                 CompatWrapper.setStackSize(cube, 1);
-                cap.setCube(cap.getSlot(), CompatWrapper.nullStack);
+                cap.setCube(cap.getSlot(), ItemStack.EMPTY);
                 UUID id = PokecubeManager.getUUID(cube);
                 cap.setSlotID(cap.getSlot(), id);
             }

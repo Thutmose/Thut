@@ -16,7 +16,7 @@ public class BiomeType
     private static final Map<Integer, BiomeType> typeMap       = Maps.newHashMap();
     private static final Map<Integer, BiomeType> typeMapClient = Maps.newHashMap();
     private static int                           MAXID         = 256;
-    public static final BiomeType                NONE          = new BiomeType("none", "none"),
+    public static final BiomeType                NONE          = new BiomeType("none", "None"),
             SKY = new BiomeType("sky", "Sky"), FLOWER = new BiomeType("flower", "Flowers"),
             LAKE = new BiomeType("lake", "Lake"), INDUSTRIAL = new BiomeType("industrial", "Industrial Area"),
             METEOR = new BiomeType("meteor", "Meteor Area"), RUIN = new BiomeType("ruin", "Ruins"),

@@ -36,12 +36,6 @@ public class BiomeDatabase
         return Biome.REGISTRY.getObject(new ResourceLocation(name));
     }
 
-    public static String getBiome(World world, Vector3 v)
-    {
-        int type = v.getBiomeID(world);
-        return getNameFromType(type);
-    }
-
     public static String getBiome(World world, Vector3 v, boolean checkIndandVillage)
     {
         String ret = "";
@@ -59,37 +53,9 @@ public class BiomeDatabase
         return ret;
     }
 
-    public static int getBiomeType(Biome biome)
-    {
-        return Biome.getIdForBiome(biome);
-    }
-
-    public static int getBiomeType(String name)
-    {
-        for (BiomeType b : BiomeType.values())
-        {
-            if (b.name.equalsIgnoreCase(name)) return (byte) b.getType();
-        }
-        for (ResourceLocation key : Biome.REGISTRY.getKeys())
-        {
-            Biome b = Biome.REGISTRY.getObject(key);
-            if (b != null) if (getBiomeName(b).equalsIgnoreCase(name)) return getBiomeType(b);
-        }
-        return BiomeType.NONE.getType();
-    }
-
-    public static String getNameFromType(int type)
-    {
-        if (type > 255) return BiomeType.getType(type).name;
-        else if (Biome.getBiome(type) != null) return getBiomeName(Biome.getBiome(type));
-        else return "none";
-    }
-
     public static String getReadableNameFromType(int type)
     {
-        if (type > 255) return BiomeType.getType(type).readableName;
-        else if (Biome.getBiome(type) != null) return getBiomeName(Biome.getBiome(type));
-        else return "None " + type;
+        return BiomeType.getType(type).readableName;
     }
 
     private static final int INDEX = 17;

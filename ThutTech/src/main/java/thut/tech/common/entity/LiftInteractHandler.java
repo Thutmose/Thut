@@ -11,7 +11,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
-import thut.lib.CompatWrapper;
 import thut.tech.common.items.ItemLinker;
 
 public class LiftInteractHandler extends BlockEntityInteractHandler
@@ -109,7 +108,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
                     int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
                     int num = (dw + 1) * (max.getY() - min.getY() + 1);
                     stack = ItemLinker.liftblocks.copy();
-                    CompatWrapper.setStackSize(stack, num);
+                    stack.setCount(num);
                     player.dropItem(stack, false, true);
                 }
                 lift.setHealth(0);

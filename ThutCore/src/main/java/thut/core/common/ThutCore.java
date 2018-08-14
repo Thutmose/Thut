@@ -1,8 +1,13 @@
 package thut.core.common;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
 
@@ -43,7 +48,6 @@ import thut.api.entity.genetics.Alleles;
 import thut.api.entity.genetics.IMobGenetics;
 import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
-import thut.api.terrain.BiomeDatabase;
 import thut.api.terrain.TerrainManager;
 import thut.core.common.commands.CommandConfig;
 import thut.core.common.commands.CommandTerrain;
@@ -53,6 +57,7 @@ import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.terrain.CapabilityTerrainAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.DefaultAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.ITerrainAffected;
+import thut.permissions.LogFormatter;
 import thut.reference.Reference;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, acceptableRemoteVersions = Reference.MINVERSION, guiFactory = "thut.core.client.config.ModGuiFactory")
@@ -66,13 +71,36 @@ public class ThutCore
 
     public static final String    modid   = Reference.MOD_ID;
     public static CreativeTabThut tabThut = CreativeTabThut.tabThut;
+    public static final Logger    logger  = Logger.getLogger(modid);
 
     // Configuration Handler that handles the config file
     public ConfigHandler          config;
 
     public ThutCore()
     {
-        BiomeDatabase.getNameFromType(0);
+        initLogger();
+    }
+
+    private void initLogger()
+    {
+        FileHandler logHandler = null;
+        logger.setLevel(Level.ALL);
+        try
+        {
+            File logs = new File("." + File.separator + "logs");
+            logs.mkdirs();
+            File logfile = new File(logs, modid + ".log");
+            if ((logfile.exists() || logfile.createNewFile()) && logfile.canWrite() && logHandler == null)
+            {
+                logHandler = new FileHandler(logfile.getPath());
+                logHandler.setFormatter(new LogFormatter());
+                logger.addHandler(logHandler);
+            }
+        }
+        catch (SecurityException | IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @EventHandler

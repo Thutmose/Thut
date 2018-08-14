@@ -15,6 +15,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -142,6 +143,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
 
     private double getSpeed(double pos, double destPos, double speed, double speedPos, double speedNeg)
     {
+        if (!getEntityWorld().isAreaLoaded(getPosition(), 8)) { return 0; }
+
         double ds = speed;
         if (destPos > pos)
         {
@@ -336,7 +339,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         if (!toMoveZ) motionZ = velocity.z = 0;
         if (getCalled())
         {
-            CompatWrapper.moveEntitySelf(this, velocity.x, velocity.y, velocity.z);
+            this.move(MoverType.SELF, velocity.x, velocity.y, velocity.z);
         }
         else
         {
@@ -792,7 +795,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn)
     {
-        return CompatWrapper.nullStack;
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -803,7 +806,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     @Override
     public ItemStack getHeldItem(EnumHand hand)
     {
-        return CompatWrapper.nullStack;
+        return ItemStack.EMPTY;
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
@@ -22,7 +23,6 @@ import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
-import thut.lib.CompatWrapper;
 
 public class BlockEntityUpdater
 {
@@ -398,7 +398,7 @@ public class BlockEntityUpdater
             if (temp1.x != 0) entity.motionX = theEntity.motionX;
             if (temp1.y != 0) entity.motionY = theEntity.motionY;
             if (temp1.z != 0) entity.motionZ = theEntity.motionZ;
-            if (!(entity instanceof EntityPlayerMP)) CompatWrapper.moveEntitySelf(entity, temp1.x, temp1.y, temp1.z);
+            if (!(entity instanceof EntityPlayerMP)) entity.move(MoverType.SELF, temp1.x, temp1.y, temp1.z);
 
             // Attempt to also set previous positions to prevent desync like
             // issues on servers.

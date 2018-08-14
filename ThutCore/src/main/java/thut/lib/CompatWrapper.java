@@ -1,6 +1,5 @@
 package thut.lib;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -9,21 +8,15 @@ import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityList.EntityEggInfo;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
@@ -31,52 +24,11 @@ import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class CompatWrapper
 {
     public static final ItemStack nullStack = ItemStack.EMPTY;
-
-    public static ItemStack fromTag(NBTTagCompound tag)
-    {
-        return new ItemStack(tag);
-    }
-
-    public static ItemStack copy(ItemStack in)
-    {
-        return in.copy();
-    }
-
-    public static Entity createEntity(World world, String in)
-    {
-        return EntityList.createEntityByIDFromName(new ResourceLocation(in), world);
-    }
-
-    public static Entity createEntity(World world, ResourceLocation in)
-    {
-        return EntityList.createEntityByIDFromName(in, world);
-    }
-
-    public static Entity createEntity(World world, Entity in)
-    {
-        return EntityList.createEntityByIDFromName(EntityList.getKey(in), world);
-    }
-
-    public static void moveEntitySelf(Entity in, double x, double y, double z)
-    {
-        in.move(MoverType.SELF, x, y, z);
-    }
-
-    public static void sendChatMessage(ICommandSender to, ITextComponent message)
-    {//
-        to.sendMessage(message);
-    }
-
-    public static void registerTileEntity(Class<? extends TileEntity> tileClass, String id)
-    {
-        GameRegistry.registerTileEntity(tileClass, id);
-    }
 
     public static void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod,
             int trackingRange, int updateFrequency, boolean sendsVelocityUpdates)
@@ -89,17 +41,6 @@ public class CompatWrapper
                 sendsVelocityUpdates);
     }
 
-    public static ItemStack setStackSize(ItemStack stack, int amount)
-    {
-        stack.setCount(amount);
-        return stack;
-    }
-
-    public static int getStackSize(ItemStack stack)
-    {
-        return stack.getCount();
-    }
-
     public static boolean isValid(ItemStack stack)
     {
         if (stack == null)
@@ -108,37 +49,7 @@ public class CompatWrapper
             Thread.dumpStack();
             return false;
         }
-        return getStackSize(stack) > 0;
-    }
-
-    public static ItemStack validate(ItemStack in)
-    {
-        if (in == null || !isValid(in)) return nullStack;
-        return in;
-    }
-
-    public static void setAnimationToGo(ItemStack stack, int num)
-    {
-        stack.setAnimationsToGo(num);
-    }
-
-    public static int increment(ItemStack in, int amt)
-    {
-        in.grow(amt);
-        return in.getCount();
-    }
-
-    public static List<ItemStack> makeList(int size)
-    {
-        return NonNullList.<ItemStack> withSize(size, ItemStack.EMPTY);
-    }
-
-    public static void rightClickWith(ItemStack stack, EntityPlayer player, EnumHand hand)
-    {
-        ItemStack old = player.getHeldItem(hand);
-        player.setHeldItem(hand, stack);
-        stack.getItem().onItemRightClick(player.getEntityWorld(), player, hand);
-        player.setHeldItem(hand, old);
+        return !stack.isEmpty();
     }
 
     public static NBTTagCompound getTag(ItemStack stack, String name, boolean create)
@@ -151,11 +62,6 @@ public class CompatWrapper
             stack.getTagCompound().setTag(name, ret);
         }
         return ret;
-    }
-
-    public static void processInitialInteract(Entity in, EntityPlayer player, EnumHand hand, ItemStack stack)
-    {
-        in.processInitialInteract(player, hand);
     }
 
     public static boolean interactWithBlock(Block block, World worldIn, BlockPos pos, IBlockState state,

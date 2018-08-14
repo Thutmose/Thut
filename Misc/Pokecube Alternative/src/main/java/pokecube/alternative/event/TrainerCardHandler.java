@@ -35,7 +35,7 @@ public class TrainerCardHandler
             if (index == -1 || CompatWrapper.isValid(data.inventory.getStackInSlot(index))) return;
             int slotIndex = event.getEntityPlayer().inventory.currentItem;
             data.inventory.setInventorySlotContents(index, item.copy());
-            player.inventory.setInventorySlotContents(slotIndex, CompatWrapper.nullStack);
+            player.inventory.setInventorySlotContents(slotIndex, ItemStack.EMPTY);
             PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), data.getIdentifier());
             event.setCanceled(true);
             return;

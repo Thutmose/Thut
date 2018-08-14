@@ -20,12 +20,14 @@ import net.minecraft.nbt.NBTException;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -35,7 +37,6 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -50,6 +51,7 @@ import thut.tech.Reference;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.BlockLift.EnumType;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.TileIDFixer;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.BlockHandler;
 import thut.tech.common.handlers.ConfigHandler;
@@ -152,6 +154,8 @@ public class TechCore
 
         EntityRegistry.registerModEntity(new ResourceLocation(Reference.MOD_ID, "lift"), EntityLift.class, "lift", 0,
                 this, 256, 1, true);
+        FMLCommonHandler.instance().getDataFixer().init(Reference.MOD_ID, 1).registerFix(FixTypes.BLOCK_ENTITY,
+                new TileIDFixer());
     }
 
     @SubscribeEvent
@@ -207,10 +211,5 @@ public class TechCore
                 }
             }
         }
-    }
-
-    @EventHandler
-    public void serverStop(FMLServerStoppedEvent e)
-    {
     }
 }

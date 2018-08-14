@@ -83,7 +83,7 @@ public class EventHandlerCommon
                         if (!CompatWrapper.isValid(cap.getCube(i)))
                         {
                             cap.setCube(i, item);
-                            player.inventory.setInventorySlotContents(slotIndex, CompatWrapper.nullStack);
+                            player.inventory.setInventorySlotContents(slotIndex, ItemStack.EMPTY);
                             syncPokemon(player);
                             toBelt = true;
                             break;
@@ -149,7 +149,7 @@ public class EventHandlerCommon
                                     event.getEntityLiving(), cube, t, null);
                             ITextComponent text = new TextComponentTranslation("pokecube.trainer.toss",
                                     event.getEntityLiving().getDisplayName(), cube.getDisplayName());
-                            cap.setCube(index, CompatWrapper.nullStack);
+                            cap.setCube(index, ItemStack.EMPTY);
                             syncPokemon((EntityPlayer) event.getEntityLiving());
                             target.sendMessage(text);
                             return;

@@ -31,7 +31,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import thut.api.ThutBlocks;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
-import thut.lib.CompatWrapper;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.BlockLift;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
@@ -172,8 +171,8 @@ public class ItemLinker extends Item
                 if (item != null)
                 {
                     ItemStack test = item.copy();
-                    CompatWrapper.setStackSize(test, CompatWrapper.getStackSize(liftblocks));
-                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += CompatWrapper.getStackSize(item);
+                    test.setCount(liftblocks.getCount());
+                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += item.getCount();
                 }
             }
             if (!playerIn.capabilities.isCreativeMode && count < num)
@@ -249,8 +248,8 @@ public class ItemLinker extends Item
                 if (item != null)
                 {
                     ItemStack test = item.copy();
-                    CompatWrapper.setStackSize(test, CompatWrapper.getStackSize(liftblocks));
-                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += CompatWrapper.getStackSize(item);
+                    test.setCount(liftblocks.getCount());
+                    if (ItemStack.areItemStacksEqual(test, liftblocks)) count += item.getCount();
                 }
             }
             if (!playerIn.capabilities.isCreativeMode && count < num)

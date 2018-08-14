@@ -21,7 +21,7 @@ public class ItemStackTools
      * impossible. */
     public static boolean addItemStackToInventory(ItemStack itemStackIn, IItemHandlerModifiable toAddTo, int minIndex)
     {
-        if (CompatWrapper.isValid(itemStackIn))
+        if (!itemStackIn.isEmpty())
         {
             try
             {
@@ -31,9 +31,9 @@ public class ItemStackTools
 
                     if (j >= 0)
                     {
-                        toAddTo.setStackInSlot(j, CompatWrapper.copy(itemStackIn));
-                        CompatWrapper.setAnimationToGo(toAddTo.getStackInSlot(j), 5);
-                        CompatWrapper.setStackSize(itemStackIn, 0);
+                        toAddTo.setStackInSlot(j, itemStackIn.copy());
+                        toAddTo.getStackInSlot(j).setAnimationsToGo(5);
+                        itemStackIn.setCount(0);
                         return true;
                     }
                     return false;
@@ -42,16 +42,15 @@ public class ItemStackTools
 
                 while (true)
                 {
-                    i = CompatWrapper.getStackSize(itemStackIn);
+                    i = itemStackIn.getCount();
                     int num = storePartialItemStack(itemStackIn, toAddTo, minIndex);
-                    itemStackIn = CompatWrapper.setStackSize(itemStackIn, num);
-                    int size = CompatWrapper.getStackSize(itemStackIn);
-                    if (size <= 0 || size >= i)
+                    itemStackIn.setCount(num);
+                    if (num <= 0 || num >= i)
                     {
                         break;
                     }
                 }
-                return CompatWrapper.getStackSize(itemStackIn) < i;
+                return itemStackIn.getCount() < i;
             }
             catch (Throwable throwable)
             {
@@ -68,9 +67,8 @@ public class ItemStackTools
 
     private static boolean canMergeStacks(ItemStack stack1, ItemStack stack2)
     {
-        return CompatWrapper.isValid(stack1) && stackEqualExact(stack1, stack2) && stack1.isStackable()
-                && CompatWrapper.getStackSize(stack1) < stack1.getMaxStackSize()
-                && CompatWrapper.getStackSize(stack1) < 64;
+        return !stack1.isEmpty() && stackEqualExact(stack1, stack2) && stack1.isStackable()
+                && stack1.getCount() < stack1.getMaxStackSize();
     }
 
     /** Checks item, NBT, and meta if the item is not damageable */
@@ -91,7 +89,7 @@ public class ItemStackTools
     {
         for (int i = minIndex; i < inventory.getSlots(); ++i)
         {
-            if (!CompatWrapper.isValid(inventory.getStackInSlot(i))) { return i; }
+            if (inventory.getStackInSlot(i).isEmpty()) { return i; }
         }
         return -1;
     }
@@ -110,7 +108,7 @@ public class ItemStackTools
      * matching slot and returns the quantity of left over items. */
     private static int storePartialItemStack(ItemStack itemStackIn, IItemHandlerModifiable inventory, int minIndex)
     {
-        int i = CompatWrapper.getStackSize(itemStackIn);
+        int i = itemStackIn.getCount();
         int j = storeItemStack(itemStackIn, inventory, minIndex);
 
         if (j < 0)
@@ -121,10 +119,10 @@ public class ItemStackTools
         if (j < 0) { return i; }
         ItemStack itemstack = inventory.getStackInSlot(j);
 
-        if (!CompatWrapper.isValid(itemstack))
+        if (itemstack.isEmpty())
         {
             itemstack = itemStackIn.copy();
-            CompatWrapper.setStackSize(itemstack, 0);
+            itemstack.setCount(0);
             if (itemStackIn.hasTagCompound())
             {
                 itemstack.setTagCompound((NBTTagCompound) itemStackIn.getTagCompound().copy());
@@ -133,7 +131,7 @@ public class ItemStackTools
         }
 
         int k = i;
-        int size = CompatWrapper.getStackSize(inventory.getStackInSlot(j));
+        int size = inventory.getStackInSlot(j).getCount();
         if (i > inventory.getStackInSlot(j).getMaxStackSize() - size)
         {
             k = inventory.getStackInSlot(j).getMaxStackSize() - size;
@@ -146,8 +144,8 @@ public class ItemStackTools
 
         if (k == 0) { return i; }
         i = i - k;
-        CompatWrapper.setStackSize(inventory.getStackInSlot(j), size + k);
-        CompatWrapper.setAnimationToGo(inventory.getStackInSlot(j), 5);
+        inventory.getStackInSlot(j).setCount(size + k);
+        inventory.getStackInSlot(j).setAnimationsToGo(5);
         return i;
     }
 }

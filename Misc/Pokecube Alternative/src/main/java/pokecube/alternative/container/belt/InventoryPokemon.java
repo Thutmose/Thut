@@ -43,7 +43,7 @@ public class InventoryPokemon implements IInventory
     @Override
     public ItemStack getStackInSlot(int slotIndex)
     {
-        return slotIndex >= this.getSizeInventory() ? CompatWrapper.nullStack : cap.getCube(slotIndex);
+        return slotIndex >= this.getSizeInventory() ? ItemStack.EMPTY : cap.getCube(slotIndex);
     }
 
     @Override
@@ -70,10 +70,10 @@ public class InventoryPokemon implements IInventory
         if (CompatWrapper.isValid(cap.getCube(slotIndex)))
         {
             ItemStack itemStack = cap.getCube(slotIndex);
-            cap.setCube(slotIndex, CompatWrapper.nullStack);
+            cap.setCube(slotIndex, ItemStack.EMPTY);
             return itemStack;
         }
-        return CompatWrapper.nullStack;
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class InventoryPokemon implements IInventory
             if (CompatWrapper.getStackSize(this.getStackInSlot(index)) <= count)
             {
                 itemstack = this.getStackInSlot(index);
-                this.setInventorySlotContents(index, CompatWrapper.nullStack);
+                this.setInventorySlotContents(index, ItemStack.EMPTY);
                 this.markDirty();
                 return itemstack;
             }
@@ -93,7 +93,7 @@ public class InventoryPokemon implements IInventory
 
             if (!CompatWrapper.isValid(itemstack))
             {
-                this.setInventorySlotContents(index, CompatWrapper.nullStack);
+                this.setInventorySlotContents(index, ItemStack.EMPTY);
             }
             else
             {
@@ -104,7 +104,7 @@ public class InventoryPokemon implements IInventory
             this.markDirty();
             return itemstack;
         }
-        return CompatWrapper.nullStack;
+        return ItemStack.EMPTY;
     }
 
     @Override
@@ -113,7 +113,7 @@ public class InventoryPokemon implements IInventory
         if (index < 0 || index >= this.getSizeInventory()) return;
         if (CompatWrapper.getStackSize(stack) > this.getInventoryStackLimit())
             CompatWrapper.setStackSize(stack, this.getInventoryStackLimit());
-        if (!CompatWrapper.isValid(stack)) stack = CompatWrapper.nullStack;
+        if (!CompatWrapper.isValid(stack)) stack = ItemStack.EMPTY;
         cap.setCube(index, stack);
         this.markDirty();
     }
@@ -183,7 +183,7 @@ public class InventoryPokemon implements IInventory
     {
         for (int i = 0; i < 6; i++)
         {
-            cap.setCube(i, CompatWrapper.nullStack);
+            cap.setCube(i, ItemStack.EMPTY);
         }
     }
 
