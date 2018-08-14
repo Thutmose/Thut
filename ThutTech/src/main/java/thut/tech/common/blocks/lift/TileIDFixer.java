@@ -25,7 +25,6 @@ public class TileIDFixer implements IFixableData
     public NBTTagCompound fixTagCompound(NBTTagCompound compound)
     {
         String s = OLD_TO_NEW_ID_MAP.get(compound.getString("id"));
-        System.out.println(compound.getString("id") + "->" + s);
         if (s != null)
         {
             compound.setString("id", s);
