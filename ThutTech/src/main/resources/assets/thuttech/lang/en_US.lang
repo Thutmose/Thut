@@ -31,4 +31,4 @@ ttinfobook.json={pages:["[\"\",{\"text\":\"Welcome the ThutTech Manual.\",\"colo
 
 
 #Misc
-entity.thuttech.lift.name=Elevator
+entity.lift.name=Elevator

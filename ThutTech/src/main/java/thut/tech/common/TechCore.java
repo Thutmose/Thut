@@ -2,13 +2,13 @@ package thut.tech.common;
 
 import static thut.tech.common.network.PacketPipeline.packetPipeline;
 
-import net.minecraft.block.Block;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;

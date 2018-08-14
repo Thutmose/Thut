@@ -18,9 +18,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
@@ -133,7 +135,27 @@ public class PacketHandler
                         int id = buffer.readInt();
                         NBTTagCompound nbt = buffer.readCompoundTag();
                         Entity e = player.getEntityWorld().getEntityByID(id);
-                        if (e != null) e.readFromNBT(nbt);
+                        if (e != null)
+                        {
+                            // Check if the mob somehow was removed from chunk
+                            // lists, if so, add it back in.
+                            Chunk chunk = e.getEntityWorld().getChunkFromBlockCoords(e.getPosition());
+                            ClassInheritanceMultiMap<Entity>[] entityLists = chunk.getEntityLists();
+                            int k = MathHelper.floor(e.posY / 16.0D);
+                            if (k < 0)
+                            {
+                                k = 0;
+                            }
+
+                            if (k >= entityLists.length)
+                            {
+                                k = entityLists.length - 1;
+                            }
+                            if (!entityLists[k].contains(e)) chunk.addEntity(e);
+
+                            // Read the mob from NBT
+                            e.readFromNBT(nbt);
+                        }
                     }
                     catch (IOException e)
                     {
