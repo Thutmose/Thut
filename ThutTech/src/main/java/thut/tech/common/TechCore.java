@@ -154,7 +154,7 @@ public class TechCore
 
         EntityRegistry.registerModEntity(new ResourceLocation(Reference.MOD_ID, "lift"), EntityLift.class, "lift", 0,
                 this, 256, 1, true);
-        FMLCommonHandler.instance().getDataFixer().init(Reference.MOD_ID, 1).registerFix(FixTypes.BLOCK_ENTITY,
+        FMLCommonHandler.instance().getDataFixer().init(Reference.MOD_ID, 88888).registerFix(FixTypes.BLOCK_ENTITY,
                 new TileIDFixer());
     }
 

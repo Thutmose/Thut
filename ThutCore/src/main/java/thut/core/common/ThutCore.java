@@ -2,11 +2,16 @@ package thut.core.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
@@ -57,12 +62,40 @@ import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.terrain.CapabilityTerrainAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.DefaultAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.ITerrainAffected;
-import thut.permissions.LogFormatter;
 import thut.reference.Reference;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, acceptableRemoteVersions = Reference.MINVERSION, guiFactory = "thut.core.client.config.ModGuiFactory")
 public class ThutCore
 {
+    public static final class LogFormatter extends Formatter
+    {
+        private static final String SEP        = System.getProperty("line.separator");
+
+        private SimpleDateFormat    dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss");
+
+        @Override
+        public String format(LogRecord record)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(dateFormat.format(record.getMillis()));
+            sb.append(" [").append(record.getLevel().getLocalizedName()).append("] ");
+
+            sb.append(record.getMessage());
+            sb.append(SEP);
+            Throwable thr = record.getThrown();
+
+            if (thr != null)
+            {
+                StringWriter thrDump = new StringWriter();
+                thr.printStackTrace(new PrintWriter(thrDump));
+                sb.append(thrDump.toString());
+            }
+
+            return sb.toString();
+        }
+    }
+
     @SidedProxy(clientSide = Reference.CLIENT_PROXY_CLASS, serverSide = Reference.COMMON_PROXY_CLASS)
     public static CommonProxy     proxy;
 

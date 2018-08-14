@@ -18,18 +18,19 @@ public class TileIDFixer implements IFixableData
     @Override
     public int getFixVersion()
     {
-        return 10;
+        return 88888;
     }
 
     @Override
     public NBTTagCompound fixTagCompound(NBTTagCompound compound)
     {
         String s = OLD_TO_NEW_ID_MAP.get(compound.getString("id"));
+        System.out.println(compound.getString("id") + "->" + s);
         if (s != null)
         {
             compound.setString("id", s);
         }
-        return null;
+        return compound;
     }
 
 }
