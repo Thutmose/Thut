@@ -117,6 +117,9 @@ public class BlockEntityUpdater
 
     public void applyEntityCollision(Entity entity)
     {
+        // TODO instead of this, apply appropriate transformation to the
+        // entity's box, and then collide off that, then apply appropriate
+        // inverse transformation before actually applying collision to entity.
         if ((theEntity.rotationYaw + 360) % 90 > 5 || theEntity.isPassenger(entity)) return;
 
         blockBoxes.clear();
@@ -370,7 +373,8 @@ public class BlockEntityUpdater
                 }
             }
             /** This is for clearing jump values on client. */
-            if (player.getEntityWorld().isRemote) player.getEntityData().setInteger("lastStandTick", player.ticksExisted);
+            if (player.getEntityWorld().isRemote)
+                player.getEntityData().setInteger("lastStandTick", player.ticksExisted);
             if (!player.capabilities.isFlying)
             {
                 entity.onGround = true;

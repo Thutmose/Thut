@@ -176,6 +176,10 @@ public interface IBlockEntity
                 for (int j = 0; j < sizeY; j++)
                     for (int k = 0; k < sizeZ; k++)
                     {
+                        // TODO Apply transformation onto this pos based on
+                        // whether the entity is rotated, and then also call the
+                        // block's rotate method as well before placing the
+                        // IBlockState.
                         BlockPos pos = new BlockPos(i + xMin + entity.posX, j + yMin + entity.posY,
                                 k + zMin + entity.posZ);
                         IBlockState state = toRevert.getFakeWorld().getBlockState(pos);

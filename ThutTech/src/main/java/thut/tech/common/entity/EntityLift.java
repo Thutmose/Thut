@@ -1,56 +1,32 @@
 package thut.tech.common.entity;
 
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.MoverType;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumHandSide;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import thut.api.entity.blockentity.BlockEntityUpdater;
+import thut.api.entity.blockentity.BlockEntityBase;
+import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.api.entity.blockentity.BlockEntityWorld;
-import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
-import thut.lib.CompatWrapper;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.handlers.ConfigHandler;
 
-public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpawnData, IBlockEntity
+public class EntityLift extends BlockEntityBase
 {
     static final DataParameter<Integer> DESTINATIONFLOORDW = EntityDataManager.<Integer> createKey(EntityLift.class,
             DataSerializers.VARINT);
@@ -65,42 +41,17 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     static final DataParameter<Boolean> CALLEDDW           = EntityDataManager.<Boolean> createKey(EntityLift.class,
             DataSerializers.BOOLEAN);
 
-    public static int                   ACCELERATIONTICKS  = 20;
-
     public static boolean               ENERGYUSE          = false;
     public static int                   ENERGYCOST         = 100;
 
-    public BlockPos                     boundMin           = BlockPos.ORIGIN;
-    public BlockPos                     boundMax           = BlockPos.ORIGIN;
-
     int                                 energy             = 0;
-    BlockEntityWorld                    fakeWorld;
-    public double                       speedUp            = ConfigHandler.LiftSpeedUp;
-    public double                       speedDown          = -ConfigHandler.LiftSpeedDown;
-    public double                       speedHoriz         = 0.5;
-    public double                       acceleration       = 0.05;
-    public boolean                      toMoveY            = false;
-    public boolean                      toMoveX            = false;
-    public boolean                      toMoveZ            = false;
-    public boolean                      axis               = true;
-    public boolean                      hasPassenger       = false;
-    int                                 n                  = 0;
-    int                                 passengertime      = 10;
-    boolean                             first              = true;
-    private boolean                     shouldRevert       = true;
-    Random                              r                  = new Random();
     public UUID                         owner;
     public double                       prevFloorY         = 0;
     public double                       prevFloor          = 0;
     TileEntityLiftAccess                current;
-    public List<AxisAlignedBB>          blockBoxes         = Lists.newArrayList();
     public int[]                        floors             = new int[128];
     public boolean[]                    hasFloors          = new boolean[128];
-    public IBlockState[][][]            blocks             = null;
-    public TileEntity[][][]             tiles              = null;
-    public BlockEntityUpdater           collider;
     private Vector3f                    velocity           = new Vector3f();
-    LiftInteractHandler                 interacter;
 
     public EntityLift(World par1World)
     {
@@ -108,76 +59,32 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this.ignoreFrustumCheck = true;
         this.hurtResistantTime = 0;
         this.isImmuneToFire = true;
-    }
-
-    @Override
-    public BlockEntityWorld getFakeWorld()
-    {
-        if (fakeWorld == null)
-        {
-            fakeWorld = new BlockEntityWorld(this, getEntityWorld());
-        }
-        return fakeWorld;
+        speedUp = ConfigHandler.LiftSpeedUp;
+        speedDown = -ConfigHandler.LiftSpeedDown;
     }
 
     public EntityLift(World world, double x, double y, double z)
     {
         this(world);
         this.setPosition(x, y, z);
-        r.setSeed(100);
     }
 
     @Override
-    /** Called when the entity is attacked. */
-    public boolean attackEntityFrom(DamageSource source, float amount)
+    protected boolean checkAccelerationConditions()
     {
-        return false;
+        return consumePower();
     }
 
     @Override
-    /** knocks back this entity */
-    public void knockBack(Entity entityIn, float strenght, double xRatio, double zRatio)
+    protected BlockEntityInteractHandler createInteractHandler()
     {
-
+        return new LiftInteractHandler(this);
     }
 
-    private double getSpeed(double pos, double destPos, double speed, double speedPos, double speedNeg)
+    @Override
+    public void accelerate()
     {
-        if (!getEntityWorld().isAreaLoaded(getPosition(), 8)) { return 0; }
-
-        double ds = speed;
-        if (destPos > pos)
-        {
-            boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
-            if (!tooFast)
-            {
-                ds = Math.min(speedPos, ds + acceleration * speedPos);
-            }
-            else while (ds >= 0 && tooFast)
-            {
-                ds = ds - acceleration * speedPos / 10;
-                tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
-            }
-        }
-        else
-        {
-            speedNeg = Math.abs(speedNeg);
-            boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
-            if (!tooFast)
-            {
-                ds = Math.max(-speedNeg, ds - acceleration * speedNeg);
-            }
-            else while (ds <= 0 && tooFast)
-            {
-                ds = ds + acceleration * speedNeg / 10;
-                tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
-            }
-        }
-        return ds;
-    }
-
-    private void accelerate()
-    {
+        this.rotationYaw = 0;
         if (isServerWorld() && !consumePower())
         {
             toMoveY = toMoveX = toMoveZ = false;
@@ -218,27 +125,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    /** Applies a velocity to each of the entities pushing them away from each
-     * other. Args: entity */
-    @Override
-    public void applyEntityCollision(Entity entity)
-    {
-        if (entity instanceof IBlockEntity) return;
-        if (collider == null)
-        {
-            collider = new BlockEntityUpdater(this);
-            collider.onSetPosition();
-        }
-        try
-        {
-            collider.applyEntityCollision(entity);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     public void call(int floor)
     {
         if (floor == 0 || floor > floors.length) { return; }
@@ -252,54 +138,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void callYValue(int yValue)
     {
         setDestY(yValue);
-    }
-
-    /** Returns true if other Entities should be prevented from moving through
-     * this Entity. */
-    @Override
-    public boolean canBeCollidedWith()
-    {
-        return !this.isDead;
-    }
-
-    /** Returns true if this entity should push and be pushed by other entities
-     * when colliding. */
-    @Override
-    public boolean canBePushed()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean canRenderOnFire()
-    {
-        return false;
-    }
-
-    public void checkCollision()
-    {
-        int xMin = boundMin.getX();
-        int zMin = boundMin.getZ();
-        int xMax = boundMax.getX();
-        int zMax = boundMax.getZ();
-        List<?> list = this.getEntityWorld().getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(
-                posX + (xMin - 1), posY, posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
-        hasPassenger = false;
-        if (list != null && !list.isEmpty())
-        {
-            if (list.size() == 1 && this.getRecursivePassengers() != null
-                    && !this.getRecursivePassengers().isEmpty()) { return; }
-            for (int i = 0; i < list.size(); ++i)
-            {
-                Entity entity = (Entity) list.get(i);
-                applyEntityCollision(entity);
-                if (entity instanceof EntityPlayerMP
-                        && entity.getEntityBoundingBox().grow(2).intersects(getEntityBoundingBox()))
-                {
-                    hasPassenger = true;
-                }
-            }
-        }
     }
 
     private boolean consumePower()
@@ -332,6 +170,7 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this.energy = energy;
     }
 
+    @Override
     public void doMotion()
     {
         if (!toMoveX) motionX = velocity.x = 0;
@@ -349,21 +188,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     }
 
     @Override
-    public void resetPositionToBB()
-    {
-        BlockPos min = getMin();
-        BlockPos max = getMax();
-        float xDiff = (max.getX() - min.getX()) / 2f;
-        float zDiff = (max.getZ() - min.getZ()) / 2f;
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-        if ((xDiff % 1) != 0) this.posX = (axisalignedbb.minX + xDiff);
-        else this.posX = (axisalignedbb.minX + axisalignedbb.maxX) / 2.0D;
-        this.posY = axisalignedbb.minY;
-        if (zDiff % 1 != 0) this.posZ = (axisalignedbb.minZ + zDiff);
-        else this.posZ = (axisalignedbb.minZ + axisalignedbb.maxZ) / 2.0D;
-    }
-
-    @Override
     protected void entityInit()
     {
         super.entityInit();
@@ -373,19 +197,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         this.dataManager.register(DESTINATIONZDW, Float.valueOf(0));
         this.dataManager.register(CURRENTFLOORDW, Integer.valueOf(-1));
         this.dataManager.register(CALLEDDW, Boolean.FALSE);
-    }
-
-    /** returns the bounding box for this entity */
-    public AxisAlignedBB getBoundingBox()
-    {
-        return null;
-    }
-
-    /** Checks if the entity's current position is a valid location to spawn
-     * this entity. */
-    public boolean getCanSpawnHere()
-    {
-        return false;
     }
 
     public boolean getCalled()
@@ -428,32 +239,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return dataManager.get(DESTINATIONZDW);
     }
 
-    // 1.11
-    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, EnumHand hand)
-    {
-        return applyPlayerInteraction(player, vec, player.getHeldItem(hand), hand);
-    }
-
-    // 1.10
-    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
-            EnumHand hand)
-    {
-        if (interacter == null) interacter = new LiftInteractHandler(this);
-        return interacter.applyPlayerInteraction(player, vec, stack, hand);
-    }
-
-    // 1.11
-    public boolean processInitialInteract(EntityPlayer player, EnumHand hand)
-    {
-        return processInitialInteract(player, player.getHeldItem(hand), hand);
-    }
-
-    // 1.10
-    public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
-    {
-        return interacter.processInitialInteract(player, stack, hand);
-    }
-
     @Override
     public boolean isPotionApplicable(PotionEffect par1PotionEffect)
     {
@@ -461,152 +246,19 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     }
 
     @Override
-    public void onUpdate()
+    protected void onGridAlign()
     {
-        if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
-        if (collider == null)
-        {
-            this.collider = new BlockEntityUpdater(this);
-            this.collider.onSetPosition();
-        }
-        this.prevPosY = this.posY;
-        this.prevPosX = this.posX;
-        this.prevPosZ = this.posZ;
-        collider.onUpdate();
-        int dy = (int) ((getDestY() - posY) * 16);
-        int dx = (int) ((getDestX() - posX) * 16);
-        int dz = (int) ((getDestZ() - posZ) * 16);
-        toMoveZ = 0 != dz;
-        toMoveY = 0 != dy;
-        toMoveX = 0 != dx;
-        accelerate();
-        if (toMoveY || toMoveX || toMoveZ)
-        {
-            doMotion();
-        }
-        else
-        {
-            setCalled(false);
-            BlockPos pos = getPosition();
-            setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
-        }
-        this.rotationYaw = 0;
-        checkCollision();
-        n++;
-        if (getEntityWorld() instanceof WorldServer && n % 100 == 0 && !hasPassenger)
-        {
-            PacketHandler.sendEntityUpdate(this);
-        }
-    }
-
-    public void readBlocks(NBTTagCompound nbt)
-    {
-        if (nbt.hasKey("Blocks"))
-        {
-            NBTTagCompound blockTag = nbt.getCompoundTag("Blocks");
-            int sizeX = blockTag.getInteger("BlocksLengthX");
-            int sizeZ = blockTag.getInteger("BlocksLengthZ");
-            int sizeY = blockTag.getInteger("BlocksLengthY");
-            if (sizeX == 0 || sizeZ == 0)
-            {
-                sizeX = sizeZ = nbt.getInteger("BlocksLength");
-            }
-            if (sizeY == 0) sizeY = 1;
-            int version = blockTag.getInteger("v");
-            blocks = new IBlockState[sizeX][sizeY][sizeZ];
-            tiles = new TileEntity[sizeX][sizeY][sizeZ];
-            for (int i = 0; i < sizeX; i++)
-                for (int k = 0; k < sizeY; k++)
-                    for (int j = 0; j < sizeZ; j++)
-                    {
-                        int n = -1;
-                        if (blockTag.hasKey("I" + i + "," + j))
-                        {
-                            n = blockTag.getInteger("I" + i + "," + j);
-                        }
-                        else if (blockTag.hasKey("I" + i + "," + k + "," + j))
-                        {
-                            n = blockTag.getInteger("I" + i + "," + k + "," + j);
-                        }
-                        if (n == -1) continue;
-                        IBlockState state;
-                        if (version == 0)
-                        {
-                            Block b = Block.getBlockFromItem(Item.getItemById(n));
-                            int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
-                            state = CompatWrapper.getBlockStateFromMeta(b, meta);
-                        }
-                        else
-                        {
-                            Block b = Block.getBlockById(n);
-                            int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
-                            state = CompatWrapper.getBlockStateFromMeta(b, meta);
-                        }
-                        blocks[i][k][j] = state;
-                        if (blockTag.hasKey("T" + i + "," + k + "," + j))
-                        {
-                            try
-                            {
-                                NBTTagCompound tag = blockTag.getCompoundTag("T" + i + "," + k + "," + j);
-                                tiles[i][k][j] = IBlockEntity.BlockEntityFormer.makeTile(tag);
-                            }
-                            catch (Exception e)
-                            {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-            // Call these to set some values for the tiles.
-            this.setTiles(getTiles());
-            this.setBlocks(getBlocks());
-        }
+        BlockPos pos = getPosition();
+        setCalled(false);
+        setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
+        PacketHandler.sendEntityUpdate(this);
     }
 
     @Override
     public void readEntityFromNBT(NBTTagCompound nbt)
     {
         super.readEntityFromNBT(nbt);
-        axis = nbt.getBoolean("axis");
         energy = nbt.getInteger("energy");
-        if (nbt.hasKey("bounds"))
-        {
-            NBTTagCompound bounds = nbt.getCompoundTag("bounds");
-            boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
-            boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
-        }
-        if (nbt.hasKey("ownerhigher")) owner = new UUID(nbt.getLong("ownerhigher"), nbt.getLong("ownerlower"));
-        readList(nbt);
-        readBlocks(nbt);
-    }
-
-    public void readList(NBTTagCompound nbt)
-    {
-        NBTTagCompound floorTag = nbt.getCompoundTag("floors");
-        for (int i = 0; i < floors.length; i++)
-        {
-            floors[i] = floorTag.getInteger("" + i);
-            if (floorTag.hasKey("f" + i))
-            {
-                hasFloors[i] = floorTag.getBoolean("f" + i);
-            }
-            else hasFloors[i] = floors[i] > 0;
-        }
-    }
-
-    @Override
-    public void readSpawnData(ByteBuf data)
-    {
-        PacketBuffer buff = new PacketBuffer(data);
-        NBTTagCompound tag = new NBTTagCompound();
-        try
-        {
-            tag = buff.readCompoundTag();
-            readEntityFromNBT(tag);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
     }
 
     /** @param currentFloor
@@ -614,30 +266,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
     public void setCurrentFloor(int currentFloor)
     {
         dataManager.set(CURRENTFLOORDW, Integer.valueOf(currentFloor));
-    }
-
-    /** Will get destroyed next tick. */
-    @Override
-    public void setDead()
-    {
-        if (!getEntityWorld().isRemote && !this.isDead && this.addedToChunk && shouldRevert)
-        {
-            IBlockEntity.BlockEntityFormer.RevertEntity(this);
-        }
-        super.setDead();
-    }
-
-    @Override
-    public void setDropItemsWhenDead(boolean dropWhenDead)
-    {
-        shouldRevert = dropWhenDead;
-    }
-
-    @Override
-    public void setPosition(double x, double y, double z)
-    {
-        super.setPosition(x, y, z);
-        if (collider != null) collider.onSetPosition();
     }
 
     /** @param destinationFloor
@@ -692,151 +320,17 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         }
     }
 
-    public void writeBlocks(NBTTagCompound nbt)
-    {
-        if (blocks != null)
-        {
-            NBTTagCompound blocksTag = new NBTTagCompound();
-            blocksTag.setInteger("BlocksLengthX", blocks.length);
-            blocksTag.setInteger("BlocksLengthY", blocks[0].length);
-            blocksTag.setInteger("BlocksLengthZ", blocks[0][0].length);
-            blocksTag.setInteger("v", 1);
-            int sizeX = blocks.length;
-            int sizeY = blocks[0].length;
-            int sizeZ = blocks[0][0].length;
-            for (int i = 0; i < sizeX; i++)
-            {
-                for (int k = 0; k < sizeY; k++)
-                {
-                    for (int j = 0; j < sizeZ; j++)
-                    {
-                        IBlockState b = blocks[i][k][j];
-                        if (b == null) continue;
-                        blocksTag.setInteger("I" + i + "," + k + "," + j, Block.getIdFromBlock(b.getBlock()));
-                        blocksTag.setInteger("M" + i + "," + k + "," + j, b.getBlock().getMetaFromState(b));
-                        try
-                        {
-                            if (tiles[i][k][j] != null)
-                            {
-
-                                NBTTagCompound tag = new NBTTagCompound();
-                                tag = tiles[i][k][j].writeToNBT(tag);
-                                blocksTag.setTag("T" + i + "," + k + "," + j, tag);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-            nbt.setTag("Blocks", blocksTag);
-        }
-    }
-
     @Override
     public void writeEntityToNBT(NBTTagCompound nbt)
     {
         super.writeEntityToNBT(nbt);
-        nbt.setBoolean("axis", axis);
-
-        NBTTagCompound vector = new NBTTagCompound();
-        vector.setDouble("minx", boundMin.getX());
-        vector.setDouble("miny", boundMin.getY());
-        vector.setDouble("minz", boundMin.getZ());
-        vector.setDouble("maxx", boundMax.getX());
-        vector.setDouble("maxy", boundMax.getY());
-        vector.setDouble("maxz", boundMax.getZ());
-        nbt.setTag("bounds", vector);
         nbt.setInteger("energy", energy);
-        if (owner != null)
-        {
-            nbt.setLong("ownerlower", owner.getLeastSignificantBits());
-            nbt.setLong("ownerhigher", owner.getMostSignificantBits());
-        }
-        writeList(nbt);
-        try
-        {
-            writeBlocks(nbt);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeList(NBTTagCompound nbt)
-    {
-        NBTTagCompound floorTag = new NBTTagCompound();
-        for (int i = 0; i < floors.length; i++)
-        {
-            floorTag.setInteger("" + i, floors[i]);
-            floorTag.setBoolean("f" + i, hasFloors[i]);
-        }
-        nbt.setTag("floors", floorTag);
-    }
-
-    @Override
-    public void writeSpawnData(ByteBuf data)
-    {
-        PacketBuffer buff = new PacketBuffer(data);
-        NBTTagCompound tag = new NBTTagCompound();
-        writeEntityToNBT(tag);
-        buff.writeCompoundTag(tag);
-    }
-
-    @Override
-    public Iterable<ItemStack> getArmorInventoryList()
-    {
-        return Lists.newArrayList();
-    }
-
-    @Override
-    public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn)
-    {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public void setItemStackToSlot(EntityEquipmentSlot slotIn, ItemStack stack)
-    {
-    }
-
-    @Override
-    public ItemStack getHeldItem(EnumHand hand)
-    {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public void setHeldItem(EnumHand hand, @Nullable ItemStack stack)
-    {
-
-    }
-
-    @Override
-    public EnumHandSide getPrimaryHand()
-    {
-        return EnumHandSide.LEFT;
-    }
-
-    @Override
-    public void setBlocks(IBlockState[][][] blocks)
-    {
-        this.blocks = blocks;
-    }
-
-    @Override
-    public IBlockState[][][] getBlocks()
-    {
-        return blocks;
     }
 
     @Override
     public void setTiles(TileEntity[][][] tiles)
     {
-        this.tiles = tiles;
+        super.setTiles(tiles);
         for (TileEntity[][] tileArrArr : tiles)
         {
             for (TileEntity[] tileArr : tileArrArr)
@@ -850,42 +344,6 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
                 }
             }
         }
-    }
-
-    @Override
-    public TileEntity[][][] getTiles()
-    {
-        return tiles;
-    }
-
-    @Override
-    public BlockPos getMin()
-    {
-        return boundMin;
-    }
-
-    @Override
-    public BlockPos getMax()
-    {
-        return boundMax;
-    }
-
-    @Override
-    public void setMin(BlockPos pos)
-    {
-        this.boundMin = pos;
-    }
-
-    @Override
-    public void setMax(BlockPos pos)
-    {
-        this.boundMax = pos;
-    }
-
-    @Override
-    public void setFakeWorld(BlockEntityWorld world)
-    {
-        this.fakeWorld = world;
     }
 
     public static EntityLift getLiftFromUUID(final UUID liftID, World world)
@@ -915,10 +373,8 @@ public class EntityLift extends EntityLivingBase implements IEntityAdditionalSpa
         return ret;
     }
 
-    @SideOnly(Side.CLIENT)
     @Override
-    public boolean isInRangeToRenderDist(double distance)
+    protected void preColliderTick()
     {
-        return true;
     }
 }

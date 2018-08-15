@@ -30,8 +30,7 @@ public class BlockEntityInteractHandler
     public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
             EnumHand hand)
     {
-        vec = vec.addVector(vec.x > 0 ? -0.01 : 0.01, vec.y > 0 ? -0.01 : 0.01,
-                vec.z > 0 ? -0.01 : 0.01);
+        vec = vec.addVector(vec.x > 0 ? -0.01 : 0.01, vec.y > 0 ? -0.01 : 0.01, vec.z > 0 ? -0.01 : 0.01);
         Vec3d playerPos = player.getPositionVector().addVector(0, player.isServerWorld() ? player.getEyeHeight() : 0,
                 0);
         Vec3d start = playerPos;
@@ -42,7 +41,7 @@ public class BlockEntityInteractHandler
         EnumFacing side = EnumFacing.DOWN;
         if (trace == null)
         {
-            pos = new BlockPos(0, 0, 0);
+            pos = theEntity.getPosition();
             hitX = hitY = hitZ = 0;
         }
         else
