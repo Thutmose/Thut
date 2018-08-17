@@ -84,18 +84,23 @@ public class EntityLift extends BlockEntityBase
     @Override
     public void accelerate()
     {
+        // These elevators shouldn't be able to rotate, set this here incase
+        // someone else has tried to rotate it.
         this.rotationYaw = 0;
+        // Only should run the consume power check on servers.
         if (isServerWorld() && !consumePower())
         {
             toMoveY = toMoveX = toMoveZ = false;
         }
         else
         {
+            // Otherwise set it to move if it has a destination.
             toMoveX = getDestX() != posX;
             toMoveY = getDestY() != posY;
             toMoveZ = getDestZ() != posZ;
         }
 
+        // Apply damping to velocities if no destination.
         if (!toMoveX) velocity.x *= 0.5;
         if (!toMoveZ) velocity.z *= 0.5;
         if (!toMoveY) velocity.y *= 0.5;
@@ -105,6 +110,8 @@ public class EntityLift extends BlockEntityBase
             if (toMoveY)
             {
                 float destY = getDestY();
+                // If Sufficiently close (0,01 blocks) just snap the elevator to
+                // the destination.
                 if (Math.abs(destY - posY) < 0.01)
                 {
                     setPosition(posX, destY, posZ);
@@ -113,6 +120,7 @@ public class EntityLift extends BlockEntityBase
                 }
                 else
                 {
+                    // Otherwise accelerate accordingly.
                     double dy = getSpeed(posY, destY, velocity.y, speedUp, speedDown);
                     velocity.y = (float) dy;
                 }

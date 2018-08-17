@@ -3,6 +3,7 @@ package thut.api.entity.blockentity;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
@@ -33,6 +34,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thut.core.common.ThutCore;
 
 public abstract class BlockEntityBase extends EntityLivingBase implements IEntityAdditionalSpawnData, IBlockEntity
 {
@@ -256,8 +258,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
         }
         catch (Exception e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            ThutCore.logger.log(Level.SEVERE, "Error handling interactions for " + this, e);
             return super.applyPlayerInteraction(player, vec, hand);
         }
     }

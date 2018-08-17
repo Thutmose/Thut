@@ -609,7 +609,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (lift != null)
         {
-            lift.setDestX(args.checkInteger(0));
+            // +0.5f as the elevator is in centre of blocks.
+            lift.setDestX(args.checkInteger(0) + 0.5f);
             return new Object[] {};
         }
         throw new Exception("no connected lift");
@@ -625,7 +626,8 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     {
         if (lift != null)
         {
-            lift.setDestZ(args.checkInteger(0));
+            // +0.5f as the elevator is in centre of blocks.
+            lift.setDestZ(args.checkInteger(0) + 0.5f);
             return new Object[] {};
         }
         throw new Exception("no connected lift");

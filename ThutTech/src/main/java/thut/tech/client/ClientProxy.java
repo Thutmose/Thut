@@ -78,7 +78,6 @@ public class ClientProxy extends CommonProxy
     @Override
     public void registerItemModels()
     {
-        // TODO Auto-generated method stub
         super.registerItemModels();
         Item lift = Item.getItemFromBlock(ThutBlocks.lift);
         ModelBakery.registerItemVariants(lift, new ModelResourceLocation("thuttech:liftcontroller", "inventory"),
@@ -88,7 +87,6 @@ public class ClientProxy extends CommonProxy
     @Override
     public void registerBlockModels()
     {
-        // TODO Auto-generated method stub
         super.registerBlockModels();
         ModelLoader.setCustomStateMapper(ThutBlocks.lift, (new StateMap.Builder()).withName(BlockLift.VARIANT)
                 .ignore(new IProperty[] { BlockLift.CALLED, BlockLift.CURRENT }).build());

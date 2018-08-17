@@ -1750,7 +1750,6 @@ public class Vector3
 
         Chunk chunk = world.getChunkFromBlockCoords(new BlockPos(x, 0, z));
         byte[] biomes = chunk.getBiomeArray();
-        // TODO confirm that this actually works, and doesn't need an offset.
         byte newBiome = (byte) Biome.getIdForBiome(biome);
 
         int chunkX = Math.abs(x & 15);

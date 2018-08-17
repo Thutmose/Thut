@@ -26,7 +26,6 @@ public class EntityProjectile extends EntityFallingBlock
     public EntityProjectile(World worldIn)
     {
         super(worldIn);
-        // TODO Auto-generated constructor stub
     }
 
     public EntityProjectile(World worldIn, double x, double y, double z, IBlockState fallingBlockState)

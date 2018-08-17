@@ -81,13 +81,6 @@ public class TickHandler
             return blockTo + " " + dimension + " " + location;
         }
 
-        @Override
-        public int hashCode()
-        {
-            // TODO Auto-generated method stub
-            return super.hashCode();
-        }
-
     }
 
     private static TickHandler                 instance;
