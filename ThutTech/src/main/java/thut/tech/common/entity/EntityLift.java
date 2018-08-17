@@ -89,40 +89,69 @@ public class EntityLift extends BlockEntityBase
         {
             toMoveY = toMoveX = toMoveZ = false;
         }
-
-        if (!toMoveX) motionX *= 0.5;
-        if (!toMoveZ) motionZ *= 0.5;
-        if (!toMoveY) motionY *= 0.5;
+        else
+        {
+            toMoveX = getDestX() != posX;
+            toMoveY = getDestY() != posY;
+            toMoveZ = getDestZ() != posZ;
+        }
 
         if (!toMoveX) velocity.x *= 0.5;
         if (!toMoveZ) velocity.z *= 0.5;
         if (!toMoveY) velocity.y *= 0.5;
-
-        motionX = velocity.x;
-        motionY = velocity.y;
-        motionZ = velocity.z;
 
         if (getCalled())
         {
             if (toMoveY)
             {
                 float destY = getDestY();
-                double dy = getSpeed(posY, destY, velocity.y, speedUp, speedDown);
-                velocity.y = (float) (motionY = dy);
+                if (Math.abs(destY - posY) < 0.01)
+                {
+                    setPosition(posX, destY, posZ);
+                    toMoveY = false;
+                    velocity.y = 0;
+                }
+                else
+                {
+                    double dy = getSpeed(posY, destY, velocity.y, speedUp, speedDown);
+                    velocity.y = (float) dy;
+                }
             }
             if (toMoveX)
             {
                 float destX = getDestX();
-                double dx = getSpeed(posX, destX, velocity.x, speedHoriz, speedHoriz);
-                velocity.x = (float) (motionX = dx);
+                if (Math.abs(destX - posX) < 0.01)
+                {
+                    setPosition(destX, posY, posZ);
+                    toMoveX = false;
+                    velocity.x = 0;
+                }
+                else
+                {
+                    double dx = getSpeed(posX, destX, velocity.x, speedHoriz, speedHoriz);
+                    velocity.x = (float) dx;
+                }
             }
             if (toMoveZ)
             {
                 float destZ = getDestZ();
-                double dz = getSpeed(posZ, destZ, velocity.z, speedHoriz, speedHoriz);
-                velocity.z = (float) (motionZ = dz);
+                if (Math.abs(destZ - posZ) < 0.01)
+                {
+                    setPosition(posX, posY, destZ);
+                    toMoveZ = false;
+                    velocity.z = 0;
+                }
+                else
+                {
+                    double dz = getSpeed(posZ, destZ, velocity.z, speedHoriz, speedHoriz);
+                    velocity.z = (float) dz;
+                }
             }
         }
+
+        motionX = velocity.x;
+        motionY = velocity.y;
+        motionZ = velocity.z;
     }
 
     public void call(int floor)

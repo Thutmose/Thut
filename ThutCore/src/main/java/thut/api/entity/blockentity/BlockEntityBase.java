@@ -102,7 +102,8 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     {
         if (!getEntityWorld().isAreaLoaded(getPosition(), 8)) { return 0; }
         double ds = speed;
-        if (destPos > pos)
+        double dp = destPos - pos;
+        if (dp > 0)
         {
             boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
             if (!tooFast)
@@ -114,8 +115,9 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
                 ds = ds - acceleration * speedPos / 10;
                 tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
             }
+            return ds;
         }
-        else
+        else if (dp < 0)
         {
             speedNeg = Math.abs(speedNeg);
             boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
@@ -128,8 +130,9 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
                 ds = ds + acceleration * speedNeg / 10;
                 tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
             }
+            return ds;
         }
-        return ds;
+        else return 0;
     }
 
     abstract protected void accelerate();
