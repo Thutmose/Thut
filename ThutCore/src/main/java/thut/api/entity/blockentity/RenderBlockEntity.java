@@ -114,8 +114,10 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
         GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
         GlStateManager.translate(0.5F, 0.5F, 0.5F);
         RenderHelper.disableStandardItemLighting();
+        boolean blend = GL11.glGetBoolean(GL11.GL_BLEND);
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.enableBlend();
+
         GlStateManager.disableCull();
 
         if (Minecraft.isAmbientOcclusionEnabled())
@@ -132,6 +134,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
         FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         IBakedModel model = getCrateModel();
         renderBakedBlockModel(blockEntity, model, Blocks.STONE.getDefaultState(), blockEntity.getFakeWorld(), pos);
+        if (!blend) GL11.glDisable(GL11.GL_BLEND);
         RenderHelper.enableStandardItemLighting();
         GlStateManager.popMatrix();
     }
@@ -166,9 +169,12 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                 GlStateManager.rotate(-180.0F, 1.0F, 0.0F, 0.0F);
                 GlStateManager.translate(0.5F, 0.5F, 0.5F);
                 RenderHelper.disableStandardItemLighting();
+
+                boolean blend = GL11.glGetBoolean(GL11.GL_BLEND);
                 GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
                         GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
                 GlStateManager.enableBlend();
+
                 GlStateManager.disableCull();
 
                 if (Minecraft.isAmbientOcclusionEnabled())
@@ -185,6 +191,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                 FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
                 IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
                 renderBakedBlockModel(entity, model, iblockstate, entity.getFakeWorld(), pos);
+                 if (!blend) GL11.glDisable(GL11.GL_BLEND);
                 RenderHelper.enableStandardItemLighting();
                 GlStateManager.popMatrix();
             }
