@@ -134,6 +134,7 @@ public class ThutCore
         {
             e.printStackTrace();
         }
+        AIThreadManager.logger = logger;
     }
 
     @EventHandler

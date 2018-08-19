@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
@@ -101,7 +103,7 @@ public class AIThreadManager
                     }
                     catch (Exception e)
                     {
-                        e.printStackTrace();
+                        logger.log(Level.SEVERE, "error checking task " + ai, e);
                     }
                 }
             }
@@ -115,7 +117,7 @@ public class AIThreadManager
                 }
                 catch (Exception e)
                 {
-                    e.printStackTrace();
+                    logger.log(Level.SEVERE, "error executing " + runnable, e);
                 }
             }
         }
@@ -131,7 +133,7 @@ public class AIThreadManager
         {
             threadCount = Math.min(threadCount, Runtime.getRuntime().availableProcessors());
             aiStuffLists = new Queue[threadCount];
-            System.out.println("Creating and starting Mob AI Threads.");
+            logger.log(Level.INFO, "Creating and starting " + threadCount + " Mob AI Threads.");
             for (int i = 0; i < threadCount; i++)
             {
                 Queue<AIStuff> set = Queues.newConcurrentLinkedQueue();
@@ -161,7 +163,7 @@ public class AIThreadManager
                         return;
                     }
                     id = number;
-                    System.out.println("This is Thread " + id);
+                    logger.log(Level.INFO, "This is Thread " + id);
                     while (true)
                     {
                         // Wait for the lock to be notified from the main
@@ -174,7 +176,7 @@ public class AIThreadManager
                             }
                             catch (Exception e)
                             {
-                                e.printStackTrace();
+                                logger.log(Level.SEVERE, "Error waiting on lock", e);
                             }
                         }
                         // After being notified, run though all of the scheduled
@@ -195,6 +197,8 @@ public class AIThreadManager
         }
 
     }
+
+    public static Logger                                           logger;
 
     /** Lists of the AI stuff for each thread. */
     private static Queue<AIStuff>[]                                aiStuffLists;
@@ -305,7 +309,7 @@ public class AIThreadManager
                 }
                 catch (Exception e)
                 {
-                    e.printStackTrace();
+                    logger.log(Level.SEVERE, "Error ticking AI stuff", e);
                 }
             }
         }
