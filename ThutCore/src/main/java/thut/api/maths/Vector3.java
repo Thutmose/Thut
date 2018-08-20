@@ -1303,9 +1303,25 @@ public class Vector3
         if (!ret) ret = ret || !getBlockMaterial(world).blocksMovement();
         if (!ret)
         {
-            ret = isPointClearBlocks(x, y, z, world);
+            Block block = state.getBlock();
+            if (state.isNormalCube()) return false;
+            if (block == null || block == Blocks.AIR || !block.isCollidable()) return true;
+            List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
+            if (world instanceof World)
+                state.addCollisionBoxToList((World) world, pos, getAABB().grow(0.03, 0.03, 0.03), aabbs, null, false);
+            if (aabbs.size() == 0) return true;
+            for (AxisAlignedBB aabb : aabbs)
+            {
+                if (aabb != null)
+                {
+                    if (y <= aabb.maxY && y >= aabb.minY) return false;
+                    if (z <= aabb.maxZ && z >= aabb.minZ) return false;
+                    if (x <= aabb.maxX && x >= aabb.minX) return false;
+                }
+            }
+            return true;
         }
-        return ret;// isPointClearBlocks(x, y, z, world);
+        return ret;
     }
 
     public boolean isEmpty()
