@@ -238,10 +238,7 @@ public class Vector3
 
             double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
 
-            boolean check = isNotSurfaceBlock((World) world, temp.set(xtest, ytest, ztest));// isPointClearBlocks(xtest,
-                                                                                            // ytest,
-                                                                                            // ztest,
-                                                                                            // world);
+            boolean check = isNotSurfaceBlock((World) world, temp.set(xtest, ytest, ztest));
             if (!check) { return Vector3.getNewVector().set(xtest, ytest, ztest); }
         }
         return null;
