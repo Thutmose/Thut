@@ -1,59 +1,98 @@
-
-// For those who want the bleeding edge
 buildscript {
     repositories {
         jcenter()
         maven {
-            name = "forge"
+            name = "Forge"
             url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "Sonatype"
+            url = 'https://oss.sonatype.org/content/groups/public'
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
     }
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
+
+plugins {
+    id 'com.matthewprenger.cursegradle' version '1.0.9'
+}
 
 repositories {
-    maven {url = "http://maven.cil.li/"}
-    maven {url 'http://maven.epoxide.xyz'}
-    ivy {
-        name = "thutcore"
-        url = "https://github.com/Thutmose/Thut/raw/1.9/ThutCore/deobf/"
-        layout "pattern", {
-            artifact "[module]-[revision]-dev.[ext]"
-        }
+    maven {
+        name = "CurseForge"
+        url = "https://minecraft.curseforge.com/api/maven/"
     }
 }
-dependencies {
-    compile "li.cil.oc:OpenComputers:MC${version_oc}:api"
-    compile "net.darkhax.tesla:Tesla:${version_tesla}"
-    deobfCompile name: 'thutcore', version: "${version_core}", ext: 'jar'
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+//Only edit below this line, the above code adds and enables the nessasary things for Forge to be setup.
+
+
+version = "${version_minecraft}-${version_compile}"
+group= ""
+archivesBaseName = "${compile_name}"
+
+repositories {
+    maven {
+        //JEI files
+        url = "http://dvs1.progwml6.com/files/maven"
+    }
+    maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "http://modmaven.k-4u.nl"
+    }
+	maven {
+		url = 'http://maven.mcmoddev.com'
+	}
+	maven {
+		url "http://dvs1.progwml6.com/files/maven"
+	}
 }
-group= "thut" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "thuttech"
+
+dependencies {
+    //Thut Core
+    deobfCompile "thutcore:thutcore:${version_minecraft}:${version_thutcore}"
+    //Open Computers API
+    deobfCompile "li.cil.oc:OpenComputers:MC1.12.+:api"
+    //Tesla
+	deobfProvided "net.darkhax.tesla:Tesla-${tesla_mcversion}:${tesla_version}"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 minecraft {
-    version = "${version_minecraft}-${version_forge}"
-    mappings = "${version_mappings}"
+    version = "${version_long}"
     runDir = "run"
-    useDepAts = true
+    mappings = "${version_mappings}"
+    useDepAts = false
     
-    replace "@VERSION", project.version
-    replaceIn "ThutTechReference.java"
-    replace "@DEP", "[${version_core},)"
-    replaceIn "ThutTechReference.java"
+    replace "@VERSION", project.version_compile
+    replaceIn "Reference.java"
     replace "@MCVERSION", "${version_mcsupport}"
-    replaceIn "ThutTechReference.java"
-    
-    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    replaceIn "Reference.java"
+    replace "@MINVERSION", "[${version_min_support},)"
+    replaceIn "Reference.java"
 }
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    classifier = 'deobf'
+}
+
+artifacts {
+    archives deobfJar
+}
+
 jar {
         manifest {
-        attributes 'FMLAT': 'thut_at.cfg'
-                        
+            attributes "FMLAT": "${at_file}"
     }
 }
+
 processResources
 {
     // this will ensure that this task is redone when the versions change.
@@ -73,5 +112,3 @@ processResources
         exclude 'mcmod.info'
     }
 }
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
