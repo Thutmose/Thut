@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Locale;
 import java.util.function.Predicate;
 
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -50,6 +51,8 @@ public class ConfigHandler extends ConfigBase
     @Configure(category = BLOCKENTITY)
     public String[]             teblacklist             = {};
     @Configure(category = BLOCKENTITY)
+    public String[]             blockblacklist          = { "minecraft:bedrock" };
+    @Configure(category = BLOCKENTITY)
     public boolean              autoBlacklistErroredTEs = true;
     @Configure(category = MISC)
     public boolean              debug                   = true;
@@ -84,6 +87,10 @@ public class ConfigHandler extends ConfigBase
             if (!s.contains(":")) s = "minecraft:" + s;
             IBlockEntity.TEBLACKLIST.add(s);
             IBlockEntity.TEBLACKLIST.add(s.toLowerCase(Locale.ENGLISH));
+        }
+        for (String s : blockblacklist)
+        {
+            IBlockEntity.BLOCKBLACKLIST.add(new ResourceLocation(s));
         }
         TerrainSegment.biomeCheckers.removeIf(new Predicate<ISubBiomeChecker>()
         {

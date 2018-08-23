@@ -5,7 +5,7 @@ public class Reference
 {
     public static final String MOD_ID             = "thutcore";
     public static final String MOD_NAME           = "ThutCore";
-    public static final String VERSION            = "@VERSION@";
+    public static final String VERSION            = "@VERSION";
     public final static String MCVERSIONS         = "@MCVERSION";
     public final static String MINVERSION         = "@MINVERSION";
     public static final String CLIENT_PROXY_CLASS = "thut.core.client.ClientProxy";

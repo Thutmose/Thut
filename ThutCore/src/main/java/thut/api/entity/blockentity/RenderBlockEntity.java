@@ -98,6 +98,11 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                     }
             GL11.glPopMatrix();
 
+            GlStateManager.enableTexture2D();
+            GlStateManager.enableLighting();
+            GlStateManager.enableCull();
+            GlStateManager.disableBlend();
+            GlStateManager.depthMask(true);
         }
         catch (Exception e)
         {
@@ -191,7 +196,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
                 FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
                 IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
                 renderBakedBlockModel(entity, model, iblockstate, entity.getFakeWorld(), pos);
-                 if (!blend) GL11.glDisable(GL11.GL_BLEND);
+                if (!blend) GL11.glDisable(GL11.GL_BLEND);
                 RenderHelper.enableStandardItemLighting();
                 GlStateManager.popMatrix();
             }

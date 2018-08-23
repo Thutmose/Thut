@@ -190,8 +190,8 @@ public class ItemLinker extends Item
             {
                 EntityLift lift = IBlockEntity.BlockEntityFormer.makeBlockEntity(worldIn, min, max, mid,
                         EntityLift.class);
-                lift.owner = playerIn.getUniqueID();
-                String message = "msg.lift.create";
+                if (lift != null) lift.owner = playerIn.getUniqueID();
+                String message = lift != null ? "msg.lift.create" : "msg.lift.fail";
                 playerIn.sendMessage(new TextComponentTranslation(message));
             }
             itemstack.getTagCompound().removeTag("min");
@@ -267,8 +267,8 @@ public class ItemLinker extends Item
             {
                 EntityLift lift = IBlockEntity.BlockEntityFormer.makeBlockEntity(worldIn, min, max, mid,
                         EntityLift.class);
-                lift.owner = playerIn.getUniqueID();
-                String message = "msg.lift.create";
+                if (lift != null) lift.owner = playerIn.getUniqueID();
+                String message = lift != null ? "msg.lift.create" : "msg.lift.fail";
                 playerIn.sendMessage(new TextComponentTranslation(message));
             }
             stack.getTagCompound().removeTag("min");

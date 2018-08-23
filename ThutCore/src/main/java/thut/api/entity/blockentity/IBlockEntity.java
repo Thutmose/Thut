@@ -31,6 +31,7 @@ import net.minecraft.world.World;
 
 public interface IBlockEntity
 {
+    static Set<ResourceLocation>         BLOCKBLACKLIST = Sets.newHashSet();
     static Set<String>                   TEBLACKLIST    = Sets.newHashSet();
     static BiMap<Class<?>, ITileRemover> CUSTOMREMOVERS = HashBiMap.create();
     List<ITileRemover>                   SORTEDREMOVERS = Lists.newArrayList();
@@ -152,14 +153,20 @@ public interface IBlockEntity
             int yMin = min.getY();
             int yMax = max.getY();
             IBlockState[][][] ret = new IBlockState[(xMax - xMin) + 1][(yMax - yMin) + 1][(zMax - zMin) + 1];
+            boolean valid = false;
+            BlockPos temp;
             for (int i = xMin; i <= xMax; i++)
                 for (int j = yMin; j <= yMax; j++)
                     for (int k = zMin; k <= zMax; k++)
                     {
-                        IBlockState state = world.getBlockState(pos.add(i, j, k));
+                        temp = pos.add(i, j, k);
+                        IBlockState state = world.getBlockState(temp);
+                        if (BLOCKBLACKLIST.contains(state.getBlock().getRegistryName()))
+                            state = Blocks.AIR.getDefaultState();
+                        valid = valid || !state.getBlock().isAir(state, world, pos);
                         ret[i - xMin][j - yMin][k - zMin] = state;
                     }
-            return ret;
+            return valid ? ret : null;
         }
 
         public static void RevertEntity(IBlockEntity toRevert)
@@ -302,7 +309,9 @@ public interface IBlockEntity
             max = new BlockPos(box.maxX, box.maxY, box.maxZ);
             IBlockEntity entity = (IBlockEntity) ret;
             ret.setPosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            entity.setBlocks(checkBlocks(world, min, max, pos));
+            IBlockState[][][] blocks = checkBlocks(world, min, max, pos);
+            if (blocks == null) return null;
+            entity.setBlocks(blocks);
             entity.setTiles(checkTiles(world, min, max, pos));
             entity.setMin(min);
             entity.setMax(max);
