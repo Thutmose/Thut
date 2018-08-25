@@ -57,8 +57,6 @@ dependencies {
     deobfCompile "thutcore:thutcore:${version_minecraft}:${version_thutcore}"
     //Open Computers API
     deobfCompile "li.cil.oc:OpenComputers:MC1.12.+:api"
-    //Tesla
-	deobfProvided "net.darkhax.tesla:Tesla-${tesla_mcversion}:${tesla_version}"
 }
 
 sourceCompatibility = 1.8

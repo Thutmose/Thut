@@ -14,6 +14,7 @@ public class ConfigHandler
     public static int     maxRadius             = 2;
     public static boolean hackyRender           = false;
     public static boolean jitterfix             = true;
+    public static int     maxLiftEnergy         = 5000000;
 
     public static void load(Configuration conf)
     {
@@ -32,6 +33,8 @@ public class ConfigHandler
                 .getInt();
         EntityLift.ENERGYUSE = conf.getBoolean("energyUse", "Lift Settings", false, "Do Lifts use energy");
         EntityLift.ENERGYCOST = conf.getInt("energyCost", "Lift Settings", 100, 0, 1000, "Base Energy use for Lifts");
+        maxLiftEnergy = conf.getInt("maxLiftEnergy", "Lift Settings", 500000, 0, Integer.MAX_VALUE,
+                "Total amount of energy a lift can store.");
         controllerProduction = conf.getInt("controllerProduction", "Lift Settings", 16, 0, 5000,
                 "T/t produced by the controller blocks");
         maxHeight = conf.get("Lift Settings", "maxHeight", 5, "Max allowed height of a lift.").getInt();

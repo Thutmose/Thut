@@ -1,7 +1,5 @@
 package thut.tech.common.blocks.lift;
 
-import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
@@ -73,7 +71,6 @@ public class BlockLift extends Block implements ITileEntityProvider
         super(Material.IRON);
         setHardness(3.5f);
         this.setUnlocalizedName("lift");
-        this.setTickRandomly(false);
         this.setCreativeTab(TechCore.tabThut);
         this.setDefaultState(this.blockState.getBaseState().withProperty(VARIANT, EnumType.CONTROLLER)
                 .withProperty(CALLED, Boolean.valueOf(false)).withProperty(CURRENT, Boolean.valueOf(false)));
@@ -292,42 +289,5 @@ public class BlockLift extends Block implements ITileEntityProvider
         TileEntityLiftAccess tile = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
         if (tile != null && tile.copiedState != null && tile.getWorld().isRemote) return tile.copiedState;
         return state;
-    }
-
-    /** Rotate the block. For vanilla blocks this rotates around the axis passed
-     * in (generally, it should be the "face" that was hit). Note: for mod
-     * blocks, this is up to the block and modder to decide. It is not mandated
-     * that it be a rotation around the face, but could be a rotation to orient
-     * *to* that face, or a visiting of possible rotations. The method should
-     * return true if the rotation was successful though.
-     *
-     * @param world
-     *            The world
-     * @param x
-     *            X position
-     * @param y
-     *            Y position
-     * @param z
-     *            Z position
-     * @param axis
-     *            The axis to rotate around
-     * @return True if the rotation was successful, False if the rotation
-     *         failed, or is not possible */
-    @Override
-    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis)
-    {
-        return false;// RotationHelper.rotateVanillaBlock(this, world, x, y,
-                     // z, axis);
-    }
-
-    @Override
-    /** Ticks the block if it's been scheduled */
-    public void updateTick(World world, BlockPos pos, IBlockState state, Random rand)
-    {
-        TileEntity te = world.getTileEntity(pos);
-        if (te instanceof TileEntityLiftAccess)
-        {
-            // ((TileEntityLiftAccess) te).notifySurroundings();
-        }
     }
 }

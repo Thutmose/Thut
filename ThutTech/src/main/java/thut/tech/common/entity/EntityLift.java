@@ -8,7 +8,6 @@ import javax.vecmath.Vector3f;
 import com.google.common.base.Predicate;
 
 import net.minecraft.entity.MoverType;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -18,6 +17,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.energy.IEnergyStorage;
 import thut.api.entity.blockentity.BlockEntityBase;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.api.entity.blockentity.BlockEntityWorld;
@@ -44,7 +45,7 @@ public class EntityLift extends BlockEntityBase
     public static boolean               ENERGYUSE          = false;
     public static int                   ENERGYCOST         = 100;
 
-    int                                 energy             = 0;
+    public IEnergyStorage               energy             = null;
     public UUID                         owner;
     public double                       prevFloorY         = 0;
     public double                       prevFloor          = 0;
@@ -180,31 +181,29 @@ public class EntityLift extends BlockEntityBase
     private boolean consumePower()
     {
         if (!ENERGYUSE || !getCalled()) return true;
+        if (energy == null) energy = getCapability(CapabilityEnergy.ENERGY, null);
+        if (energy == null) return true;
+
         boolean power = false;
         Vector3 bounds = Vector3.getNewVector().set(boundMax.subtract(boundMin));
         double volume = bounds.x * bounds.y * bounds.z;
-        double energyCost = Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01;
+        int energyCost = (int) (Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01);
         energyCost = Math.max(energyCost, 1);
-        power = (energy = (int) (energy - energyCost)) > 0;
-        if (energy < 0) energy = 0;
+        int canExtract = energy.extractEnergy(energyCost, true);
+        if (canExtract == energyCost)
+        {
+            power = true;
+            energy.extractEnergy(energyCost, false);
+        }
         MinecraftForge.EVENT_BUS.post(new EventLiftConsumePower(this, (long) energyCost));
         if (!power)
         {
             this.setDestinationFloor(-1);
             this.setDestY((float) posY);
+            this.setCalled(false);
             toMoveY = false;
         }
         return power;
-    }
-
-    public int getEnergy()
-    {
-        return energy;
-    }
-
-    public void setEnergy(int energy)
-    {
-        this.energy = energy;
     }
 
     @Override
@@ -291,13 +290,6 @@ public class EntityLift extends BlockEntityBase
         PacketHandler.sendEntityUpdate(this);
     }
 
-    @Override
-    public void readEntityFromNBT(NBTTagCompound nbt)
-    {
-        super.readEntityFromNBT(nbt);
-        energy = nbt.getInteger("energy");
-    }
-
     /** @param currentFloor
      *            the destinationFloor to set */
     public void setCurrentFloor(int currentFloor)
@@ -355,13 +347,6 @@ public class EntityLift extends BlockEntityBase
             floors[floor - 1] = te.getPos().getY() - 2;
             hasFloors[floor - 1] = true;
         }
-    }
-
-    @Override
-    public void writeEntityToNBT(NBTTagCompound nbt)
-    {
-        super.writeEntityToNBT(nbt);
-        nbt.setInteger("energy", energy);
     }
 
     @Override

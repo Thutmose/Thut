@@ -28,11 +28,9 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -55,12 +53,12 @@ import thut.tech.common.blocks.lift.TileIDFixer;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.BlockHandler;
 import thut.tech.common.handlers.ConfigHandler;
+import thut.tech.common.handlers.EnergyHandler;
 import thut.tech.common.handlers.ItemHandler;
 import thut.tech.common.network.PacketPipeline.ClientPacket;
 import thut.tech.common.network.PacketPipeline.ClientPacket.MessageHandlerClient;
 import thut.tech.common.network.PacketPipeline.ServerPacket;
 import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
-import thut.tech.common.tesla.TeslaHandler;
 
 @SuppressWarnings("deprecation")
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, dependencies = Reference.DEPSTRING, version = Reference.VERSION)
@@ -135,6 +133,9 @@ public class TechCore
     {
         ItemHandler.registerRecipes();
         proxy.initClient();
+
+        // Register the energy handler to bus.
+        MinecraftForge.EVENT_BUS.register(new EnergyHandler());
     }
 
     @EventHandler
@@ -144,7 +145,6 @@ public class TechCore
 
         Configuration config = new Configuration(e.getSuggestedConfigurationFile());
         ConfigHandler.load(config);
-        if (!Loader.isModLoaded("tesla")) EntityLift.ENERGYUSE = false;
         packetPipeline = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
 
         MinecraftForge.EVENT_BUS.register(this);
@@ -170,14 +170,6 @@ public class TechCore
     {
         BlockHandler.registerBlocks(event);
         proxy.registerBlockModels();
-    }
-
-    @Optional.Method(modid = "tesla")
-    @EventHandler
-    public void preInitTesla(FMLPreInitializationEvent e)
-    {
-        System.out.println("TESLA LOCATED");
-        new TeslaHandler();
     }
 
     @SubscribeEvent

@@ -53,7 +53,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public TileEntityLiftAccess         rootNode;
     public Vector<TileEntityLiftAccess> connected    = new Vector<TileEntityLiftAccess>();
     EnumFacing                          sourceSide;
-    public double                       energy;
     boolean                             loaded       = false;
     public int                          floor        = 0;
     public int                          calledYValue = -1;
@@ -73,6 +72,9 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public boolean[]                    editFace     = new boolean[6];
     public boolean[]                    floorDisplay = new boolean[6];
     public boolean                      callPanel    = false;
+
+    // Used for limiting how often checks for connected controllers are done.
+    private int                         tick         = 0;
 
     public TileEntityLiftAccess()
     {
@@ -277,24 +279,11 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return oldState.getBlock() != newSate.getBlock();
     }
 
-    /** invalidates a tile entity */
-    @Override
-    public void invalidate()
-    {
-        super.invalidate();
-    }
-
     public boolean isSideOn(EnumFacing side)
     {
         int state = 1;
         byte byte0 = sides[side.getIndex()];
         return (byte0 & state) != 0;
-    }
-
-    @Override
-    public void onChunkUnload()
-    {
-        super.onChunkUnload();
     }
 
     @Override
@@ -334,10 +323,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             Block block = Block.REGISTRY.getObject(new ResourceLocation(key));
             if (block != null) copiedState = CompatWrapper.getBlockStateFromMeta(block, meta);
         }
-    }
-
-    public void setEnergy(double energy)
-    {
     }
 
     public void setFloor(int floor)
@@ -451,27 +436,29 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 lift.setCurrentFloor(-1);
             }
 
-            // Make sure that lift's floor is this one if it doesn't have one
-            // defined.
-            if (!lift.hasFloors[floor - 1])
-            {
-                lift.setFoor(this, floor);
-            }
-
             // Sets the values used for rendering colours over numbers on the
             // display.
             calledFloor = lift.getDestinationFloor();
             currentFloor = lift.getCurrentFloor();
         }
 
-        // Find lift if existing lift isn't found.
-        EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, world);
-        if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead || tempLift != lift))
+        if (lift == null && liftID != null)
         {
-            lift = tempLift;
-            if (lift == null || lift.isDead) return;
-        }
+            // Find lift if existing lift isn't found.
+            EntityLift tempLift = EntityLift.getLiftFromUUID(liftID, world);
+            if (liftID != null && !liftID.equals(empty) && (lift == null || lift.isDead || tempLift != lift))
+            {
+                lift = tempLift;
+                if (lift == null || lift.isDead) return;
 
+                // Make sure that lift's floor is this one if it doesn't have
+                // one defined.
+                if (!lift.hasFloors[floor - 1])
+                {
+                    this.setFloor(floor);
+                }
+            }
+        }
         // Cleanup floor if the lift is gone.
         if (floor > 0 && (lift == null || lift.isDead))
         {
@@ -481,7 +468,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
         // Scan sides for a controller which actually has a lift attached, and
         // attach self to that floor.
-        if (lift == null)
+        if (lift == null && tick++ % 50 == 0)
         {
             for (EnumFacing side : EnumFacing.values())
             {
@@ -500,13 +487,6 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 }
             }
         }
-    }
-
-    /** validates a tile entity */
-    @Override
-    public void validate()
-    {
-        super.validate();
     }
 
     @Override
