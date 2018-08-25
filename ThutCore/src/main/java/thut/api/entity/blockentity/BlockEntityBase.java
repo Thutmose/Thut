@@ -373,6 +373,9 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
                             }
                         }
                     }
+            // Call these in this order so any appropriate changes can be made.
+            this.setBlocks(blocks);
+            this.setTiles(tiles);
         }
     }
 
