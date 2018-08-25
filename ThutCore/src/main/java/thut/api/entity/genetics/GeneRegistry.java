@@ -2,11 +2,13 @@ package thut.api.entity.genetics;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.logging.Level;
 
 import com.google.common.collect.Maps;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import thut.api.entity.ai.AIThreadManager;
 
 public class GeneRegistry
 {
@@ -27,12 +29,13 @@ public class GeneRegistry
         Gene temp;
         try
         {
+            // Ensure the gene has a blank constructor for registration
             temp = gene.newInstance();
             geneMap.put(temp.getKey(), gene);
         }
         catch (InstantiationException | IllegalAccessException e)
         {
-            e.printStackTrace();
+            AIThreadManager.logger.log(Level.SEVERE, "Error with registry of " + gene, e);
         }
     }
 

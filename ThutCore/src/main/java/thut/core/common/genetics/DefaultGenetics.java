@@ -35,20 +35,23 @@ public class DefaultGenetics implements IMobGenetics
         Map<ResourceLocation, Alleles> genetics2 = parent2.getAlleles();
         for (Alleles a1 : genetics1.values())
         {
+            // Get the key from here.
             Gene gene1 = a1.getExpressed();
             Alleles a2 = genetics2.get(gene1.getKey());
             if (a2 != null)
             {
+                // Get expressed gene for checking epigenetic rate first.
                 Gene gene2 = a2.getExpressed();
-                if (gene1.getEpigeneticRate() < rand.nextFloat())
-                {
-                    int a = rand.nextInt(2);
-                    int b = a == 1 ? 0 : 1;
-                    gene1 = a1.getAlleles()[a];
-                    gene2 = a2.getAlleles()[b];
-                }
+
+                // Get the genes based on if epigenes or not.
+                gene1 = gene1.getEpigeneticRate() < rand.nextFloat() ? gene1 : a1.getAlleles()[rand.nextInt(2)];
+                gene2 = gene2.getEpigeneticRate() < rand.nextFloat() ? gene2 : a2.getAlleles()[rand.nextInt(2)];
+
+                // Apply mutations if needed.
                 if (gene1.getMutationRate() > rand.nextFloat()) gene1 = gene1.mutate(parent1, parent2);
                 if (gene2.getMutationRate() > rand.nextFloat()) gene2 = gene2.mutate(parent1, parent2);
+
+                // Make the new allele.
                 Alleles allele = new Alleles(gene1, gene2);
                 getAlleles().put(gene1.getKey(), allele);
             }

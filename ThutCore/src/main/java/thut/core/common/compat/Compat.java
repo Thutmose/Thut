@@ -1,9 +1,9 @@
 package thut.core.common.compat;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import com.google.common.collect.Maps;
 
@@ -15,6 +15,7 @@ import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import thut.core.common.ThutCore;
 import thut.lib.CompatClass;
 import thut.lib.CompatClass.Phase;
 import thut.lib.CompatParser;
@@ -72,9 +73,9 @@ public class Compat
                 if (comp.takesEvent()) m.invoke(null, event);
                 else m.invoke(null);
             }
-            catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                ThutCore.logger.log(Level.SEVERE, "Error with ", e);
             }
         }
     }
