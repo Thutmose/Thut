@@ -61,7 +61,7 @@ import thut.tech.common.network.PacketPipeline.ServerPacket;
 import thut.tech.common.network.PacketPipeline.ServerPacket.MessageHandlerServer;
 
 @SuppressWarnings("deprecation")
-@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, dependencies = Reference.DEPSTRING, version = Reference.VERSION)
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, acceptableRemoteVersions = Reference.MINVERSION, dependencies = Reference.DEPSTRING, version = Reference.VERSION)
 public class TechCore
 {
     @SidedProxy(clientSide = Reference.CLIENT_PROXY_CLASS, serverSide = Reference.COMMON_PROXY_CLASS)
