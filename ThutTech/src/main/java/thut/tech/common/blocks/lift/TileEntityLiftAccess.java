@@ -453,7 +453,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
 
                 // Make sure that lift's floor is this one if it doesn't have
                 // one defined.
-                if (!lift.hasFloors[floor - 1])
+                if (floor > 0 && !lift.hasFloors[floor - 1])
                 {
                     this.setFloor(floor);
                 }
