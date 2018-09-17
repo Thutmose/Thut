@@ -54,7 +54,6 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     int                        n                 = 0;
     boolean                    first             = true;
     Random                     r                 = new Random();
-    public UUID                id                = null;
     public UUID                owner;
     public List<AxisAlignedBB> blockBoxes        = Lists.newArrayList();
     public IBlockState[][][]   blocks            = null;
@@ -389,8 +388,6 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
             boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
             boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
         }
-        if (nbt.hasKey("higher")) id = new UUID(nbt.getLong("higher"), nbt.getLong("lower"));
-        if (nbt.hasKey("ownerhigher")) owner = new UUID(nbt.getLong("ownerhigher"), nbt.getLong("ownerlower"));
         readBlocks(nbt);
     }
 
@@ -489,11 +486,6 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
         vector.setDouble("maxy", boundMax.getY());
         vector.setDouble("maxz", boundMax.getZ());
         nbt.setTag("bounds", vector);
-        if (owner != null)
-        {
-            nbt.setLong("ownerlower", owner.getLeastSignificantBits());
-            nbt.setLong("ownerhigher", owner.getMostSignificantBits());
-        }
         try
         {
             writeBlocks(nbt);

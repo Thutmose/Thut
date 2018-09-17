@@ -1,5 +1,7 @@
 package thut.tech.common.entity;
 
+import java.util.logging.Level;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.Entity;
@@ -11,6 +13,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
+import thut.tech.common.TechCore;
 import thut.tech.common.items.ItemLinker;
 
 public class LiftInteractHandler extends BlockEntityInteractHandler
@@ -59,6 +62,28 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
                 lift.setDestY((float) (lift.posY - 10));
                 return true;
             }
+        }
+        if (lift.owner == null)
+        {
+            TechCore.logger.log(Level.SEVERE, "Killing unowned Lift: " + lift);
+            if (!lift.getEntityWorld().isRemote)
+            {
+                String message = "msg.lift.killed";
+                player.sendMessage(new TextComponentTranslation(message));
+                if (DROPSPARTS)
+                {
+                    BlockPos max = lift.boundMax;
+                    BlockPos min = lift.boundMin;
+                    int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
+                    int num = (dw + 1) * (max.getY() - min.getY() + 1);
+                    stack = ItemLinker.liftblocks.copy();
+                    stack.setCount(num);
+                    player.dropItem(stack, false, true);
+                }
+                lift.setHealth(0);
+                lift.setDead();
+            }
+            return true;
         }
 
         if (player.isSneaking() && stack != null && stack.getItem() instanceof ItemLinker

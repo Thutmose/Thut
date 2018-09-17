@@ -8,6 +8,7 @@ import javax.vecmath.Vector3f;
 import com.google.common.base.Predicate;
 
 import net.minecraft.entity.MoverType;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -347,6 +348,20 @@ public class EntityLift extends BlockEntityBase
             floors[floor - 1] = te.getPos().getY() - 2;
             hasFloors[floor - 1] = true;
         }
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound arg0)
+    {
+        super.readEntityFromNBT(arg0);
+        if (arg0.hasUniqueId("owner")) owner = arg0.getUniqueId("owner");
+    }
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound arg0)
+    {
+        super.writeEntityToNBT(arg0);
+        if (owner != null) arg0.setUniqueId("owner", owner);
     }
 
     @Override
