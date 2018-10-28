@@ -154,7 +154,6 @@ public class BlockEntityUpdater
                     pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
                     IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
                     state = state.getActualState(blockEntity.getFakeWorld(), pos);
-                    state = state.getBlock().getExtendedState(state, blockEntity.getFakeWorld(), pos);
                     try
                     {
                         state.addCollisionBoxToList(blockEntity.getFakeWorld(), pos, TileEntity.INFINITE_EXTENT_AABB,
