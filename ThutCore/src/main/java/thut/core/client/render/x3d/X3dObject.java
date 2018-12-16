@@ -44,6 +44,8 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
 
     private int[]                              rgbab      = new int[5];
 
+    private boolean                            hidden     = false;
+
     public X3dObject(String name)
     {
         this.name = name;
@@ -116,6 +118,7 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
 
     public void render()
     {
+        if (hidden) return;
         preRender();
         // Renders the model.
         addForRender();
@@ -326,5 +329,11 @@ public class X3dObject implements IExtendedModelPart, IRetexturableModel
         preScale.x = (float) scale.x;
         preScale.y = (float) scale.y;
         preScale.z = (float) scale.z;
+    }
+
+    @Override
+    public void setHidden(boolean hidden)
+    {
+        this.hidden = hidden;
     }
 }

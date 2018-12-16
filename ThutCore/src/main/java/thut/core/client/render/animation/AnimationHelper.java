@@ -69,6 +69,9 @@ public class AnimationHelper
                 sx += (float) (component.scaleChange[0] / component.length * componentTimer + component.scaleOffset[0]);
                 sy += (float) (component.scaleChange[1] / component.length * componentTimer + component.scaleOffset[1]);
                 sz += (float) (component.scaleChange[2] / component.length * componentTimer + component.scaleOffset[2]);
+                
+                //Apply hidden like this so last hidden state is kept
+                part.setHidden(component.hidden);
             }
         }
         if (animated)
