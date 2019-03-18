@@ -7,6 +7,7 @@ import javax.vecmath.Vector3f;
 
 import com.google.common.base.Predicate;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.MoverType;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
@@ -393,7 +394,8 @@ public class EntityLift extends BlockEntityBase
         if (world instanceof WorldServer)
         {
             WorldServer worlds = (WorldServer) world;
-            return (EntityLift) worlds.getEntityFromUuid(liftID);
+            Entity entity = worlds.getEntityFromUuid(liftID);
+            if (entity instanceof EntityLift) return (EntityLift) entity;
         }
         else
         {
