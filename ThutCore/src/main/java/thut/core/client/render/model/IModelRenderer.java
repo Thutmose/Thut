@@ -9,7 +9,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
-import thut.core.client.render.animation.CapabilityAnimation;
+import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.tabula.components.Animation;
 
@@ -84,7 +84,7 @@ public interface IModelRenderer<T extends EntityLiving>
 
     default String getAnimation(Entity entityIn)
     {
-        IAnimationHolder holder = entityIn.getCapability(CapabilityAnimation.CAPABILITY, null);
+        IAnimationHolder holder = AnimationHelper.getHolder(entityIn);
         if (holder != null) return holder.getPendingAnimation();
         return "idle";
     }
@@ -95,7 +95,7 @@ public interface IModelRenderer<T extends EntityLiving>
 
     default void setAnimation(String phase, Entity entity)
     {
-        IAnimationHolder holder = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
+        IAnimationHolder holder = AnimationHelper.getHolder(entity);
         if (holder != null) holder.setPendingAnimation(phase);
     }
 

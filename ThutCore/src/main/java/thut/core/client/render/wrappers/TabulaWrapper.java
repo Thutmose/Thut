@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
-import thut.core.client.render.animation.CapabilityAnimation;
+import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.tabula.components.Animation;
@@ -54,7 +54,7 @@ public class TabulaWrapper extends ModelBase
         checkInit();
         GlStateManager.disableCull();
         float partialTick = ageInTicks - entityIn.ticksExisted;
-        IAnimationHolder animate = entityIn.getCapability(CapabilityAnimation.CAPABILITY, null);
+        IAnimationHolder animate = AnimationHelper.getHolder(entityIn);
         String phase = animate != null ? animate.getPendingAnimation() : "idle";
         if (phase == null) phase = "idle";
         if (modelj.changer != null)
@@ -87,7 +87,7 @@ public class TabulaWrapper extends ModelBase
         checkInit();
         if (!Minecraft.getMinecraft().isGamePaused())
         {
-            IAnimationHolder animate = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
+            IAnimationHolder animate = AnimationHelper.getHolder(entity);
             modelj.setToInitPose();
             if (animate != null && !animate.getPlaying().isEmpty())
             {

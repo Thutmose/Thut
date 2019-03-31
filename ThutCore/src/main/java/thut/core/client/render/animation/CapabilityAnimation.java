@@ -68,8 +68,8 @@ public class CapabilityAnimation
     {
         Map<UUID, Integer> stepsMap = Maps.newHashMap();
         Set<Animation>     playing  = Sets.newHashSet();
-        private String     pending;
-        private String     current;
+        private String     pending  = "idle";
+        private String     current  = "idle";
 
         @Override
         public int getStep(Animation animation)
@@ -88,7 +88,7 @@ public class CapabilityAnimation
         public void clean()
         {
             stepsMap.clear();
-            pending = current = null;
+            pending = current = "idle";
             this.playing.clear();
         }
 

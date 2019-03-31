@@ -2,6 +2,12 @@ package thut.core.client.render.animation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import net.minecraft.entity.Entity;
 import thut.api.maths.Vector3;
@@ -17,12 +23,85 @@ import thut.core.client.render.tabula.components.AnimationComponent;
  * @author Thutmose */
 public class AnimationHelper
 {
+    private final static Map<UUID, Holder> holderMap = Maps.newHashMap();
+
+    private static class Holder implements IAnimationHolder
+    {
+        Map<UUID, Integer> stepsMap = Maps.newHashMap();
+        Set<Animation>     playing  = Sets.newHashSet();
+        private String     pending  = "idle";
+        private String     current  = "idle";
+
+        @Override
+        public int getStep(Animation animation)
+        {
+            if (stepsMap.containsKey(animation.id)) return stepsMap.get(animation.id);
+            return 0;
+        }
+
+        @Override
+        public void setStep(Animation animation, int step)
+        {
+            stepsMap.put(animation.id, step);
+        }
+
+        @Override
+        public void clean()
+        {
+            stepsMap.clear();
+            pending = current = "idle";
+            this.playing.clear();
+        }
+
+        @Override
+        public void setPendingAnimation(String name)
+        {
+            this.pending = name;
+        }
+
+        @Override
+        public String getPendingAnimation()
+        {
+            return this.pending;
+        }
+
+        @Override
+        public Set<Animation> getPlaying()
+        {
+            return playing;
+        }
+
+        @Override
+        public void setCurrentAnimation(String name)
+        {
+            this.current = name;
+        }
+
+        @Override
+        public String getCurrentAnimation()
+        {
+            return this.current;
+        }
+    }
+
+    public static IAnimationHolder getHolder(Entity mob)
+    {
+        if (mob.hasCapability(CapabilityAnimation.CAPABILITY, null))
+            return mob.getCapability(CapabilityAnimation.CAPABILITY, null);
+        if (holderMap.containsKey(mob.getUniqueID())) return holderMap.get(holderMap.get(mob.getUniqueID()));
+        else
+        {
+            Holder holder = new Holder();
+            holderMap.put(mob.getUniqueID(), holder);
+            return holder;
+        }
+    }
 
     public static boolean doAnimation(List<Animation> list, Entity entity, String partName, IExtendedModelPart part,
             float partialTick, float limbSwing)
     {
         boolean animate = false;
-        IAnimationHolder holder = entity.getCapability(CapabilityAnimation.CAPABILITY, null);
+        IAnimationHolder holder = getHolder(entity);
         if (holder != null) for (Animation animation : list)
         {
             animate = animate(animation, holder, partName, part, partialTick, limbSwing, entity.ticksExisted)
@@ -69,8 +148,8 @@ public class AnimationHelper
                 sx += (float) (component.scaleChange[0] / component.length * componentTimer + component.scaleOffset[0]);
                 sy += (float) (component.scaleChange[1] / component.length * componentTimer + component.scaleOffset[1]);
                 sz += (float) (component.scaleChange[2] / component.length * componentTimer + component.scaleOffset[2]);
-                
-                //Apply hidden like this so last hidden state is kept
+
+                // Apply hidden like this so last hidden state is kept
                 part.setHidden(component.hidden);
             }
         }

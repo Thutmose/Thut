@@ -16,7 +16,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
-import thut.core.client.render.animation.CapabilityAnimation;
+import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.animation.ModelHolder;
 import thut.core.client.render.model.IAnimationChanger;
@@ -135,8 +135,7 @@ public class ModelWrapper extends ModelBase implements IModel
     {
         if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
                 .modifyAnimation((EntityLiving) entityIn, partialTickTime, renderer.getAnimation(entityIn)), entityIn);
-        applyAnimation(entityIn, entityIn.getCapability(CapabilityAnimation.CAPABILITY, null), renderer,
-                partialTickTime, limbSwing);
+        applyAnimation(entityIn, AnimationHelper.getHolder(entityIn), renderer, partialTickTime, limbSwing);
     }
 
     @Override
