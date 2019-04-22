@@ -349,15 +349,24 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         int red = 255, green = 255, blue = 255;
         int brightness = entity.getBrightnessForRender();
         int alpha = 255;
+        int[] rgbab = parent.getRGBAB();
         if (entity instanceof IMobColourable)
         {
             IMobColourable poke = (IMobColourable) entity;
-            red = poke.getRGBA()[0];
-            green = poke.getRGBA()[1];
-            blue = poke.getRGBA()[2];
-            alpha = poke.getRGBA()[3];
+            rgbab[0] = poke.getRGBA()[0];
+            rgbab[1] = poke.getRGBA()[1];
+            rgbab[2] = poke.getRGBA()[2];
+            rgbab[3] = poke.getRGBA()[3];
         }
-        int[] rgbab = parent.getRGBAB();
+        else
+        {
+            rgbab[0] = red;
+            rgbab[1] = green;
+            rgbab[2] = blue;
+            rgbab[3] = alpha;
+            rgbab[4] = brightness;
+        }
+        rgbab[4] = brightness;
         IAnimationChanger animChanger = renderer.getAnimationChanger();
         if (animChanger != null)
         {
@@ -369,16 +378,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
                 rgbab[0] = col.getRed();
                 rgbab[1] = col.getGreen();
                 rgbab[2] = col.getBlue();
-                rgbab[4] = brightness;
             }
-        }
-        else
-        {
-            rgbab[0] = red;
-            rgbab[1] = green;
-            rgbab[2] = blue;
-            rgbab[3] = alpha;
-            rgbab[4] = brightness;
         }
         parent.setRGBAB(rgbab);
         for (String partName : parent.getSubParts().keySet())

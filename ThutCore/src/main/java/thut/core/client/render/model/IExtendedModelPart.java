@@ -38,8 +38,11 @@ public interface IExtendedModelPart extends IModelCustom
     void setPreTranslations(Vector3 translations);
 
     void setPreScale(Vector3 scale);
-    
-    void setHidden(boolean hidden);
+
+    default void setHidden(boolean hidden)
+    {
+
+    }
 
     void setRGBAB(int[] arrays);
 }
