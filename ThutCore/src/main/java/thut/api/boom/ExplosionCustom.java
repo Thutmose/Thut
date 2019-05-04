@@ -311,6 +311,7 @@ public class ExplosionCustom extends Explosion
         }
     }
 
+    //TODO figure out a good way to clear these between each set of shells.
     HashMap<Integer, Float>      resists    = new HashMap<Integer, Float>(100000, 1);
     HashSet<Integer>             blockedSet = new HashSet<>(100000, 1);
     Int2ObjectOpenHashMap<Float> thisShell  = new Int2ObjectOpenHashMap<>();

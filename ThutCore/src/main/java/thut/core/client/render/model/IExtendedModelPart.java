@@ -9,6 +9,11 @@ public interface IExtendedModelPart extends IModelCustom
 {
     void addChild(IExtendedModelPart child);
 
+    default void removeChild(String name)
+    {
+        getSubParts().remove(name);
+    }
+
     Vector4 getDefaultRotations();
 
     Vector3 getDefaultTranslations();

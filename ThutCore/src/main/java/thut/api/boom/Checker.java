@@ -47,12 +47,14 @@ public class Checker
         {
             increment++;
             long time = System.currentTimeMillis();
-            if (time - start > 100)
+            //Break out early if we have taken too long.
+            if (time - start > 10)
             {
                 done = false;
                 break;
             }
             Cruncher.indexToVals(boom.currentIndex, boom.r);
+            //TODO make this check world bounds somehow.
             if (boom.r.y + boom.centre.y < 0 || boom.r.y + boom.centre.y > 255) continue;
             double rSq = boom.r.magSq();
             if (rSq > radSq) continue;
@@ -61,11 +63,13 @@ public class Checker
             boom.rHat.set(boom.r).norm();
             index = Cruncher.getVectorInt(boom.rHat.scalarMultBy(num / 2d));
             boom.rHat.scalarMultBy(2d / num);
+            //Already checked here, so we exit.
             if (boom.blockedSet.contains(index))
             {
                 continue;
             }
             str = boom.strength * scaleFactor / rSq;
+            //Check for mobs to hit at this point.
             if (boom.rAbs.isAir(boom.world) && !(boom.r.isEmpty()))
             {
                 if (ExplosionCustom.AFFECTINAIR)
@@ -80,12 +84,14 @@ public class Checker
                 continue;
             }
 
+            //Return due to out of blast power.
             if (str <= boom.minBlastDamage)
             {
                 System.out.println("Terminating at distance " + rMag);
                 done = true;
                 break;
             }
+            //Continue to next site, we can't break this block.
             if (!boom.canBreak(boom.rAbs))
             {
                 boom.blockedSet.add(index);
@@ -97,18 +103,23 @@ public class Checker
             index2 = Cruncher.getVectorInt(boom.r);
             boom.resists.put(index2, res);
             boom.checked.set(index2);
+            //This block is too strong, so continue to next block.
             if (res > str)
             {
                 boom.blockedSet.add(index);
                 continue;
             }
+            //Whether we should continue onto the next site.
             boolean stop = false;
+            
             rMag = boom.r.mag();
             float dj = 1;
             resist = 0;
 
+            //Check each block to see if we have enough power to break.
             for (float j = 0F; j <= rMag; j += dj)
             {
+                //TODO start this just inside the last shell?
                 boom.rTest.set(boom.rHat).scalarMultBy(j);
 
                 if (!(boom.rTest.sameBlock(boom.rTestPrev)))
@@ -129,6 +140,7 @@ public class Checker
                         boom.checked.set(index2);
                     }
                     resist += res;
+                    //Can't break this, so set as blocked and flag for next site.
                     if (!boom.canBreak(boom.rTestAbs))
                     {
                         stop = true;
@@ -138,6 +150,7 @@ public class Checker
                     double d1 = boom.rTest.magSq();
                     double d = d1;
                     str = boom.strength * scaleFactor / d;
+                    //too hard, so set as blocked and flag for next site.
                     if (resist > str)
                     {
                         stop = true;
@@ -147,6 +160,7 @@ public class Checker
                 }
                 boom.rTestPrev.set(boom.rTest);
             }
+            //Continue onto next site.
             if (stop) continue;
             boom.rAbs.set(boom.r).addTo(boom.centre);
             Chunk chunk = boom.world.getChunkFromBlockCoords(boom.rAbs.getPos());
@@ -155,16 +169,21 @@ public class Checker
                 System.out.println("No chunk at " + boom.rAbs);
                 Thread.dumpStack();
             }
+            //Add to affected chunks list.
             if (!boom.affected.contains(chunk)) boom.affected.add(chunk);
+            //Add as affected location.
             boom.addChunkPosition(boom.rAbs);
+            //Check for additional mobs to hit.
             List<Entity> hits = boom.world.getEntitiesWithinAABBExcludingEntity(boom.exploder,
                     boom.rAbs.getAABB().grow(0.5, 0.5, 0.5));
             if (hits != null) for (Entity e : hits)
             {
                 entityAffected.add(new HitEntity(e, (float) str));
             }
+            //Add to blocks to remove list.
             ret.add(new BlockPos(boom.rAbs.getPos()));
         }
+        //Increment the boom index for next pass.
         boom.nextIndex = boom.currentIndex + increment;
         return new BlastResult(ret, entityAffected, done);
     }
