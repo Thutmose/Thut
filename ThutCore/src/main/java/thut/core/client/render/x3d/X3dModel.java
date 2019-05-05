@@ -137,7 +137,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         }
     }
 
-    HashMap<String, IExtendedModelPart> makeObjects(X3dXML xml) throws Exception
+    public HashMap<String, IExtendedModelPart> makeObjects(X3dXML xml) throws Exception
     {
         Map<String, Set<String>> childMap = Maps.newHashMap();
         Set<Transform> allTransforms = Sets.newHashSet();
