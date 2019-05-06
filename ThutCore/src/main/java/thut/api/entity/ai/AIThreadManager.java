@@ -330,6 +330,8 @@ public class AIThreadManager
             mob = event.getEntity().getCapability(IAIMob.THUTMOBAI, null);
             ai = mob.getAI();
         }
+        if (mob.vanillaWrapped()) return;
+
         IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null);
         if (genes != null) genes.onUpdateTick(event.getEntityLiving());
 

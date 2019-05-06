@@ -27,8 +27,13 @@ public interface IAIMob
      * @return */
     boolean selfManaged();
 
+    void setWrapped(boolean wrapped);
+
+    boolean vanillaWrapped();
+
     public static class Default implements IAIMob
     {
+        boolean wrapped = false;
 
         @Override
         public AIStuff getAI()
@@ -40,6 +45,18 @@ public interface IAIMob
         public boolean selfManaged()
         {
             return false;
+        }
+
+        @Override
+        public void setWrapped(boolean wrapped)
+        {
+            this.wrapped = wrapped;
+        }
+
+        @Override
+        public boolean vanillaWrapped()
+        {
+            return wrapped;
         }
 
     }
