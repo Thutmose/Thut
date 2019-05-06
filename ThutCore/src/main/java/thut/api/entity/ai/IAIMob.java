@@ -27,9 +27,15 @@ public interface IAIMob
      * @return */
     boolean selfManaged();
 
-    void setWrapped(boolean wrapped);
+    default void setWrapped(boolean wrapped)
+    {
 
-    boolean vanillaWrapped();
+    }
+
+    default boolean vanillaWrapped()
+    {
+        return false;
+    }
 
     public static class Default implements IAIMob
     {

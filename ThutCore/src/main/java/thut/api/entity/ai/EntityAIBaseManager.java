@@ -21,7 +21,6 @@ public class EntityAIBaseManager extends EntityAIBase
     public void updateTask()
     {
         AIStuff ai = wrapped.getAI();
-
         IMobGenetics genes = entity.getCapability(IMobGenetics.GENETICS_CAP, null);
         if (genes != null) genes.onUpdateTick(entity);
 
@@ -49,8 +48,7 @@ public class EntityAIBaseManager extends EntityAIBase
     @Override
     public boolean isInterruptible()
     {
-        // TODO Auto-generated method stub
-        return true;
+        return false;
     }
 
     @Override
