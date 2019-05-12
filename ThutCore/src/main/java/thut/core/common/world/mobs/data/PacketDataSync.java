@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import thut.api.network.PacketHandler;
 import thut.api.world.mobs.data.Data;
 import thut.api.world.mobs.data.DataSync;
+import thut.core.common.ThutCore;
 
 public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync, IMessage>
 {
@@ -41,7 +42,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
     public IMessage onMessage(final PacketDataSync message, final MessageContext ctx)
     {
         EntityPlayer player;
-        player = Minecraft.getMinecraft().player;
+        player = ThutCore.proxy.getPlayer();
         int id = message.id;
         World world = player.getEntityWorld();
         Entity mob = world.getEntityByID(id);
