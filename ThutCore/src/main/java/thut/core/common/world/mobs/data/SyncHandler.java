@@ -31,20 +31,26 @@ public class SyncHandler
         if (data == null) return;
         WorldServer world = (WorldServer) event.getEntity().getEntityWorld();
         Set<? extends EntityPlayer> players = world.getEntityTracker().getTrackingPlayers(event.getEntity());
+        boolean sendSelf = event.getEntity() instanceof EntityPlayerMP;
         for (EntityPlayer player : players)
         {
+            sendSelf = sendSelf && player != event.getEntity();
             if (player instanceof EntityPlayerMP)
                 PacketDataSync.sync((EntityPlayerMP) player, data, event.getEntity().getEntityId(), false);
+        }
+        if (sendSelf)
+        {
+            PacketDataSync.sync((EntityPlayerMP) event.getEntity(), data, event.getEntity().getEntityId(), false);
         }
     }
 
     @SubscribeEvent
     public void startTracking(StartTracking event)
     {
-        if (event.getEntity().getEntityWorld().isRemote) return;
-        DataSync data = getData(event.getEntity());
+        if (event.getTarget().getEntityWorld().isRemote) return;
+        DataSync data = getData(event.getTarget());
         if (data == null) return;
         EntityPlayer player = event.getEntityPlayer();
-        PacketDataSync.sync((EntityPlayerMP) player, data, event.getEntity().getEntityId(), true);
+        PacketDataSync.sync((EntityPlayerMP) player, data, event.getTarget().getEntityId(), true);
     }
 }
