@@ -161,8 +161,7 @@ public interface IBlockEntity
                     {
                         temp = pos.add(i, j, k);
                         IBlockState state = world.getBlockState(temp);
-                        if (BLOCKBLACKLIST.contains(state.getBlock().getRegistryName()))
-                            state = Blocks.AIR.getDefaultState();
+                        if (BLOCKBLACKLIST.contains(state.getBlock().getRegistryName())) return null;
                         valid = valid || !state.getBlock().isAir(state, world, pos);
                         ret[i - xMin][j - yMin][k - zMin] = state;
                     }
