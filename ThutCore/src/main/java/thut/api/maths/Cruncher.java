@@ -205,25 +205,11 @@ public class Cruncher
     }
 
     public Double[]  set1  = new Double[] { 123456d };
-
-    public Integer[] set5  = new Integer[] { 123456 };
     public Object[]  set6  = new Object[] { null };
-    public byte[][]  set11 = new byte[][] { { 123 } };
-    public short[][] set12 = new short[][] { { 123 } };
     public int       n;
-    public Boolean[] done  = { Boolean.valueOf(false) };
 
     double           temp  = 0.0D;
-
-    int              temp2 = 0;
-
     Object           temp6 = null;
-
-    float            temp3 = 0.0F;
-
-    byte[]           temp4 = { 0 };
-
-    short[]          temp7 = { 0 };
 
     public Cruncher()
     {
@@ -237,29 +223,11 @@ public class Cruncher
             this.set1[i] = this.set1[j];
             this.set1[j] = Double.valueOf(this.temp);
         }
-        if ((this.set5[0] != 123456) || (this.set5.length == this.n))
-        {
-            this.temp2 = this.set5[i].intValue();
-            this.set5[i] = this.set5[j];
-            this.set5[j] = (this.temp2);
-        }
         if ((this.set6[0] != null) || (this.set6.length == this.n))
         {
             this.temp6 = this.set6[i];
             this.set6[i] = this.set6[j];
             this.set6[j] = (this.temp6);
-        }
-        if ((this.set11.length == this.n))
-        {
-            this.temp4 = this.set11[i];
-            this.set11[i] = this.set11[j];
-            this.set11[j] = this.temp4;
-        }
-        if ((this.set12.length == this.n))
-        {
-            this.temp7 = this.set12[i];
-            this.set12[i] = this.set12[j];
-            this.set12[j] = this.temp7;
         }
     }
 
@@ -290,26 +258,6 @@ public class Cruncher
         if ((vals1 == null) || (vals1.length == 0)) { return; }
         this.set1 = vals1;
         this.set6 = vals2;
-        this.n = this.set1.length;
-
-        quicksort(0, this.n - 1);
-    }
-
-    public void sort2(Double[] vals1, short[][] quadrant)
-    {
-        if ((vals1 == null) || (vals1.length == 0)) { return; }
-        this.set1 = vals1;
-        this.set12 = quadrant;
-        this.n = this.set1.length;
-
-        quicksort(0, this.n - 1);
-    }
-
-    public void sort22(Double[] vals1, Integer[] vals2)
-    {
-        if ((vals1 == null) || (vals1.length == 0)) { return; }
-        this.set1 = vals1;
-        this.set5 = vals2;
         this.n = this.set1.length;
 
         quicksort(0, this.n - 1);
