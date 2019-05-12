@@ -2,8 +2,9 @@ package thut.lib;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -29,14 +30,17 @@ public class CompatParser
 
         private static final String BAD_PACKAGE_ERROR = "Unable to get resources from path '%s'. Are you sure the package '%s' exists?";
 
-        public static List<Class<?>> find(String scannedPackage) throws UnsupportedEncodingException
+        public static List<Class<?>> find(String scannedPackage) throws UnsupportedEncodingException, URISyntaxException
         {
             String scannedPath = scannedPackage.replace(DOT, SLASH);
             URL scannedUrl = Thread.currentThread().getContextClassLoader().getResource(scannedPath);
             if (scannedUrl == null) { throw new IllegalArgumentException(
                     String.format(BAD_PACKAGE_ERROR, scannedPath, scannedPackage)); }
-            File scannedDir = new File(
-                    java.net.URLDecoder.decode(scannedUrl.getFile(), Charset.defaultCharset().name()));
+            String urlString = scannedUrl.toString();
+            urlString = urlString.replaceFirst("jar:", "");
+            urlString = urlString.replace("!" + scannedPath, "");
+            URI uri = new URI(urlString);
+            File scannedDir = new File(uri.getPath());
 
             Set<Class<?>> classes = Sets.newHashSet();
 
