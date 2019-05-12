@@ -24,7 +24,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
 
     public static void sync(EntityPlayerMP syncTo, DataSync data, int entity_id, boolean all)
     {
-        List<Data<?>> list = all ? data.getDirty() : data.getAll();
+        List<Data<?>> list = all ? data.getAll() : data.getDirty();
         // Nothing to sync.
         if (list == null) return;
         PacketDataSync packet = new PacketDataSync();

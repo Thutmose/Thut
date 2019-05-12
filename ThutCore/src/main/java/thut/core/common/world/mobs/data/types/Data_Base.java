@@ -10,12 +10,22 @@ public abstract class Data_Base<T> implements Data<T>
     private boolean dirty    = false;
     private T       lastSent = null;
 
+    protected void initLast(T last)
+    {
+        this.lastSent = last;
+    }
+
+    protected boolean isDifferent(T last, T value)
+    {
+        return last != null ? !last.equals(value) : value != null;
+    }
+
     @Override
     public boolean dirty()
     {
         if (dirty) return true;
         T value = get();
-        return lastSent != null ? !lastSent.equals(value) : value != null;
+        return isDifferent(lastSent, value);
     }
 
     @Override

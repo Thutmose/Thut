@@ -16,6 +16,7 @@ import thut.api.world.mobs.data.DataSync;
 import thut.core.common.world.mobs.data.types.Data_Byte;
 import thut.core.common.world.mobs.data.types.Data_Float;
 import thut.core.common.world.mobs.data.types.Data_Int;
+import thut.core.common.world.mobs.data.types.Data_ItemStack;
 import thut.core.common.world.mobs.data.types.Data_String;
 import thut.core.common.world.mobs.data.types.Data_UUID;
 
@@ -30,6 +31,7 @@ public class DataSync_Impl implements DataSync, ICapabilityProvider
         addMapping(Data_Float.class);
         addMapping(Data_String.class);
         addMapping(Data_UUID.class);
+        addMapping(Data_ItemStack.class);
     }
 
     public static void addMapping(Class<? extends Data<?>> dataType)
