@@ -43,6 +43,7 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
 import thut.api.entity.IMultiplePassengerEntity;
@@ -63,6 +64,7 @@ import thut.core.common.terrain.CapabilityTerrainAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.DefaultAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.ITerrainAffected;
 import thut.core.common.world.mobs.data.DataSync_Impl;
+import thut.core.common.world.mobs.data.PacketDataSync;
 import thut.core.common.world.mobs.data.SyncHandler;
 import thut.reference.Reference;
 
@@ -146,6 +148,9 @@ public class ThutCore
         proxy.registerEntities();
         proxy.registerTEs();
         new CapabilityTerrainAffected();
+
+        PacketHandler.packetPipeline.registerMessage(PacketDataSync.class, PacketDataSync.class,
+                PacketHandler.getMessageID(), Side.CLIENT);
     }
 
     @EventHandler

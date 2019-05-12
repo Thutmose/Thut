@@ -68,7 +68,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
                     val.read(buf);
                     data.add(val);
                 }
-                catch (InstantiationException | IllegalAccessException e)
+                catch (Exception e)
                 {
                     e.printStackTrace();
                 }

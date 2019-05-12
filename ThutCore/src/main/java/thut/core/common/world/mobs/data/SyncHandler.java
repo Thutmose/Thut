@@ -16,7 +16,7 @@ import thut.api.world.mobs.data.DataSync;
 public class SyncHandler
 {
     @CapabilityInject(DataSync.class)
-    private static final Capability<DataSync> CAP = null;
+    public static final Capability<DataSync> CAP = null;
 
     public static DataSync getData(Entity mob)
     {
