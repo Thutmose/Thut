@@ -51,9 +51,9 @@ import thut.api.entity.ai.IAIMob;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.entity.genetics.Alleles;
 import thut.api.entity.genetics.IMobGenetics;
-import thut.api.maths.Cruncher;
 import thut.api.network.PacketHandler;
 import thut.api.terrain.TerrainManager;
+import thut.api.world.mobs.data.DataSync;
 import thut.core.common.commands.CommandConfig;
 import thut.core.common.commands.CommandTerrain;
 import thut.core.common.genetics.DefaultGenetics;
@@ -62,6 +62,8 @@ import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.terrain.CapabilityTerrainAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.DefaultAffected;
 import thut.core.common.terrain.CapabilityTerrainAffected.ITerrainAffected;
+import thut.core.common.world.mobs.data.DataSync_Impl;
+import thut.core.common.world.mobs.data.SyncHandler;
 import thut.reference.Reference;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION, updateJSON = Reference.UPDATEURL, acceptableRemoteVersions = Reference.MINVERSION, guiFactory = "thut.core.client.config.ModGuiFactory")
@@ -164,7 +166,8 @@ public class ThutCore
         MinecraftForge.EVENT_BUS.register(aiTicker);
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new TickHandler());
-        new Cruncher();
+        MinecraftForge.EVENT_BUS.register(new SyncHandler());
+
         CapabilityManager.INSTANCE.register(IAIMob.class, new Capability.IStorage<IAIMob>()
         {
             @Override
@@ -199,6 +202,19 @@ public class ThutCore
             {
             }
         }, DefaultAffected::new);
+        CapabilityManager.INSTANCE.register(DataSync.class, new Capability.IStorage<DataSync>()
+        {
+            @Override
+            public NBTBase writeNBT(Capability<DataSync> capability, DataSync instance, EnumFacing side)
+            {
+                return null;
+            }
+
+            @Override
+            public void readNBT(Capability<DataSync> capability, DataSync instance, EnumFacing side, NBTBase nbt)
+            {
+            }
+        }, DataSync_Impl::new);
         CapabilityManager.INSTANCE.register(IMobGenetics.class, new Capability.IStorage<IMobGenetics>()
         {
 
