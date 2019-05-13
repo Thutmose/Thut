@@ -247,11 +247,11 @@ public interface IBlockEntity
                 @SuppressWarnings("unchecked")
                 RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> registry = (RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>) F
                         .get(null);
-                oclass = (Class<? extends TileEntity>) registry.getObject(new ResourceLocation(s));
+                oclass = registry.getObject(new ResourceLocation(s));
 
                 if (oclass != null)
                 {
-                    tileentity = (TileEntity) oclass.newInstance();
+                    tileentity = oclass.newInstance();
                 }
             }
             catch (Throwable throwable1)

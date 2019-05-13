@@ -50,12 +50,14 @@ public abstract class CompatItem extends Item
     }
 
     // 1.11
+    @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
     {
         return onItemRightClick(player.getHeldItem(hand), world, player, hand);
     }
 
     // 1.11
+    @Override
     public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand,
             EnumFacing side, float hitX, float hitY, float hitZ)
     {

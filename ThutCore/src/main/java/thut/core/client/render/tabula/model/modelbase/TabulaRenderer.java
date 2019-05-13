@@ -75,7 +75,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         model = modelBase;
         if (modelBase instanceof TabulaModelBase)
         {
-            TabulaModelBase mowzieModelBase = (TabulaModelBase) modelBase;
+            TabulaModelBase mowzieModelBase = modelBase;
             mowzieModelBase.addPart(this);
         }
     }

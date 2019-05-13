@@ -196,6 +196,7 @@ public class ModelWrapper extends ModelBase implements IModel
         this.rotationPointZ = par3;
     }
 
+    @Override
     public void setOffset(Vector3 point)
     {
         setRotationPoint((float) point.x, (float) point.y, (float) point.z);

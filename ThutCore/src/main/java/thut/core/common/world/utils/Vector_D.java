@@ -9,7 +9,7 @@ public class Vector_D extends Vector_Base<Double>
     public static int floor(double value)
     {
         int i = (int) value;
-        return value < (double) i ? i - 1 : i;
+        return value < i ? i - 1 : i;
     }
 
     public void toInts(Vector_I toSet)

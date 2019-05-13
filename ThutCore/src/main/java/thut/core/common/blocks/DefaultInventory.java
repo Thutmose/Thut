@@ -93,6 +93,7 @@ public interface DefaultInventory extends IInventory
     }
 
     // 1.11
+    @Override
     default public boolean isEmpty()
     {
         return true;

@@ -194,6 +194,6 @@ public class WorldCache implements IBlockAccess
     /** Converts the chunk coordinate pair to a long */
     public static long asLong(int x, int z)
     {
-        return (long) x & 4294967295L | ((long) z & 4294967295L) << 32;
+        return x & 4294967295L | (z & 4294967295L) << 32;
     }
 }

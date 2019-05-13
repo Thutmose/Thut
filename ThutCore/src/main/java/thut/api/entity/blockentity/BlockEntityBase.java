@@ -69,6 +69,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
         this.isImmuneToFire = true;
     }
 
+    @Override
     public BlockEntityWorld getFakeWorld()
     {
         if (fake_world == null)

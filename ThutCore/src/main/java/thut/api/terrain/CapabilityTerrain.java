@@ -53,7 +53,7 @@ public class CapabilityTerrain
         {
             int chunkY = (blockLocation.getY() / 16) & 15;
             TerrainSegment segment = getTerrainSegment(chunkY);
-            segment.getCentre().addTo(0, 256 * ((int) (blockLocation.getY() / 256)), 0);
+            segment.getCentre().addTo(0, 256 * (blockLocation.getY() / 256), 0);
             return segment;
         }
 

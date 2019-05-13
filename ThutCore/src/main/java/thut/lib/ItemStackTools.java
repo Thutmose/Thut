@@ -5,7 +5,6 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.wrapper.InvWrapper;
@@ -125,7 +124,7 @@ public class ItemStackTools
             itemstack.setCount(0);
             if (itemStackIn.hasTagCompound())
             {
-                itemstack.setTagCompound((NBTTagCompound) itemStackIn.getTagCompound().copy());
+                itemstack.setTagCompound(itemStackIn.getTagCompound().copy());
             }
             inventory.setStackInSlot(j, itemstack);
         }
