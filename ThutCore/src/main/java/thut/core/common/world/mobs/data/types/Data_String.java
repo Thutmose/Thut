@@ -40,6 +40,7 @@ public class Data_String extends Data_Base<String>
         int len = buf.readInt();
         byte[] arr = new byte[len];
         buf.readBytes(arr);
+        value = new String(arr);
     }
 
 }
