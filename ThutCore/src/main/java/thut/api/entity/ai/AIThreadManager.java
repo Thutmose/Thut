@@ -330,7 +330,19 @@ public class AIThreadManager
             mob = event.getEntity().getCapability(IAIMob.THUTMOBAI, null);
             ai = mob.getAI();
         }
-        if (mob != null && mob.vanillaWrapped()) return;
+        if (mob != null && mob.vanillaWrapped())
+        {
+            // Manually run this client side, since the normal AI doesn't
+            // actually run.
+            if (event.getEntity().world.isRemote)
+            {
+                for (ILogicRunnable logic : ai.aiLogic)
+                {
+                    logic.doServerTick(event.getEntity().getEntityWorld());
+                }
+            }
+            return;
+        }
 
         IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null);
         if (genes != null) genes.onUpdateTick(event.getEntityLiving());

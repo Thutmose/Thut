@@ -3,6 +3,7 @@ package thut.api.entity.ai;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.world.World;
 import thut.api.entity.ai.AIThreadManager.AIStuff;
 import thut.api.entity.genetics.IMobGenetics;
 
@@ -23,26 +24,23 @@ public class EntityAIBaseManager extends EntityAIBase
         AIStuff ai = wrapped.getAI();
         IMobGenetics genes = entity.getCapability(IMobGenetics.GENETICS_CAP, null);
         if (genes != null) genes.onUpdateTick(entity);
+        World world = entity.getEntityWorld();
 
         // If not IAIMob, or self managed, then no need to run AI stuff.
         if (wrapped.selfManaged() || ai == null) return;
+        world.profiler.startSection("custom_ai");
         // Run the ILogicRunnables on both server and client side.
         for (ILogicRunnable logic : ai.aiLogic)
         {
-            logic.doServerTick(entity.getEntityWorld());
+            logic.doServerTick(world);
         }
-        // Run remainder if AI server side only.
-        if (!entity.getEntityWorld().isRemote) updateEntityActionState((EntityLiving) entity, ai);
+        // Run Tick results from AI stuff.
+        ai.runServerThreadTasks(world);
+        world.profiler.endSection();
     }
 
     protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
     {
-        mob.getEntityWorld().profiler.startSection("custom_ai");
-        // Run Tick results from AI stuff.
-        ai.runServerThreadTasks(mob.getEntityWorld());
-        // Schedule AIStuff to tick for next tick.
-        AIThreadManager.scheduleAITick(ai);
-        mob.getEntityWorld().profiler.endSection();
     }
 
     @Override
