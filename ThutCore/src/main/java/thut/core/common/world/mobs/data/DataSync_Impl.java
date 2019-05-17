@@ -133,6 +133,14 @@ public class DataSync_Impl implements DataSync, ICapabilityProvider
         lock.writeLock().lock();
         for (Data<?> value : values)
         {
+            // Only update things we already have. This fixes issues on
+            // server/client syncing when both sides have not fully initialized.
+            if (!data.containsKey(value.getID())) continue;
+            int uid1 = value.getUID();
+            int uid2 = data.get(value.getID()).getUID();
+            // Only update same values, things can go funny on initial syncing
+            // if things have not initialized on both sides yet.
+            if (uid1 != uid2) continue;
             this.data.put(value.getID(), value);
         }
         lock.writeLock().unlock();
