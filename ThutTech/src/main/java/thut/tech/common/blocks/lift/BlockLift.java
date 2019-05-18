@@ -1,7 +1,5 @@
 package thut.tech.common.blocks.lift;
 
-import javax.annotation.Nullable;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -198,22 +196,16 @@ public class BlockLift extends Block implements ITileEntityProvider
         return metadata == 1;
     }
 
-    // 1.11
+    @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
             EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
     {
-        return onBlockActivated(worldIn, pos, state, playerIn, hand, playerIn.getHeldItem(hand), side, hitX, hitY,
-                hitZ);
-    }
-
-    // 1.10
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
-            EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)
-    {
+        ItemStack heldItem = playerIn.getHeldItem(hand);
         boolean linkerOrStick = CompatWrapper.isValid(heldItem)
                 && (heldItem.getItem().getUnlocalizedName().toLowerCase().contains("wrench")
                         || heldItem.getItem().getUnlocalizedName().toLowerCase().contains("screwdriver")
                         || heldItem.getItem() instanceof ItemLinker || heldItem.getItem() == Items.STICK);
+        if (linkerOrStick && playerIn.isSneaking()) return false;
 
         if (CompatWrapper.isValid(heldItem) && !linkerOrStick && side == EnumFacing.DOWN)
         {

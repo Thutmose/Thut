@@ -58,7 +58,9 @@ public class DataSync_Impl implements DataSync, ICapabilityProvider
     {
         Class<? extends Data<?>> dataType = REGISTRY.get(id);
         if (dataType == null) throw new NullPointerException("No type registered for ID: " + id);
-        return (T) dataType.newInstance();
+        Data<?> data = dataType.newInstance();
+        getID(data);
+        return (T) data;
     }
 
     public Int2ObjectArrayMap<Data<?>> data = new Int2ObjectArrayMap<>();
@@ -136,8 +138,9 @@ public class DataSync_Impl implements DataSync, ICapabilityProvider
             // Only update things we already have. This fixes issues on
             // server/client syncing when both sides have not fully initialized.
             if (!data.containsKey(value.getID())) continue;
+            Data<?> old = data.get(value.getID());
             int uid1 = value.getUID();
-            int uid2 = data.get(value.getID()).getUID();
+            int uid2 = old.getUID();
             // Only update same values, things can go funny on initial syncing
             // if things have not initialized on both sides yet.
             if (uid1 != uid2) continue;
