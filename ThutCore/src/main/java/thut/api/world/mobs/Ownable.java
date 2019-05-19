@@ -6,8 +6,14 @@ import javax.annotation.Nullable;
 
 public interface Ownable
 {
-    void setOwnerId();
+    /** Sets the owner for this mob.
+     * 
+     * @param owner */
+    void setOwnerId(UUID owner);
 
+    /** The UUID of our owner, null means no owner.
+     * 
+     * @return */
     @Nullable
     UUID getOwnerId();
 

@@ -4,11 +4,12 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import thut.api.world.Keyed;
 import thut.api.world.World;
 import thut.api.world.utils.Info;
 import thut.api.world.utils.Vector;
 
-public interface Block
+public interface Block extends Keyed
 {
     /** The world that this block lives in
      * 

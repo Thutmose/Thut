@@ -2,6 +2,9 @@ package thut.api.world;
 
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import thut.api.world.blocks.Block;
 import thut.api.world.mobs.Mob;
 import thut.api.world.utils.Vector;
@@ -16,6 +19,7 @@ public interface World
      * 
      * @param position
      * @return */
+    @Nonnull
     Block getBlock(Vector<Integer> position);
 
     /** @param mob
@@ -30,5 +34,12 @@ public interface World
      * 
      * @param id
      * @return */
+    @Nullable
     Mob getMob(UUID id);
+
+    /** This is the level of this world, generally the base world is 0, lower
+     * ones are negative.
+     * 
+     * @return */
+    int getLevel();
 }

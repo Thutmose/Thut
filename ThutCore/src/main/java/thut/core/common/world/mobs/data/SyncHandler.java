@@ -59,16 +59,15 @@ public class SyncHandler
         WorldServer world = (WorldServer) event.getEntity().getEntityWorld();
         Set<? extends EntityPlayer> players = world.getEntityTracker().getTrackingPlayers(event.getEntity());
         boolean sendSelf = event.getEntity() instanceof EntityPlayerMP;
-        boolean all = false;
         for (EntityPlayer player : players)
         {
             sendSelf = sendSelf && player != event.getEntity();
             if (player instanceof EntityPlayerMP)
-                PacketDataSync.sync((EntityPlayerMP) player, data, event.getEntity().getEntityId(), all);
+                PacketDataSync.sync((EntityPlayerMP) player, data, event.getEntity().getEntityId(), false);
         }
         if (sendSelf)
         {
-            PacketDataSync.sync((EntityPlayerMP) event.getEntity(), data, event.getEntity().getEntityId(), all);
+            PacketDataSync.sync((EntityPlayerMP) event.getEntity(), data, event.getEntity().getEntityId(), false);
         }
     }
 

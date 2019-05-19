@@ -43,6 +43,7 @@ import thut.api.network.PacketHandler.MessageServer.MessageHandlerServer;
 import thut.api.terrain.BiomeType;
 import thut.api.terrain.CapabilityTerrain;
 import thut.api.terrain.CapabilityTerrain.ITerrainProvider;
+import thut.api.world.mobs.Mob;
 
 public class PacketHandler
 {
@@ -389,6 +390,20 @@ public class PacketHandler
             packetData[i] = data[i - 1];
         }
         return new MessageServer(packetData);
+    }
+
+    public static void sendEntityUpdate(Mob mob)
+    {
+        if (!(mob.wrapped() instanceof Entity)) return;
+        Entity e = (Entity) mob.wrapped();
+        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
+        NBTTagCompound nbt = new NBTTagCompound();
+        e.writeToNBT(nbt);
+        buffer.writeByte(MessageClient.ENTITYUPDATE);
+        buffer.writeInt(e.getEntityId());
+        buffer.writeCompoundTag(nbt);
+        MessageClient message = new MessageClient(buffer);
+        sendToAllNear(message, Vector3.getNewVector().set(e), e.getEntityWorld().provider.getDimension(), 64);
     }
 
     public static void sendEntityUpdate(Entity e)

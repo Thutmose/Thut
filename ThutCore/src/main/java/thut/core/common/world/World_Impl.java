@@ -25,7 +25,7 @@ public class World_Impl implements World
         // TODO consider caching this and cleanup stuff?
         // Maybe store these in a chunk capability instead.
         Block block = new Block_Impl(pos);
-        
+
         return block;
     }
 
@@ -48,6 +48,12 @@ public class World_Impl implements World
     {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public int getLevel()
+    {
+        return wrapped.provider.getDimension();
     }
 
 }

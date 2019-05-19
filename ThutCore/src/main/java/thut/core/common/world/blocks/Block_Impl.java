@@ -50,4 +50,11 @@ public class Block_Impl implements Block
         return id;
     }
 
+    @Override
+    public String key()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

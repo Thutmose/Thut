@@ -1,17 +1,15 @@
 package thut.api.entity;
 
-import net.minecraft.entity.Entity;
-
 /** These mobs will attempt to eat items, blocks, or other mobs.
  * 
  * @author Thutmose */
 public interface IHungrymob
 {
-    /** Called when the mob eats the Entity e. e can be any entity, will often
+    /** Called when the mob eats the Object e. e can be any entity, will often
      * be an EntityItem.
      * 
      * @param e */
-    public void eat(Entity e);
+    public void eat(Object e);
 
     /** Mob eats berries */
     public boolean eatsBerries();
@@ -51,7 +49,7 @@ public interface IHungrymob
      * was already eaten by someone else.
      * 
      * @param e */
-    public void noEat(Entity e);
+    public void noEat(Object e);
 
     /** Sets the hungerCooldown
      * 
