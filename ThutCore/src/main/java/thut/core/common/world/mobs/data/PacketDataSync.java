@@ -33,6 +33,18 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
         PacketHandler.packetPipeline.sendTo(packet, syncTo);
     }
 
+    public static void sync(List<EntityPlayerMP> syncTo, DataSync data, int entity_id, boolean all)
+    {
+        List<Data<?>> list = all ? data.getAll() : data.getDirty();
+        // Nothing to sync.
+        if (list == null || syncTo.isEmpty()) return;
+        PacketDataSync packet = new PacketDataSync();
+        packet.data = list;
+        packet.id = entity_id;
+        for (EntityPlayerMP player : syncTo)
+            PacketHandler.packetPipeline.sendTo(packet, player);
+    }
+
     public PacketDataSync()
     {
     }

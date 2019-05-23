@@ -57,6 +57,8 @@ public class CompatParser
         {
             List<Class<?>> classes = new ArrayList<Class<?>>();
 
+            // TODO cache these to speed up searching if the jar hasn't actually
+            // changed.
             if (file.toString().endsWith(".jar"))
             {
                 try

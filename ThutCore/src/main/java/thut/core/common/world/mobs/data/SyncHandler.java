@@ -14,9 +14,6 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import thut.api.world.mobs.data.DataSync;
 
 public class SyncHandler
@@ -29,27 +26,6 @@ public class SyncHandler
         return mob.getCapability(CAP, null);
     }
 
-    private List<SyncPacket> syncSet = Lists.newArrayList();
-
-    @SubscribeEvent
-    public void WorldTick(WorldTickEvent event)
-    {
-        if (event.side == Side.CLIENT || event.phase == Phase.START) return;
-        int m = syncSet.size();
-        long time = event.world.getTotalWorldTime() - 10;
-        for (int i = 0; i < m; i++)
-        {
-            SyncPacket packet = syncSet.get(i);
-            if (packet.time < time)
-            {
-                syncSet.remove(i);
-                i--;
-                m--;
-                PacketDataSync.sync(packet.sendTo, packet.data, packet.target.getEntityId(), true);
-            }
-        }
-    }
-
     @SubscribeEvent
     public void EntityUpdate(LivingUpdateEvent event)
     {
@@ -59,16 +35,17 @@ public class SyncHandler
         WorldServer world = (WorldServer) event.getEntity().getEntityWorld();
         Set<? extends EntityPlayer> players = world.getEntityTracker().getTrackingPlayers(event.getEntity());
         boolean sendSelf = event.getEntity() instanceof EntityPlayerMP;
+        List<EntityPlayerMP> playerList = Lists.newArrayList();
         for (EntityPlayer player : players)
         {
             sendSelf = sendSelf && player != event.getEntity();
-            if (player instanceof EntityPlayerMP)
-                PacketDataSync.sync((EntityPlayerMP) player, data, event.getEntity().getEntityId(), false);
+            playerList.add((EntityPlayerMP) player);
         }
         if (sendSelf)
         {
-            PacketDataSync.sync((EntityPlayerMP) event.getEntity(), data, event.getEntity().getEntityId(), false);
+            playerList.add((EntityPlayerMP) event.getEntity());
         }
+        if (!playerList.isEmpty()) PacketDataSync.sync(playerList, data, event.getEntity().getEntityId(), false);
     }
 
     @SubscribeEvent
@@ -77,23 +54,6 @@ public class SyncHandler
         if (event.getTarget().getEntityWorld().isRemote) return;
         DataSync data = getData(event.getTarget());
         if (data == null) return;
-        syncSet.add(new SyncPacket(event.getTarget().getEntityWorld().getTotalWorldTime(),
-                (EntityPlayerMP) event.getEntityPlayer(), event.getEntity(), data));
-    }
-
-    private static class SyncPacket
-    {
-        final long           time;
-        final EntityPlayerMP sendTo;
-        final Entity         target;
-        final DataSync       data;
-
-        public SyncPacket(long time, EntityPlayerMP sendTo, Entity target, DataSync data)
-        {
-            this.time = time;
-            this.sendTo = sendTo;
-            this.target = target;
-            this.data = data;
-        }
+        PacketDataSync.sync((EntityPlayerMP) event.getEntityPlayer(), data, event.getTarget().getEntityId(), true);
     }
 }
