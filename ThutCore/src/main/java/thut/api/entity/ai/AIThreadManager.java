@@ -336,6 +336,18 @@ public class AIThreadManager
             // actually run.
             if (event.getEntity().world.isRemote)
             {
+                for (int i = 0; i < ai.aiLogic.size(); i++)
+                {
+                    ILogicRunnable runnable = (ILogicRunnable) ai.aiLogic.get(i);
+                    try
+                    {
+                        runnable.doLogic();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.log(Level.SEVERE, "error executing " + runnable, e);
+                    }
+                }
                 for (ILogicRunnable logic : ai.aiLogic)
                 {
                     logic.doServerTick(event.getEntity().getEntityWorld());
