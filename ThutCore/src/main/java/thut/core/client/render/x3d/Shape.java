@@ -98,6 +98,8 @@ public class Shape
         }
         GL11.glEnd();
 
+        if (!flat) GL11.glShadeModel(GL11.GL_FLAT);
+
         if (!hasTextures)
         {
             GlStateManager.enableTexture2D();

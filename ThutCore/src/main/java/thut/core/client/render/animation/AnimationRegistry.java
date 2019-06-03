@@ -27,6 +27,7 @@ public class AnimationRegistry
     {
         void convertToIdents(String[] names);
     }
+
     /** Map of XML node name to animation to read in. */
     public static HashMap<String, Class<? extends Animation>> animations      = Maps.newHashMap();
 
@@ -75,7 +76,11 @@ public class AnimationRegistry
                     ret.name = animationPhases.get(name);
                 }
             }
-            catch (Exception e)
+            catch (InstantiationException e)
+            {
+                e.printStackTrace();
+            }
+            catch (IllegalAccessException e)
             {
                 e.printStackTrace();
             }

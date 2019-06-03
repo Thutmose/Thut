@@ -53,20 +53,13 @@ public class BiWalkAnimation extends Animation
         for (String s : lf)
             if (s != null) fl.add(s);
         biwalkdur = Integer.parseInt(map.getNamedItem("duration").getNodeValue());
-        try
+        if (map.getNamedItem("legAngle") != null)
         {
-            if (map.getNamedItem("legAngle") != null)
-            {
-                walkAngle1 = Float.parseFloat(map.getNamedItem("legAngle").getNodeValue());
-            }
-            if (map.getNamedItem("armAngle") != null)
-            {
-                walkAngle2 = Float.parseFloat(map.getNamedItem("armAngle").getNodeValue());
-            }
+            walkAngle1 = Float.parseFloat(map.getNamedItem("legAngle").getNodeValue());
         }
-        catch (Exception e)
+        if (map.getNamedItem("armAngle") != null)
         {
-            e.printStackTrace();
+            walkAngle2 = Float.parseFloat(map.getNamedItem("armAngle").getNodeValue());
         }
         init(hl, hr, fl, fr, biwalkdur, walkAngle1, walkAngle2);
         return this;
