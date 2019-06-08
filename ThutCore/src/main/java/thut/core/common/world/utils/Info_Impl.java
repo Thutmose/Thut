@@ -5,8 +5,8 @@ import java.util.UUID;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.NBTException;
 import thut.api.world.utils.Info;
 
 public class Info_Impl implements Info
