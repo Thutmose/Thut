@@ -1,7 +1,6 @@
 package thut.core.common;
 
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import thut.api.ThutBlocks;

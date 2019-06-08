@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import thut.api.world.World;
 
 public class WorldManager

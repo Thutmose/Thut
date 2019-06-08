@@ -1,7 +1,5 @@
 package thut.core.client.render.model;
 
-import org.lwjgl.util.vector.Vector3f;
-
 public class Vector6f
 {
     public Vector3f vector1;

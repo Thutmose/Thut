@@ -2,8 +2,6 @@ package thut.tech.common.handlers;
 
 import static thut.api.ThutBlocks.lift;
 
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;

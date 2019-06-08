@@ -4,7 +4,8 @@ import javax.vecmath.Vector3f;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
+
 import thut.core.client.render.model.IPartTexturer;
 import thut.core.client.render.model.TextureCoordinate;
 import thut.core.client.render.model.Vertex;

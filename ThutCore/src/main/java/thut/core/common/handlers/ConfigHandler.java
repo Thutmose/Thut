@@ -6,8 +6,8 @@ import java.util.function.Predicate;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import thut.api.boom.ExplosionCustom;
 import thut.api.entity.ai.AIThreadManager;
 import thut.api.entity.blockentity.BlockEntityUpdater;

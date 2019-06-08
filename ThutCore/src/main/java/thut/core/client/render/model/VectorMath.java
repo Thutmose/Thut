@@ -1,8 +1,5 @@
 package thut.core.client.render.model;
 
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
-
 public class VectorMath
 {
     static final Vector3f X_AXIS = new Vector3f(1.0F, 0.0F, 0.0F);

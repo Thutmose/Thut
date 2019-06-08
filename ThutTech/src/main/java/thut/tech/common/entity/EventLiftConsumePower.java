@@ -1,7 +1,5 @@
 package thut.tech.common.entity;
 
-import net.minecraftforge.fml.common.eventhandler.Event;
-
 public class EventLiftConsumePower extends Event
 {
     public final EntityLift lift;

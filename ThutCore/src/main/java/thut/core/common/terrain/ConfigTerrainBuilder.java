@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.state.IProperty;
 import net.minecraft.util.ResourceLocation;
 import thut.api.terrain.BiomeType;
 import thut.api.terrain.TerrainSegment;

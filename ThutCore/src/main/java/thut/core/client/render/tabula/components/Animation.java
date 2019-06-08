@@ -13,8 +13,8 @@ import org.w3c.dom.NamedNodeMap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.core.client.render.animation.AnimationRegistry.IPartRenamer;
 
 /** Container for Tabula animations.

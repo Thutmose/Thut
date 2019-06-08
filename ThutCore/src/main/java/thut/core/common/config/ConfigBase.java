@@ -10,10 +10,7 @@ import java.util.Set;
 
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.ConfigElement;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.config.IConfigElement;
-import net.minecraftforge.fml.common.Loader;
 
 public abstract class ConfigBase extends Configuration
 {

@@ -11,8 +11,8 @@ import com.google.common.collect.Maps;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.core.client.render.tabula.components.ModelJson;
 import thut.core.client.render.tabula.json.JsonFactory;
 import thut.core.client.render.tabula.model.IModelParser;

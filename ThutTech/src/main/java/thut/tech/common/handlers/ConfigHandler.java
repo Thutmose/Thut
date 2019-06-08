@@ -1,6 +1,5 @@
 package thut.tech.common.handlers;
 
-import net.minecraftforge.common.config.Configuration;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.entity.LiftInteractHandler;
 

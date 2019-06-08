@@ -15,8 +15,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResource;
 import net.minecraft.entity.Entity;
+import net.minecraft.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import thut.api.entity.IMobColourable;
 import thut.api.maths.Vector3;
