@@ -2,7 +2,7 @@ package thut.core.common.genetics.genes;
 
 import java.util.Arrays;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import thut.api.entity.genetics.Gene;
 
 public abstract class GeneByteArr implements Gene
@@ -23,15 +23,15 @@ public abstract class GeneByteArr implements Gene
     }
 
     @Override
-    public NBTTagCompound save()
+    public CompoundNBT save()
     {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setByteArray("V", value);
+        CompoundNBT tag = new CompoundNBT();
+        tag.putByteArray("V", value);
         return tag;
     }
 
     @Override
-    public void load(NBTTagCompound tag)
+    public void load(CompoundNBT tag)
     {
         value = tag.getByteArray("V");
     }

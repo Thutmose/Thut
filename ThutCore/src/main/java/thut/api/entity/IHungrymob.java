@@ -6,7 +6,7 @@ package thut.api.entity;
 public interface IHungrymob
 {
     /** Called when the mob eats the Object e. e can be any entity, will often
-     * be an EntityItem.
+     * be an ItemEntity.
      * 
      * @param e */
     public void eat(Object e);

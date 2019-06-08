@@ -1,11 +1,11 @@
 package thut.api.pathing;
 
-import static net.minecraft.util.EnumFacing.DOWN;
-import static net.minecraft.util.EnumFacing.EAST;
-import static net.minecraft.util.EnumFacing.NORTH;
-import static net.minecraft.util.EnumFacing.SOUTH;
-import static net.minecraft.util.EnumFacing.UP;
-import static net.minecraft.util.EnumFacing.WEST;
+import static net.minecraft.util.Direction.DOWN;
+import static net.minecraft.util.Direction.EAST;
+import static net.minecraft.util.Direction.NORTH;
+import static net.minecraft.util.Direction.SOUTH;
+import static net.minecraft.util.Direction.UP;
+import static net.minecraft.util.Direction.WEST;
 
 import java.util.List;
 
@@ -16,11 +16,11 @@ import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.IntHashMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -38,7 +38,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     static int    count = 0;
     static double mean  = 0;
 
-    public static Vector3 getOpposite(EnumFacing side, Vector3 ret)
+    public static Vector3 getOpposite(Direction side, Vector3 ret)
     {
         switch (side)
         {
@@ -249,26 +249,26 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             int dy = end.yCoord - current.yCoord;
             int dz = end.zCoord - current.zCoord;
 
-            EnumFacing s = null;
+            Direction s = null;
 
             if (dx != 0 && dx > dy && dx > dz)
             {
-                s = dx < 0 ? EnumFacing.EAST : EnumFacing.WEST;
+                s = dx < 0 ? Direction.EAST : Direction.WEST;
             }
             else if (dy != 0 && dy > dz && dy > dx)
             {
-                s = dy < 0 ? EnumFacing.UP : EnumFacing.DOWN;
+                s = dy < 0 ? Direction.UP : Direction.DOWN;
             }
             else if (dz != 0 && dz > dx && dz > dy)
             {
-                s = dz < 0 ? EnumFacing.SOUTH : EnumFacing.NORTH;
+                s = dz < 0 ? Direction.SOUTH : Direction.NORTH;
             }
 
             int num = s != null ? s.ordinal() : 0;
 
             for (int i = 0; i < 6; i++)
             {
-                EnumFacing side = EnumFacing.values()[(i + num) % 6];
+                Direction side = Direction.values()[(i + num) % 6];
                 if (side == getDirFromPoint(current)) continue;
                 Vector3 opp = getOpposite(side, check);
                 int x = current.xCoord + side.getFrontOffsetX() * (l + 1);
@@ -306,7 +306,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                         }
                     }
                 }
-                if (!safe && !(side == EnumFacing.DOWN || side == EnumFacing.UP))
+                if (!safe && !(side == Direction.DOWN || side == Direction.UP))
                 {
                     PathPoint point1 = openPoint(x, y + 1, z);
                     boolean up = isEmpty(pokemob, point1, opp);
@@ -373,9 +373,9 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         return ret;
     }
 
-    EnumFacing getDirFromPoint(PathPoint current)
+    Direction getDirFromPoint(PathPoint current)
     {
-        EnumFacing side = null;
+        Direction side = null;
         if (current.previous == null) return side;
 
         int dx = current.xCoord - current.previous.xCoord;
@@ -384,13 +384,13 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
         if (dx != 0 && dx > dy && dx >= dz)
         {
-            return dx < 0 ? EnumFacing.EAST : EnumFacing.WEST;
+            return dx < 0 ? Direction.EAST : Direction.WEST;
         }
         else if (dy != 0 && dy > dz && dy >= dx)
         {
-            return dy < 0 ? EnumFacing.UP : EnumFacing.DOWN;
+            return dy < 0 ? Direction.UP : Direction.DOWN;
         }
-        else if (dz != 0 && dz > dx && dz >= dy) { return dz < 0 ? EnumFacing.SOUTH : EnumFacing.NORTH; }
+        else if (dz != 0 && dz > dx && dz >= dy) { return dz < 0 ? Direction.SOUTH : Direction.NORTH; }
 
         return side;
     }
@@ -529,13 +529,13 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         if (state.isNormalCube() || m.blocksMovement()) return false;
         if (size.x > 1 || size.z > 1)
         {
-            if (mob.fits(worldMap, v, from) || mob.fits(worldMap, v.addTo(0, ((EntityLiving) mob).stepHeight, 0), from))
+            if (mob.fits(worldMap, v, from) || mob.fits(worldMap, v.addTo(0, ((MobEntity) mob).stepHeight, 0), from))
                 return true;
-            for (EnumFacing side : EnumFacing.HORIZONTALS)
+            for (Direction side : Direction.HORIZONTALS)
             {
                 v.set(point).addTo(0.5 + side.getFrontOffsetX() * 0.5, 0, 0.5 + side.getFrontOffsetZ() * 0.5);
                 if (mob.fits(worldMap, v, from)
-                        || mob.fits(worldMap, v.addTo(0, ((EntityLiving) mob).stepHeight, 0), from))
+                        || mob.fits(worldMap, v.addTo(0, ((MobEntity) mob).stepHeight, 0), from))
                 {
                     point.x = (float) v.x;
                     point.y = (float) v.z;
@@ -546,7 +546,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
             return false;
         }
         if (!(v.clearOfBlocks(worldMap)
-                || v.addTo(0, ((EntityLiving) mob).stepHeight, 0).isClearOfBlocks(worldMap))) { return false; }
+                || v.addTo(0, ((MobEntity) mob).stepHeight, 0).isClearOfBlocks(worldMap))) { return false; }
         return true;
     }
 
@@ -558,7 +558,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         boolean water = mob.swims();
         boolean air = mob.flys() || mob.floats();
         boolean ladder = (state = worldMap.getBlockState(pos)).getBlock().isLadder(state, worldMap, pos,
-                (EntityLivingBase) mob);
+                (LivingEntity) mob);
         if (air || ladder) { return isEmpty(size, point, from); }
         if (water)
         {

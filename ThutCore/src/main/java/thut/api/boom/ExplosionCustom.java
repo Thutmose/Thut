@@ -12,8 +12,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
@@ -98,7 +98,7 @@ public class ExplosionCustom extends Explosion
 
     public boolean               meteor                 = false;
 
-    public EntityPlayer          owner                  = null;
+    public PlayerEntity          owner                  = null;
 
     List<Entity>                 targets                = new ArrayList<Entity>();
 
@@ -115,7 +115,7 @@ public class ExplosionCustom extends Explosion
 
     public Set<BlockPos>         affectedBlockPositions = new HashSet<BlockPos>();
 
-    Map<EntityLivingBase, Float> damages                = new HashMap<EntityLivingBase, Float>();
+    Map<LivingEntity, Float> damages                = new HashMap<LivingEntity, Float>();
 
     List<Chunk>                  affected               = new ArrayList<Chunk>();
 
@@ -135,7 +135,7 @@ public class ExplosionCustom extends Explosion
         this.explosionZ = center.z;
         explosionSize = power;
         this.centre = center.copy();
-        dimension = world.provider.getDimension();
+        dimension = world.dimension.getDimension();
         minBlastDamage = MINBLASTDAMAGE;
         maxPerTick = MAXPERTICK;
     }
@@ -175,7 +175,7 @@ public class ExplosionCustom extends Explosion
 
     public void doExplosion()
     {
-        this.world.playSound((EntityPlayer) null, this.explosionX, this.explosionY, this.explosionZ,
+        this.world.playSound((PlayerEntity) null, this.explosionX, this.explosionY, this.explosionZ,
                 SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F,
                 (1.0F + (this.world.rand.nextFloat() - this.world.rand.nextFloat()) * 0.2F) * 0.7F);
 

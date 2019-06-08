@@ -6,14 +6,14 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.tabula.components.Animation;
 
-public interface IModelRenderer<T extends EntityLiving>
+public interface IModelRenderer<T extends MobEntity>
 {
     public static final String DEFAULTPHASE = "idle";
     static final Vector3       DEFAULTSCALE = Vector3.getNewVector().set(1);

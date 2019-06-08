@@ -5,8 +5,8 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
 import thut.core.client.render.model.IModelRenderer;
@@ -60,7 +60,7 @@ public class TabulaWrapper extends ModelBase
         if (phase == null) phase = "idle";
         if (modelj.changer != null)
         {
-            phase = modelj.changer.modifyAnimation((EntityLiving) entityIn, partialTick, phase);
+            phase = modelj.changer.modifyAnimation((MobEntity) entityIn, partialTick, phase);
         }
         boolean inSet = false;
         if (animate != null)
@@ -82,11 +82,11 @@ public class TabulaWrapper extends ModelBase
      * float params here are the same second and third as in the
      * setRotationAngles method. */
     @Override
-    public void setLivingAnimations(EntityLivingBase entity, float limbSwing, float limbSwingAmount,
+    public void setLivingAnimations(LivingEntity entity, float limbSwing, float limbSwingAmount,
             float partialTickTime)
     {
         checkInit();
-        if (!Minecraft.getMinecraft().isGamePaused())
+        if (!Minecraft.getInstance().isGamePaused())
         {
             IAnimationHolder animate = AnimationHelper.getHolder(entity);
             modelj.setToInitPose();

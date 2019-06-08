@@ -6,7 +6,7 @@ import java.util.logging.Level;
 
 import com.google.common.collect.Maps;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import thut.api.entity.ai.AIThreadManager;
 
@@ -39,14 +39,14 @@ public class GeneRegistry
         }
     }
 
-    public static NBTTagCompound save(Gene gene)
+    public static CompoundNBT save(Gene gene)
     {
-        NBTTagCompound tag = gene.save();
-        tag.setString("K", gene.getKey().toString());
+        CompoundNBT tag = gene.save();
+        tag.putString("K", gene.getKey().toString());
         return tag;
     }
 
-    public static Gene load(NBTTagCompound tag) throws Exception
+    public static Gene load(CompoundNBT tag) throws Exception
     {
         Gene ret = null;
         ResourceLocation resource = new ResourceLocation(tag.getString("K"));

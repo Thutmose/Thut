@@ -4,7 +4,6 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.crash.ReportedException;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.wrapper.InvWrapper;
@@ -24,7 +23,7 @@ public class ItemStackTools
         {
             try
             {
-                if (itemStackIn.isItemDamaged())
+                if (itemStackIn.isDamaged())
                 {
                     int j = getFirstEmptyStack(toAddTo, minIndex);
 
@@ -55,9 +54,10 @@ public class ItemStackTools
             {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Adding item to inventory");
                 CrashReportCategory crashreportcategory = crashreport.makeCategory("Item being added");
-                crashreportcategory.addCrashSection("Item ID",
-                        Integer.valueOf(Item.getIdFromItem(itemStackIn.getItem())));
-                crashreportcategory.addCrashSection("Item data", Integer.valueOf(itemStackIn.getMetadata()));
+                // crashreportcategory.addCrashSection("Item ID",
+                // Integer.valueOf(Item.getIdFromItem(itemStackIn.getItem())));
+                // crashreportcategory.addCrashSection("Item data",
+                // Integer.valueOf(itemStackIn.getMetadata()));
                 throw new ReportedException(crashreport);
             }
         }
@@ -73,9 +73,7 @@ public class ItemStackTools
     /** Checks item, NBT, and meta if the item is not damageable */
     private static boolean stackEqualExact(ItemStack stack1, ItemStack stack2)
     {
-        return stack1.getItem() == stack2.getItem()
-                && (!stack1.getHasSubtypes() || stack1.getMetadata() == stack2.getMetadata())
-                && ItemStack.areItemStackTagsEqual(stack1, stack2);
+        return stack1.getItem() == stack2.getItem() && ItemStack.areItemStackTagsEqual(stack1, stack2);
     }
 
     public static int getFirstEmptyStack(IInventory inventory, int minIndex)
@@ -122,9 +120,9 @@ public class ItemStackTools
         {
             itemstack = itemStackIn.copy();
             itemstack.setCount(0);
-            if (itemStackIn.hasTagCompound())
+            if (itemStackIn.hasTag())
             {
-                itemstack.setTagCompound(itemStackIn.getTagCompound().copy());
+                itemstack.setTag(itemStackIn.getTag().copy());
             }
             inventory.setStackInSlot(j, itemstack);
         }

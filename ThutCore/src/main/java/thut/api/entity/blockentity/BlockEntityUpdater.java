@@ -13,8 +13,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MoverType;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -73,7 +73,7 @@ public class BlockEntityUpdater
         {
             theEntity.setPosition(theEntity.posX, Math.round(theEntity.posY), theEntity.posZ);
         }
-        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.getEntityWorld().getTotalWorldTime());
+        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.getEntityWorld().getGameTime());
         MutableBlockPos pos = new MutableBlockPos();
         int xMin = blockEntity.getMin().getX();
         int zMin = blockEntity.getMin().getZ();
@@ -357,18 +357,18 @@ public class BlockEntityUpdater
 
         }
         // Extra stuff to do with players.
-        if (entity instanceof EntityPlayer)
+        if (entity instanceof PlayerEntity)
         {
-            EntityPlayer player = (EntityPlayer) entity;
+            PlayerEntity player = (PlayerEntity) entity;
 
             if (player.getEntityWorld().isRemote)
             {
                 // This fixes jitter, need a better way to handle this.
-                if (Minecraft.getMinecraft().gameSettings.viewBobbing
+                if (Minecraft.getInstance().gameSettings.viewBobbing
                         || TickHandler.playerTickTracker.containsKey(player.getUniqueID()))
                 {
                     TickHandler.playerTickTracker.put(player.getUniqueID(), (int) (System.currentTimeMillis() % 2000));
-                    Minecraft.getMinecraft().gameSettings.viewBobbing = false;
+                    Minecraft.getInstance().gameSettings.viewBobbing = false;
                 }
             }
             /** This is for clearing jump values on client. */
@@ -383,8 +383,8 @@ public class BlockEntityUpdater
             // Meed to set floatingTickCount to prevent being kicked for flying.
             if (!player.capabilities.isCreativeMode && !player.getEntityWorld().isRemote)
             {
-                EntityPlayerMP entityplayer = (EntityPlayerMP) player;
-                entityplayer.connection.floatingTickCount = 0;
+                ServerPlayerEntity PlayerEntity = (ServerPlayerEntity) player;
+                PlayerEntity.connection.floatingTickCount = 0;
             }
         }
 
@@ -401,7 +401,7 @@ public class BlockEntityUpdater
             if (temp1.x != 0) entity.motionX = theEntity.motionX;
             if (temp1.y != 0) entity.motionY = theEntity.motionY;
             if (temp1.z != 0) entity.motionZ = theEntity.motionZ;
-            if (!(entity instanceof EntityPlayerMP)) entity.move(MoverType.SELF, temp1.x, temp1.y, temp1.z);
+            if (!(entity instanceof ServerPlayerEntity)) entity.move(MoverType.SELF, temp1.x, temp1.y, temp1.z);
 
             // Attempt to also set previous positions to prevent desync like
             // issues on servers.

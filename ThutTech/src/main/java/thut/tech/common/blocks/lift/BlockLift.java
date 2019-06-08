@@ -7,16 +7,16 @@ import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.IProperty;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -117,15 +117,15 @@ public class BlockLift extends Block implements ITileEntityProvider
         return state.getValue(VARIANT) == EnumType.LIFT ? 0 : 1;
     }
 
-    public EnumFacing getFacingfromEntity(EntityLiving e)
+    public Direction getFacingfromEntity(MobEntity e)
     {
-        EnumFacing side = null;
+        Direction side = null;
         double angle = e.rotationYaw % 360;
 
-        if (angle > 315 || angle <= 45) { return EnumFacing.SOUTH; }
-        if (angle > 45 && angle <= 135) { return EnumFacing.WEST; }
-        if (angle > 135 && angle <= 225) { return EnumFacing.NORTH; }
-        if (angle > 225 && angle <= 315) { return EnumFacing.EAST; }
+        if (angle > 315 || angle <= 45) { return Direction.SOUTH; }
+        if (angle > 45 && angle <= 135) { return Direction.WEST; }
+        if (angle > 135 && angle <= 225) { return Direction.NORTH; }
+        if (angle > 225 && angle <= 315) { return Direction.EAST; }
 
         return side;
     }
@@ -153,7 +153,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     }
 
     @Override
-    public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
+    public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side)
     {
         return 0;
     }
@@ -161,7 +161,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
 
     /** returns a list of blocks with the same ID, but different meta (eg: wood
      * returns 4 blocks) */
@@ -176,7 +176,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     ////////////////////////////////////////////////////// RedStone
     ////////////////////////////////////////////////////// stuff/////////////////////////////////////////////////
     @Override
-    public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side)
+    public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side)
     {
         return blockState.getValue(CURRENT) ? 15 : 0;
     }
@@ -196,8 +196,8 @@ public class BlockLift extends Block implements ITileEntityProvider
     }
 
     @Override
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
-            EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, PlayerEntity playerIn,
+            Hand hand, Direction side, float hitX, float hitY, float hitZ)
     {
         ItemStack heldItem = playerIn.getHeldItem(hand);
         boolean linkerOrStick = CompatWrapper.isValid(heldItem)
@@ -206,7 +206,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                         || heldItem.getItem() instanceof ItemLinker || heldItem.getItem() == Items.STICK);
         if (linkerOrStick && playerIn.isSneaking()) return false;
 
-        if (CompatWrapper.isValid(heldItem) && !linkerOrStick && side == EnumFacing.DOWN)
+        if (CompatWrapper.isValid(heldItem) && !linkerOrStick && side == Direction.DOWN)
         {
             Block b = Block.getBlockFromItem(heldItem.getItem());
             if (b != null && state.getValue(VARIANT) == EnumType.CONTROLLER)
@@ -235,7 +235,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                     if (!worldIn.isRemote)
                     {
                         te.setSide(side, !te.isSideOn(side));
-                        if (worldIn instanceof WorldServer) te.sendUpdate((EntityPlayerMP) playerIn);
+                        if (worldIn instanceof WorldServer) te.sendUpdate((ServerPlayerEntity) playerIn);
                     }
                     return true;
                 }
@@ -250,7 +250,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                     if (!worldIn.isRemote && !te.editFace[side.ordinal()] && !te.floorDisplay[side.ordinal()])
                     {
                         te.setSidePage(side, (te.getSidePage(side) + 1) % 8);
-                        if (playerIn instanceof EntityPlayerMP) te.sendUpdate((EntityPlayerMP) playerIn);
+                        if (playerIn instanceof ServerPlayerEntity) te.sendUpdate((ServerPlayerEntity) playerIn);
                         PacketHandler.sendTileUpdate(te);
                     }
                     return true;
@@ -268,8 +268,8 @@ public class BlockLift extends Block implements ITileEntityProvider
     @Override
     /** Called when a block is placed using its ItemBlock. Args: World, X, Y, Z,
      * side, hitX, hitY, hitZ, block metadata */
-    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY,
-            float hitZ, int meta, EntityLivingBase placer)
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY,
+            float hitZ, int meta, LivingEntity placer)
     {
         return getStateFromMeta(meta);
     }

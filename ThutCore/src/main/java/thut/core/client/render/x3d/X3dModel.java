@@ -126,7 +126,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     {
         try
         {
-            IResource res = Minecraft.getMinecraft().getResourceManager().getResource(model);
+            IResource res = Minecraft.getInstance().getResourceManager().getResource(model);
             X3dXML xml = new X3dXML(res.getInputStream());
             res.close();
             makeObjects(xml);

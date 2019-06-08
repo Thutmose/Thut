@@ -7,7 +7,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -16,7 +16,7 @@ import thut.api.entity.blockentity.RenderBlockEntity;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.ConfigHandler;
 
-public class RenderLift extends RenderBlockEntity<EntityLivingBase>
+public class RenderLift extends RenderBlockEntity<LivingEntity>
 {
     public static RenderLift hackyRenderer;
 
@@ -31,7 +31,7 @@ public class RenderLift extends RenderBlockEntity<EntityLivingBase>
     }
 
     @Override
-    public void doRender(EntityLivingBase entity, double x, double y, double z, float entityYaw, float partialTicks)
+    public void doRender(LivingEntity entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
         if (!ConfigHandler.hackyRender) super.doRender(entity, x, y, z, entityYaw, partialTicks);
     }
@@ -39,7 +39,7 @@ public class RenderLift extends RenderBlockEntity<EntityLivingBase>
     @SubscribeEvent
     public static void hackyRender(RenderWorldLastEvent event)
     {
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getInstance();
         Entity cameraEntity = mc.getRenderViewEntity();
         BlockPos renderingVector = cameraEntity.getPosition();
         Frustum frustum = new Frustum();
@@ -50,7 +50,7 @@ public class RenderLift extends RenderBlockEntity<EntityLivingBase>
         frustum.setPosition(viewX, viewY, viewZ);
         WorldClient client = mc.world;
         List<Entity> entities = client.loadedEntityList;
-        RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
+        RenderManager renderManager = Minecraft.getInstance().getRenderManager();
         for (Entity entity : entities)
             if (entity != null && entity instanceof EntityLift && entity != mc.player
                     && entity.isInRangeToRender3d(renderingVector.getX(), renderingVector.getY(),

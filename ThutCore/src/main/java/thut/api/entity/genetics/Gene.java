@@ -1,7 +1,7 @@
 package thut.api.entity.genetics;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
 public interface Gene
@@ -32,7 +32,7 @@ public interface Gene
      * only called if this gene is expressed.
      * 
      * @param genes */
-    default void onUpdateTick(EntityLivingBase mob)
+    default void onUpdateTick(LivingEntity mob)
     {
 
     }
@@ -52,12 +52,12 @@ public interface Gene
     }
 
     /** @return nbttag compount for saving. */
-    NBTTagCompound save();
+    CompoundNBT save();
 
     /** Loads the data from tag.
      * 
      * @param tag */
-    void load(NBTTagCompound tag);
+    void load(CompoundNBT tag);
 
     /** @return key to correspond to this class of Gene. This should return the
      *         same value for every instance of this class. */

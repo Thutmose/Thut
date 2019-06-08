@@ -21,7 +21,7 @@ import thut.core.client.render.animation.AnimationRegistry.IPartRenamer;
  *
  * @author Gegy1000
  * @since 0.1.0 */
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class Animation
 {
     public final UUID                                     id         = UUID.randomUUID();

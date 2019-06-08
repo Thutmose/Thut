@@ -13,18 +13,18 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.api.distmarker.Dist;
@@ -50,7 +50,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     Vector3                             here;
     public TileEntityLiftAccess         rootNode;
     public Vector<TileEntityLiftAccess> connected    = new Vector<TileEntityLiftAccess>();
-    EnumFacing                          sourceSide;
+    Direction                          sourceSide;
     boolean                             loaded       = false;
     public int                          floor        = 0;
     public int                          calledYValue = -1;
@@ -133,7 +133,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return ret;
     }
 
-    public boolean doButtonClick(EntityLivingBase clicker, EnumFacing side, float hitX, float hitY, float hitZ)
+    public boolean doButtonClick(LivingEntity clicker, Direction side, float hitX, float hitY, float hitZ)
     {
         if (liftID != null && !liftID.equals(empty) && lift != EntityLift.getLiftFromUUID(liftID, world))
         {
@@ -153,21 +153,21 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                     case 1:
                         callFaces[side.ordinal()] = !callFaces[side.ordinal()];
                         floorDisplay[side.ordinal()] = false;
-                        clicker.sendMessage(new TextComponentTranslation(message, callFaces[side.ordinal()]));
+                        clicker.sendMessage(new TranslationTextComponent(message, callFaces[side.ordinal()]));
                         break;
                     case 2:
                         floorDisplay[side.ordinal()] = !floorDisplay[side.ordinal()];
                         callFaces[side.ordinal()] = false;
                         message = "msg.floorDisplay.name";
-                        clicker.sendMessage(new TextComponentTranslation(message, floorDisplay[side.ordinal()]));
+                        clicker.sendMessage(new TranslationTextComponent(message, floorDisplay[side.ordinal()]));
                         break;
                     case 16:
                         editFace[side.ordinal()] = false;
                         message = "msg.editMode.name";
-                        clicker.sendMessage(new TextComponentTranslation(message, false));
+                        clicker.sendMessage(new TranslationTextComponent(message, false));
                         break;
                     }
-                    if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
+                    if (clicker instanceof ServerPlayerEntity) sendUpdate((ServerPlayerEntity) clicker);
                 }
                 return true;
             }
@@ -190,11 +190,11 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
                 }
             }
         }
-        if (clicker instanceof EntityPlayerMP) sendUpdate((EntityPlayerMP) clicker);
+        if (clicker instanceof ServerPlayerEntity) sendUpdate((ServerPlayerEntity) clicker);
         return valid;
     }
 
-    public int getButtonFromClick(EnumFacing side, float hitX, float hitY, float hitZ)
+    public int getButtonFromClick(Direction side, float hitX, float hitY, float hitZ)
     {
         int ret = 0;
         int page = getSidePage(side);
@@ -251,7 +251,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return new SPacketUpdateTileEntity(this.getPos(), 3, getUpdateTag());
     }
 
-    public int getSidePage(EnumFacing side)
+    public int getSidePage(Direction side)
     {
         return sidePages[side.getIndex()];
     }
@@ -277,7 +277,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         return oldState.getBlock() != newSate.getBlock();
     }
 
-    public boolean isSideOn(EnumFacing side)
+    public boolean isSideOn(Direction side)
     {
         int state = 1;
         byte byte0 = sides[side.getIndex()];
@@ -287,26 +287,26 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     @Override
     public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
     {
-        NBTTagCompound nbttagcompound = pkt.getNbtCompound();
-        this.readFromNBT(nbttagcompound);
+        CompoundNBT CompoundNBT = pkt.getNbtCompound();
+        this.readFromNBT(CompoundNBT);
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound par1)
+    public void readFromNBT(CompoundNBT par1)
     {
         super.readFromNBT(par1);
         floor = par1.getInteger("floor");
         liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
         sides = par1.getByteArray("sides");
-        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        for (Direction face : Direction.HORIZONTALS)
         {
             callFaces[face.ordinal()] = par1.getBoolean(face + "Call");
         }
-        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        for (Direction face : Direction.HORIZONTALS)
         {
             editFace[face.ordinal()] = par1.getBoolean(face + "Edit");
         }
-        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        for (Direction face : Direction.HORIZONTALS)
         {
             floorDisplay[face.ordinal()] = par1.getBoolean(face + "Display");
         }
@@ -315,7 +315,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (sidePages.length != 6) sidePages = new byte[6];
         if (par1.hasKey("state"))
         {
-            NBTTagCompound state = par1.getCompoundTag("state");
+            CompoundNBT state = par1.getCompound("state");
             String key = state.getString("K");
             int meta = state.getInteger("M");
             Block block = Block.REGISTRY.getObject(new ResourceLocation(key));
@@ -340,7 +340,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         if (world != null && !world.isRemote) PacketHandler.sendTileUpdate(this);
     }
 
-    public void setSide(EnumFacing side, boolean flag)
+    public void setSide(Direction side, boolean flag)
     {
         int state = 1;
         byte byte0 = sides[side.getIndex()];
@@ -358,7 +358,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         markDirty();
     }
 
-    public void setSidePage(EnumFacing side, int page)
+    public void setSidePage(Direction side, int page)
     {
         sidePages[side.getIndex()] = (byte) page;
     }
@@ -386,7 +386,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             IBlockState state = world.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
             boolean callPanel = false;
-            if (!old && !lift.getCalled()) for (EnumFacing face : EnumFacing.HORIZONTALS)
+            if (!old && !lift.getCalled()) for (Direction face : Direction.HORIZONTALS)
             {
                 callPanel |= callFaces[face.ordinal()];
             }
@@ -468,7 +468,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         // attach self to that floor.
         if (lift == null && tick++ % 50 == 0)
         {
-            for (EnumFacing side : EnumFacing.values())
+            for (Direction side : Direction.values())
             {
                 TileEntity t = here.getTileEntity(world, side);
                 Block b = here.getBlock(world, side);
@@ -488,23 +488,23 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound par1)
+    public CompoundNBT writeToNBT(CompoundNBT par1)
     {
         super.writeToNBT(par1);
         par1.setInteger("floor", floor);
-        par1.setByteArray("sides", sides);
-        par1.setByteArray("sidePages", sidePages);
-        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        par1.putByteArray("sides", sides);
+        par1.putByteArray("sidePages", sidePages);
+        for (Direction face : Direction.HORIZONTALS)
         {
-            par1.setBoolean(face + "Call", callFaces[face.ordinal()]);
+            par1.putBoolean(face + "Call", callFaces[face.ordinal()]);
         }
-        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        for (Direction face : Direction.HORIZONTALS)
         {
-            par1.setBoolean(face + "Edit", editFace[face.ordinal()]);
+            par1.putBoolean(face + "Edit", editFace[face.ordinal()]);
         }
-        for (EnumFacing face : EnumFacing.HORIZONTALS)
+        for (Direction face : Direction.HORIZONTALS)
         {
-            par1.setBoolean(face + "Display", floorDisplay[face.ordinal()]);
+            par1.putBoolean(face + "Display", floorDisplay[face.ordinal()]);
         }
         if (lift != null)
         {
@@ -512,36 +512,36 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         }
         if (liftID != null)
         {
-            par1.setLong("idLess", liftID.getLeastSignificantBits());
-            par1.setLong("idMost", liftID.getMostSignificantBits());
+            par1.putLong("idLess", liftID.getLeastSignificantBits());
+            par1.putLong("idMost", liftID.getMostSignificantBits());
         }
         if (copiedState != null)
         {
-            NBTTagCompound state = new NBTTagCompound();
-            state.setString("K", copiedState.getBlock().getRegistryName().toString());
+            CompoundNBT state = new CompoundNBT();
+            state.putString("K", copiedState.getBlock().getRegistryName().toString());
             state.setInteger("M", copiedState.getBlock().getMetaFromState(copiedState));
             par1.setTag("state", state);
         }
         return par1;
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public AxisAlignedBB getRenderBoundingBox()
     {
         AxisAlignedBB bb = INFINITE_EXTENT_AABB;
         return bb;
     }
 
-    public void sendUpdate(EntityPlayerMP player)
+    public void sendUpdate(ServerPlayerEntity player)
     {
         if (world instanceof BlockEntityWorld) return;
         player.connection.sendPacket(getUpdatePacket());
     }
 
     @Override
-    public NBTTagCompound getUpdateTag()
+    public CompoundNBT getUpdateTag()
     {
-        return writeToNBT(new NBTTagCompound());
+        return writeToNBT(new CompoundNBT());
     }
 
     // Open Computers stuff here, possibly will move this to a compat class or

@@ -15,9 +15,10 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -195,7 +196,7 @@ public interface IBlockEntity
                             if (tile != null)
                             {
                                 TileEntity newTile = entity.getEntityWorld().getTileEntity(pos);
-                                if (newTile != null) newTile.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                                if (newTile != null) newTile.readFromNBT(tile.writeToNBT(new CompoundNBT()));
                             }
                         }
                     }
@@ -224,7 +225,7 @@ public interface IBlockEntity
                         TileEntity old = world.getTileEntity(temp);
                         if (old != null)
                         {
-                            NBTTagCompound tag = new NBTTagCompound();
+                            CompoundNBT tag = new CompoundNBT();
                             tag = old.writeToNBT(tag);
                             ret[i - xMin][j - yMin][k - zMin] = makeTile(tag);
                         }
@@ -233,7 +234,7 @@ public interface IBlockEntity
         }
 
         @SuppressWarnings("deprecation")
-        public static TileEntity makeTile(NBTTagCompound compound)
+        public static TileEntity makeTile(CompoundNBT compound)
         {
             TileEntity tileentity = null;
             String s = compound.getString("id");

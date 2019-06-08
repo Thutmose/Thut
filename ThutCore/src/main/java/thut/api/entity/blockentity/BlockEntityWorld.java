@@ -10,9 +10,9 @@ import com.google.common.collect.Maps;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
@@ -70,16 +70,16 @@ public class BlockEntityWorld extends World
 
     @Nullable
     @Override
-    public EntityPlayer getClosestPlayer(double posX, double posY, double posZ, double distance, boolean spectator)
+    public PlayerEntity getClosestPlayer(double posX, double posY, double posZ, double distance, boolean spectator)
     {
         return world.getClosestPlayer(posX, posY, posZ, distance, spectator);
     }
 
     @Nullable
     @Override
-    public EntityPlayer getNearestAttackablePlayer(double posX, double posY, double posZ, double maxXZDistance,
-            double maxYDistance, @Nullable Function<EntityPlayer, Double> playerToDouble,
-            @Nullable Predicate<EntityPlayer> p_184150_12_)
+    public PlayerEntity getNearestAttackablePlayer(double posX, double posY, double posZ, double maxXZDistance,
+            double maxYDistance, @Nullable Function<PlayerEntity, Double> playerToDouble,
+            @Nullable Predicate<PlayerEntity> p_184150_12_)
     {
         return world.getNearestAttackablePlayer(posX, posY, posZ, maxXZDistance, maxYDistance, playerToDouble,
                 p_184150_12_);
@@ -119,7 +119,7 @@ public class BlockEntityWorld extends World
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public int getCombinedLight(BlockPos pos, int lightValue)
     {
         return 15 << 20 | 15 << 4;
@@ -170,7 +170,7 @@ public class BlockEntityWorld extends World
     }
 
     @Override
-    public int getStrongPower(BlockPos pos, EnumFacing direction)
+    public int getStrongPower(BlockPos pos, Direction direction)
     {
         return world.getStrongPower(pos, direction);
     }
@@ -182,7 +182,7 @@ public class BlockEntityWorld extends World
     }
 
     @Override
-    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+    public boolean isSideSolid(BlockPos pos, Direction side, boolean _default)
     {
         return getBlockState(pos).isSideSolid(this, pos, side);
     }
@@ -195,11 +195,11 @@ public class BlockEntityWorld extends World
 
     /** Gets the chunk at the specified location. */
     @Override
-    public Chunk getChunkFromChunkCoords(int chunkX, int chunkZ)
+    public Chunk getChunk(int chunkX, int chunkZ)
     {
         AxisAlignedBB chunkBox = new AxisAlignedBB(chunkX * 16, 0, chunkZ * 16, chunkX * 16 + 15, world.getHeight(),
                 chunkZ * 16 + 15);
-        if (!intersects(chunkBox)) return world.getChunkFromChunkCoords(chunkX, chunkZ);
+        if (!intersects(chunkBox)) return world.getChunk(chunkX, chunkZ);
 
         if (lastOrigin == null || !lastOrigin.equals(entity.getPosition()))
         {
@@ -225,7 +225,7 @@ public class BlockEntityWorld extends World
                     ExtendedBlockStorage storage = ret.getBlockStorageArray()[j >> 4];
                     if (storage == null)
                     {
-                        storage = new ExtendedBlockStorage(j >> 4 << 4, this.world.provider.hasSkyLight());
+                        storage = new ExtendedBlockStorage(j >> 4 << 4, this.world.dimension.hasSkyLight());
                         ret.getBlockStorageArray()[j >> 4] = storage;
                     }
                     storage.set(i & 15, j & 15, k & 15, state);

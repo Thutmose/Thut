@@ -14,13 +14,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.feature.structure.VillagePieces.Village;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import thut.api.maths.Vector3;
 
@@ -53,13 +56,13 @@ public class TerrainSegment
          *            chunkZ of terrainsegement */
         void bindToTerrain(int x, int y, int z);
 
-        void doEffect(EntityLivingBase entity, boolean firstEntry);
+        void doEffect(LivingEntity entity, boolean firstEntry);
 
         // Does not currently work TODO make this work
-        void readFromNBT(NBTTagCompound nbt);
+        void readFromNBT(CompoundNBT nbt);
 
         // Does not currently work TODO make this work
-        void writeToNBT(NBTTagCompound nbt);
+        void writeToNBT(CompoundNBT nbt);
 
         String getIdenitifer();
     }
@@ -72,7 +75,7 @@ public class TerrainSegment
             if (caveAdjusted)
             {
                 // Do not return this for cave worlds
-                if (!world.provider.isSurfaceWorld()) return -1;
+                if (!world.dimension.isSurfaceWorld()) return -1;
                 boolean sky = false;
                 Vector3 temp1 = Vector3.getNewVector();
                 int x0 = segment.chunkX * 16, y0 = segment.chunkY * 16, z0 = segment.chunkZ * 16;
@@ -166,7 +169,8 @@ public class TerrainSegment
                     if (bool)
                     {
                         temp.set(v).addTo(i, j, k);
-                        if (temp.getBlock(world) == b || (b == null && temp.getBlock(world) == null))
+                        BlockState state = world.getBlockState(temp.getPos());
+                        if (state.getBlock() == b || (b == null && state.getBlock() == null))
                         {
                             ret++;
                         }
@@ -185,7 +189,7 @@ public class TerrainSegment
         return ret;
     }
 
-    public static void readFromNBT(TerrainSegment t, NBTTagCompound nbt)
+    public static void readFromNBT(TerrainSegment t, CompoundNBT nbt)
     {
         if (noLoad) return;
         int[] biomes = nbt.getIntArray("biomes");
@@ -358,8 +362,8 @@ public class TerrainSegment
 
     private int getBiome(World world, Vector3 v, boolean caveAdjust)
     {
-        if (chunk == null || chunk.x != chunkX || chunk.z != chunkZ)
-            chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+        if (chunk == null || chunk.getPos().x != chunkX || chunk.getPos().z != chunkZ)
+            chunk = world.getChunk(chunkX, chunkZ);
         if (chunk == null)
         {
             Thread.dumpStack();
@@ -419,7 +423,7 @@ public class TerrainSegment
     public void refresh(World world)
     {
         long time = System.nanoTime();
-        if (chunk == null) chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+        if (chunk == null) chunk = world.getChunk(chunkX, chunkZ);
         for (int i = 0; i < GRIDSIZE; i++)
             for (int j = 0; j < GRIDSIZE; j++)
                 for (int k = 0; k < GRIDSIZE; k++)
@@ -436,14 +440,14 @@ public class TerrainSegment
         if (dt > 0.01) System.out.println("subBiome refresh took " + dt);
     }
 
-    public void saveToNBT(NBTTagCompound nbt)
+    public void saveToNBT(CompoundNBT nbt)
     {
         if (!(toSave)) return;
-        nbt.setIntArray("biomes", biomes);
-        nbt.setInteger("x", chunkX);
-        nbt.setInteger("y", chunkY);
-        nbt.setInteger("z", chunkZ);
-        nbt.setBoolean("toSave", toSave);
+        nbt.putIntArray("biomes", biomes);
+        nbt.putInt("x", chunkX);
+        nbt.putInt("y", chunkY);
+        nbt.putInt("z", chunkZ);
+        nbt.putBoolean("toSave", toSave);
     }
 
     public void setBiome(BlockPos p, int type)

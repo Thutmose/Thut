@@ -1,8 +1,8 @@
 package thut.api.network;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 
 public interface IPlayerProvider
 {
-    public EntityPlayer getPlayer();
+    public PlayerEntity getPlayer();
 }

@@ -7,9 +7,9 @@ import javax.xml.ws.handler.MessageContext;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -42,7 +42,7 @@ public class PacketPipeline
         {
         }
 
-        public ClientPacket(byte channel, NBTTagCompound nbt)
+        public ClientPacket(byte channel, CompoundNBT nbt)
         {
             this.buffer = new PacketBuffer(Unpooled.buffer());
             buffer.writeByte(channel);
@@ -86,7 +86,7 @@ public class PacketPipeline
         public static class MessageHandlerServer implements IMessageHandler<ServerPacket, IMessage>
         {
 
-            public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
+            public void handleServerSide(PlayerEntity player, PacketBuffer buffer)
             {
                 final BlockPos pos = buffer.readBlockPos();
                 final int button = buffer.readInt();
@@ -113,7 +113,7 @@ public class PacketPipeline
             @Override
             public ServerPacket onMessage(ServerPacket message, MessageContext ctx)
             {
-                EntityPlayer player = ctx.getServerHandler().player;
+                PlayerEntity player = ctx.getServerHandler().player;
                 handleServerSide(player, message.buffer);
                 return null;
             }
@@ -125,7 +125,7 @@ public class PacketPipeline
         {
         }
 
-        public ServerPacket(byte channel, NBTTagCompound nbt)
+        public ServerPacket(byte channel, CompoundNBT nbt)
         {
             this.buffer = new PacketBuffer(Unpooled.buffer());
             buffer.writeByte(channel);
@@ -196,7 +196,7 @@ public class PacketPipeline
         return new ClientPacket(packetData);
     }
 
-    public static ClientPacket makeClientPacket(byte channel, NBTTagCompound nbt)
+    public static ClientPacket makeClientPacket(byte channel, CompoundNBT nbt)
     {
         PacketBuffer packetData = new PacketBuffer(Unpooled.buffer());
         packetData.writeByte(channel);
@@ -205,7 +205,7 @@ public class PacketPipeline
         return new ClientPacket(packetData);
     }
 
-    public static ServerPacket makePacket(byte channel, NBTTagCompound nbt)
+    public static ServerPacket makePacket(byte channel, CompoundNBT nbt)
     {
         PacketBuffer packetData = new PacketBuffer(Unpooled.buffer());
         packetData.writeByte(channel);
@@ -236,14 +236,14 @@ public class PacketPipeline
         packetPipeline.sendToAllAround(toSend, new TargetPoint(dimID, point.x, point.y, point.z, distance));
     }
 
-    public static void sendToClient(IMessage toSend, EntityPlayer player)
+    public static void sendToClient(IMessage toSend, PlayerEntity player)
     {
         if (player == null)
         {
             System.out.println("null player");
             return;
         }
-        packetPipeline.sendTo(toSend, (EntityPlayerMP) player);
+        packetPipeline.sendTo(toSend, (ServerPlayerEntity) player);
     }
 
     public static void sendToServer(IMessage toSend)

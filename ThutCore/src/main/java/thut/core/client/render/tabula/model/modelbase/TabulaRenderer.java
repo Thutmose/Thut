@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.model.ModelBox;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.api.entity.IMobColourable;
@@ -20,7 +20,7 @@ import thut.core.client.render.model.IPartTexturer;
 import thut.core.client.render.model.IRetexturableModel;
 import thut.core.client.render.tabula.components.ModelJson;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 {
     static final float        ratio        = 180f / (float) Math.PI;
@@ -98,7 +98,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         }
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void compileDisplayList(float scale)
     {
         displayList = GLAllocation.generateDisplayLists(1);
@@ -117,7 +117,7 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
         return parent;
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public void render(float scale, Entity entity)
     {
         if (set == null) return;
@@ -144,9 +144,9 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
             int i;
 
             /** Rotate the head */
-            if (entity instanceof EntityLivingBase && model.tabulaModel.getHeadParts().contains(identifier))
+            if (entity instanceof LivingEntity && model.tabulaModel.getHeadParts().contains(identifier))
             {
-                rotateHead((EntityLivingBase) entity, model.tabulaModel.getHeadInfo(), scale);
+                rotateHead((LivingEntity) entity, model.tabulaModel.getHeadInfo(), scale);
             }
 
             GL11.glPushMatrix();
@@ -237,10 +237,10 @@ public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
 
     }
 
-    private void rotateHead(EntityLivingBase entity, HeadInfo headInfo, float scale)
+    private void rotateHead(LivingEntity entity, HeadInfo headInfo, float scale)
     {
         float ang;
-        float partialTicks = Minecraft.getMinecraft().getRenderPartialTicks();
+        float partialTicks = Minecraft.getInstance().getRenderPartialTicks();
         float f = this.interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
         float f1 = this.interpolateRotation(entity.prevRotationYawHead, entity.rotationYawHead, partialTicks);
         float headYaw = f1 - f;

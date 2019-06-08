@@ -17,8 +17,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -33,7 +33,7 @@ import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.api.distmarker.Dist;
@@ -97,7 +97,7 @@ public class TechCore
         ItemStack stack = new ItemStack(Items.WRITTEN_BOOK);
         try
         {
-            stack.setTagCompound(JsonToNBT.getTagFromJson(name));
+            stack.setTag(JsonToNBT.getTagFromJson(name));
         }
         catch (NBTException e)
         {
@@ -113,11 +113,11 @@ public class TechCore
     }
 
     @SuppressWarnings("rawtypes")
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public void livingRender(RenderLivingEvent.Post evt)
     {
-        if (!Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()) return;
+        if (!Minecraft.getInstance().getRenderManager().isDebugBoundingBox()) return;
     }
 
     @EventHandler
@@ -137,7 +137,7 @@ public class TechCore
     }
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent e)
+    public void preInit(FMLCommonSetupEvent e)
     {
         proxy.preinit(e);
 
@@ -147,8 +147,8 @@ public class TechCore
 
         MinecraftForge.EVENT_BUS.register(this);
 
-        packetPipeline.registerMessage(MessageHandlerClient.class, ClientPacket.class, 0, Side.CLIENT);
-        packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Side.SERVER);
+        packetPipeline.registerMessage(MessageHandlerClient.class, ClientPacket.class, 0, Dist.CLIENT);
+        packetPipeline.registerMessage(MessageHandlerServer.class, ServerPacket.class, 1, Dist.DEDICATED_SERVER);
 
         EntityRegistry.registerModEntity(new ResourceLocation(Reference.MOD_ID, "lift"), EntityLift.class, "lift", 0,
                 this, 256, 1, true);
@@ -173,9 +173,9 @@ public class TechCore
     @SubscribeEvent
     public void interactRightClickBlock(PlayerInteractEvent.RightClickBlock evt)
     {
-        if (evt.getHand() == EnumHand.OFF_HAND || evt.getWorld().isRemote || !CompatWrapper.isValid(evt.getItemStack())
-                || !evt.getEntityPlayer().isSneaking() || evt.getItemStack().getItem() != Items.STICK
-                || evt.getFace() == EnumFacing.DOWN || evt.getFace() == EnumFacing.UP)
+        if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || !CompatWrapper.isValid(evt.getItemStack())
+                || !evt.getPlayerEntity().isSneaking() || evt.getItemStack().getItem() != Items.STICK
+                || evt.getFace() == Direction.DOWN || evt.getFace() == Direction.UP)
             return;
         IBlockState state = evt.getWorld().getBlockState(evt.getPos());
         if (state.getBlock() == ThutBlocks.lift && state.getValue(BlockLift.VARIANT) == EnumType.CONTROLLER)

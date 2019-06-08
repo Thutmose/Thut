@@ -2,7 +2,7 @@ package thut.core.common.blocks;
 
 import java.util.List;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import thut.lib.CompatWrapper;
@@ -75,19 +75,19 @@ public interface DefaultInventory extends IInventory
     }
 
     @Override
-    default public boolean isUsableByPlayer(EntityPlayer player)
+    default public boolean isUsableByPlayer(PlayerEntity player)
     {
         return true;
     }
 
     @Override
-    default public void openInventory(EntityPlayer player)
+    default public void openInventory(PlayerEntity player)
     {
 
     }
 
     @Override
-    default public void closeInventory(EntityPlayer player)
+    default public void closeInventory(PlayerEntity player)
     {
 
     }

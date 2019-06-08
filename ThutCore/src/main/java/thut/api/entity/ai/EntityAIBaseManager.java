@@ -1,7 +1,7 @@
 package thut.api.entity.ai;
 
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.world.World;
 import thut.api.entity.ai.AIThreadManager.AIStuff;
@@ -10,9 +10,9 @@ import thut.api.entity.genetics.IMobGenetics;
 public class EntityAIBaseManager extends EntityAIBase
 {
     final IAIMob           wrapped;
-    final EntityLivingBase entity;
+    final LivingEntity entity;
 
-    public EntityAIBaseManager(IAIMob wrapped, EntityLivingBase mob)
+    public EntityAIBaseManager(IAIMob wrapped, LivingEntity mob)
     {
         this.wrapped = wrapped;
         this.entity = mob;
@@ -39,7 +39,7 @@ public class EntityAIBaseManager extends EntityAIBase
         world.profiler.endSection();
     }
 
-    protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
+    protected void updateEntityActionState(MobEntity mob, AIStuff ai)
     {
     }
 

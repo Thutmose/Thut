@@ -53,7 +53,7 @@ public class World_Impl implements World
     @Override
     public int getLevel()
     {
-        return wrapped.provider.getDimension();
+        return wrapped.dimension.getDimension();
     }
 
 }

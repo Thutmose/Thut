@@ -4,10 +4,10 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.capabilities.Capability;
@@ -32,7 +32,7 @@ public class CapabilityTerrain
     }
 
     public static class DefaultProvider
-            implements ITerrainProvider, ICapabilityProvider, INBTSerializable<NBTTagCompound>
+            implements ITerrainProvider, ICapabilityProvider, INBTSerializable<CompoundNBT>
     {
         private BlockPos         pos;
         private final Chunk      chunk;
@@ -88,23 +88,23 @@ public class CapabilityTerrain
         }
 
         @Override
-        public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+        public boolean hasCapability(Capability<?> capability, Direction facing)
         {
             return capability == CapabilityTerrain.TERRAIN_CAP;
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+        public <T> T getCapability(Capability<T> capability, Direction facing)
         {
             if (hasCapability(capability, facing)) return (T) this;
             return null;
         }
 
         @Override
-        public NBTTagCompound serializeNBT()
+        public CompoundNBT serializeNBT()
         {
-            NBTTagCompound nbt = new NBTTagCompound();
+            CompoundNBT nbt = new CompoundNBT();
             for (int i = 0; i < 16; i++)
             {
                 TerrainSegment t = this.getTerrainSegment(i);
@@ -114,15 +114,15 @@ public class CapabilityTerrain
                 {
                     continue;
                 }
-                NBTTagCompound terrainTag = new NBTTagCompound();
+                CompoundNBT terrainTag = new CompoundNBT();
                 t.saveToNBT(terrainTag);
                 nbt.setTag("" + i, terrainTag);
             }
-            NBTTagList biomeList = new NBTTagList();
+            ListNBT biomeList = new ListNBT();
             for (BiomeType t : BiomeType.values())
             {
-                NBTTagCompound tag = new NBTTagCompound();
-                tag.setString("name", t.name);
+                CompoundNBT tag = new CompoundNBT();
+                tag.putString("name", t.name);
                 tag.setInteger("id", t.getType());
                 biomeList.appendTag(tag);
             }
@@ -131,16 +131,16 @@ public class CapabilityTerrain
         }
 
         @Override
-        public void deserializeNBT(NBTTagCompound nbt)
+        public void deserializeNBT(CompoundNBT nbt)
         {
             BlockPos pos = this.getChunkPos();
             int x = pos.getX();
             int z = pos.getZ();
             Map<Integer, Integer> idReplacements = Maps.newHashMap();
-            NBTTagList tags = (NBTTagList) nbt.getTag("ids");
-            for (int i = 0; i < tags.tagCount(); i++)
+            ListNBT tags = (ListNBT) nbt.getTag("ids");
+            for (int i = 0; i < tags.size(); i++)
             {
-                NBTTagCompound tag = tags.getCompoundTagAt(i);
+                CompoundNBT tag = tags.getCompound(i);
                 String name = tag.getString("name");
                 int id = tag.getInteger("id");
                 BiomeType type = BiomeType.getBiome(name, false);
@@ -152,10 +152,10 @@ public class CapabilityTerrain
             boolean hasReplacements = !idReplacements.isEmpty();
             for (int i = 0; i < 16; i++)
             {
-                NBTTagCompound terrainTag = null;
+                CompoundNBT terrainTag = null;
                 try
                 {
-                    terrainTag = nbt.getCompoundTag(i + "");
+                    terrainTag = nbt.getCompound(i + "");
                 }
                 catch (Exception e)
                 {
@@ -184,18 +184,18 @@ public class CapabilityTerrain
     {
 
         @Override
-        public NBTBase writeNBT(Capability<ITerrainProvider> capability, ITerrainProvider instance, EnumFacing side)
+        public INBT writeNBT(Capability<ITerrainProvider> capability, ITerrainProvider instance, Direction side)
         {
             if (instance instanceof DefaultProvider) return ((DefaultProvider) instance).serializeNBT();
             return null;
         }
 
         @Override
-        public void readNBT(Capability<ITerrainProvider> capability, ITerrainProvider instance, EnumFacing side,
-                NBTBase base)
+        public void readNBT(Capability<ITerrainProvider> capability, ITerrainProvider instance, Direction side,
+                INBT base)
         {
-            if (instance instanceof DefaultProvider && base instanceof NBTTagCompound)
-                ((DefaultProvider) instance).deserializeNBT((NBTTagCompound) base);
+            if (instance instanceof DefaultProvider && base instanceof CompoundNBT)
+                ((DefaultProvider) instance).deserializeNBT((CompoundNBT) base);
         }
     }
 }

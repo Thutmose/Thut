@@ -25,13 +25,13 @@ public class WorldManager
     @SubscribeEvent
     public void WorldLoadEvent(Load evt)
     {
-        worldDimMap.put(evt.getWorld().provider.getDimension(), new World_Impl(evt.getWorld()));
+        worldDimMap.put(evt.getWorld().dimension.getDimension(), new World_Impl(evt.getWorld()));
     }
 
     @SubscribeEvent
     public void WorldUnLoadEvent(Unload evt)
     {
-        worldDimMap.remove(evt.getWorld().provider.getDimension());
+        worldDimMap.remove(evt.getWorld().dimension.getDimension());
     }
 
     @Nullable

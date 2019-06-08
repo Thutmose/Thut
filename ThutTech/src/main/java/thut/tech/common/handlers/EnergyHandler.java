@@ -1,9 +1,9 @@
 package thut.tech.common.handlers;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -22,7 +22,7 @@ public class EnergyHandler
     private static final ResourceLocation ENERGY = new ResourceLocation(Reference.MOD_ID, "energy");
 
     /** Pretty standard storable EnergyStorage. */
-    public static class ProviderLift extends EnergyStorage implements ICapabilitySerializable<NBTTagCompound>
+    public static class ProviderLift extends EnergyStorage implements ICapabilitySerializable<CompoundNBT>
     {
         public ProviderLift()
         {
@@ -30,27 +30,27 @@ public class EnergyHandler
         }
 
         @Override
-        public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+        public boolean hasCapability(Capability<?> capability, Direction facing)
         {
             return capability == CapabilityEnergy.ENERGY;
         }
 
         @Override
-        public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+        public <T> T getCapability(Capability<T> capability, Direction facing)
         {
             return (capability == CapabilityEnergy.ENERGY) ? CapabilityEnergy.ENERGY.cast(this) : null;
         }
 
         @Override
-        public NBTTagCompound serializeNBT()
+        public CompoundNBT serializeNBT()
         {
-            NBTTagCompound tag = new NBTTagCompound();
+            CompoundNBT tag = new CompoundNBT();
             tag.setInteger("E", getEnergyStored());
             return tag;
         }
 
         @Override
-        public void deserializeNBT(NBTTagCompound nbt)
+        public void deserializeNBT(CompoundNBT nbt)
         {
             this.energy = nbt.getInteger("E");
         }
@@ -82,13 +82,13 @@ public class EnergyHandler
         }
 
         @Override
-        public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+        public boolean hasCapability(Capability<?> capability, Direction facing)
         {
             return capability == CapabilityEnergy.ENERGY;
         }
 
         @Override
-        public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+        public <T> T getCapability(Capability<T> capability, Direction facing)
         {
             return hasCapability(capability, facing) ? CapabilityEnergy.ENERGY.cast(this) : null;
         }

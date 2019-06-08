@@ -14,7 +14,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * @author BobMowzie, gegy1000
  * @since 0.1.0
  */
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class TabulaModelBase extends ModelBase {
     /**
      * Store every MowzieModelRenderer in this array
@@ -141,8 +141,8 @@ public class TabulaModelBase extends ModelBase {
      * Note: Just keep f3 and f4 from the setRotationAngles() method.
      *
      * @param f  is the number of boxes being used. (i.e. if you are using this on a head and neck, set it to 2. Just a head, 1);
-     * @param f3 is the rotationYaw of the EntityLivingBase;
-     * @param f4 is the rotationPitch of the EntityLivingBase.
+     * @param f3 is the rotationYaw of the LivingEntity;
+     * @param f4 is the rotationPitch of the LivingEntity.
      */
     public void faceTarget(TabulaRenderer box, float f, float f3, float f4) {
         box.rotateAngleY += (f3 / (180f / (float) Math.PI)) / f;

@@ -8,8 +8,8 @@ import com.google.common.collect.Lists;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -23,7 +23,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
     public int           id;
     public List<Data<?>> data = Lists.newArrayList();
 
-    public static void sync(EntityPlayerMP syncTo, DataSync data, int entity_id, boolean all)
+    public static void sync(ServerPlayerEntity syncTo, DataSync data, int entity_id, boolean all)
     {
         List<Data<?>> list = all ? data.getAll() : data.getDirty();
         // Nothing to sync.
@@ -34,7 +34,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
         PacketHandler.packetPipeline.sendTo(packet, syncTo);
     }
 
-    public static void sync(List<EntityPlayerMP> syncTo, DataSync data, int entity_id, boolean all)
+    public static void sync(List<ServerPlayerEntity> syncTo, DataSync data, int entity_id, boolean all)
     {
         List<Data<?>> list = all ? data.getAll() : data.getDirty();
         // Nothing to sync.
@@ -42,7 +42,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
         PacketDataSync packet = new PacketDataSync();
         packet.data = list;
         packet.id = entity_id;
-        for (EntityPlayerMP player : syncTo)
+        for (ServerPlayerEntity player : syncTo)
             PacketHandler.packetPipeline.sendTo(packet, player);
     }
 
@@ -53,7 +53,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
     @Override
     public IMessage onMessage(final PacketDataSync message, final MessageContext ctx)
     {
-        EntityPlayer player;
+        PlayerEntity player;
         player = ThutCore.proxy.getPlayer();
         int id = message.id;
         World world = player.getEntityWorld();

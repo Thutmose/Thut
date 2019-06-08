@@ -9,7 +9,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityFallingBlock;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import thut.api.boom.ExplosionCustom;
@@ -36,9 +36,9 @@ public class EntityProjectile extends EntityFallingBlock
     public Vector3 getAccelerationFromRails(Vector3 here)
     {
         Vector3 ret = Vector3.getNewVector();
-        EnumFacing dir = null;
+        Direction dir = null;
 
-        for (EnumFacing side : EnumFacing.values())
+        for (Direction side : Direction.values())
         {
             if (side.getFrontOffsetY() == 0)
             {
@@ -91,7 +91,7 @@ public class EntityProjectile extends EntityFallingBlock
             Vector3 velocity = Vector3.getNewVector().setToVelocity(this);
             double d = velocity.mag() + 1;
 
-            IBlockState downState = here.offset(EnumFacing.DOWN).getBlockState(getEntityWorld());
+            IBlockState downState = here.offset(Direction.DOWN).getBlockState(getEntityWorld());
 
             Vector3 hit = here.findNextSolidBlock(getEntityWorld(), velocity, d);
             d -= 1;

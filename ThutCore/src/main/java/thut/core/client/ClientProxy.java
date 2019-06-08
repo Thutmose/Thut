@@ -1,19 +1,19 @@
 package thut.core.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.versions.forge.ForgeVersion;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -72,18 +72,18 @@ public class ClientProxy extends CommonProxy
     }
 
     @Override
-    public EntityPlayer getPlayer()
+    public PlayerEntity getPlayer()
     {
         return getPlayer(null);
     }
 
     @Override
-    public EntityPlayer getPlayer(String playerName)
+    public PlayerEntity getPlayer(String playerName)
     {
         if (isOnClientSide())
         {
             if (playerName != null) { return getWorld().getPlayerEntityByName(playerName); }
-            return Minecraft.getMinecraft().player;
+            return Minecraft.getInstance().player;
         }
         return super.getPlayer(playerName);
     }
@@ -91,7 +91,7 @@ public class ClientProxy extends CommonProxy
     @Override
     public World getWorld()
     {
-        if (isOnClientSide()) { return Minecraft.getMinecraft().world; }
+        if (isOnClientSide()) { return Minecraft.getInstance().world; }
         return super.getWorld();
     }
 
@@ -108,14 +108,14 @@ public class ClientProxy extends CommonProxy
     @Override
     public boolean isOnClientSide()
     {
-        return FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT;
+        return FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT;
     }
 
     @Override
     public void loadSounds() {}
 
     @Override
-    public void preinit(FMLPreInitializationEvent e)
+    public void preinit(FMLCommonSetupEvent e)
     {
         super.preinit(e);
         CapabilityAnimation.setup();
@@ -124,10 +124,10 @@ public class ClientProxy extends CommonProxy
     @SubscribeEvent
     public void textOverlay(RenderGameOverlayEvent.Text event)
     {
-        boolean debug = Minecraft.getMinecraft().gameSettings.showDebugInfo;
+        boolean debug = Minecraft.getInstance().gameSettings.showDebugInfo;
         if (!debug) return;
-        TerrainSegment t = TerrainManager.getInstance().getTerrainForEntity(Minecraft.getMinecraft().player);
-        Vector3 v = Vector3.getNewVector().set(Minecraft.getMinecraft().player);
+        TerrainSegment t = TerrainManager.getInstance().getTerrainForEntity(Minecraft.getInstance().player);
+        Vector3 v = Vector3.getNewVector().set(Minecraft.getInstance().player);
         int num = t.getBiome(v);
         String msg = "Sub-Biome: " + BiomeDatabase.getReadableNameFromType(num);
         event.getLeft().add("");

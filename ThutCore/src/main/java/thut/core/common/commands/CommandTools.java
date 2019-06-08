@@ -1,21 +1,21 @@
 package thut.core.common.commands;
 
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.command.ICommandSource;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
 
 public class CommandTools
 {
-    public static boolean isOp(ICommandSender sender, String permission)
+    public static boolean isOp(ICommandSource sender, String permission)
     {
         /*
          * If sent by a player, check permissions, otherwise return true.
          */
-        if (sender instanceof EntityPlayerMP)
+        if (sender instanceof ServerPlayerEntity)
         {
             /*
              * Check if the node is registered, if not, register it as OP, and
@@ -27,7 +27,7 @@ public class CommandTools
                 PermissionAPI.getPermissionHandler().registerNode(permission, DefaultPermissionLevel.OP, message);
                 System.err.println(message + ": " + permission);
             }
-            return PermissionAPI.hasPermission((EntityPlayerMP) sender, permission);
+            return PermissionAPI.hasPermission((ServerPlayerEntity) sender, permission);
         }
         return true;
     }
@@ -44,7 +44,7 @@ public class CommandTools
         {
             if (args[i] instanceof String)
             {
-                args[i] = new TextComponentTranslation((String) args[i]);
+                args[i] = new TranslationTextComponent((String) args[i]);
             }
 
             if (!formatting.isEmpty() && args[i] instanceof ITextComponent)
@@ -82,32 +82,32 @@ public class CommandTools
                 }
             }
         }
-        TextComponentTranslation translated = new TextComponentTranslation(key, args);
+        TranslationTextComponent translated = new TranslationTextComponent(key, args);
         return translated;
     }
 
-    public static void sendBadArgumentsMissingArg(ICommandSender sender)
+    public static void sendBadArgumentsMissingArg(ICommandSource sender)
     {
         sender.sendMessage(makeError("pokecube.command.invalidmissing"));
     }
 
-    public static void sendBadArgumentsTryTab(ICommandSender sender)
+    public static void sendBadArgumentsTryTab(ICommandSource sender)
     {
         sender.sendMessage(makeError("pokecube.command.invalidtab"));
     }
 
-    public static void sendError(ICommandSender sender, String text)
+    public static void sendError(ICommandSource sender, String text)
     {
         sender.sendMessage(makeError(text));
     }
 
-    public static void sendMessage(ICommandSender sender, String text)
+    public static void sendMessage(ICommandSource sender, String text)
     {
         ITextComponent message = makeTranslatedMessage(text, null);
         sender.sendMessage(message);
     }
 
-    public static void sendNoPermissions(ICommandSender sender)
+    public static void sendNoPermissions(ICommandSource sender)
     {
         sender.sendMessage(makeError("pokecube.command.noperms"));
     }

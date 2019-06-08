@@ -8,8 +8,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.INBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -93,13 +93,13 @@ public class CapabilityAnimation
         }
 
         @Override
-        public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+        public boolean hasCapability(Capability<?> capability, Direction facing)
         {
             return capability == CAPABILITY;
         }
 
         @Override
-        public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+        public <T> T getCapability(Capability<T> capability, Direction facing)
         {
             if (hasCapability(capability, facing)) return CAPABILITY.cast(this);
             return null;
@@ -144,14 +144,14 @@ public class CapabilityAnimation
         CapabilityManager.INSTANCE.register(IAnimationHolder.class, new Capability.IStorage<IAnimationHolder>()
         {
             @Override
-            public NBTBase writeNBT(Capability<IAnimationHolder> capability, IAnimationHolder instance, EnumFacing side)
+            public INBT writeNBT(Capability<IAnimationHolder> capability, IAnimationHolder instance, Direction side)
             {
                 return null;
             }
 
             @Override
-            public void readNBT(Capability<IAnimationHolder> capability, IAnimationHolder instance, EnumFacing side,
-                    NBTBase nbt)
+            public void readNBT(Capability<IAnimationHolder> capability, IAnimationHolder instance, Direction side,
+                    INBT nbt)
             {
             }
         }, DefaultImpl::new);

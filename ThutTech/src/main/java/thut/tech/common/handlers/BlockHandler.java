@@ -32,7 +32,7 @@ public class BlockHandler
         }
 
         @Override
-        @SideOnly(Side.CLIENT)
+        @OnlyIn(Dist.CLIENT)
         /** returns a list of items with the same ID, but different meta (eg:
          * dye returns 16 items) */
         public void getSubItems(CreativeTabs par2CreativeTabs, NonNullList<ItemStack> par3List)

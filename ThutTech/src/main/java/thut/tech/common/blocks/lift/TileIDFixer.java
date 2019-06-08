@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.datafix.IFixableData;
 
 public class TileIDFixer implements IFixableData
@@ -22,12 +22,12 @@ public class TileIDFixer implements IFixableData
     }
 
     @Override
-    public NBTTagCompound fixTagCompound(NBTTagCompound compound)
+    public CompoundNBT fixTagCompound(CompoundNBT compound)
     {
         String s = OLD_TO_NEW_ID_MAP.get(compound.getString("id"));
         if (s != null)
         {
-            compound.setString("id", s);
+            compound.putString("id", s);
         }
         return compound;
     }

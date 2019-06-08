@@ -15,6 +15,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import net.minecraftforge.event.world.WorldEvent.Load;
@@ -23,8 +25,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.api.block.IOwnableTE;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler;
@@ -157,11 +157,11 @@ public class TickHandler
 
     public static Vector<BlockChange> getListForWorld(World world)
     {
-        Vector<BlockChange> ret = getInstance().blocks.get(world.provider.getDimension());
+        Vector<BlockChange> ret = getInstance().blocks.get(world.dimension.getDimension());
         if (ret == null)
         {
             ret = new Vector<BlockChange>();
-            getInstance().blocks.put(world.provider.getDimension(), ret);
+            getInstance().blocks.put(world.dimension.getDimension(), ret);
         }
         return ret;
     }
@@ -186,13 +186,13 @@ public class TickHandler
     {
         if (evt.getWorld().isRemote) return;
         // Add the chunk to the corresponding world cache.
-        IBlockAccess world = getWorldCache(evt.getWorld().provider.getDimension());
+        IBlockAccess world = getWorldCache(evt.getWorld().dimension.getDimension());
         if (world == null)
         {
             world = ThutCore.instance.config.multithreadedAI ? new WorldCache(evt.getWorld()) : evt.getWorld();
             synchronized (worldCaches)
             {
-                worldCaches.put(evt.getWorld().provider.getDimension(), world);
+                worldCaches.put(evt.getWorld().dimension.getDimension(), world);
             }
         }
         if (world instanceof WorldCache) ((WorldCache) world).addChunk(evt.getChunk());
@@ -203,7 +203,7 @@ public class TickHandler
     {
         if (evt.getWorld().isRemote) return;
         // Remove the chunk from the cache
-        IBlockAccess world = getWorldCache(evt.getWorld().provider.getDimension());
+        IBlockAccess world = getWorldCache(evt.getWorld().dimension.getDimension());
         if (world != null && world instanceof WorldCache)
         {
             ((WorldCache) world).removeChunk(evt.getChunk());
@@ -212,7 +212,7 @@ public class TickHandler
 
     public static Map<UUID, Integer> playerTickTracker = Maps.newHashMap();
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     /** This is used to re-set view bobbing for when a player walks off a block
      * entity. */
@@ -223,12 +223,12 @@ public class TickHandler
             Integer time = playerTickTracker.get(event.player.getUniqueID());
             if (time < (int) (System.currentTimeMillis() % 2000) - 100)
             {
-                Minecraft.getMinecraft().gameSettings.viewBobbing = true;
+                Minecraft.getInstance().gameSettings.viewBobbing = true;
             }
         }
         /** This deals with the massive hunger reduction for standing on the
          * block entities. */
-        if (event.phase == Phase.END && event.side == Side.CLIENT)
+        if (event.phase == Phase.END && event.side == Dist.CLIENT)
         {
             if (event.player.ticksExisted == event.player.getEntityData().getInteger("lastStandTick") + 1)
             {
@@ -263,20 +263,20 @@ public class TickHandler
         synchronized (worldCaches)
         {
             // Initialize a world cache for this dimension
-            worldCaches.put(evt.getWorld().provider.getDimension(), new WorldCache(evt.getWorld()));
+            worldCaches.put(evt.getWorld().dimension.getDimension(), new WorldCache(evt.getWorld()));
         }
     }
 
     @SubscribeEvent
     public void worldTickEvent(WorldTickEvent evt)
     {
-        if (evt.phase != Phase.END || !blocks.containsKey(evt.world.provider.getDimension())
-                || blocks.get(evt.world.provider.getDimension()).size() == 0 || evt.world.isRemote)
+        if (evt.phase != Phase.END || !blocks.containsKey(evt.world.dimension.getDimension())
+                || blocks.get(evt.world.dimension.getDimension()).size() == 0 || evt.world.isRemote)
             return;
 
         int num = 0;
         ArrayList<BlockChange> removed = Lists.newArrayList();
-        Vector<BlockChange> blocks = this.blocks.get(evt.world.provider.getDimension());
+        Vector<BlockChange> blocks = this.blocks.get(evt.world.dimension.getDimension());
         ArrayList<BlockChange> toRemove = Lists.newArrayList(blocks);
 
         // remove the blocks needed for that world.
@@ -296,14 +296,14 @@ public class TickHandler
     @SubscribeEvent
     public void WorldUnloadEvent(Unload evt)
     {
-        if (evt.getWorld().provider.getDimension() == 0)
+        if (evt.getWorld().dimension.getDimension() == 0)
         {
             blocks.clear();
         }
         synchronized (worldCaches)
         {
             // Remove world cache for dimension
-            worldCaches.remove(evt.getWorld().provider.getDimension());
+            worldCaches.remove(evt.getWorld().dimension.getDimension());
         }
     }
 }

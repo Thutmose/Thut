@@ -24,7 +24,7 @@ import thut.core.client.render.tabula.model.modelbase.TabulaModelBase;
 import thut.core.client.render.tabula.model.modelbase.TabulaRenderer;
 import thut.core.client.render.tabula.model.tabula.TabulaModel;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ModelJson extends TabulaModelBase
 {
     public TabulaModel                             tabulaModel;

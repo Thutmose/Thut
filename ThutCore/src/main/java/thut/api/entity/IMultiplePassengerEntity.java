@@ -1,6 +1,5 @@
 package thut.api.entity;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,10 +8,10 @@ import javax.vecmath.Vector3f;
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializer;
+import net.minecraft.network.datasync.IDataSerializer;
 import net.minecraft.util.math.MathHelper;
 
 public interface IMultiplePassengerEntity
@@ -44,14 +43,14 @@ public interface IMultiplePassengerEntity
             buf.writeLong(entityId.getLeastSignificantBits());
         }
 
-        public void writeToNBT(NBTTagCompound tag)
+        public void writeToNBT(CompoundNBT tag)
         {
             PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(8));
             writeToBuf(buffer);
-            tag.setByteArray("v", buffer.array());
+            tag.putByteArray("v", buffer.array());
         }
 
-        public static Seat readFromNBT(NBTTagCompound tag)
+        public static Seat readFromNBT(CompoundNBT tag)
         {
             byte[] arr = tag.getByteArray("v");
             PacketBuffer buf = new PacketBuffer(Unpooled.copiedBuffer(arr));
@@ -59,7 +58,7 @@ public interface IMultiplePassengerEntity
         }
     }
 
-    public static final DataSerializer<Seat> SEATSERIALIZER = new DataSerializer<Seat>()
+    public static final IDataSerializer<Seat> SEATSERIALIZER = new IDataSerializer<Seat>()
     {
         @Override
         public void write(PacketBuffer buf, Seat value)
@@ -68,7 +67,7 @@ public interface IMultiplePassengerEntity
         }
 
         @Override
-        public Seat read(PacketBuffer buf) throws IOException
+        public Seat read(PacketBuffer buf)
         {
             return new Seat(buf);
         }

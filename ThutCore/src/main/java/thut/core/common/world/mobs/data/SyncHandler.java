@@ -6,8 +6,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -33,17 +33,17 @@ public class SyncHandler
         DataSync data = getData(event.getEntity());
         if (data == null) return;
         WorldServer world = (WorldServer) event.getEntity().getEntityWorld();
-        Set<? extends EntityPlayer> players = world.getEntityTracker().getTrackingPlayers(event.getEntity());
-        boolean sendSelf = event.getEntity() instanceof EntityPlayerMP;
-        List<EntityPlayerMP> playerList = Lists.newArrayList();
-        for (EntityPlayer player : players)
+        Set<? extends PlayerEntity> players = world.getEntityTracker().getTrackingPlayers(event.getEntity());
+        boolean sendSelf = event.getEntity() instanceof ServerPlayerEntity;
+        List<ServerPlayerEntity> playerList = Lists.newArrayList();
+        for (PlayerEntity player : players)
         {
             sendSelf = sendSelf && player != event.getEntity();
-            playerList.add((EntityPlayerMP) player);
+            playerList.add((ServerPlayerEntity) player);
         }
         if (sendSelf)
         {
-            playerList.add((EntityPlayerMP) event.getEntity());
+            playerList.add((ServerPlayerEntity) event.getEntity());
         }
         if (!playerList.isEmpty()) PacketDataSync.sync(playerList, data, event.getEntity().getEntityId(), false);
     }
@@ -54,6 +54,6 @@ public class SyncHandler
         if (event.getTarget().getEntityWorld().isRemote) return;
         DataSync data = getData(event.getTarget());
         if (data == null) return;
-        PacketDataSync.sync((EntityPlayerMP) event.getEntityPlayer(), data, event.getTarget().getEntityId(), true);
+        PacketDataSync.sync((ServerPlayerEntity) event.getPlayerEntity(), data, event.getTarget().getEntityId(), true);
     }
 }

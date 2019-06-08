@@ -16,10 +16,10 @@ import thut.core.common.ThutCore;
 public class ParticleFactory
 {
     static final Map<Integer, IParticleFactory>        particleTypes = ReflectionHelper.getPrivateValue(
-            net.minecraft.client.particle.ParticleManager.class, Minecraft.getMinecraft().effectRenderer,
+            net.minecraft.client.particle.ParticleManager.class, Minecraft.getInstance().effectRenderer,
             "field_178932_g", "particleTypes");
     static final Object                                lock          = ReflectionHelper.getPrivateValue(
-            net.minecraft.client.particle.ParticleManager.class, Minecraft.getMinecraft().effectRenderer,
+            net.minecraft.client.particle.ParticleManager.class, Minecraft.getInstance().effectRenderer,
             "field_187241_h", "queue");
 
     private static final Map<String, IParticleFactory> factories     = Maps.newHashMap();
@@ -67,7 +67,7 @@ public class ParticleFactory
                 if (args.length > 1) par.setMaxAge(Math.max(2, args[1]));
                 synchronized (lock)
                 {
-                    Minecraft.getMinecraft().effectRenderer.addEffect(par);
+                    Minecraft.getInstance().effectRenderer.addEffect(par);
                 }
                 return null;
             }
@@ -92,7 +92,7 @@ public class ParticleFactory
             particle.name = "aurora";
             int life = 32;
             if (args.length > 1) life = args[1];
-            particle.setStartTime((int) (ThutCore.proxy.getWorld().getWorldTime() % 1000));
+            particle.setStartTime((int) (ThutCore.proxy.getWorld().getDayTime() % 1000));
             particle.setAnimSpeed(1);
             particle.setLifetime(life);
             particle.setSize(0.1f);

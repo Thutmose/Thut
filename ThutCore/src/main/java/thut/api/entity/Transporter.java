@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityTracker;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -77,7 +77,7 @@ public class Transporter
 
     public static class DeSticker
     {
-        final EntityPlayerMP player;
+        final ServerPlayerEntity player;
         final float          x0;
         final float          y0;
         final float          z0;
@@ -85,7 +85,7 @@ public class Transporter
         final int            dimension;
         int                  tick = 0;
 
-        public DeSticker(EntityPlayerMP player)
+        public DeSticker(ServerPlayerEntity player)
         {
             this.player = player;
             this.dimension = player.dimension;
@@ -139,7 +139,7 @@ public class Transporter
         {
             riders = entities;
             theMount = mount;
-            time = mount.getEntityWorld().getTotalWorldTime();
+            time = mount.getEntityWorld().getGameTime();
             this.dim = dim;
         }
 
@@ -148,7 +148,7 @@ public class Transporter
         {
             if (evt.phase != TickEvent.Phase.END) return;
             if (theMount.isDead) MinecraftForge.EVENT_BUS.unregister(this);
-            boolean doneAll = theMount.getEntityWorld().getTotalWorldTime() > time;
+            boolean doneAll = theMount.getEntityWorld().getGameTime() > time;
             for (int i = riders.length - 1; i >= 0; i--)
             {
                 Entity theEntity = riders[i];
@@ -156,11 +156,11 @@ public class Transporter
                 if (dim != theEntity.dimension)
                 {
                     doneAll = false;
-                    if (theEntity instanceof EntityPlayerMP)
+                    if (theEntity instanceof ServerPlayerEntity)
                     {
-                        ReflectionHelper.setPrivateValue(EntityPlayerMP.class, (EntityPlayerMP) theEntity, true,
+                        ReflectionHelper.setPrivateValue(ServerPlayerEntity.class, (ServerPlayerEntity) theEntity, true,
                                 "invulnerableDimensionChange", "field_184851_cj", "ck");
-                        theEntity.getServer().getPlayerList().transferPlayerToDimension((EntityPlayerMP) theEntity, dim,
+                        theEntity.getServer().getPlayerList().transferPlayerToDimension((ServerPlayerEntity) theEntity, dim,
                                 new TTeleporter(theEntity.getServer().getWorld(dim)));
                     }
                     else
@@ -198,11 +198,11 @@ public class Transporter
 
     private static void doMoveEntity(Entity theEntity, double x, double y, double z, float yaw, float pitch)
     {
-        if (theEntity instanceof EntityPlayerMP)
+        if (theEntity instanceof ServerPlayerEntity)
         {
-            theEntity.dismountRidingEntity();
-            ((EntityPlayerMP) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch);
-            MinecraftForge.EVENT_BUS.register(new DeSticker((EntityPlayerMP) theEntity));
+            theEntity.stopRiding();
+            ((ServerPlayerEntity) theEntity).connection.setPlayerLocation(x, y, z, yaw, pitch);
+            MinecraftForge.EVENT_BUS.register(new DeSticker((ServerPlayerEntity) theEntity));
         }
         else theEntity.setLocationAndAngles(x, y, z, yaw, pitch);
     }
@@ -210,7 +210,7 @@ public class Transporter
     public static Entity teleportEntity(Entity entity, Vector3 t2, int dimension, boolean destBlocked)
     {
         if (!DimensionManager.isDimensionRegistered(dimension)) return entity;
-        if (entity.isRiding())
+        if (entity.isPassenger())
         {
             Entity mount = entity.getRidingEntity();
             mount = teleportEntity(mount, t2, dimension, false);
@@ -229,13 +229,13 @@ public class Transporter
         for (int i = x - 1; i <= x + 1; i++)
             for (int j = z - 1; j <= z + 1; j++)
             {
-                entity.getEntityWorld().getChunkFromChunkCoords(x, z);
+                entity.getEntityWorld().getChunk(x, z);
             }
         doMoveEntity(entity, t2.x, t2.y, t2.z, entity.rotationYaw, entity.rotationPitch);
         List<Entity> passengers = Lists.newArrayList(entity.getPassengers());
         for (Entity e : passengers)
         {
-            e.dismountRidingEntity();
+            e.stopRiding();
             doMoveEntity(e, t2.x, t2.y, t2.z, e.rotationYaw, e.rotationPitch);
         }
         if (!passengers.isEmpty()) MinecraftForge.EVENT_BUS
@@ -250,15 +250,15 @@ public class Transporter
     // From RFTools.
     private static Entity transferToDimension(Entity entityIn, Vector3 t2, int dimension)
     {
-        int oldDimension = entityIn.getEntityWorld().provider.getDimension();
+        int oldDimension = entityIn.getEntityWorld().dimension.getDimension();
         if (oldDimension == dimension) return entityIn;
-        if (!(entityIn instanceof EntityPlayerMP)) { return changeDimension(entityIn, t2, dimension); }
+        if (!(entityIn instanceof ServerPlayerEntity)) { return changeDimension(entityIn, t2, dimension); }
         MinecraftServer server = entityIn.getEntityWorld().getMinecraftServer();
         WorldServer worldServer = server.getWorld(dimension);
         Teleporter teleporter = new TTeleporter(worldServer, t2.x, t2.y, t2.z);
-        EntityPlayerMP playerIn = (EntityPlayerMP) entityIn;
+        ServerPlayerEntity playerIn = (ServerPlayerEntity) entityIn;
         // Prevents death due to say world border size differences.
-        ReflectionHelper.setPrivateValue(EntityPlayerMP.class, playerIn, true, "invulnerableDimensionChange",
+        ReflectionHelper.setPrivateValue(ServerPlayerEntity.class, playerIn, true, "invulnerableDimensionChange",
                 "field_184851_cj", "ck");
         // Use player list to actually do the transfer.
         worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(playerIn, dimension, teleporter);
@@ -288,7 +288,7 @@ public class Transporter
                 worldserver1 = minecraftserver.getWorld(0);
                 entityIn.dimension = 0;
             }
-            NBTTagCompound tag = new NBTTagCompound();
+            CompoundNBT tag = new CompoundNBT();
             entityIn.writeToNBT(tag);
             entityIn.getEntityWorld().removeEntity(entityIn);
             entityIn.readFromNBT(tag);

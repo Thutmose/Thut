@@ -7,9 +7,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class BiomeType
 {
@@ -23,7 +23,7 @@ public class BiomeType
             CAVE = new BiomeType("cave", "Cave"), CAVE_WATER = new BiomeType("cavewater", "Cave Lake"),
             VILLAGE = new BiomeType("village", "Village"), ALL = new BiomeType("all", "All");
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void setMap(Map<Integer, String> mapIn)
     {
         typeMapClient.clear();
@@ -66,7 +66,7 @@ public class BiomeType
 
     public static ArrayList<BiomeType> values()
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
+        if (FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT)
         {
             ArrayList<BiomeType> types = Lists.newArrayList();
             Collection<BiomeType> values = typeMapClient.values();
@@ -87,7 +87,7 @@ public class BiomeType
 
     public static BiomeType getType(int id)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
+        if (FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT)
             return typeMapClient.containsKey(id) ? typeMapClient.get(id) : NONE;
         return typeMap.containsKey(id) ? typeMap.get(id) : NONE;
     }

@@ -33,7 +33,7 @@ public class SmartSlot extends Slot
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public net.minecraft.client.renderer.texture.TextureAtlasSprite getBackgroundSprite()
     {
         if (tex != null)

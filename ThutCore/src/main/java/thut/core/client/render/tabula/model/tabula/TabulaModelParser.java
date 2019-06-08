@@ -19,7 +19,7 @@ import thut.core.client.render.tabula.model.IModelParser;
 
 public class TabulaModelParser implements IModelParser<TabulaModel>
 {
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public Map<TabulaModel, ModelJson> modelMap;
 
     @Override
@@ -47,7 +47,7 @@ public class TabulaModelParser implements IModelParser<TabulaModel>
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public TabulaModel parse(String json) throws IOException
     {
         if (modelMap == null)
@@ -69,7 +69,7 @@ public class TabulaModelParser implements IModelParser<TabulaModel>
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public void render(TabulaModel model, Entity entity)
     {
         modelMap.get(model).render(entity, 0f, 0f, 0f, 0f, 0f, 0.0625f);

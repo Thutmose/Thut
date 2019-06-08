@@ -12,7 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.tabula.components.Animation;
 
@@ -120,7 +120,7 @@ public class AnimationRandomizer implements IAnimationChanger
     }
 
     @Override
-    public String modifyAnimation(EntityLiving entity, float partialTicks, String phase)
+    public String modifyAnimation(MobEntity entity, float partialTicks, String phase)
     {
         if (running.containsKey(entity.getEntityId()))
         {

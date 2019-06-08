@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -38,11 +38,11 @@ public class AIThreadManager
     public static class AIStuff
     {
         public static int                      tickRate = 1;
-        public final EntityLiving              entity;
+        public final MobEntity              entity;
         public final ArrayList<IAIRunnable>    aiTasks  = new ArrayList<IAIRunnable>();
         public final ArrayList<ILogicRunnable> aiLogic  = new ArrayList<ILogicRunnable>();
 
-        public AIStuff(EntityLiving entity_)
+        public AIStuff(MobEntity entity_)
         {
             entity = entity_;
         }
@@ -69,7 +69,7 @@ public class AIThreadManager
                 // all ai ticks are done at the same time, this increases load
                 // for the AI tick, but prevents issues where certain AI tasks
                 // run out of sync across different mobs.
-                if (world.getTotalWorldTime() % tickRate != 0) return;
+                if (world.getGameTime() % tickRate != 0) return;
                 tick();
             }
 
@@ -269,22 +269,22 @@ public class AIThreadManager
         // At the start, refresh the player lists.
         if (evt.phase == Phase.START)
         {
-            Vector players = worldPlayers.get(evt.world.provider.getDimension());
+            Vector players = worldPlayers.get(evt.world.dimension.getDimension());
             if (players == null)
             {
                 players = new Vector();
             }
             players.clear();
             players.addAll(evt.world.playerEntities);
-            worldPlayers.put(evt.world.provider.getDimension(), players);
-            Vector<Entity> entities = worldEntities.get(evt.world.provider.getDimension());
+            worldPlayers.put(evt.world.dimension.getDimension(), players);
+            Vector<Entity> entities = worldEntities.get(evt.world.dimension.getDimension());
             if (entities == null)
             {
                 entities = new Vector<Entity>();
             }
             entities.clear();
             entities.addAll(evt.world.loadedEntityList);
-            worldEntities.put(evt.world.provider.getDimension(), entities);
+            worldEntities.put(evt.world.dimension.getDimension(), entities);
         }
     }
 
@@ -357,7 +357,7 @@ public class AIThreadManager
         }
 
         IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null);
-        if (genes != null) genes.onUpdateTick(event.getEntityLiving());
+        if (genes != null) genes.onUpdateTick(event.getMobEntity());
 
         // If not IAIMob, or self managed, then no need to run AI stuff.
         if (mob == null || mob.selfManaged() || ai == null) return;
@@ -368,10 +368,10 @@ public class AIThreadManager
         }
         // Run remainder if AI server side only.
         if (!event.getEntity().getEntityWorld().isRemote)
-            updateEntityActionState((EntityLiving) event.getEntityLiving(), ai);
+            updateEntityActionState((MobEntity) event.getMobEntity(), ai);
     }
 
-    protected void updateEntityActionState(EntityLiving mob, AIStuff ai)
+    protected void updateEntityActionState(MobEntity mob, AIStuff ai)
     {
         mob.getEntityWorld().profiler.startSection("custom_ai");
         // Run Tick results from AI stuff.

@@ -2,7 +2,7 @@ package thut.api.entity.genetics;
 
 import java.util.Random;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 
 public class Alleles
 {
@@ -47,19 +47,19 @@ public class Alleles
         expressed = a.interpolate(b);
     }
 
-    public void load(NBTTagCompound tag) throws Exception
+    public void load(CompoundNBT tag) throws Exception
     {
-        expressed = GeneRegistry.load(tag.getCompoundTag("expressed"));
-        getAlleles()[0] = GeneRegistry.load(tag.getCompoundTag("gene1"));
-        getAlleles()[1] = GeneRegistry.load(tag.getCompoundTag("gene2"));
+        expressed = GeneRegistry.load(tag.getCompound("expressed"));
+        getAlleles()[0] = GeneRegistry.load(tag.getCompound("gene1"));
+        getAlleles()[1] = GeneRegistry.load(tag.getCompound("gene2"));
     }
 
-    public NBTTagCompound save()
+    public CompoundNBT save()
     {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setTag("expressed", GeneRegistry.save(getExpressed()));
-        tag.setTag("gene1", GeneRegistry.save(getAlleles()[0]));
-        tag.setTag("gene2", GeneRegistry.save(getAlleles()[1]));
+        CompoundNBT tag = new CompoundNBT();
+        tag.put("expressed", GeneRegistry.save(getExpressed()));
+        tag.put("gene1", GeneRegistry.save(getAlleles()[0]));
+        tag.put("gene2", GeneRegistry.save(getAlleles()[1]));
         return tag;
     }
 }

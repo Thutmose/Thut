@@ -14,9 +14,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
@@ -27,6 +27,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -36,7 +37,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor.TargetPoint;
-import net.minecraftforge.api.distmarker.Dist;
 import thut.api.maths.Cruncher;
 import thut.api.maths.Vector3;
 import thut.api.network.PacketHandler.MessageClient.MessageHandlerClient;
@@ -48,11 +48,11 @@ import thut.api.world.mobs.Mob;
 
 public class PacketHandler
 {
-    public static void sendTerrainToClient(World world, ChunkPos pos, EntityPlayerMP player)
+    public static void sendTerrainToClient(World world, ChunkPos pos, ServerPlayerEntity player)
     {
-        ITerrainProvider provider = world.getChunkFromChunkCoords(pos.x, pos.z)
+        ITerrainProvider provider = world.getChunk(pos.x, pos.z)
                 .getCapability(CapabilityTerrain.TERRAIN_CAP, null);
-        NBTTagCompound terrainData = (NBTTagCompound) CapabilityTerrain.TERRAIN_CAP.writeNBT(provider, null);
+        CompoundNBT terrainData = (CompoundNBT) CapabilityTerrain.TERRAIN_CAP.writeNBT(provider, null);
         terrainData.setInteger("c_x", pos.x);
         terrainData.setInteger("c_z", pos.z);
         MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
@@ -63,7 +63,7 @@ public class PacketHandler
     {
         public static class MessageHandlerClient implements IMessageHandler<MessageClient, MessageServer>
         {
-            public void handleClientSide(EntityPlayer player, PacketBuffer buffer)
+            public void handleClientSide(PlayerEntity player, PacketBuffer buffer)
             {
                 byte channel = buffer.readByte();
 
@@ -72,7 +72,7 @@ public class PacketHandler
                 {
                     try
                     {
-                        NBTTagCompound nbt = buffer.readCompoundTag();
+                        CompoundNBT nbt = buffer.readCompoundTag();
                         int[] mid = nbt.getIntArray("mid");
                         int[] affected = nbt.getIntArray("affected");
                         List<Integer> locs = Lists.newArrayList();
@@ -99,7 +99,7 @@ public class PacketHandler
                 {
                     try
                     {
-                        NBTTagCompound nbt = buffer.readCompoundTag();
+                        CompoundNBT nbt = buffer.readCompoundTag();
                         BlockPos pos = new BlockPos(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
                         TileEntity tile = player.getEntityWorld().getTileEntity(pos);
                         if (tile != null) tile.readFromNBT(nbt);
@@ -116,7 +116,7 @@ public class PacketHandler
                 {
                     try
                     {
-                        NBTTagCompound nbt = buffer.readCompoundTag();
+                        CompoundNBT nbt = buffer.readCompoundTag();
                         Map<Integer, String> map = Maps.newHashMap();
                         for (String s : nbt.getKeySet())
                         {
@@ -135,7 +135,7 @@ public class PacketHandler
                     try
                     {
                         int id = buffer.readInt();
-                        NBTTagCompound nbt = buffer.readCompoundTag();
+                        CompoundNBT nbt = buffer.readCompoundTag();
                         Entity e = player.getEntityWorld().getEntityByID(id);
                         if (e != null)
                         {
@@ -169,8 +169,8 @@ public class PacketHandler
                 {
                     try
                     {
-                        NBTTagCompound nbt = buffer.readCompoundTag();
-                        Chunk chunk = player.getEntityWorld().getChunkFromChunkCoords(nbt.getInteger("c_x"),
+                        CompoundNBT nbt = buffer.readCompoundTag();
+                        Chunk chunk = player.getEntityWorld().getChunk(nbt.getInteger("c_x"),
                                 nbt.getInteger("c_z"));
                         ITerrainProvider terrain = chunk.getCapability(CapabilityTerrain.TERRAIN_CAP, null);
                         CapabilityTerrain.TERRAIN_CAP.readNBT(terrain, null, nbt);
@@ -186,7 +186,7 @@ public class PacketHandler
             @Override
             public MessageServer onMessage(final MessageClient message, MessageContext ctx)
             {
-                Minecraft.getMinecraft().addScheduledTask(new Runnable()
+                Minecraft.getInstance().addScheduledTask(new Runnable()
                 {
                     @Override
                     public void run()
@@ -211,7 +211,7 @@ public class PacketHandler
         {
         }
 
-        public MessageClient(byte channel, NBTTagCompound nbt)
+        public MessageClient(byte channel, CompoundNBT nbt)
         {
             this.buffer = new PacketBuffer(Unpooled.buffer());
             buffer.writeByte(channel);
@@ -254,14 +254,14 @@ public class PacketHandler
     {
         public static class MessageHandlerServer implements IMessageHandler<MessageServer, IMessage>
         {
-            public void handleServerSide(EntityPlayer player, PacketBuffer buffer)
+            public void handleServerSide(PlayerEntity player, PacketBuffer buffer)
             {
             }
 
             @Override
             public IMessage onMessage(MessageServer message, MessageContext ctx)
             {
-                EntityPlayer player = ctx.getServerHandler().player;
+                PlayerEntity player = ctx.getServerHandler().player;
                 handleServerSide(player, message.buffer);
                 return null;
             }
@@ -273,7 +273,7 @@ public class PacketHandler
         {
         }
 
-        public MessageServer(byte channel, NBTTagCompound nbt)
+        public MessageServer(byte channel, CompoundNBT nbt)
         {
             this.buffer = new PacketBuffer(Unpooled.buffer());
             buffer.writeByte(channel);
@@ -324,7 +324,7 @@ public class PacketHandler
             this.dimension = dimension;
             this.locs = locs;
             this.mid = mid;
-            if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) MinecraftForge.EVENT_BUS.register(this);
+            if (FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT) MinecraftForge.EVENT_BUS.register(this);
         }
 
         @SubscribeEvent
@@ -365,8 +365,8 @@ public class PacketHandler
 
     static
     {
-        packetPipeline.registerMessage(MessageHandlerClient.class, MessageClient.class, getMessageID(), Side.CLIENT);
-        packetPipeline.registerMessage(MessageHandlerServer.class, MessageServer.class, getMessageID(), Side.SERVER);
+        packetPipeline.registerMessage(MessageHandlerClient.class, MessageClient.class, getMessageID(), Dist.CLIENT);
+        packetPipeline.registerMessage(MessageHandlerServer.class, MessageServer.class, getMessageID(), Dist.DEDICATED_SERVER);
     }
 
     public static MessageClient makeClientPacket(byte channel, byte[] data)
@@ -398,42 +398,42 @@ public class PacketHandler
         if (!(mob.wrapped() instanceof Entity)) return;
         Entity e = (Entity) mob.wrapped();
         PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
-        NBTTagCompound nbt = new NBTTagCompound();
+        CompoundNBT nbt = new CompoundNBT();
         e.writeToNBT(nbt);
         buffer.writeByte(MessageClient.ENTITYUPDATE);
         buffer.writeInt(e.getEntityId());
         buffer.writeCompoundTag(nbt);
         MessageClient message = new MessageClient(buffer);
-        sendToAllNear(message, Vector3.getNewVector().set(e), e.getEntityWorld().provider.getDimension(), 64);
+        sendToAllNear(message, Vector3.getNewVector().set(e), e.getEntityWorld().dimension.getDimension(), 64);
     }
 
     public static void sendEntityUpdate(Entity e)
     {
         PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
-        NBTTagCompound nbt = new NBTTagCompound();
+        CompoundNBT nbt = new CompoundNBT();
         e.writeToNBT(nbt);
         buffer.writeByte(MessageClient.ENTITYUPDATE);
         buffer.writeInt(e.getEntityId());
         buffer.writeCompoundTag(nbt);
         MessageClient message = new MessageClient(buffer);
-        sendToAllNear(message, Vector3.getNewVector().set(e), e.getEntityWorld().provider.getDimension(), 64);
+        sendToAllNear(message, Vector3.getNewVector().set(e), e.getEntityWorld().dimension.getDimension(), 64);
     }
 
     public static void sendTileUpdate(TileEntity tile)
     {
         PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
-        NBTTagCompound nbt = new NBTTagCompound();
+        CompoundNBT nbt = new CompoundNBT();
         tile.writeToNBT(nbt);
         buffer.writeByte(MessageClient.TILEUPDATE);
         buffer.writeCompoundTag(nbt);
         MessageClient message = new MessageClient(buffer);
-        sendToAllNear(message, Vector3.getNewVector().set(tile), tile.getWorld().provider.getDimension(), 64);
+        sendToAllNear(message, Vector3.getNewVector().set(tile), tile.getWorld().dimension.getDimension(), 64);
     }
 
-    public static void sendTerrainValues(EntityPlayerMP player)
+    public static void sendTerrainValues(ServerPlayerEntity player)
     {
         Map<Integer, String> values = BiomeType.getMap();
-        NBTTagCompound tag = new NBTTagCompound();
+        CompoundNBT tag = new CompoundNBT();
         for (Integer i : values.keySet())
         {
             tag.setInteger(values.get(i), i);
@@ -446,7 +446,7 @@ public class PacketHandler
     {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         if (server == null) return;
-        for (EntityPlayerMP player : server.getPlayerList().getPlayers())
+        for (ServerPlayerEntity player : server.getPlayerList().getPlayers())
         {
             sendTerrainValues(player);
         }

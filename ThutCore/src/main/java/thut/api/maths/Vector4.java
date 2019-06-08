@@ -3,7 +3,7 @@ package thut.api.maths;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.MathHelper;
 
 public class Vector4
@@ -26,10 +26,10 @@ public class Vector4
 
     public Vector4(Entity e)
     {
-        this(e.posX, e.posY, e.posZ, e.dimension);
+        this(e.posX, e.posY, e.posZ, e.dimension.getId());
     }
 
-    public Vector4(NBTTagCompound nbt)
+    public Vector4(CompoundNBT nbt)
     {
         this();
         x = nbt.getFloat("x");
@@ -201,8 +201,8 @@ public class Vector4
 
     public String toIntString()
     {
-        return "x:" + MathHelper.floor(x) + " y:" + MathHelper.floor(y) + " z:"
-                + MathHelper.floor(z) + " w:" + MathHelper.floor(w);
+        return "x:" + MathHelper.floor(x) + " y:" + MathHelper.floor(y) + " z:" + MathHelper.floor(z) + " w:"
+                + MathHelper.floor(w);
     }
 
     public Vector4 toQuaternion()
@@ -235,11 +235,11 @@ public class Vector4
         return false;
     }
 
-    public void writeToNBT(NBTTagCompound nbt)
+    public void writeToNBT(CompoundNBT nbt)
     {
-        nbt.setFloat("x", x);
-        nbt.setFloat("y", y);
-        nbt.setFloat("z", z);
-        nbt.setFloat("w", w);
+        nbt.putFloat("x", x);
+        nbt.putFloat("y", y);
+        nbt.putFloat("z", z);
+        nbt.putFloat("w", w);
     }
 }

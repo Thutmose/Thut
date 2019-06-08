@@ -1,21 +1,21 @@
 package thut.core.common;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import thut.api.network.IPlayerProvider;
 
 public class CommonProxy implements IPlayerProvider
 {
 
     @Override
-    public EntityPlayer getPlayer()
+    public PlayerEntity getPlayer()
     {
         return null;
     }
 
-    public EntityPlayer getPlayer(String playerName)
+    public PlayerEntity getPlayer(String playerName)
     {
         if (playerName != null) { return getWorld().getPlayerEntityByName(playerName); }
         return null;
@@ -43,7 +43,7 @@ public class CommonProxy implements IPlayerProvider
     {
     }
 
-    public void preinit(FMLPreInitializationEvent e)
+    public void preinit(FMLCommonSetupEvent e)
     {
     }
 

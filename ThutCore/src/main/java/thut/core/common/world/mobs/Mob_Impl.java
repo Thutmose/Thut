@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import thut.api.world.World;
@@ -113,13 +113,13 @@ public class Mob_Impl implements Mob, ICapabilityProvider
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+    public boolean hasCapability(Capability<?> capability, Direction facing)
     {
         return entity.hasCapability(capability, facing);
     }
 
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+    public <T> T getCapability(Capability<T> capability, Direction facing)
     {
         return entity.getCapability(capability, facing);
     }
@@ -152,14 +152,14 @@ public class Mob_Impl implements Mob, ICapabilityProvider
     public float getMaxHealth()
     {
         float num = 0;
-        if (this.entity instanceof EntityLiving) num = ((EntityLiving) entity).getMaxHealth();
+        if (this.entity instanceof MobEntity) num = ((MobEntity) entity).getMaxHealth();
         return num;
     }
 
     @Override
     public void setHealth(float health)
     {
-        if (this.entity instanceof EntityLiving) ((EntityLiving) this.entity).setHealth(health);
+        if (this.entity instanceof MobEntity) ((MobEntity) this.entity).setHealth(health);
     }
 
 }

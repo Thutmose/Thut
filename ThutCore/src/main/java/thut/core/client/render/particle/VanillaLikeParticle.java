@@ -56,7 +56,7 @@ public class VanillaLikeParticle extends Particle
         {
             ParticleAurora particle = new ParticleAurora(worldIn, xCoordIn, yCoordIn, zCoordIn);
             particle.textureMap = textureMap;
-            particle.start = (int) (worldIn.getTotalWorldTime() % 100000);
+            particle.start = (int) (worldIn.getGameTime() % 100000);
             if (args.length > 0)
             {
                 int rgba = args[0];
@@ -85,7 +85,7 @@ public class VanillaLikeParticle extends Particle
     public void renderParticle(BufferBuilder worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
             float rotationZ, float rotationYZ, float rotationXY, float rotationXZ)
     {
-        if (textureMap != null) Minecraft.getMinecraft().renderEngine.bindTexture(textureMap);
+        if (textureMap != null) Minecraft.getInstance().renderEngine.bindTexture(textureMap);
         super.renderParticle(worldRendererIn, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY,
                 rotationXZ);
     }

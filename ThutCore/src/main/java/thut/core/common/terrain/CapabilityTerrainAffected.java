@@ -3,8 +3,8 @@ package thut.core.common.terrain;
 import java.util.Collection;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -30,14 +30,14 @@ public class CapabilityTerrainAffected
     {
         void onTerrainTick();
 
-        EntityLivingBase getAttached();
+        LivingEntity getAttached();
 
-        void attach(EntityLivingBase mob);
+        void attach(LivingEntity mob);
     }
 
     public static class DefaultAffected implements ITerrainAffected, ICapabilityProvider
     {
-        private EntityLivingBase           theMob;
+        private LivingEntity           theMob;
         private TerrainSegment             terrain;
         private Collection<ITerrainEffect> effects;
 
@@ -73,25 +73,25 @@ public class CapabilityTerrainAffected
         }
 
         @Override
-        public EntityLivingBase getAttached()
+        public LivingEntity getAttached()
         {
             return theMob;
         }
 
         @Override
-        public void attach(EntityLivingBase mob)
+        public void attach(LivingEntity mob)
         {
             theMob = mob;
         }
 
         @Override
-        public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+        public boolean hasCapability(Capability<?> capability, Direction facing)
         {
             return capability == TERRAIN_CAP;
         }
 
         @Override
-        public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+        public <T> T getCapability(Capability<T> capability, Direction facing)
         {
             return hasCapability(capability, facing) ? TERRAIN_CAP.cast(this) : null;
         }
@@ -106,17 +106,17 @@ public class CapabilityTerrainAffected
     @SubscribeEvent
     public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
     {
-        if (!(event.getObject() instanceof EntityLivingBase) || event.getCapabilities().containsKey(TERRAINEFFECTCAP))
+        if (!(event.getObject() instanceof LivingEntity) || event.getCapabilities().containsKey(TERRAINEFFECTCAP))
             return;
         DefaultAffected effects = new DefaultAffected();
-        effects.attach((EntityLivingBase) event.getObject());
+        effects.attach((LivingEntity) event.getObject());
         event.addCapability(TERRAINEFFECTCAP, effects);
     }
 
     @SubscribeEvent
     public void EntityUpdate(LivingUpdateEvent evt)
     {
-        ITerrainAffected effects = evt.getEntityLiving().getCapability(TERRAIN_CAP, null);
+        ITerrainAffected effects = evt.getMobEntity().getCapability(TERRAIN_CAP, null);
         if (effects != null)
         {
             effects.onTerrainTick();

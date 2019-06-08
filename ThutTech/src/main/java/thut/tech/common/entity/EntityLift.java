@@ -9,7 +9,7 @@ import com.google.common.base.Predicate;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MoverType;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -352,14 +352,14 @@ public class EntityLift extends BlockEntityBase
     }
 
     @Override
-    public void readEntityFromNBT(NBTTagCompound arg0)
+    public void readEntityFromNBT(CompoundNBT arg0)
     {
         super.readEntityFromNBT(arg0);
         if (arg0.hasUniqueId("owner")) owner = arg0.getUniqueId("owner");
     }
 
     @Override
-    public void writeEntityToNBT(NBTTagCompound arg0)
+    public void writeEntityToNBT(CompoundNBT arg0)
     {
         super.writeEntityToNBT(arg0);
         if (owner != null) arg0.setUniqueId("owner", owner);

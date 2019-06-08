@@ -1,7 +1,7 @@
 package thut.core.client.render.model;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 
 public interface IAnimationChanger
 {
@@ -9,5 +9,5 @@ public interface IAnimationChanger
 
     boolean isPartHidden(String part, Entity entity, boolean default_);
 
-    String modifyAnimation(EntityLiving entity, float partialTicks, String phase);
+    String modifyAnimation(MobEntity entity, float partialTicks, String phase);
 }

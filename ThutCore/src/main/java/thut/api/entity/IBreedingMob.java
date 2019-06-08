@@ -3,14 +3,14 @@ package thut.api.entity;
 import java.util.Vector;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.AnimalEntity;
 
 /** This interface is used for mobs which can breed with other mobs.
  * 
  * @author Thutmose */
 public interface IBreedingMob
 {
-    boolean canMate(EntityAnimal entityAnimal);
+    boolean canMate(AnimalEntity AnimalEntity);
 
     /** Will be called by the mother before she lays to know what baby to put in
      * the egg.

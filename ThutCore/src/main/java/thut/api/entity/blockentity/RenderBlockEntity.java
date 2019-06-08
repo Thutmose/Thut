@@ -19,7 +19,7 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.ResourceLocation;
@@ -27,17 +27,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.api.entity.IMultiplePassengerEntity;
 import thut.core.common.ThutCore;
 
-@SideOnly(Side.CLIENT)
-public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingBase<T>
+@OnlyIn(Dist.CLIENT)
+public class RenderBlockEntity<T extends LivingEntity> extends RenderLivingBase<T>
 {
     private static IBakedModel crate_model;
     float                      pitch = 0.0f;
@@ -162,7 +162,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
         IBlockState iblockstate = entity.getFakeWorld().getBlockState(pos);
         if (iblockstate.getMaterial() != Material.AIR)
         {
-            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+            BlockRendererDispatcher blockrendererdispatcher = Minecraft.getInstance().getBlockRendererDispatcher();
             IBlockState actualstate = iblockstate.getActualState(entity.getFakeWorld(), pos);
             iblockstate = actualstate.getBlock().getExtendedState(actualstate, entity.getFakeWorld(), pos);
             if (iblockstate.getRenderType() == EnumBlockRenderType.MODEL)
@@ -210,7 +210,7 @@ public class RenderBlockEntity<T extends EntityLivingBase> extends RenderLivingB
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-        Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
+        Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelRenderer()
                 .renderModelSmooth(entity.getFakeWorld().world, model, state, pos, buffer, false, 0);
         tessellator.draw();
         return;

@@ -10,11 +10,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList.EntityEggInfo;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -52,20 +52,20 @@ public class CompatWrapper
         return !stack.isEmpty();
     }
 
-    public static NBTTagCompound getTag(ItemStack stack, String name, boolean create)
+    public static CompoundNBT getTag(ItemStack stack, String name, boolean create)
     {
-        NBTTagCompound ret = stack.getSubCompound(name);
+        CompoundNBT ret = stack.getSubCompound(name);
         if (ret == null)
         {
-            if (!stack.hasTagCompound()) stack.setTagCompound(new NBTTagCompound());
-            ret = new NBTTagCompound();
-            stack.getTagCompound().setTag(name, ret);
+            if (!stack.hasTag()) stack.setTag(new CompoundNBT());
+            ret = new CompoundNBT();
+            stack.getTag().setTag(name, ret);
         }
         return ret;
     }
 
     public static boolean interactWithBlock(Block block, World worldIn, BlockPos pos, IBlockState state,
-            EntityPlayer playerIn, EnumHand hand, @Nullable ItemStack heldItem, EnumFacing side, float hitX, float hitY,
+            PlayerEntity playerIn, Hand hand, @Nullable ItemStack heldItem, Direction side, float hitX, float hitY,
             float hitZ)
     {
         return block.onBlockActivated(worldIn, pos, state, playerIn, hand, side, hitX, hitY, hitZ);

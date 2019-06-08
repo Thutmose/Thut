@@ -1,6 +1,6 @@
 package thut.core.common.genetics.genes;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import thut.api.entity.genetics.Gene;
 
 public abstract class GeneFloat implements Gene
@@ -21,15 +21,15 @@ public abstract class GeneFloat implements Gene
     }
 
     @Override
-    public NBTTagCompound save()
+    public CompoundNBT save()
     {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setFloat("V", value);
+        CompoundNBT tag = new CompoundNBT();
+        tag.putFloat("V", value);
         return tag;
     }
 
     @Override
-    public void load(NBTTagCompound tag)
+    public void load(CompoundNBT tag)
     {
         value = tag.getFloat("V");
     }

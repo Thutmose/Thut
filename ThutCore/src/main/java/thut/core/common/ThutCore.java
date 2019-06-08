@@ -16,16 +16,17 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -39,11 +40,10 @@ import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
-import net.minecraftforge.api.distmarker.Dist;
 import thut.api.TickHandler;
 import thut.api.block.IOwnableTE;
 import thut.api.entity.IMultiplePassengerEntity;
@@ -150,7 +150,7 @@ public class ThutCore
         new CapabilityTerrainAffected();
 
         PacketHandler.packetPipeline.registerMessage(PacketDataSync.class, PacketDataSync.class,
-                PacketHandler.getMessageID(), Side.CLIENT);
+                PacketHandler.getMessageID(), Dist.CLIENT);
     }
 
     @EventHandler
@@ -159,7 +159,7 @@ public class ThutCore
     }
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent e)
+    public void preInit(FMLCommonSetupEvent e)
     {
         proxy.preinit(e);
         config = new ConfigHandler(e.getSuggestedConfigurationFile());
@@ -176,7 +176,7 @@ public class ThutCore
         CapabilityManager.INSTANCE.register(IAIMob.class, new Capability.IStorage<IAIMob>()
         {
             @Override
-            public NBTBase writeNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side)
+            public INBT writeNBT(Capability<IAIMob> capability, IAIMob instance, Direction side)
             {
                 if (instance instanceof INBTSerializable<?>) { return INBTSerializable.class.cast(instance)
                         .serializeNBT(); }
@@ -185,7 +185,7 @@ public class ThutCore
 
             @SuppressWarnings("unchecked")
             @Override
-            public void readNBT(Capability<IAIMob> capability, IAIMob instance, EnumFacing side, NBTBase nbt)
+            public void readNBT(Capability<IAIMob> capability, IAIMob instance, Direction side, INBT nbt)
             {
                 if (instance instanceof INBTSerializable<?>)
                 {
@@ -196,27 +196,27 @@ public class ThutCore
         CapabilityManager.INSTANCE.register(ITerrainAffected.class, new Capability.IStorage<ITerrainAffected>()
         {
             @Override
-            public NBTBase writeNBT(Capability<ITerrainAffected> capability, ITerrainAffected instance, EnumFacing side)
+            public INBT writeNBT(Capability<ITerrainAffected> capability, ITerrainAffected instance, Direction side)
             {
                 return null;
             }
 
             @Override
-            public void readNBT(Capability<ITerrainAffected> capability, ITerrainAffected instance, EnumFacing side,
-                    NBTBase nbt)
+            public void readNBT(Capability<ITerrainAffected> capability, ITerrainAffected instance, Direction side,
+                    INBT nbt)
             {
             }
         }, DefaultAffected::new);
         CapabilityManager.INSTANCE.register(DataSync.class, new Capability.IStorage<DataSync>()
         {
             @Override
-            public NBTBase writeNBT(Capability<DataSync> capability, DataSync instance, EnumFacing side)
+            public INBT writeNBT(Capability<DataSync> capability, DataSync instance, Direction side)
             {
                 return null;
             }
 
             @Override
-            public void readNBT(Capability<DataSync> capability, DataSync instance, EnumFacing side, NBTBase nbt)
+            public void readNBT(Capability<DataSync> capability, DataSync instance, Direction side, INBT nbt)
             {
             }
         }, DataSync_Impl::new);
@@ -224,32 +224,31 @@ public class ThutCore
         {
 
             @Override
-            public NBTBase writeNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side)
+            public INBT writeNBT(Capability<IMobGenetics> capability, IMobGenetics instance, Direction side)
             {
-                NBTTagList genes = new NBTTagList();
+                ListNBT genes = new ListNBT();
                 for (Map.Entry<ResourceLocation, Alleles> entry : instance.getAlleles().entrySet())
                 {
-                    NBTTagCompound tag = new NBTTagCompound();
-                    tag.setString("K", entry.getKey().toString());
-                    tag.setTag("V", entry.getValue().save());
+                    CompoundNBT tag = new CompoundNBT();
+                    tag.putString("K", entry.getKey().toString());
+                    tag.put("V", entry.getValue().save());
                     genes.appendTag(tag);
                 }
                 return genes;
             }
 
             @Override
-            public void readNBT(Capability<IMobGenetics> capability, IMobGenetics instance, EnumFacing side,
-                    NBTBase nbt)
+            public void readNBT(Capability<IMobGenetics> capability, IMobGenetics instance, Direction side, INBT nbt)
             {
-                NBTTagList list = (NBTTagList) nbt;
-                for (int i = 0; i < list.tagCount(); i++)
+                ListNBT list = (ListNBT) nbt;
+                for (int i = 0; i < list.size(); i++)
                 {
-                    NBTTagCompound tag = list.getCompoundTagAt(i);
+                    CompoundNBT tag = list.getCompound(i);
                     Alleles alleles = new Alleles();
                     ResourceLocation key = new ResourceLocation(tag.getString("K"));
                     try
                     {
-                        alleles.load(tag.getCompoundTag("V"));
+                        alleles.load(tag.getCompound("V"));
                         instance.getAlleles().put(key, alleles);
                     }
                     catch (Exception e)
@@ -290,13 +289,13 @@ public class ThutCore
     @SubscribeEvent
     public void PlayerLoggedInEvent(PlayerLoggedInEvent event)
     {
-        PacketHandler.sendTerrainValues((EntityPlayerMP) event.player);
+        PacketHandler.sendTerrainValues((ServerPlayerEntity) event.player);
     }
 
     @SubscribeEvent
     public void BreakBlock(BreakEvent evt)
     {
-        EntityPlayer player = evt.getPlayer();
+        PlayerEntity player = evt.getPlayer();
         TileEntity tile = evt.getWorld().getTileEntity(evt.getPos());
         if (tile instanceof IOwnableTE)
         {
@@ -318,8 +317,8 @@ public class ThutCore
             TileEntity tile = evt.getWorld().getTileEntity(pos);
             if (tile instanceof IOwnableTE)
             {
-                NBTTagCompound tag = tile.writeToNBT(new NBTTagCompound());
-                if (tag.hasKey("admin") && tag.getBoolean("admin"))
+                CompoundNBT tag = tile.write(new CompoundNBT());
+                if (tag.contains("admin") && tag.getBoolean("admin"))
                 {
                     toRemove.add(pos);
                 }

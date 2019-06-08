@@ -5,12 +5,12 @@ import java.util.logging.Level;
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumHand;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TranslationTextComponent;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.tech.common.TechCore;
 import thut.tech.common.items.ItemLinker;
@@ -27,7 +27,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
         this.lift = lift;
     }
 
-    public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
+    public boolean processInitialInteract(PlayerEntity player, @Nullable ItemStack stack, Hand hand)
     {
         if (stack != null && stack.getItem() == Items.STICK)
         {
@@ -68,7 +68,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             if (!lift.getEntityWorld().isRemote)
             {
                 String message = "msg.lift.killed";
-                player.sendMessage(new TextComponentTranslation(message));
+                player.sendMessage(new TranslationTextComponent(message));
                 if (DROPSPARTS)
                 {
                     BlockPos max = lift.boundMax;
@@ -89,15 +89,15 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
                 && ((lift.owner != null && player.getUniqueID().equals(lift.owner))
                         || player.capabilities.isCreativeMode))
         {
-            if (stack.getTagCompound() == null)
+            if (stack.getTag() == null)
             {
-                stack.setTagCompound(new NBTTagCompound());
+                stack.setTag(new CompoundNBT());
             }
-            stack.getTagCompound().setString("lift", lift.getCachedUniqueIdString());
+            stack.getTag().putString("lift", lift.getCachedUniqueIdString());
 
             String message = "msg.liftSet.name";
 
-            if (!lift.getEntityWorld().isRemote) player.sendMessage(new TextComponentTranslation(message));
+            if (!lift.getEntityWorld().isRemote) player.sendMessage(new TranslationTextComponent(message));
             return true;
         }
         else if (stack != null && stack.getItem() instanceof ItemLinker
@@ -109,7 +109,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
                 Entity ownerentity = lift.getEntityWorld().getPlayerEntityByUUID(lift.owner);
                 String message = "msg.lift.owner";
 
-                player.sendMessage(new TextComponentTranslation(message, ownerentity.getName()));
+                player.sendMessage(new TranslationTextComponent(message, ownerentity.getName()));
             }
             return true;
         }
@@ -124,7 +124,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             if (!lift.getEntityWorld().isRemote)
             {
                 String message = "msg.lift.killed";
-                player.sendMessage(new TextComponentTranslation(message));
+                player.sendMessage(new TranslationTextComponent(message));
                 if (DROPSPARTS)
                 {
                     BlockPos max = lift.boundMax;

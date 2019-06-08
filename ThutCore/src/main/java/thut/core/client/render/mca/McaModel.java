@@ -40,7 +40,7 @@ public class McaModel extends X3dModel
     // try
     // {
     // IResource res =
-    // Minecraft.getMinecraft().getResourceManager().getResource(model);
+    // Minecraft.getInstance().getResourceManager().getResource(model);
     // InputStream stream = res.getInputStream();
     // McaXML xml = new McaXML(stream);
     // makeObjects(xml);

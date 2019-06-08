@@ -2,18 +2,18 @@ package thut.core.common.world.utils;
 
 import java.util.UUID;
 
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTException;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import thut.api.world.utils.Info;
 
 public class Info_Impl implements Info
 {
     private static final long serialVersionUID = 4947657861031977837L;
 
-    NBTTagCompound            nbt              = new NBTTagCompound();
+    CompoundNBT            nbt              = new CompoundNBT();
 
     @Override
     public <T> T value(String key, Class<T> type)
@@ -43,11 +43,11 @@ public class Info_Impl implements Info
 //        case "S":
 //            return type.cast(nbt.getShort(key));
         default:
-            if (type == NBTTagCompound.class)
+            if (type == CompoundNBT.class)
             {
-                return type.cast(nbt.getCompoundTag(key));
+                return type.cast(nbt.getCompound(key));
             }
-            else if (type == NBTTagList.class)
+            else if (type == ListNBT.class)
             {
                 return type.cast(nbt.getTag(key));
             }
@@ -70,46 +70,46 @@ public class Info_Impl implements Info
         case "C":
             return;
 //        case "Z":
-//            nbt.setBoolean(key, (boolean) value);
+//            nbt.putBoolean(key, (boolean) value);
 //            return;
 //        case "B":
 //            nbt.setByte(key, (byte) value);
 //            return;
 //        case "[B":
-//            nbt.setByteArray(key, (byte[]) value);
+//            nbt.putByteArray(key, (byte[]) value);
 //            return;
 //        case "D":
 //            nbt.setDouble(key, (double) value);
 //            return;
 //        case "F":
-//            nbt.setFloat(key, (float) value);
+//            nbt.putFloat(key, (float) value);
 //            return;
 //        case "I":
 //            nbt.setInteger(key, (int) value);
 //            return;
 //        case "[I":
-//            nbt.setIntArray(key, (int[]) value);
+//            nbt.putIntArray(key, (int[]) value);
 //            return;
 //        case "J":
-//            nbt.setLong(key, (long) value);
+//            nbt.putLong(key, (long) value);
 //            return;
 //        case "S":
 //            nbt.setShort(key, (short) value);
 //            return;
         default:
-            if (type == NBTTagCompound.class)
+            if (type == CompoundNBT.class)
             {
-                nbt.setTag(key, (NBTBase) value);
+                nbt.setTag(key, (INBT) value);
                 return;
             }
-            else if (type == NBTTagList.class)
+            else if (type == ListNBT.class)
             {
-                nbt.setTag(key, (NBTBase) value);
+                nbt.setTag(key, (INBT) value);
                 return;
             }
             else if (type == String.class)
             {
-                nbt.setString(key, (String) value);
+                nbt.putString(key, (String) value);
                 return;
             }
             break;

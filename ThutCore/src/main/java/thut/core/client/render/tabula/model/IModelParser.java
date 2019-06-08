@@ -22,9 +22,9 @@ public interface IModelParser<T extends IModel> {
 
     Class<T> getModelClass();
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     T parse(String json) throws IOException;
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     void render(T model, Entity entity);
 }

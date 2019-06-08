@@ -6,8 +6,8 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.model.ModelBakery;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.state.IProperty;
 import net.minecraft.world.World;
@@ -16,7 +16,7 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLCommonSetupEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import thut.api.ThutBlocks;
 import thut.tech.client.render.RenderLift;
@@ -31,19 +31,19 @@ public class ClientProxy extends CommonProxy
 {
 
     @Override
-    public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z)
+    public Object getClientGuiElement(int id, PlayerEntity player, World world, int x, int y, int z)
     {
         return null;
     }
 
     @Override
-    public EntityPlayer getPlayer()
+    public PlayerEntity getPlayer()
     {
         return getPlayer(null);
     }
 
     @Override
-    public EntityPlayer getPlayer(String playerName)
+    public PlayerEntity getPlayer(String playerName)
     {
         if (isOnClientSide())
         {
@@ -53,7 +53,7 @@ public class ClientProxy extends CommonProxy
             }
             else
             {
-                return Minecraft.getMinecraft().player;
+                return Minecraft.getInstance().player;
             }
         }
         else
@@ -67,7 +67,7 @@ public class ClientProxy extends CommonProxy
     {
         if (isOnClientSide())
         {
-            return Minecraft.getMinecraft().world;
+            return Minecraft.getInstance().world;
         }
         else
         {
@@ -97,18 +97,18 @@ public class ClientProxy extends CommonProxy
     public void initClient()
     {
         Item lift = Item.getItemFromBlock(ThutBlocks.lift);
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 0,
+        Minecraft.getInstance().getRenderItem().getItemModelMesher().register(lift, 0,
                 new ModelResourceLocation("thuttech:lift", "inventory"));
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(lift, 1,
+        Minecraft.getInstance().getRenderItem().getItemModelMesher().register(lift, 1,
                 new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
-        Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
+        Minecraft.getInstance().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
                 new ModelResourceLocation("thuttech:devicelinker", "inventory"));
     }
 
     @Override
     public boolean isOnClientSide()
     {
-        return FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT;
+        return FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT;
     }
 
     @Override
@@ -117,13 +117,13 @@ public class ClientProxy extends CommonProxy
     }
 
     @Override
-    public void preinit(FMLPreInitializationEvent event)
+    public void preinit(FMLCommonSetupEvent event)
     {
         super.preinit(event);
-        RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<EntityLivingBase>()
+        RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<LivingEntity>()
         {
             @Override
-            public Render<? super EntityLivingBase> createRenderFor(RenderManager manager)
+            public Render<? super LivingEntity> createRenderFor(RenderManager manager)
             {
                 return new RenderLift(manager);
             }

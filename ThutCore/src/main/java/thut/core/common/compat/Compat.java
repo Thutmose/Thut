@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import thut.core.common.ThutCore;
 import thut.lib.CompatClass;
 import thut.lib.CompatClass.Phase;
@@ -57,7 +57,7 @@ public class Compat
     }
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent evt)
+    public void preInit(FMLCommonSetupEvent evt)
     {
         doMetastuff();
         doPhase(Phase.PRE, evt);

@@ -14,7 +14,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import thut.api.ThutBlocks;
 import thut.api.entity.blockentity.BlockEntityWorld;
@@ -75,7 +75,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
 
     private void drawNumber(int number, int floor)
     {
-        TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
+        TextureManager renderengine = Minecraft.getInstance().renderEngine;
 
         GL11.glPushMatrix();
         if (renderengine != null)
@@ -146,7 +146,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
         GL11.glPopMatrix();
     }
 
-    public void drawEditOverlay(TileEntityLiftAccess monitor, EnumFacing side)
+    public void drawEditOverlay(TileEntityLiftAccess monitor, Direction side)
     {
         // Call button toggle
         // Draw the white background
@@ -167,14 +167,14 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
         GL11.glPopMatrix();
     }
 
-    public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, EnumFacing side, boolean wide)
+    public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, Direction side, boolean wide)
     {
         if (!wide) floor = floor - monitor.getSidePage(side) * 16;
         IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
         boolean isMonitor = state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER;
         if (isMonitor && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
         {
-            TextureManager renderengine = Minecraft.getMinecraft().renderEngine;
+            TextureManager renderengine = Minecraft.getInstance().renderEngine;
             GL11.glPushMatrix();
             if (renderengine != null)
             {
@@ -261,7 +261,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
             }
             for (int i = 0; i < 6; i++)
             {
-                EnumFacing dir = EnumFacing.getFront(i);
+                Direction dir = Direction.getFront(i);
 
                 if (!monitor.isSideOn(dir)) continue;
 
@@ -269,17 +269,17 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
 
                 GL11.glTranslatef((float) x, (float) y, (float) z);
 
-                if (dir == EnumFacing.EAST)
+                if (dir == Direction.EAST)
                 {
                     GL11.glTranslatef(1, 0, 0);
                     GL11.glRotatef(270, 0, 1, 0);
                 }
-                else if (dir == EnumFacing.SOUTH)
+                else if (dir == Direction.SOUTH)
                 {
                     GL11.glTranslatef(1, 0, 1);
                     GL11.glRotatef(180, 0, 1, 0);
                 }
-                else if (dir == EnumFacing.WEST)
+                else if (dir == Direction.WEST)
                 {
                     GL11.glTranslatef(0, 0, 1);
                     GL11.glRotatef(90, 0, 1, 0);

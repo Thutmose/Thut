@@ -13,34 +13,34 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.Hand;
+import net.minecraft.util.HandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import thut.core.common.ThutCore;
 
-public abstract class BlockEntityBase extends EntityLivingBase implements IEntityAdditionalSpawnData, IBlockEntity
+public abstract class BlockEntityBase extends LivingEntity implements IEntityAdditionalSpawnData, IBlockEntity
 {
     public static int          ACCELERATIONTICKS = 20;
-    public BlockPos            boundMin          = BlockPos.ORIGIN;
-    public BlockPos            boundMax          = BlockPos.ORIGIN;
+    public BlockPos            boundMin          = BlockPos.ZERO;
+    public BlockPos            boundMax          = BlockPos.ZERO;
     private BlockEntityWorld   fake_world;
     private boolean            shouldRevert      = true;
     public double              speedUp           = 0.5;
@@ -198,7 +198,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
             {
                 Entity entity = (Entity) list.get(i);
                 applyEntityCollision(entity);
-                if (entity instanceof EntityPlayerMP
+                if (entity instanceof ServerPlayerEntity
                         && entity.getEntityBoundingBox().grow(2).intersects(getEntityBoundingBox()))
                 {
                     hasPassenger = true;
@@ -249,7 +249,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
 
     @Override
     /** Applies the given player interaction to this Entity. */
-    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, EnumHand hand)
+    public EnumActionResult applyPlayerInteraction(PlayerEntity player, Vec3d vec, Hand hand)
     {
         if (interacter == null) interacter = createInteractHandler();
         try
@@ -265,7 +265,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
 
     /** First layer of player interaction */
     @Override
-    public boolean processInitialInteract(EntityPlayer player, EnumHand hand)
+    public boolean processInitialInteract(PlayerEntity player, Hand hand)
     {
         if (interacter == null) interacter = createInteractHandler();
         return interacter.processInitialInteract(player, player.getHeldItem(hand), hand);
@@ -316,11 +316,11 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     }
 
     @SuppressWarnings("deprecation")
-    public void readBlocks(NBTTagCompound nbt)
+    public void readBlocks(CompoundNBT nbt)
     {
         if (nbt.hasKey("Blocks"))
         {
-            NBTTagCompound blockTag = nbt.getCompoundTag("Blocks");
+            CompoundNBT blockTag = nbt.getCompound("Blocks");
             int sizeX = blockTag.getInteger("BlocksLengthX");
             int sizeZ = blockTag.getInteger("BlocksLengthZ");
             int sizeY = blockTag.getInteger("BlocksLengthY");
@@ -364,7 +364,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
                         {
                             try
                             {
-                                NBTTagCompound tag = blockTag.getCompoundTag("T" + i + "," + k + "," + j);
+                                CompoundNBT tag = blockTag.getCompound("T" + i + "," + k + "," + j);
                                 tiles[i][k][j] = IBlockEntity.BlockEntityFormer.makeTile(tag);
                             }
                             catch (Exception e)
@@ -380,12 +380,12 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     }
 
     @Override
-    public void readEntityFromNBT(NBTTagCompound nbt)
+    public void readEntityFromNBT(CompoundNBT nbt)
     {
         super.readEntityFromNBT(nbt);
         if (nbt.hasKey("bounds"))
         {
-            NBTTagCompound bounds = nbt.getCompoundTag("bounds");
+            CompoundNBT bounds = nbt.getCompound("bounds");
             boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
             boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
         }
@@ -396,7 +396,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     public void readSpawnData(ByteBuf data)
     {
         PacketBuffer buff = new PacketBuffer(data);
-        NBTTagCompound tag = new NBTTagCompound();
+        CompoundNBT tag = new CompoundNBT();
         try
         {
             tag = buff.readCompoundTag();
@@ -432,11 +432,11 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
         if (collider != null) collider.onSetPosition();
     }
 
-    public void writeBlocks(NBTTagCompound nbt)
+    public void writeBlocks(CompoundNBT nbt)
     {
         if (blocks != null)
         {
-            NBTTagCompound blocksTag = new NBTTagCompound();
+            CompoundNBT blocksTag = new CompoundNBT();
             blocksTag.setInteger("BlocksLengthX", blocks.length);
             blocksTag.setInteger("BlocksLengthY", blocks[0].length);
             blocksTag.setInteger("BlocksLengthZ", blocks[0][0].length);
@@ -459,7 +459,7 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
                             if (tiles[i][k][j] != null)
                             {
 
-                                NBTTagCompound tag = new NBTTagCompound();
+                                CompoundNBT tag = new CompoundNBT();
                                 tag = tiles[i][k][j].writeToNBT(tag);
                                 blocksTag.setTag("T" + i + "," + k + "," + j, tag);
                             }
@@ -476,10 +476,10 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     }
 
     @Override
-    public void writeEntityToNBT(NBTTagCompound nbt)
+    public void writeEntityToNBT(CompoundNBT nbt)
     {
         super.writeEntityToNBT(nbt);
-        NBTTagCompound vector = new NBTTagCompound();
+        CompoundNBT vector = new CompoundNBT();
         vector.setDouble("minx", boundMin.getX());
         vector.setDouble("miny", boundMin.getY());
         vector.setDouble("minz", boundMin.getZ());
@@ -501,12 +501,12 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     public void writeSpawnData(ByteBuf data)
     {
         PacketBuffer buff = new PacketBuffer(data);
-        NBTTagCompound tag = new NBTTagCompound();
+        CompoundNBT tag = new CompoundNBT();
         writeEntityToNBT(tag);
         buff.writeCompoundTag(tag);
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
     public boolean isInRangeToRenderDist(double distance)
     {
@@ -539,21 +539,21 @@ public abstract class BlockEntityBase extends EntityLivingBase implements IEntit
     }
 
     @Override
-    public ItemStack getHeldItem(EnumHand hand)
+    public ItemStack getHeldItem(Hand hand)
     {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public void setHeldItem(EnumHand hand, @Nullable ItemStack stack)
+    public void setHeldItem(Hand hand, @Nullable ItemStack stack)
     {
 
     }
 
     @Override
-    public EnumHandSide getPrimaryHand()
+    public HandSide getPrimaryHand()
     {
-        return EnumHandSide.LEFT;
+        return HandSide.LEFT;
     }
 
     @Override

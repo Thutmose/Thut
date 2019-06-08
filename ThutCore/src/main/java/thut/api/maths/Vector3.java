@@ -16,14 +16,14 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.command.ICommandSender;
+import net.minecraft.command.ICommandSource;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -34,7 +34,7 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.provider.BiomeProvider;
+import net.minecraft.world.biome.dimension.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -354,7 +354,7 @@ public class Vector3
             clear:
             while (!v.clearOfBlocks(world))
             {
-                for (EnumFacing side : EnumFacing.values())
+                for (Direction side : Direction.values())
                 {
                     v2.set(v);
                     if (v.offsetBy(side).clearOfBlocks(world))
@@ -366,7 +366,7 @@ public class Vector3
                 boolean step = true;
                 if (n < 2)
                 {
-                    v.offset(EnumFacing.UP);
+                    v.offset(Direction.UP);
                 }
                 else if (n < 4)
                 {
@@ -375,7 +375,7 @@ public class Vector3
                         step = false;
                         v.set(v1);
                     }
-                    v.offsetBy(EnumFacing.NORTH);
+                    v.offsetBy(Direction.NORTH);
                 }
                 else if (n < 6)
                 {
@@ -384,7 +384,7 @@ public class Vector3
                         step = true;
                         v.set(v1);
                     }
-                    v.offsetBy(EnumFacing.SOUTH);
+                    v.offsetBy(Direction.SOUTH);
                 }
                 else if (n < 8)
                 {
@@ -393,7 +393,7 @@ public class Vector3
                         step = false;
                         v.set(v1);
                     }
-                    v.offsetBy(EnumFacing.EAST);
+                    v.offsetBy(Direction.EAST);
                 }
                 else if (n < 10)
                 {
@@ -402,7 +402,7 @@ public class Vector3
                         step = true;
                         v.set(v1);
                     }
-                    v.offsetBy(EnumFacing.WEST);
+                    v.offsetBy(Direction.WEST);
                 }
                 else if (n < 12)
                 {
@@ -411,7 +411,7 @@ public class Vector3
                         step = false;
                         v.set(v1);
                     }
-                    v.offsetBy(EnumFacing.DOWN);
+                    v.offsetBy(Direction.DOWN);
                 }
                 n++;
                 if (n >= 12) break;
@@ -437,7 +437,7 @@ public class Vector3
         return ret;
     }
 
-    public static Vector3 readFromNBT(NBTTagCompound nbt, String tag)
+    public static Vector3 readFromNBT(CompoundNBT nbt, String tag)
     {
         if (!nbt.hasKey(tag + "x")) return null;
 
@@ -634,7 +634,7 @@ public class Vector3
             {
                 for (Entity e : targets)
                 {
-                    if (e instanceof EntityLivingBase && !ret.contains(e) && !e.isRidingOrBeingRiddenBy(excluded))
+                    if (e instanceof LivingEntity && !ret.contains(e) && !e.isPassengerOrBeingRiddenBy(excluded))
                     {
                         ret.add(e);
                     }
@@ -988,14 +988,14 @@ public class Vector3
             {
                 int x0 = (xtest > 0 ? (int) xtest : (int) xtest - 1), y0 = (ytest > 0 ? (int) ytest : (int) ytest - 1),
                         z0 = (ztest > 0 ? (int) ztest : (int) ztest - 1);
-                List<EntityLivingBase> targets = world.getEntitiesWithinAABB(EntityLivingBase.class,
+                List<LivingEntity> targets = world.getEntitiesWithinAABB(LivingEntity.class,
                         new AxisAlignedBB(x0 - 0.5, y0 - 0.5, z0 - 0.5, x0 + 0.5, y0 + 0.5, z0 + 0.5));
                 if (targets != null && targets.size() > 0)
                 {
                     List<Entity> ret = new ArrayList<Entity>();
                     for (Entity e : targets)
                     {
-                        if (e instanceof EntityLivingBase && !excluded.contains(e))
+                        if (e instanceof LivingEntity && !excluded.contains(e))
                         {
                             ret.add(e);
                         }
@@ -1041,7 +1041,7 @@ public class Vector3
                 List<Entity> ret = new ArrayList<Entity>();
                 for (Entity e : targets)
                 {
-                    if (e instanceof EntityLiving)
+                    if (e instanceof MobEntity)
                     {
                         ret.add(e);
                     }
@@ -1087,7 +1087,7 @@ public class Vector3
         return state.getBlock();
     }
 
-    public Block getBlock(IBlockAccess world, EnumFacing side)
+    public Block getBlock(IBlockAccess world, Direction side)
     {
         Vector3 other = offset(side);
         Block ret = other.getBlock(world);
@@ -1200,7 +1200,7 @@ public class Vector3
         return world.getTileEntity(getPos());
     }
 
-    public TileEntity getTileEntity(IBlockAccess world, EnumFacing side)
+    public TileEntity getTileEntity(IBlockAccess world, Direction side)
     {
         Vector3 other = offset(side);
         TileEntity ret = other.getTileEntity(world);
@@ -1397,7 +1397,7 @@ public class Vector3
         return true;
     }
 
-    public boolean isSideSolid(IBlockAccess world, EnumFacing side)
+    public boolean isSideSolid(IBlockAccess world, Direction side)
     {
         boolean ret = world.isSideSolid(getPos(), side, false);
         return ret;
@@ -1414,7 +1414,7 @@ public class Vector3
     {
         int x0 = intX(), y0 = intY(), z0 = intZ();
         List<Entity> ret = new ArrayList<Entity>();
-        List<EntityLiving> targets = world.getEntitiesWithinAABB(EntityLiving.class,
+        List<MobEntity> targets = world.getEntitiesWithinAABB(MobEntity.class,
                 new AxisAlignedBB(x0, y0, z0, x0 + 1, y0 + 1, z0 + 1));
         for (Entity e : targets)
         {
@@ -1430,7 +1430,7 @@ public class Vector3
     {
         int x0 = intX(), y0 = intY(), z0 = intZ();
         List<Entity> ret = new ArrayList<Entity>();
-        List<EntityLiving> targets = world.getEntitiesWithinAABB(EntityLiving.class,
+        List<MobEntity> targets = world.getEntitiesWithinAABB(MobEntity.class,
                 new AxisAlignedBB(x0, y0, z0, x0 + 1, y0 + 1, z0 + 1));
         for (Entity e : targets)
         {
@@ -1514,12 +1514,12 @@ public class Vector3
         return vHat;
     }
 
-    public Vector3 offset(EnumFacing side)
+    public Vector3 offset(Direction side)
     {
         return add(Vector3.getNewVector().set(side));
     }
 
-    public Vector3 offsetBy(EnumFacing side)
+    public Vector3 offsetBy(Direction side)
     {
         return addTo(side.getFrontOffsetX(), side.getFrontOffsetY(), side.getFrontOffsetZ());
     }
@@ -1653,7 +1653,7 @@ public class Vector3
         return this;
     }
 
-    public Vector3 set(EnumFacing dir)
+    public Vector3 set(Direction dir)
     {
         this.x = dir.getFrontOffsetX();
         this.y = dir.getFrontOffsetY();
@@ -1694,9 +1694,9 @@ public class Vector3
             double[] d = (double[]) o;
             this.set(d[0], d[1], d[2]);
         }
-        else if (o instanceof EnumFacing)
+        else if (o instanceof Direction)
         {
-            EnumFacing side = (EnumFacing) o;
+            Direction side = (Direction) o;
             this.set(side.getFrontOffsetX(), side.getFrontOffsetY(), side.getFrontOffsetZ());
         }
         else if (o instanceof Vector3)
@@ -1708,9 +1708,9 @@ public class Vector3
             BlockPos c = (BlockPos) o;
             this.set(c.getX(), c.getY(), c.getZ());
         }
-        else if (o instanceof ICommandSender)
+        else if (o instanceof ICommandSource)
         {
-            ICommandSender c = (ICommandSender) o;
+            ICommandSource c = (ICommandSource) o;
             this.set(c.getPosition());
         }
         else if (o instanceof PathPoint)
@@ -1876,7 +1876,7 @@ public class Vector3
         data.writeDouble(z);
     }
 
-    public void writeToNBT(NBTTagCompound nbt, String tag)
+    public void writeToNBT(CompoundNBT nbt, String tag)
     {
         nbt.setDouble(tag + "x", x);
         nbt.setDouble(tag + "y", y);

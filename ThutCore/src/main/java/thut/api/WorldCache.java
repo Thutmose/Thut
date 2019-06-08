@@ -9,7 +9,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -120,7 +120,7 @@ public class WorldCache implements IBlockAccess
         {
             synchronized (world)
             {
-                return world.getChunkFromChunkCoords(chunkX, chunkZ);
+                return world.getChunk(chunkX, chunkZ);
             }
         }
         long key = asLong(chunkX, chunkZ);
@@ -136,7 +136,7 @@ public class WorldCache implements IBlockAccess
     }
 
     @Override
-    public int getStrongPower(BlockPos pos, EnumFacing direction)
+    public int getStrongPower(BlockPos pos, Direction direction)
     {
         return 0;
     }
@@ -173,7 +173,7 @@ public class WorldCache implements IBlockAccess
     }
 
     @Override
-    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+    public boolean isSideSolid(BlockPos pos, Direction side, boolean _default)
     {
         int l = (pos.getX() >> 4);
         int i1 = (pos.getZ() >> 4);

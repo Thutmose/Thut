@@ -13,11 +13,11 @@ import com.google.common.collect.Maps;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
+import net.minecraft.command.ICommandSource;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
 import thut.core.common.config.ConfigBase;
@@ -46,13 +46,13 @@ public class CommandConfig extends CommandBase
     }
 
     @Override
-    public boolean checkPermission(MinecraftServer server, ICommandSender sender)
+    public boolean checkPermission(MinecraftServer server, ICommandSource sender)
     {
         return true;
     }
 
     @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
+    public void execute(MinecraftServer server, ICommandSource sender, String[] args) throws CommandException
     {
         if (args.length == 0)
         {
@@ -158,7 +158,7 @@ public class CommandConfig extends CommandBase
         }
     }
 
-    private void handleSet(ICommandSender sender, String[] args, Object o, Field field) throws Exception
+    private void handleSet(ICommandSource sender, String[] args, Object o, Field field) throws Exception
     {
         int num = parseInt(args[2]);
         String value = args[3];
@@ -184,11 +184,11 @@ public class CommandConfig extends CommandBase
         {
             throw new CommandException("This can only by done for arrays.");
         }
-        sender.sendMessage(new TextComponentString("Changed index " + num + " from " + oldValue + " to " + value));
+        sender.sendMessage(new StringTextComponent("Changed index " + num + " from " + oldValue + " to " + value));
         config.updateField(field, toSet);
     }
 
-    private void handleAdd(ICommandSender sender, String[] args, Object o, Field field) throws Exception
+    private void handleAdd(ICommandSource sender, String[] args, Object o, Field field) throws Exception
     {
         String value = args[2];
         for (int i = 3; i < args.length; i++)
@@ -212,11 +212,11 @@ public class CommandConfig extends CommandBase
         {
             throw new CommandException("This can only by done for arrays.");
         }
-        sender.sendMessage(new TextComponentString("Added " + value + " to " + field.getName()));
+        sender.sendMessage(new StringTextComponent("Added " + value + " to " + field.getName()));
         config.updateField(field, toSet);
     }
 
-    private void handleRemove(ICommandSender sender, String[] args, Object o, Field field) throws Exception
+    private void handleRemove(ICommandSource sender, String[] args, Object o, Field field) throws Exception
     {
         String value = args[2];
         for (int i = 3; i < args.length; i++)
@@ -249,7 +249,7 @@ public class CommandConfig extends CommandBase
         {
             throw new CommandException("This can only by done for arrays.");
         }
-        sender.sendMessage(new TextComponentString("Removed " + value + " from " + field.getName()));
+        sender.sendMessage(new StringTextComponent("Removed " + value + " from " + field.getName()));
         config.updateField(field, toSet);
     }
 
@@ -266,7 +266,7 @@ public class CommandConfig extends CommandBase
     }
 
     @Override
-    public String getUsage(ICommandSender sender)
+    public String getUsage(ICommandSource sender)
     {
         return "/" + aliases.get(0) + "<option name> <optional:newvalue>";
     }
@@ -279,7 +279,7 @@ public class CommandConfig extends CommandBase
     }
 
     @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSource sender, String[] args, BlockPos pos)
     {
         List<String> ret = new ArrayList<String>();
         if (args.length == 1)

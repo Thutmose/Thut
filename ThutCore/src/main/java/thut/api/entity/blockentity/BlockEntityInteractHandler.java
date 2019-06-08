@@ -4,11 +4,11 @@ import javax.annotation.Nullable;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
@@ -27,18 +27,18 @@ public class BlockEntityInteractHandler
         theEntity = (Entity) entity;
     }
 
-    public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, @Nullable ItemStack stack,
-            EnumHand hand)
+    public EnumActionResult applyPlayerInteraction(PlayerEntity player, Vec3d vec, @Nullable ItemStack stack,
+            Hand hand)
     {
-        vec = vec.addVector(vec.x > 0 ? -0.01 : 0.01, vec.y > 0 ? -0.01 : 0.01, vec.z > 0 ? -0.01 : 0.01);
-        Vec3d playerPos = player.getPositionVector().addVector(0, player.isServerWorld() ? player.getEyeHeight() : 0,
+        vec = vec.add(vec.x > 0 ? -0.01 : 0.01, vec.y > 0 ? -0.01 : 0.01, vec.z > 0 ? -0.01 : 0.01);
+        Vec3d playerPos = player.getPositionVector().add(0, player.isServerWorld() ? player.getEyeHeight() : 0,
                 0);
         Vec3d start = playerPos;
         Vec3d end = playerPos.add(player.getLookVec().scale(4.5));
         RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start, end, blockEntity);
         BlockPos pos;
         float hitX, hitY, hitZ;
-        EnumFacing side = EnumFacing.DOWN;
+        Direction side = Direction.DOWN;
         if (trace == null)
         {
             pos = theEntity.getPosition();
@@ -89,7 +89,7 @@ public class BlockEntityInteractHandler
         return EnumActionResult.PASS;
     }
 
-    public boolean processInitialInteract(EntityPlayer player, @Nullable ItemStack stack, EnumHand hand)
+    public boolean processInitialInteract(PlayerEntity player, @Nullable ItemStack stack, Hand hand)
     {
         return false;
     }

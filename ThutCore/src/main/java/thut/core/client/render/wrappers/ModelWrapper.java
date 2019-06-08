@@ -12,8 +12,8 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.AnimationHelper;
@@ -122,7 +122,7 @@ public class ModelWrapper extends ModelBase implements IModel
             info.headPitch = headPitch;
             info.headYaw = netHeadYaw;
         }
-        transformGlobal(renderer.getAnimation(entityIn), entityIn, Minecraft.getMinecraft().getRenderPartialTicks(),
+        transformGlobal(renderer.getAnimation(entityIn), entityIn, Minecraft.getInstance().getRenderPartialTicks(),
                 netHeadYaw, headPitch);
     }
 
@@ -130,11 +130,11 @@ public class ModelWrapper extends ModelBase implements IModel
      * float params here are the same second and third as in the
      * setRotationAngles method. */
     @Override
-    public void setLivingAnimations(EntityLivingBase entityIn, float limbSwing, float limbSwingAmount,
+    public void setLivingAnimations(LivingEntity entityIn, float limbSwing, float limbSwingAmount,
             float partialTickTime)
     {
         if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
-                .modifyAnimation((EntityLiving) entityIn, partialTickTime, renderer.getAnimation(entityIn)), entityIn);
+                .modifyAnimation((MobEntity) entityIn, partialTickTime, renderer.getAnimation(entityIn)), entityIn);
         applyAnimation(entityIn, AnimationHelper.getHolder(entityIn), renderer, partialTickTime, limbSwing);
     }
 
