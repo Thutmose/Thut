@@ -491,7 +491,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public CompoundNBT writeToNBT(CompoundNBT par1)
     {
         super.writeToNBT(par1);
-        par1.setInteger("floor", floor);
+        par1.putInt("floor", floor);
         par1.putByteArray("sides", sides);
         par1.putByteArray("sidePages", sidePages);
         for (Direction face : Direction.HORIZONTALS)
@@ -519,7 +519,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             CompoundNBT state = new CompoundNBT();
             state.putString("K", copiedState.getBlock().getRegistryName().toString());
-            state.setInteger("M", copiedState.getBlock().getMetaFromState(copiedState));
+            state.putInt("M", copiedState.getBlock().getMetaFromState(copiedState));
             par1.setTag("state", state);
         }
         return par1;

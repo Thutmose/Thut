@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -32,7 +32,7 @@ public class SyncHandler
         if (event.getEntity().getEntityWorld().isRemote) return;
         DataSync data = getData(event.getEntity());
         if (data == null) return;
-        WorldServer world = (WorldServer) event.getEntity().getEntityWorld();
+        ServerWorld world = (ServerWorld) event.getEntity().getEntityWorld();
         Set<? extends PlayerEntity> players = world.getEntityTracker().getTrackingPlayers(event.getEntity());
         boolean sendSelf = event.getEntity() instanceof ServerPlayerEntity;
         List<ServerPlayerEntity> playerList = Lists.newArrayList();

@@ -1,6 +1,5 @@
 package thut.api;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,15 +23,6 @@ public class TickHandler
     private static TickHandler                 instance;
 
     public static int                          maxChanges = 200;
-
-    static Map<Thread, ArrayList<BlockChange>> lists      = Maps.newConcurrentMap();
-
-    public static void cleanup()
-    {
-        Thread thread = Thread.currentThread();
-        lists.remove(thread);
-        System.gc();
-    }
 
     public static TickHandler getInstance()
     {

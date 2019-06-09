@@ -9,22 +9,20 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -56,17 +54,16 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     Random                     r                 = new Random();
     public UUID                owner;
     public List<AxisAlignedBB> blockBoxes        = Lists.newArrayList();
-    public BlockState[][][]   blocks            = null;
+    public BlockState[][][]    blocks            = null;
     public TileEntity[][][]    tiles             = null;
     BlockEntityUpdater         collider;
     BlockEntityInteractHandler interacter;
 
-    public BlockEntityBase(World par1World)
+    public BlockEntityBase(EntityType<? extends LivingEntity> type, World par1World)
     {
-        super(par1World);
+        super(type, par1World);
         this.ignoreFrustumCheck = true;
         this.hurtResistantTime = 0;
-        this.isImmuneToFire = true;
     }
 
     @Override
@@ -79,9 +76,9 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         return fake_world;
     }
 
-    public BlockEntityBase(World world, double x, double y, double z)
+    public BlockEntityBase(EntityType<? extends LivingEntity> type, World world, double x, double y, double z)
     {
-        this(world);
+        this(type, world);
         this.setPosition(x, y, z);
         r.setSeed(100);
     }
@@ -164,7 +161,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     @Override
     public boolean canBeCollidedWith()
     {
-        return !this.isDead;
+        return this.isAlive();
     }
 
     /** Returns true if this entity should push and be pushed by other entities
@@ -199,7 +196,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
                 Entity entity = (Entity) list.get(i);
                 applyEntityCollision(entity);
                 if (entity instanceof ServerPlayerEntity
-                        && entity.getEntityBoundingBox().grow(2).intersects(getEntityBoundingBox()))
+                        && entity.getBoundingBox().grow(2).intersects(getBoundingBox()))
                 {
                     hasPassenger = true;
                 }
@@ -218,24 +215,12 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         BlockPos max = getMax();
         float xDiff = (max.getX() - min.getX()) / 2f;
         float zDiff = (max.getZ() - min.getZ()) / 2f;
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+        AxisAlignedBB axisalignedbb = this.getBoundingBox();
         if ((xDiff % 1) != 0) this.posX = (axisalignedbb.minX + xDiff);
         else this.posX = (axisalignedbb.minX + axisalignedbb.maxX) / 2.0D;
         this.posY = axisalignedbb.minY;
         if (zDiff % 1 != 0) this.posZ = (axisalignedbb.minZ + zDiff);
         else this.posZ = (axisalignedbb.minZ + axisalignedbb.maxZ) / 2.0D;
-    }
-
-    @Override
-    protected void entityInit()
-    {
-        super.entityInit();
-    }
-
-    /** returns the bounding box for this entity */
-    public AxisAlignedBB getBoundingBox()
-    {
-        return null;
     }
 
     /** Checks if the entity's current position is a valid location to spawn
@@ -249,7 +234,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
 
     @Override
     /** Applies the given player interaction to this Entity. */
-    public EnumActionResult applyPlayerInteraction(PlayerEntity player, Vec3d vec, Hand hand)
+    public ActionResultType applyPlayerInteraction(PlayerEntity player, Vec3d vec, Hand hand)
     {
         if (interacter == null) interacter = createInteractHandler();
         try
@@ -272,7 +257,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     }
 
     @Override
-    public boolean isPotionApplicable(PotionEffect par1PotionEffect)
+    public boolean isPotionApplicable(EffectInstance par1EffectInstance)
     {
         return false;
     }
@@ -282,7 +267,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     abstract protected void onGridAlign();
 
     @Override
-    public void onUpdate()
+    public void tick()
     {
         if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
         if (collider == null)
@@ -296,9 +281,9 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         this.prevPosZ = this.posZ;
         collider.onUpdate();
         accelerate();
-        int dy = (int) ((motionY) * 16);
-        int dx = (int) ((motionX) * 16);
-        int dz = (int) ((motionZ) * 16);
+        int dy = (int) ((getMotion().x) * 16);
+        int dx = (int) ((getMotion().y) * 16);
+        int dz = (int) ((getMotion().z) * 16);
         if (toMoveY || toMoveX || toMoveZ)
         {
             doMotion();
@@ -315,10 +300,9 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         checkCollision();
     }
 
-    @SuppressWarnings("deprecation")
     public void readBlocks(CompoundNBT nbt)
     {
-        if (nbt.hasKey("Blocks"))
+        if (nbt.contains("Blocks"))
         {
             CompoundNBT blockTag = nbt.getCompound("Blocks");
             int sizeX = blockTag.getInt("BlocksLengthX");
@@ -329,43 +313,22 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
                 sizeX = sizeZ = nbt.getInt("BlocksLength");
             }
             if (sizeY == 0) sizeY = 1;
-            int version = blockTag.getInt("v");
             blocks = new BlockState[sizeX][sizeY][sizeZ];
             tiles = new TileEntity[sizeX][sizeY][sizeZ];
             for (int i = 0; i < sizeX; i++)
                 for (int k = 0; k < sizeY; k++)
                     for (int j = 0; j < sizeZ; j++)
                     {
-                        int n = -1;
-                        if (blockTag.hasKey("I" + i + "," + j))
-                        {
-                            n = blockTag.getInt("I" + i + "," + j);
-                        }
-                        else if (blockTag.hasKey("I" + i + "," + k + "," + j))
-                        {
-                            n = blockTag.getInt("I" + i + "," + k + "," + j);
-                        }
-                        if (n == -1) continue;
-                        BlockState state;
-                        if (version == 0)
-                        {
-                            Block b = Block.getBlockFromItem(Item.getItemById(n));
-                            int meta = blockTag.getInt("M" + i + "," + k + "," + j);
-                            state = b.getStateFromMeta(meta);
-                        }
-                        else
-                        {
-                            Block b = Block.getBlockById(n);
-                            int meta = blockTag.getInt("M" + i + "," + k + "," + j);
-                            state = b.getStateFromMeta(meta);
-                        }
+                        String name = "B" + i + "," + k + "," + j;
+                        if (!blockTag.contains(name)) continue;
+                        BlockState state = NBTUtil.readBlockState(blockTag.getCompound(name));
                         blocks[i][k][j] = state;
-                        if (blockTag.hasKey("T" + i + "," + k + "," + j))
+                        if (blockTag.contains("T" + i + "," + k + "," + j))
                         {
                             try
                             {
                                 CompoundNBT tag = blockTag.getCompound("T" + i + "," + k + "," + j);
-                                tiles[i][k][j] = IBlockEntity.BlockEntityFormer.makeTile(tag);
+                                tiles[i][k][j] = TileEntity.create(tag);
                             }
                             catch (Exception e)
                             {
@@ -380,10 +343,10 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     }
 
     @Override
-    public void readEntityFromNBT(CompoundNBT nbt)
+    public void readAdditional(CompoundNBT nbt)
     {
-        super.readEntityFromNBT(nbt);
-        if (nbt.hasKey("bounds"))
+        super.readAdditional(nbt);
+        if (nbt.contains("bounds"))
         {
             CompoundNBT bounds = nbt.getCompound("bounds");
             boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
@@ -393,14 +356,14 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     }
 
     @Override
-    public void readSpawnData(ByteBuf data)
+    public void readSpawnData(PacketBuffer data)
     {
         PacketBuffer buff = new PacketBuffer(data);
         CompoundNBT tag = new CompoundNBT();
         try
         {
             tag = buff.readCompoundTag();
-            readEntityFromNBT(tag);
+            readAdditional(tag);
         }
         catch (Exception e)
         {
@@ -410,19 +373,20 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
 
     /** Will get destroyed next tick. */
     @Override
-    public void setDead()
+    public void remove()
     {
-        if (!getEntityWorld().isRemote && !this.isDead && this.addedToChunk && shouldRevert)
+        if (!getEntityWorld().isRemote && this.isAlive() && shouldRevert)
         {
             IBlockEntity.BlockEntityFormer.RevertEntity(this);
         }
-        super.setDead();
+        super.remove();
     }
 
     @Override
-    public void setDropItemsWhenDead(boolean dropWhenDead)
+    public void remove(boolean keepData)
     {
-        shouldRevert = dropWhenDead;
+        shouldRevert = !keepData;
+        super.remove(keepData);
     }
 
     @Override
@@ -437,10 +401,9 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         if (blocks != null)
         {
             CompoundNBT blocksTag = new CompoundNBT();
-            blocksTag.setInteger("BlocksLengthX", blocks.length);
-            blocksTag.setInteger("BlocksLengthY", blocks[0].length);
-            blocksTag.setInteger("BlocksLengthZ", blocks[0][0].length);
-            blocksTag.setInteger("v", 1);
+            blocksTag.putInt("BlocksLengthX", blocks.length);
+            blocksTag.putInt("BlocksLengthY", blocks[0].length);
+            blocksTag.putInt("BlocksLengthZ", blocks[0][0].length);
             int sizeX = blocks.length;
             int sizeY = blocks[0].length;
             int sizeZ = blocks[0][0].length;
@@ -452,16 +415,14 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
                     {
                         BlockState b = blocks[i][k][j];
                         if (b == null) continue;
-                        blocksTag.setInteger("I" + i + "," + k + "," + j, Block.getIdFromBlock(b.getBlock()));
-                        blocksTag.setInteger("M" + i + "," + k + "," + j, b.getBlock().getMetaFromState(b));
+                        blocksTag.put("B" + i + "," + k + "," + j, NBTUtil.writeBlockState(b));
                         try
                         {
                             if (tiles[i][k][j] != null)
                             {
-
                                 CompoundNBT tag = new CompoundNBT();
-                                tag = tiles[i][k][j].writeToNBT(tag);
-                                blocksTag.setTag("T" + i + "," + k + "," + j, tag);
+                                tag = tiles[i][k][j].write(tag);
+                                blocksTag.put("T" + i + "," + k + "," + j, tag);
                             }
                         }
                         catch (Exception e)
@@ -471,14 +432,14 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
                     }
                 }
             }
-            nbt.setTag("Blocks", blocksTag);
+            nbt.put("Blocks", blocksTag);
         }
     }
 
     @Override
-    public void writeEntityToNBT(CompoundNBT nbt)
+    public void writeAdditional(CompoundNBT nbt)
     {
-        super.writeEntityToNBT(nbt);
+        super.writeAdditional(nbt);
         CompoundNBT vector = new CompoundNBT();
         vector.putDouble("minx", boundMin.getX());
         vector.putDouble("miny", boundMin.getY());
@@ -486,7 +447,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         vector.putDouble("maxx", boundMax.getX());
         vector.putDouble("maxy", boundMax.getY());
         vector.putDouble("maxz", boundMax.getZ());
-        nbt.setTag("bounds", vector);
+        nbt.put("bounds", vector);
         try
         {
             writeBlocks(nbt);
@@ -498,11 +459,11 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     }
 
     @Override
-    public void writeSpawnData(ByteBuf data)
+    public void writeSpawnData(PacketBuffer data)
     {
         PacketBuffer buff = new PacketBuffer(data);
         CompoundNBT tag = new CompoundNBT();
-        writeEntityToNBT(tag);
+        writeAdditional(tag);
         buff.writeCompoundTag(tag);
     }
 
@@ -525,17 +486,6 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     public Iterable<ItemStack> getArmorInventoryList()
     {
         return Lists.newArrayList();
-    }
-
-    @Override
-    public ItemStack getItemStackFromSlot(EntityEquipmentSlot slotIn)
-    {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public void setItemStackToSlot(EntityEquipmentSlot slotIn, ItemStack stack)
-    {
     }
 
     @Override

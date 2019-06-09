@@ -1,14 +1,10 @@
 package thut.api.entity.blockentity;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -18,15 +14,16 @@ import com.google.common.collect.Sets;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
 
 public interface IBlockEntity
@@ -42,7 +39,7 @@ public interface IBlockEntity
                                                             @Override
                                                             public void preBlockRemoval(TileEntity tileIn)
                                                             {
-                                                                tileIn.invalidate();
+                                                                tileIn.remove();
                                                             }
 
                                                             @Override
@@ -91,11 +88,11 @@ public interface IBlockEntity
 
     public static class BlockEntityFormer
     {
-        private static final Logger LOGGER = LogManager.getLogger();
-
         public static RayTraceResult rayTraceInternal(Vec3d start, Vec3d end, IBlockEntity toTrace)
         {
-            return toTrace.getFakeWorld().rayTraceBlocks(start, end, false, true, false);
+            RayTraceContext context = new RayTraceContext(start, end, RayTraceContext.BlockMode.COLLIDER,
+                    RayTraceContext.FluidMode.NONE, (Entity) toTrace);
+            return toTrace.getFakeWorld().func_217299_a(context);
         }
 
         public static void removeBlocks(World world, BlockPos min, BlockPos max, BlockPos pos)
@@ -130,7 +127,6 @@ public interface IBlockEntity
                         if (tile != null)
                         {
                             tileHandler = getRemover(tile);
-                            System.out.println(tile.isInvalid() + " " + tile + " " + tile.getWorld());
                         }
                         world.setBlockState(temp, Blocks.AIR.getDefaultState(), 2);
                         if (tileHandler != null) tileHandler.postBlockRemoval(tile);
@@ -196,12 +192,12 @@ public interface IBlockEntity
                             if (tile != null)
                             {
                                 TileEntity newTile = entity.getEntityWorld().getTileEntity(pos);
-                                if (newTile != null) newTile.readFromNBT(tile.writeToNBT(new CompoundNBT()));
+                                if (newTile != null) newTile.read(tile.write(new CompoundNBT()));
                             }
                         }
                     }
             List<Entity> possibleInside = entity.getEntityWorld().getEntitiesWithinAABBExcludingEntity(entity,
-                    entity.getEntityBoundingBox());
+                    entity.getBoundingBox());
             for (Entity e : possibleInside)
             {
                 e.setPosition(e.posX, e.posY + 0.25, e.posZ);
@@ -226,63 +222,11 @@ public interface IBlockEntity
                         if (old != null)
                         {
                             CompoundNBT tag = new CompoundNBT();
-                            tag = old.writeToNBT(tag);
-                            ret[i - xMin][j - yMin][k - zMin] = makeTile(tag);
+                            tag = old.write(tag);
+                            ret[i - xMin][j - yMin][k - zMin] = TileEntity.create(tag);
                         }
                     }
             return ret;
-        }
-
-        @SuppressWarnings("deprecation")
-        public static TileEntity makeTile(CompoundNBT compound)
-        {
-            TileEntity tileentity = null;
-            String s = compound.getString("id");
-            Class<? extends TileEntity> oclass = null;
-
-            try
-            {
-                Field F = TileEntity.class.getDeclaredFields()[1];
-                F.setAccessible(true);
-                @SuppressWarnings("unchecked")
-                RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> registry = (RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>) F
-                        .get(null);
-                oclass = registry.getObject(new ResourceLocation(s));
-
-                if (oclass != null)
-                {
-                    tileentity = oclass.newInstance();
-                }
-            }
-            catch (Throwable throwable1)
-            {
-                LOGGER.error("Failed to create block entity " + s, throwable1);
-                net.minecraftforge.fml.common.FMLLog.log(org.apache.logging.log4j.Level.ERROR, throwable1,
-                        "A TileEntity %s(%s) has thrown an exception during loading, its state cannot be restored. Report this to the mod author",
-                        s, oclass.getName());
-            }
-
-            if (tileentity != null)
-            {
-                try
-                {
-                    tileentity.readFromNBT(compound);
-                }
-                catch (Throwable throwable)
-                {
-                    LOGGER.error("Failed to load data for block entity " + s, throwable);
-                    net.minecraftforge.fml.common.FMLLog.log(org.apache.logging.log4j.Level.ERROR, throwable,
-                            "A TileEntity %s(%s) has thrown an exception during loading, its state cannot be restored. Report this to the mod author",
-                            s, oclass.getName());
-                    tileentity = null;
-                }
-            }
-            else
-            {
-                LOGGER.warn("Skipping BlockEntity with id " + s);
-            }
-
-            return tileentity;
         }
 
         public static <T extends Entity> T makeBlockEntity(World world, BlockPos min, BlockPos max, BlockPos pos,
@@ -315,7 +259,7 @@ public interface IBlockEntity
             entity.setMin(min);
             entity.setMax(max);
             removeBlocks(world, min, max, pos);
-            world.spawnEntity(ret);
+            world.func_217376_c(ret);
             return ret;
         }
     }
@@ -339,6 +283,8 @@ public interface IBlockEntity
     BlockEntityWorld getFakeWorld();
 
     void setFakeWorld(BlockEntityWorld world);
+
+    void setSize(EntitySize size);
 
     default boolean shouldHide(BlockPos pos)
     {

@@ -40,7 +40,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraftforge.fluids.Fluid;
-import thut.lib.CompatWrapper;
 
 /** @author Thutmose */
 public class Vector3
@@ -1627,27 +1626,6 @@ public class Vector3
             chunk.setBiomes(biomes);
             chunk.markDirty();
         }
-    }
-
-    public boolean setBlock(World world, Block id)
-    {
-        return setBlock(world, id, 0, 3);
-    }
-
-    // */
-    public boolean setBlock(World world, Block id, int meta)
-    {
-        return setBlock(world, id, meta, 3);
-    }
-
-    public boolean setBlock(World world, Block id, int meta, int flag)
-    {
-        if (doChunksExist(world, 1))
-        {
-            world.setBlockState(getPos(), CompatWrapper.getBlockStateFromMeta(id, meta), flag);
-            return true;
-        }
-        return false;
     }
 
     public void setBlock(World world, BlockState defaultState)

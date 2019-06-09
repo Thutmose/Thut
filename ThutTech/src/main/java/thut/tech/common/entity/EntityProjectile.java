@@ -154,7 +154,7 @@ public class EntityProjectile extends EntityFallingBlock
         Matrix3.expandAABBs(aabbs, box);
         Matrix3.mergeAABBs(aabbs, 0.01, 0.01, 0.01);
         Vector3 diffs = Vector3.getNewVector().set(x, y, z);
-        mainBox.set(getEntityBoundingBox());
+        mainBox.set(getBoundingBox());
         diffs.set(mainBox.doTileCollision(world, aabbs, this, Vector3.empty, diffs, false));
         boolean lock = false;
         if (diffs.x != x || diffs.y != y || diffs.z != z)

@@ -55,7 +55,7 @@ public class RenderLift extends RenderBlockEntity<LivingEntity>
             if (entity != null && entity instanceof EntityLift && entity != mc.player
                     && entity.isInRangeToRender3d(renderingVector.getX(), renderingVector.getY(),
                             renderingVector.getZ())
-                    && (entity.ignoreFrustumCheck || frustum.isBoundingBoxInFrustum(entity.getEntityBoundingBox()))
+                    && (entity.ignoreFrustumCheck || frustum.isBoundingBoxInFrustum(entity.getBoundingBox()))
                     && entity.isEntityAlive() && entity.getRecursivePassengers().isEmpty())
                 try
                 {

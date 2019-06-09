@@ -16,8 +16,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +32,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.maths.Vector3;
-import thut.lib.CompatWrapper;
 
 public class ExplosionCustom extends Explosion
 {
@@ -298,18 +297,8 @@ public class ExplosionCustom extends Explosion
             world.setBlockState(pos, Blocks.AIR.getDefaultState());
             return;
         }
-        float resistance = destroyed.getBlock().getExplosionResistance(destroyed, world, pos, exploder, this);
-        if (melt == null) melt = Blocks.AIR;
-        if (dust == null) dust = Blocks.AIR;
-        if (resistance > 2 && !destroyed.getMaterial().isLiquid())
-        {
-            int meta = (int) Math.min(resistance / 2, 15);
-            world.setBlockState(pos, CompatWrapper.getBlockStateFromMeta(melt, meta));
-        }
-        else
-        {
-            world.setBlockState(pos, dust.getDefaultState());
-        }
+        // TODO re-implement dust/melt at some point?
+        world.setBlockState(pos, Blocks.AIR.getDefaultState());
     }
 
     // TODO figure out a good way to clear these between each set of shells.

@@ -53,8 +53,8 @@ public class PacketHandler
         ITerrainProvider provider = world.getChunk(pos.x, pos.z)
                 .getCapability(CapabilityTerrain.TERRAIN_CAP, null);
         CompoundNBT terrainData = (CompoundNBT) CapabilityTerrain.TERRAIN_CAP.writeNBT(provider, null);
-        terrainData.setInteger("c_x", pos.x);
-        terrainData.setInteger("c_z", pos.z);
+        terrainData.putInt("c_x", pos.x);
+        terrainData.putInt("c_z", pos.z);
         MessageClient message = new MessageClient(MessageClient.TERRAINSYNC, terrainData);
         PacketHandler.packetPipeline.sendTo(message, player);
     }
@@ -436,7 +436,7 @@ public class PacketHandler
         CompoundNBT tag = new CompoundNBT();
         for (Integer i : values.keySet())
         {
-            tag.setInteger(values.get(i), i);
+            tag.putInt(values.get(i), i);
         }
         MessageClient message = new MessageClient(MessageClient.TERRAINVALUES, tag);
         packetPipeline.sendTo(message, player);

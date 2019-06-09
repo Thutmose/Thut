@@ -13,11 +13,11 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
@@ -278,7 +278,7 @@ public class EntityLift extends BlockEntityBase
     }
 
     @Override
-    public boolean isPotionApplicable(PotionEffect par1PotionEffect)
+    public boolean isPotionApplicable(EffectInstance par1EffectInstance)
     {
         return false;
     }
@@ -391,9 +391,9 @@ public class EntityLift extends BlockEntityBase
         {
             world = ((BlockEntityWorld) world).getWorld();
         }
-        if (world instanceof WorldServer)
+        if (world instanceof ServerWorld)
         {
-            WorldServer worlds = (WorldServer) world;
+            ServerWorld worlds = (ServerWorld) world;
             Entity entity = worlds.getEntityFromUuid(liftID);
             if (entity instanceof EntityLift) return (EntityLift) entity;
         }

@@ -85,7 +85,7 @@ public class Info_Impl implements Info
 //            nbt.putFloat(key, (float) value);
 //            return;
 //        case "I":
-//            nbt.setInteger(key, (int) value);
+//            nbt.putInt(key, (int) value);
 //            return;
 //        case "[I":
 //            nbt.putIntArray(key, (int[]) value);

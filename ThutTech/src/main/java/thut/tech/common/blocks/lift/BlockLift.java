@@ -22,7 +22,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import net.minecraft.world.chunk.BlockStateContainer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -235,7 +235,7 @@ public class BlockLift extends Block implements ITileEntityProvider
                     if (!worldIn.isRemote)
                     {
                         te.setSide(side, !te.isSideOn(side));
-                        if (worldIn instanceof WorldServer) te.sendUpdate((ServerPlayerEntity) playerIn);
+                        if (worldIn instanceof ServerWorld) te.sendUpdate((ServerPlayerEntity) playerIn);
                     }
                     return true;
                 }

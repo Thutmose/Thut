@@ -8,7 +8,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
@@ -39,14 +39,14 @@ public abstract class CompatItem extends Item
     public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, PlayerEntity playerIn,
             Hand hand)
     {
-        return new ActionResult<>(EnumActionResult.PASS, itemStackIn);
+        return new ActionResult<>(ActionResultType.PASS, itemStackIn);
     }
 
     // 1.10
-    public EnumActionResult onItemUse(ItemStack stack, PlayerEntity playerIn, World worldIn, BlockPos pos,
+    public ActionResultType onItemUse(ItemStack stack, PlayerEntity playerIn, World worldIn, BlockPos pos,
             Hand hand, Direction facing, float hitX, float hitY, float hitZ)
     {
-        return EnumActionResult.PASS;
+        return ActionResultType.PASS;
     }
 
     // 1.11
@@ -58,7 +58,7 @@ public abstract class CompatItem extends Item
 
     // 1.11
     @Override
-    public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand,
+    public ActionResultType onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand,
             Direction side, float hitX, float hitY, float hitZ)
     {
         return onItemUse(playerIn.getHeldItem(hand), playerIn, worldIn, pos, hand, side, hitX, hitY, hitZ);

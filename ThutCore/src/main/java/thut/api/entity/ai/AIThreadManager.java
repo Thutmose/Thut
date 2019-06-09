@@ -2,26 +2,13 @@ package thut.api.entity.ai;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Queue;
-import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
-import net.minecraftforge.fml.common.thread.SidedThreadGroups;
-import thut.api.TickHandler;
 import thut.api.entity.genetics.IMobGenetics;
 import thut.core.common.ThutCore;
 
@@ -123,89 +110,7 @@ public class AIThreadManager
         }
     }
 
-    public static class AIThread extends Thread
-    {
-        public static int                        threadCount = 1;
-
-        public static HashMap<Integer, AIThread> threads     = Maps.newHashMap();
-
-        public static void createThreads()
-        {
-            threadCount = Math.min(threadCount, Runtime.getRuntime().availableProcessors());
-            aiStuffLists = new Queue[threadCount];
-            logger.log(Level.INFO, "Creating and starting " + threadCount + " Mob AI Threads.");
-            for (int i = 0; i < threadCount; i++)
-            {
-                Queue<AIStuff> set = Queues.newConcurrentLinkedQueue();
-                AIThread thread = new AIThread(i, set, new Object());
-                aiStuffLists[i] = set;
-                thread.setPriority(8);
-                thread.start();
-            }
-        }
-
-        public final Queue<AIStuff> aiStuff;
-        public final Object         lock;
-        final int                   id;
-
-        public AIThread(final int number, final Queue<AIStuff> aiStuff, final Object lock)
-        {// TODO see if adding the threadgroup breaks anything...
-            super(SidedThreadGroups.SERVER, new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    int id;
-                    Thread thread = Thread.currentThread();
-                    if (!(thread instanceof AIThread))
-                    {
-                        new ClassCastException("wrong thread type").printStackTrace();
-                        return;
-                    }
-                    id = number;
-                    logger.log(Level.INFO, "This is Thread " + id);
-                    while (true)
-                    {
-                        // Wait for the lock to be notified from the main
-                        // thread.
-                        synchronized (lock)
-                        {
-                            try
-                            {
-                                lock.wait();
-                            }
-                            catch (Exception e)
-                            {
-                                logger.log(Level.SEVERE, "Error waiting on lock", e);
-                            }
-                        }
-                        // After being notified, run though all of the scheduled
-                        // AIStuffs to tick.
-                        synchronized (aiStuff)
-                        {
-                            while (!aiStuff.isEmpty())
-                                aiStuff.remove().tick();
-                        }
-                    }
-                }
-            });
-            this.lock = lock;
-            id = number;
-            this.aiStuff = aiStuff;
-            this.setName("Netty Server IO - Mob AI Thread-" + id);
-            threads.put(id, this);
-        }
-
-    }
-
     public static Logger                                           logger;
-
-    /** Lists of the AI stuff for each thread. */
-    private static Queue<AIStuff>[]                                aiStuffLists;
-    /** Map of dimension to players, used for thread-safe player access. */
-    public static final HashMap<Integer, Vector<Object>>           worldPlayers  = new HashMap<Integer, Vector<Object>>();
-
-    public static final ConcurrentHashMap<Integer, Vector<Entity>> worldEntities = new ConcurrentHashMap<Integer, Vector<Entity>>();
 
     /** Used for sorting the AI runnables for run order. */
     public static final Comparator<IAIRunnable>                    aiComparator  = new Comparator<IAIRunnable>()
@@ -236,148 +141,10 @@ public class AIThreadManager
         return task.shouldRun();
     }
 
-    /** Clears things for world unload */
-    public static void clear()
-    {
-        /** This can be null if server was started with multithreaded AI
-         * disabled. */
-        if (aiStuffLists != null) for (Queue v : aiStuffLists)
-        {
-            v.clear();
-        }
-        worldPlayers.clear();
-        TickHandler.getInstance().worldCaches.clear();
-    }
-
-    /** Sets the AIStuff to tick on correct thread. the Queue is locked when
-     * reading, so this will wait instead of causing a CME
-     * 
-     * @param blockEntity
-     * @param task */
-    public static void scheduleAITick(AIStuff ai)
-    {
-        if (!ThutCore.instance.config.multithreadedAI) { return; }
-
-        int id = ai.entity.getEntityId() % AIThread.threadCount;
-        AIThread thread = AIThread.threads.get(id);
-        thread.aiStuff.add(ai);
-    }
-
     @SubscribeEvent
-    public void tickEvent(WorldTickEvent evt)
+    public void updateGenes(LivingUpdateEvent event)
     {
-        // At the start, refresh the player lists.
-        if (evt.phase == Phase.START)
-        {
-            Vector players = worldPlayers.get(evt.world.dimension.getDimension());
-            if (players == null)
-            {
-                players = new Vector();
-            }
-            players.clear();
-            players.addAll(evt.world.playerEntities);
-            worldPlayers.put(evt.world.dimension.getDimension(), players);
-            Vector<Entity> entities = worldEntities.get(evt.world.dimension.getDimension());
-            if (entities == null)
-            {
-                entities = new Vector<Entity>();
-            }
-            entities.clear();
-            entities.addAll(evt.world.loadedEntityList);
-            worldEntities.put(evt.world.dimension.getDimension(), entities);
-        }
-    }
-
-    /** AI Ticks at the end of the server tick.
-     * 
-     * @param evt */
-    @SubscribeEvent
-    public void tickEventServer(ServerTickEvent evt)
-    {
-        if (evt.phase == Phase.END)
-        {
-            // Loop through the threads, and notify the locks. this makes them
-            // run the AI Ticks that were scheduled this tick
-            for (AIThread thread : AIThread.threads.values())
-            {
-                try
-                {
-                    synchronized (thread.lock)
-                    {
-                        thread.lock.notify();
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.log(Level.SEVERE, "Error ticking AI stuff", e);
-                }
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void LivingUpdate(LivingUpdateEvent event)
-    {
-        IAIMob mob = null;
-        AIStuff ai = null;
-        if (event.getEntity() instanceof IAIMob)
-        {
-            mob = ((IAIMob) event.getEntity());
-            ai = mob.getAI();
-        }
-        else if (event.getEntity().hasCapability(IAIMob.THUTMOBAI, null))
-        {
-            mob = event.getEntity().getCapability(IAIMob.THUTMOBAI, null);
-            ai = mob.getAI();
-        }
-        if (mob != null && mob.vanillaWrapped())
-        {
-            // Manually run this client side, since the normal AI doesn't
-            // actually run.
-            if (event.getEntity().world.isRemote)
-            {
-                for (int i = 0; i < ai.aiLogic.size(); i++)
-                {
-                    ILogicRunnable runnable = (ILogicRunnable) ai.aiLogic.get(i);
-                    try
-                    {
-                        runnable.doLogic();
-                    }
-                    catch (Exception e)
-                    {
-                        logger.log(Level.SEVERE, "error executing " + runnable, e);
-                    }
-                }
-                for (ILogicRunnable logic : ai.aiLogic)
-                {
-                    logic.doServerTick(event.getEntity().getEntityWorld());
-                }
-            }
-            return;
-        }
-
-        IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null);
+        IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null).orElse(null);
         if (genes != null) genes.onUpdateTick(event.getEntity());
-
-        // If not IAIMob, or self managed, then no need to run AI stuff.
-        if (mob == null || mob.selfManaged() || ai == null) return;
-        // Run the ILogicRunnables on both server and client side.
-        for (ILogicRunnable logic : ai.aiLogic)
-        {
-            logic.doServerTick(event.getEntity().getEntityWorld());
-        }
-        // Run remainder if AI server side only.
-        if (!event.getEntity().getEntityWorld().isRemote)
-            updateEntityActionState((MobEntity) event.getEntity(), ai);
-    }
-
-    protected void updateEntityActionState(MobEntity mob, AIStuff ai)
-    {
-        mob.getEntityWorld().profiler.startSection("custom_ai");
-        // Run Tick results from AI stuff.
-        ai.runServerThreadTasks(mob.getEntityWorld());
-        // Schedule AIStuff to tick for next tick.
-        AIThreadManager.scheduleAITick(ai);
-        mob.getEntityWorld().profiler.endSection();
     }
 }

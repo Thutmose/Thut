@@ -995,17 +995,95 @@ public class Matrix3
 
     private double xOffset(AxisAlignedBB box, AxisAlignedBB aabb, double x)
     {
-        return box.calculateXOffset(aabb, x);
+        if (aabb.maxY > box.minY && aabb.minY < box.maxY && aabb.maxZ > box.minZ && aabb.minZ < box.maxZ)
+        {
+            if (x > 0.0D && aabb.maxX <= box.minX)
+            {
+                double d1 = box.minX - aabb.maxX;
+
+                if (d1 < x)
+                {
+                    x = d1;
+                }
+            }
+            else if (x < 0.0D && aabb.minX >= box.maxX)
+            {
+                double d0 = box.maxX - aabb.minX;
+
+                if (d0 > x)
+                {
+                    x = d0;
+                }
+            }
+
+            return x;
+        }
+        else
+        {
+            return x;
+        }
     }
 
     private double yOffset(AxisAlignedBB box, AxisAlignedBB aabb, double x)
     {
-        return box.calculateYOffset(aabb, x);
+        if (aabb.maxX > box.minX && aabb.minX < box.maxX && aabb.maxZ > box.minZ && aabb.minZ < box.maxZ)
+        {
+            if (x > 0.0D && aabb.maxY <= box.minY)
+            {
+                double d1 = box.minY - aabb.maxY;
+
+                if (d1 < x)
+                {
+                    x = d1;
+                }
+            }
+            else if (x < 0.0D && aabb.minY >= box.maxY)
+            {
+                double d0 = box.maxY - aabb.minY;
+
+                if (d0 > x)
+                {
+                    x = d0;
+                }
+            }
+
+            return x;
+        }
+        else
+        {
+            return x;
+        }
     }
 
     private double zOffset(AxisAlignedBB box, AxisAlignedBB aabb, double x)
     {
-        return box.calculateZOffset(aabb, x);
+        if (aabb.maxX > box.minX && aabb.minX < box.maxX && aabb.maxY > box.minY && aabb.minY < box.maxY)
+        {
+            if (x > 0.0D && aabb.maxZ <= box.minZ)
+            {
+                double d1 = box.minZ - aabb.maxZ;
+
+                if (d1 < x)
+                {
+                    x = d1;
+                }
+            }
+            else if (x < 0.0D && aabb.minZ >= box.maxZ)
+            {
+                double d0 = box.maxZ - aabb.minZ;
+
+                if (d0 > x)
+                {
+                    x = d0;
+                }
+            }
+
+            return x;
+        }
+        else
+        {
+            return x;
+        }
     }
 
     public boolean doTileCollision(IBlockReader world, List<AxisAlignedBB> aabbs, Vector3 location, Entity e,

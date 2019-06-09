@@ -15,7 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -163,7 +163,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.toobig";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message));
-                return new ActionResult<>(EnumActionResult.PASS, itemstack);
+                return new ActionResult<>(ActionResultType.PASS, itemstack);
             }
             int num = (dw + 1) * (max.getY() - min.getY() + 1);
             int count = 0;
@@ -180,7 +180,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.noblock";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, num));
-                return new ActionResult<>(EnumActionResult.PASS, itemstack);
+                return new ActionResult<>(ActionResultType.PASS, itemstack);
             }
             else if (!playerIn.capabilities.isCreativeMode)
             {
@@ -197,18 +197,18 @@ public class ItemLinker extends Item
             }
             itemstack.getTag().remove("min");
         }
-        return new ActionResult<>(EnumActionResult.PASS, itemstack);
+        return new ActionResult<>(ActionResultType.PASS, itemstack);
     }
 
     // 1.11
-    public EnumActionResult onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand,
+    public ActionResultType onItemUse(PlayerEntity playerIn, World worldIn, BlockPos pos, Hand hand,
             Direction side, float hitX, float hitY, float hitZ)
     {
         return onItemUse(playerIn.getHeldItem(hand), playerIn, worldIn, pos, hand, side, hitX, hitY, hitZ);
     }
 
     // 1.10
-    public EnumActionResult onItemUse(ItemStack stack, PlayerEntity playerIn, World worldIn, BlockPos pos,
+    public ActionResultType onItemUse(ItemStack stack, PlayerEntity playerIn, World worldIn, BlockPos pos,
             Hand hand, Direction facing, float hitX, float hitY, float hitZ)
     {
         if (stack.getTag() == null) stack.setTag(new CompoundNBT());
@@ -221,7 +221,7 @@ public class ItemLinker extends Item
             stack.getTag().setTag("min", min);
             String message = "msg.lift.setcorner";
             if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, pos));
-            return EnumActionResult.SUCCESS;
+            return ActionResultType.SUCCESS;
         }
         else if (playerIn.isSneaking() && stack.hasTag() && stack.getTag().hasKey("min"))
         {
@@ -240,7 +240,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.toobig";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message));
-                return EnumActionResult.FAIL;
+                return ActionResultType.FAIL;
             }
             int num = (dw + 1) * (max.getY() - min.getY() + 1);
             int count = 0;
@@ -257,7 +257,7 @@ public class ItemLinker extends Item
             {
                 String message = "msg.lift.noblock";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, num));
-                return EnumActionResult.FAIL;
+                return ActionResultType.FAIL;
             }
             else if (!playerIn.capabilities.isCreativeMode)
             {
@@ -273,12 +273,12 @@ public class ItemLinker extends Item
                 playerIn.sendMessage(new TranslationTextComponent(message));
             }
             stack.getTag().remove("min");
-            return EnumActionResult.SUCCESS;
+            return ActionResultType.SUCCESS;
         }
 
         if (stack.getTag() == null)
         {
-            return EnumActionResult.PASS;
+            return ActionResultType.PASS;
         }
         else
         {
@@ -289,7 +289,7 @@ public class ItemLinker extends Item
             {
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                 te.setSide(facing, true);
-                return EnumActionResult.SUCCESS;
+                return ActionResultType.SUCCESS;
             }
 
             UUID liftID;
@@ -314,7 +314,7 @@ public class ItemLinker extends Item
                     if (floor >= 64) floor = 64 - floor;
                     String message = "msg.floorSet.name";
                     if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, floor));
-                    return EnumActionResult.SUCCESS;
+                    return ActionResultType.SUCCESS;
                 }
             }
             else if (playerIn.isSneaking() && state.getBlock() == ThutBlocks.lift
@@ -328,7 +328,7 @@ public class ItemLinker extends Item
                     String message = "msg.editMode.name";
                     if (!worldIn.isRemote)
                         playerIn.sendMessage(new TranslationTextComponent(message, te.editFace[facing.ordinal()]));
-                    return EnumActionResult.SUCCESS;
+                    return ActionResultType.SUCCESS;
                 }
             }
             else if (playerIn.isSneaking())
@@ -338,7 +338,7 @@ public class ItemLinker extends Item
                 if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message));
             }
         }
-        return EnumActionResult.PASS;
+        return ActionResultType.PASS;
     }
 
     public void setLift(EntityLift lift, ItemStack stack)

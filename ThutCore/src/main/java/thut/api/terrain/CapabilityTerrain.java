@@ -117,7 +117,7 @@ public class CapabilityTerrain
             {
                 CompoundNBT tag = new CompoundNBT();
                 tag.putString("name", t.name);
-                tag.setInteger("id", t.getType());
+                tag.putInt("id", t.getType());
                 biomeList.appendTag(tag);
             }
             nbt.put("ids", biomeList);

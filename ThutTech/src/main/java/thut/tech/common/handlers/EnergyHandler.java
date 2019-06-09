@@ -45,7 +45,7 @@ public class EnergyHandler
         public CompoundNBT serializeNBT()
         {
             CompoundNBT tag = new CompoundNBT();
-            tag.setInteger("E", getEnergyStored());
+            tag.putInt("E", getEnergyStored());
             return tag;
         }
 

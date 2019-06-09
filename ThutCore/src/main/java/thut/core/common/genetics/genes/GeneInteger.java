@@ -24,7 +24,7 @@ public abstract class GeneInteger implements Gene
     public CompoundNBT save()
     {
         CompoundNBT tag = new CompoundNBT();
-        tag.setInteger("V", value);
+        tag.putInt("V", value);
         return tag;
     }
 

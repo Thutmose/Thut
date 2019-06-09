@@ -6,15 +6,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.ForgeHooks;
-import thut.lib.CompatWrapper;
 
 public class BlockEntityInteractHandler
 {
@@ -27,66 +27,61 @@ public class BlockEntityInteractHandler
         theEntity = (Entity) entity;
     }
 
-    public EnumActionResult applyPlayerInteraction(PlayerEntity player, Vec3d vec, @Nullable ItemStack stack,
-            Hand hand)
+    public ActionResultType applyPlayerInteraction(PlayerEntity player, Vec3d vec, @Nullable ItemStack stack, Hand hand)
     {
         vec = vec.add(vec.x > 0 ? -0.01 : 0.01, vec.y > 0 ? -0.01 : 0.01, vec.z > 0 ? -0.01 : 0.01);
-        Vec3d playerPos = player.getPositionVector().add(0, player.isServerWorld() ? player.getEyeHeight() : 0,
-                0);
+        Vec3d playerPos = player.getPositionVector().add(0, player.isServerWorld() ? player.getEyeHeight() : 0, 0);
         Vec3d start = playerPos;
         Vec3d end = playerPos.add(player.getLookVec().scale(4.5));
-        RayTraceResult trace = IBlockEntity.BlockEntityFormer.rayTraceInternal(start, end, blockEntity);
+        BlockRayTraceResult trace = null;
+        RayTraceResult trace2 = IBlockEntity.BlockEntityFormer.rayTraceInternal(start, end, blockEntity);
+        if (trace2 instanceof BlockRayTraceResult)
+        {
+            trace = (BlockRayTraceResult) trace2;
+        }
         BlockPos pos;
-        float hitX, hitY, hitZ;
-        Direction side = Direction.DOWN;
         if (trace == null)
         {
             pos = theEntity.getPosition();
-            hitX = hitY = hitZ = 0;
         }
         else
         {
-            pos = trace.getBlockPos();
-            hitX = (float) (trace.hitVec.x - pos.getX());
-            hitY = (float) (trace.hitVec.y - pos.getY());
-            hitZ = (float) (trace.hitVec.z - pos.getZ());
-            side = trace.sideHit;
+            pos = trace.getPos();
         }
         BlockState state = blockEntity.getFakeWorld().getBlockState(pos);
-        boolean activate = CompatWrapper.interactWithBlock(state.getBlock(), blockEntity.getFakeWorld(), pos, state,
-                player, hand, stack, side, hitX, hitY, hitZ);
-        if (activate) return EnumActionResult.SUCCESS;
+        boolean activate = state.onBlockActivated(blockEntity.getFakeWorld(), player, hand, trace);
+        if (activate) return ActionResultType.SUCCESS;
         else if (trace == null || !state.getMaterial().isSolid())
         {
             Vec3d playerLook = playerPos.add(player.getLookVec().scale(4));
-            RayTraceResult result = theEntity.getEntityWorld().rayTraceBlocks(playerPos, playerLook, false, true,
-                    false);
-            if (result != null && result.typeOfHit == Type.BLOCK)
+
+            RayTraceContext context = new RayTraceContext(playerPos, playerLook, RayTraceContext.BlockMode.COLLIDER,
+                    RayTraceContext.FluidMode.NONE, player);
+
+            RayTraceResult result = theEntity.getEntityWorld().func_217299_a(context);
+
+            if (result instanceof BlockRayTraceResult)
             {
-                pos = result.getBlockPos();
+                trace = (BlockRayTraceResult) result;
+                pos = trace.getPos();
                 state = theEntity.getEntityWorld().getBlockState(pos);
-                hitX = (float) (result.hitVec.x - pos.getX());
-                hitY = (float) (result.hitVec.y - pos.getY());
-                hitZ = (float) (result.hitVec.z - pos.getZ());
+                ItemUseContext context2 = new ItemUseContext(player, hand, trace);
                 if (player.isSneaking() && !stack.isEmpty())
                 {
-                    EnumActionResult itemUse = ForgeHooks.onPlaceItemIntoWorld(stack, player, player.getEntityWorld(),
-                            pos, result.sideHit, hitX, hitY, hitZ, hand);
-                    if (itemUse != EnumActionResult.PASS) return itemUse;
+                    ActionResultType itemUse = ForgeHooks.onPlaceItemIntoWorld(context2);
+                    if (itemUse != ActionResultType.PASS) return itemUse;
                 }
-                activate = CompatWrapper.interactWithBlock(state.getBlock(), theEntity.getEntityWorld(), pos, state,
-                        player, hand, stack, result.sideHit, hitX, hitY, hitZ);
-                if (activate) return EnumActionResult.SUCCESS;
+                activate = state.onBlockActivated(theEntity.getEntityWorld(), player, hand, trace);
+                if (activate) return ActionResultType.SUCCESS;
                 else if (!player.isSneaking() && !stack.isEmpty())
                 {
-                    EnumActionResult itemUse = ForgeHooks.onPlaceItemIntoWorld(stack, player, player.getEntityWorld(),
-                            pos, result.sideHit, hitX, hitY, hitZ, hand);
-                    if (itemUse != EnumActionResult.PASS) return itemUse;
+                    ActionResultType itemUse = ForgeHooks.onPlaceItemIntoWorld(context2);
+                    if (itemUse != ActionResultType.PASS) return itemUse;
                 }
             }
-            return EnumActionResult.PASS;
+            return ActionResultType.PASS;
         }
-        return EnumActionResult.PASS;
+        return ActionResultType.PASS;
     }
 
     public boolean processInitialInteract(PlayerEntity player, @Nullable ItemStack stack, Hand hand)

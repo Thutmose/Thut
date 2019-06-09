@@ -1,5 +1,6 @@
 package thut.api.entity.blockentity;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -8,21 +9,28 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.item.crafting.RecipeManager;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.tags.NetworkTagManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.world.storage.MapData;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -265,5 +273,112 @@ public class BlockEntityWorld extends World
     public IBlockEntity getEntity()
     {
         return blockEntity;
+    }
+
+    @Override
+    public ITickList<Block> getPendingBlockTicks()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ITickList<Fluid> getPendingFluidTicks()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void playEvent(PlayerEntity p_217378_1_, int p_217378_2_, BlockPos p_217378_3_, int p_217378_4_)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List<? extends PlayerEntity> getPlayers()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void notifyBlockUpdate(BlockPos pos, BlockState oldState, BlockState newState, int flags)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void playSound(PlayerEntity player, double x, double y, double z, SoundEvent soundIn, SoundCategory category,
+            float volume, float pitch)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void playMovingSound(PlayerEntity p_217384_1_, Entity p_217384_2_, SoundEvent p_217384_3_,
+            SoundCategory p_217384_4_, float p_217384_5_, float p_217384_6_)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public Entity getEntityByID(int id)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MapData func_217406_a(String p_217406_1_)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void func_217399_a(MapData p_217399_1_)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public int func_217395_y()
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public void sendBlockBreakProgress(int breakerId, BlockPos pos, int progress)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public Scoreboard getScoreboard()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public RecipeManager getRecipeManager()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public NetworkTagManager getTags()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

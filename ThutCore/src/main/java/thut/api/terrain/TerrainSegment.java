@@ -109,7 +109,7 @@ public class TerrainSegment
             {
                 int biome = -1;
 
-                Biome b = v.getBiome(chunk, world.getBiomeProvider());
+                Biome b = v.getBiome(world);
 
                 // Do not define lakes on watery biomes.
                 boolean notLake = BiomeDatabase.contains(b, Type.OCEAN) || BiomeDatabase.contains(b, Type.SWAMP)

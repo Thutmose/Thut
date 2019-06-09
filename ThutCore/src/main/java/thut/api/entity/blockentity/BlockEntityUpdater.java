@@ -12,14 +12,18 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.World;
 import thut.api.TickHandler;
 import thut.api.maths.Matrix3;
@@ -30,7 +34,7 @@ public class BlockEntityUpdater
 
     public static boolean isWhitelisted(TileEntity tile)
     {
-        ResourceLocation id = TileEntity.getKey(tile.getClass());
+        ResourceLocation id = TileEntityType.getId(tile.getType());
         return id == null ? true : !IBlockEntity.TEBLACKLIST.contains(id.toString());
     }
 
@@ -54,26 +58,28 @@ public class BlockEntityUpdater
         xMax = theEntity.posX + blockEntity.getMax().getX() + 0.5;
         yMax = theEntity.posY + blockEntity.getMax().getY() + 1;
         zMax = theEntity.posZ + blockEntity.getMax().getZ() + 0.5;
-        theEntity.setEntityBoundingBox(new AxisAlignedBB(xMin, yMin, zMin, xMax, yMax, zMax));
+        theEntity.setBoundingBox(new AxisAlignedBB(xMin, yMin, zMin, xMax, yMax, zMax));
     }
 
     public void onUpdate()
     {
         if (blockEntity.getBlocks() == null) return;
-        if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks().length)
-            World.MAX_ENTITY_RADIUS = blockEntity.getBlocks().length;
-        if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0].length)
-            World.MAX_ENTITY_RADIUS = blockEntity.getBlocks()[0].length;
-        if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0][0].length)
-            World.MAX_ENTITY_RADIUS = blockEntity.getBlocks()[0][0].length;
-
-        theEntity.height = blockEntity.getMax().getY();
-        theEntity.width = 1 + blockEntity.getMax().getX() - blockEntity.getMin().getX();
-        if (theEntity.motionY == 0)
+        // TODO see if this is needed.
+        // if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks().length)
+        // World.MAX_ENTITY_RADIUS = blockEntity.getBlocks().length;
+        // if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0].length)
+        // World.MAX_ENTITY_RADIUS = blockEntity.getBlocks()[0].length;
+        // if (World.MAX_ENTITY_RADIUS < blockEntity.getBlocks()[0][0].length)
+        // World.MAX_ENTITY_RADIUS = blockEntity.getBlocks()[0][0].length;
+        EntitySize size = theEntity.getSize(theEntity.getPose());
+        size = EntitySize.fixed(1 + blockEntity.getMax().getX() - blockEntity.getMin().getX(),
+                blockEntity.getMax().getY());
+        blockEntity.setSize(size);
+        if (theEntity.getMotion().y == 0)
         {
             theEntity.setPosition(theEntity.posX, Math.round(theEntity.posY), theEntity.posZ);
         }
-        blockEntity.getFakeWorld().getWorldInfo().setWorldTotalTime(theEntity.getEntityWorld().getGameTime());
+        blockEntity.getFakeWorld().getWorldInfo().setGameTime(theEntity.getEntityWorld().getGameTime());
         MutableBlockPos pos = new MutableBlockPos();
         int xMin = blockEntity.getMin().getX();
         int zMin = blockEntity.getMin().getZ();
@@ -99,16 +105,16 @@ public class BlockEntityUpdater
                         if (erroredSet.contains(tile) || !isWhitelisted(tile)) continue;
                         try
                         {
-                            ((ITickable) tile).update();
+                            ((ITickable) tile).tick();
                         }
                         catch (Throwable e)
                         {
                             e.printStackTrace();
                             System.err.println("Error with Tile Entity " + tile);
                             erroredSet.add(tile);
-                            if (autoBlacklist && TileEntity.getKey(tile.getClass()) != null)
+                            if (autoBlacklist && TileEntityType.getId(tile.getType()) != null)
                             {
-                                IBlockEntity.TEBLACKLIST.add(TileEntity.getKey(tile.getClass()).toString());
+                                IBlockEntity.TEBLACKLIST.add(TileEntityType.getId(tile.getType()).toString());
                             }
                         }
                     }
@@ -133,16 +139,18 @@ public class BlockEntityUpdater
         int zMin = blockEntity.getMin().getZ();
         BlockPos origin = theEntity.getPosition();
 
-        double minX = entity.getEntityBoundingBox().minX;
-        double minY = entity.getEntityBoundingBox().minY;
-        double minZ = entity.getEntityBoundingBox().minZ;
-        double maxX = entity.getEntityBoundingBox().maxX;
-        double maxY = entity.getEntityBoundingBox().maxY;
-        double maxZ = entity.getEntityBoundingBox().maxZ;
+        double minX = entity.getBoundingBox().minX;
+        double minY = entity.getBoundingBox().minY;
+        double minZ = entity.getBoundingBox().minZ;
+        double maxX = entity.getBoundingBox().maxX;
+        double maxY = entity.getBoundingBox().maxY;
+        double maxZ = entity.getBoundingBox().maxZ;
         double dx, dz, dy, r;
-        Vector3f diffs = new Vector3f((float) (theEntity.motionX - entity.motionX),
-                (float) (theEntity.motionY - entity.motionY), (float) (theEntity.motionZ - entity.motionZ));
-
+        Vec3d motion_a = theEntity.getMotion();
+        Vec3d motion_b = entity.getMotion();
+        Vector3f diffs = new Vector3f((float) (motion_a.x - motion_b.x), (float) (motion_a.y - motion_b.y),
+                (float) (motion_a.z - motion_b.z));
+        World fakeworld = blockEntity.getFakeWorld();
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
         /** Expanded box by velocities to test for collision with. */
         AxisAlignedBB testBox = boundingBox.expand(-diffs.x, -diffs.y, -diffs.z);
@@ -150,20 +158,11 @@ public class BlockEntityUpdater
             for (int j = 0; j < sizeY; j++)
                 for (int k = 0; k < sizeZ; k++)
                 {
-                    List<AxisAlignedBB> toAdd = Lists.newArrayList();
                     pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
-                    BlockState state = blockEntity.getFakeWorld().getBlockState(pos);
-                    state = state.getActualState(blockEntity.getFakeWorld(), pos);
-                    try
-                    {
-                        state.addCollisionBoxToList(blockEntity.getFakeWorld(), pos, TileEntity.INFINITE_EXTENT_AABB,
-                                toAdd, entity, false);
-                    }
-                    catch (Exception e)
-                    {
-                        // blockBox = block.getBoundingBox(state, world,
-                        // pos);
-                    }
+                    BlockState state = fakeworld.getBlockState(pos);
+                    state = state.getExtendedState(fakeworld, pos);
+                    VoxelShape shape = state.getCollisionShape(fakeworld, pos);
+                    List<AxisAlignedBB> toAdd = shape.toBoundingBoxList();
                     for (AxisAlignedBB blockBox : toAdd)
                     {
                         if (blockBox != null)
@@ -372,19 +371,19 @@ public class BlockEntityUpdater
                 }
             }
             /** This is for clearing jump values on client. */
-            if (player.getEntityWorld().isRemote)
-                player.getEntityData().setInteger("lastStandTick", player.ticksExisted);
-            if (!player.capabilities.isFlying)
+            if (player.getEntityWorld().isRemote) player.getEntityData().putInt("lastStandTick", player.ticksExisted);
+            if (!player.playerAbilities.isFlying)
             {
                 entity.onGround = true;
                 entity.fall(entity.fallDistance, 0);
                 entity.fallDistance = 0;
             }
             // Meed to set floatingTickCount to prevent being kicked for flying.
-            if (!player.capabilities.isCreativeMode && !player.getEntityWorld().isRemote)
+            if (!player.playerAbilities.isCreativeMode && !player.getEntityWorld().isRemote)
             {
                 ServerPlayerEntity PlayerEntity = (ServerPlayerEntity) player;
-                PlayerEntity.connection.floatingTickCount = 0;
+                // TODO fix access transformer
+                // PlayerEntity.connection.floatingTickCount = 0;
             }
         }
 
@@ -397,11 +396,18 @@ public class BlockEntityUpdater
                 entity.fall(entity.fallDistance, 0);
                 entity.fallDistance = 0;
             }
+            Vec3d motion = new Vec3d(temp1.x, temp1.y, temp1.z);
+            if (!(entity instanceof ServerPlayerEntity)) entity.move(MoverType.SELF, motion);
 
-            if (temp1.x != 0) entity.motionX = theEntity.motionX;
-            if (temp1.y != 0) entity.motionY = theEntity.motionY;
-            if (temp1.z != 0) entity.motionZ = theEntity.motionZ;
-            if (!(entity instanceof ServerPlayerEntity)) entity.move(MoverType.SELF, temp1.x, temp1.y, temp1.z);
+            dx = motion_b.x;
+            dy = motion_b.y;
+            dz = motion_b.z;
+
+            if (temp1.x != 0) dx = motion_a.x;
+            if (temp1.y != 0) dx = motion_a.y;
+            if (temp1.z != 0) dx = motion_a.z;
+
+            entity.setMotion(dx, dy, dz);
 
             // Attempt to also set previous positions to prevent desync like
             // issues on servers.

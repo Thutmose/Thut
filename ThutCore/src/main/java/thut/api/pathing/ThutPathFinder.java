@@ -167,13 +167,13 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         this.pathb.clearPath();
         this.pathf.clearPath();
         this.pointMap.clearMap();
-        int i = MathHelper.floor(entity.getEntityBoundingBox().minY + 0.5D);
+        int i = MathHelper.floor(entity.getBoundingBox().minY + 0.5D);
 
         double dist = entity.getDistance(x, y, z);
         dist = Math.max(2 * dist, 2 * distance);
         if (!mob.swims() && entity.isInWater())
         {
-            i = (int) entity.getEntityBoundingBox().minY;
+            i = (int) entity.getBoundingBox().minY;
             // If it isn't supposed to be under water, attempt to adjust path to
             // top of water.
             for (Block block = this.worldMap
@@ -202,8 +202,8 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         {
 
         }
-        PathPoint start = this.openPoint(MathHelper.floor(entity.getEntityBoundingBox().minX), i,
-                MathHelper.floor(entity.getEntityBoundingBox().minZ));
+        PathPoint start = this.openPoint(MathHelper.floor(entity.getBoundingBox().minX), i,
+                MathHelper.floor(entity.getBoundingBox().minZ));
         PathPoint end = this.openPoint(MathHelper.floor(x - entity.width / 2.0F), MathHelper.floor(y),
                 MathHelper.floor(z - entity.width / 2.0F));
         Path path = this.addToPath(entity, start, end, distance);
@@ -230,7 +230,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     /** Creates a path from one entity to another within a minimum distance */
     public Path createEntityPathTo(IBlockReader world, Entity entity, Entity target, float distance)
     {
-        return this.createEntityPathTo(target.posX, target.getEntityBoundingBox().minY + 0.5f, target.posZ, distance);
+        return this.createEntityPathTo(target.posX, target.getBoundingBox().minY + 0.5f, target.posZ, distance);
     }
 
     /** populates pathOptions with available points and returns the number of
