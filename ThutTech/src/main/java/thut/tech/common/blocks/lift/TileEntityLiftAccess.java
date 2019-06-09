@@ -10,7 +10,7 @@ import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.network.SimpleComponent;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -44,7 +44,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public int                          power        = 0;
     public int                          prevPower    = 1;
     public EntityLift                   lift;
-    public IBlockState                  copiedState  = null;
+    public BlockState                  copiedState  = null;
     boolean                             listNull     = false;
     List<Entity>                        list         = new ArrayList<Entity>();
     Vector3                             here;
@@ -272,7 +272,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
      * @return true forcing the invalidation of the existing TE, false not to
      *         invalidate the existing TE */
     @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newSate)
+    public boolean shouldRefresh(World world, BlockPos pos, BlockState oldState, BlockState newSate)
     {
         return oldState.getBlock() != newSate.getBlock();
     }
@@ -295,7 +295,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
     public void readFromNBT(CompoundNBT par1)
     {
         super.readFromNBT(par1);
-        floor = par1.getInteger("floor");
+        floor = par1.getInt("floor");
         liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
         sides = par1.getByteArray("sides");
         for (Direction face : Direction.HORIZONTALS)
@@ -317,7 +317,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
         {
             CompoundNBT state = par1.getCompound("state");
             String key = state.getString("K");
-            int meta = state.getInteger("M");
+            int meta = state.getInt("M");
             Block block = Block.REGISTRY.getObject(new ResourceLocation(key));
             if (block != null) copiedState = CompatWrapper.getBlockStateFromMeta(block, meta);
         }
@@ -383,7 +383,7 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             // should be emitted.
             boolean check = lift.getCurrentFloor() == this.floor && (int) (lift.motionY * 16) == 0;
 
-            IBlockState state = world.getBlockState(getPos());
+            BlockState state = world.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
             boolean callPanel = false;
             if (!old && !lift.getCalled()) for (Direction face : Direction.HORIZONTALS)

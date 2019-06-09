@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
@@ -170,7 +170,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
     public void drawOverLay(TileEntityLiftAccess monitor, int floor, Color colour, Direction side, boolean wide)
     {
         if (!wide) floor = floor - monitor.getSidePage(side) * 16;
-        IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
+        BlockState state = monitor.getWorld().getBlockState(monitor.getPos());
         boolean isMonitor = state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER;
         if (isMonitor && monitor.getBlockType() == ThutBlocks.lift && floor > 0 && floor < 17)
         {
@@ -229,7 +229,7 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
     public void render(T tileentity, double x, double y, double z, float f, int i1, float f2)
     {
         TileEntityLiftAccess monitor = (TileEntityLiftAccess) tileentity;
-        IBlockState state = monitor.getWorld().getBlockState(monitor.getPos());
+        BlockState state = monitor.getWorld().getBlockState(monitor.getPos());
         if (state.getBlock() != ThutBlocks.lift) return;
 
         boolean blend;
@@ -247,8 +247,8 @@ public class RenderLiftController<T extends TileEntity> extends TileEntitySpecia
 
         blend = GL11.glGetBoolean(GL11.GL_BLEND);
         light = GL11.glGetBoolean(GL11.GL_LIGHTING);
-        src = GL11.glGetInteger(GL11.GL_BLEND_SRC);
-        dst = GL11.glGetInteger(GL11.GL_BLEND_DST);
+        src = GL11.glgetInt(GL11.GL_BLEND_SRC);
+        dst = GL11.glgetInt(GL11.GL_BLEND_DST);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);

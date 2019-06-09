@@ -5,7 +5,7 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -20,7 +20,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.BlockStateContainer;
@@ -76,7 +76,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     /** Can this block provide power. Only wire currently seems to have this
      * change based on its state. */
     @Override
-    public boolean canProvidePower(IBlockState state)
+    public boolean canProvidePower(BlockState state)
     {
         return true;
     }
@@ -112,7 +112,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     /** Gets the metadata of the item this Block can drop. This method is called
      * when the block gets destroyed. It returns the metadata of the dropped
      * item based on the old metadata of the block. */
-    public int damageDropped(IBlockState state)
+    public int damageDropped(BlockState state)
     {
         return state.getValue(VARIANT) == EnumType.LIFT ? 0 : 1;
     }
@@ -132,7 +132,7 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     @Override
     /** Convert the BlockState into the correct metadata value */
-    public int getMetaFromState(IBlockState state)
+    public int getMetaFromState(BlockState state)
     {
         if (state.getBlock() != this) return state.getBlock().getMetaFromState(state);
         int ret = state.getValue(VARIANT).ordinal();
@@ -143,7 +143,7 @@ public class BlockLift extends Block implements ITileEntityProvider
 
     @Override
     /** Convert the given metadata into a BlockState for this Block */
-    public IBlockState getStateFromMeta(int meta)
+    public BlockState getStateFromMeta(int meta)
     {
         int typeMeta = meta & 3;
         boolean called = ((meta / 4) & 1) > 0;
@@ -153,7 +153,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     }
 
     @Override
-    public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side)
+    public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
     {
         return 0;
     }
@@ -176,7 +176,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     ////////////////////////////////////////////////////// RedStone
     ////////////////////////////////////////////////////// stuff/////////////////////////////////////////////////
     @Override
-    public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, Direction side)
+    public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side)
     {
         return blockState.getValue(CURRENT) ? 15 : 0;
     }
@@ -196,7 +196,7 @@ public class BlockLift extends Block implements ITileEntityProvider
     }
 
     @Override
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, PlayerEntity playerIn,
+    public boolean onBlockActivated(World worldIn, BlockPos pos, BlockState state, PlayerEntity playerIn,
             Hand hand, Direction side, float hitX, float hitY, float hitZ)
     {
         ItemStack heldItem = playerIn.getHeldItem(hand);
@@ -211,7 +211,7 @@ public class BlockLift extends Block implements ITileEntityProvider
             Block b = Block.getBlockFromItem(heldItem.getItem());
             if (b != null && state.getValue(VARIANT) == EnumType.CONTROLLER)
             {
-                IBlockState newState = CompatWrapper.getBlockStateFromMeta(b, heldItem.getItemDamage());
+                BlockState newState = CompatWrapper.getBlockStateFromMeta(b, heldItem.getItemDamage());
                 TileEntityLiftAccess te = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
                 te.copiedState = newState;
                 if (!te.getWorld().isRemote) PacketHandler.sendTileUpdate(te);
@@ -268,14 +268,14 @@ public class BlockLift extends Block implements ITileEntityProvider
     @Override
     /** Called when a block is placed using its ItemBlock. Args: World, X, Y, Z,
      * side, hitX, hitY, hitZ, block metadata */
-    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY,
+    public BlockState getStateForPlacement(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY,
             float hitZ, int meta, LivingEntity placer)
     {
         return getStateFromMeta(meta);
     }
 
     @Deprecated
-    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos)
+    public BlockState getActualState(BlockState state, IBlockReader worldIn, BlockPos pos)
     {
         TileEntityLiftAccess tile = (TileEntityLiftAccess) worldIn.getTileEntity(pos);
         if (tile != null && tile.copiedState != null && tile.getWorld().isRemote) return tile.copiedState;

@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.google.common.base.Predicate;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import thut.api.maths.Vector3;
@@ -17,19 +17,19 @@ import thut.api.terrain.TerrainSegment.ISubBiomeChecker;
 
 public class ConfigTerrainChecker implements ISubBiomeChecker
 {
-    private final List<Predicate<IBlockState>> list;
+    private final List<Predicate<BlockState>> list;
     private final BiomeType                    subbiome;
 
-    public ConfigTerrainChecker(List<Predicate<IBlockState>> list, BiomeType subbiome)
+    public ConfigTerrainChecker(List<Predicate<BlockState>> list, BiomeType subbiome)
     {
         this.list = list;
         this.subbiome = subbiome;
     }
 
-    private boolean apply(IBlockState state)
+    private boolean apply(BlockState state)
     {
         if (state.getMaterial() == Material.AIR) return false;
-        for (Predicate<IBlockState> predicate : list)
+        for (Predicate<BlockState> predicate : list)
         {
             if (predicate.apply(state)) return true;
         }

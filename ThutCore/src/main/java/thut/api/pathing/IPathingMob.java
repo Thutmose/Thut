@@ -2,7 +2,7 @@ package thut.api.pathing;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import thut.api.maths.Vector3;
 
 public interface IPathingMob
@@ -19,7 +19,7 @@ public interface IPathingMob
      * @param world
      * @param location
      * @return */
-    float getBlockPathWeight(IBlockAccess world, Vector3 location);
+    float getBlockPathWeight(IBlockReader world, Vector3 location);
 
     double getFloatHeight();
 
@@ -28,7 +28,7 @@ public interface IPathingMob
      * @return */
     Vector3 getMobSizes();
 
-    boolean fits(IBlockAccess world, Vector3 location, @Nullable Vector3 directionFrom);
+    boolean fits(IBlockReader world, Vector3 location, @Nullable Vector3 directionFrom);
 
     int getPathTime();
 

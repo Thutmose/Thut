@@ -31,7 +31,7 @@ public abstract class GeneInteger implements Gene
     @Override
     public void load(CompoundNBT tag)
     {
-        value = tag.getInteger("V");
+        value = tag.getInt("V");
     }
 
 }

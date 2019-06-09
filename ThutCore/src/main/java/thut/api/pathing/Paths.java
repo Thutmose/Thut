@@ -2,14 +2,14 @@ package thut.api.pathing;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import thut.api.TickHandler;
 
 public class Paths
 {
     public final World  world;
-    public IBlockAccess chunks;
+    public IBlockReader chunks;
 
     public Paths(World world)
     {

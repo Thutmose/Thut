@@ -35,7 +35,7 @@ public class Info_Impl implements Info
 //        case "F":
 //            return type.cast(nbt.getFloat(key));
 //        case "I":
-//            return type.cast(nbt.getInteger(key));
+//            return type.cast(nbt.getInt(key));
 //        case "[I":
 //            return type.cast(nbt.getIntArray(key));
 //        case "J":
@@ -79,7 +79,7 @@ public class Info_Impl implements Info
 //            nbt.putByteArray(key, (byte[]) value);
 //            return;
 //        case "D":
-//            nbt.setDouble(key, (double) value);
+//            nbt.putDouble(key, (double) value);
 //            return;
 //        case "F":
 //            nbt.putFloat(key, (float) value);

@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.state.IProperty;
 import net.minecraft.util.ResourceLocation;
 import thut.api.terrain.BiomeType;
@@ -18,7 +18,7 @@ import thut.api.terrain.TerrainSegment;
 
 public class ConfigTerrainBuilder
 {
-    public static Predicate<IBlockState> getState(String arguments)
+    public static Predicate<BlockState> getState(String arguments)
     {
         String[] args = arguments.split(" ");
 
@@ -36,14 +36,14 @@ public class ConfigTerrainBuilder
         }
         final String key = keyTemp;
         final String val = valTemp;
-        return new Predicate<IBlockState>()
+        return new Predicate<BlockState>()
         {
             final Pattern                  modidPattern = Pattern.compile(modid);
             final Pattern                  blockPattern = Pattern.compile(blockName);
             Map<ResourceLocation, Boolean> checks       = Maps.newHashMap();
 
             @Override
-            public boolean apply(IBlockState input)
+            public boolean apply(BlockState input)
             {
                 if (input == null || input.getBlock() == null) return false;
                 Block block = input.getBlock();
@@ -77,13 +77,13 @@ public class ConfigTerrainBuilder
         };
     }
 
-    private static void addToList(List<Predicate<IBlockState>> list, String... conts)
+    private static void addToList(List<Predicate<BlockState>> list, String... conts)
     {
         if (conts == null) return;
         if (conts.length < 1) return;
         for (String s : conts)
         {
-            Predicate<IBlockState> b = getState(s);
+            Predicate<BlockState> b = getState(s);
             if (b != null)
             {
                 list.add(b);
@@ -120,7 +120,7 @@ public class ConfigTerrainBuilder
 
     private static void generateConfigTerrain(String[] blocks, BiomeType subbiome)
     {
-        List<Predicate<IBlockState>> list = Lists.newArrayList();
+        List<Predicate<BlockState>> list = Lists.newArrayList();
         addToList(list, blocks);
         if (!list.isEmpty())
         {

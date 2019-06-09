@@ -87,12 +87,6 @@ public class CapabilityTerrain
             return pos;
         }
 
-        @Override
-        public boolean hasCapability(Capability<?> capability, Direction facing)
-        {
-            return capability == CapabilityTerrain.TERRAIN_CAP;
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public <T> T getCapability(Capability<T> capability, Direction facing)
@@ -126,7 +120,7 @@ public class CapabilityTerrain
                 tag.setInteger("id", t.getType());
                 biomeList.appendTag(tag);
             }
-            nbt.setTag("ids", biomeList);
+            nbt.put("ids", biomeList);
             return nbt;
         }
 
@@ -137,12 +131,12 @@ public class CapabilityTerrain
             int x = pos.getX();
             int z = pos.getZ();
             Map<Integer, Integer> idReplacements = Maps.newHashMap();
-            ListNBT tags = (ListNBT) nbt.getTag("ids");
+            ListNBT tags = (ListNBT) nbt.get("ids");
             for (int i = 0; i < tags.size(); i++)
             {
                 CompoundNBT tag = tags.getCompound(i);
                 String name = tag.getString("name");
-                int id = tag.getInteger("id");
+                int id = tag.getInt("id");
                 BiomeType type = BiomeType.getBiome(name, false);
                 if (type.getType() != id)
                 {

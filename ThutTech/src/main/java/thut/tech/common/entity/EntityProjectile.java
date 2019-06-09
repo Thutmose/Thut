@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.util.Direction;
@@ -19,7 +19,7 @@ import thut.api.maths.Vector3;
 public class EntityProjectile extends EntityFallingBlock
 {
 
-    IBlockState block;
+    BlockState block;
     boolean     accelerated = false;
 
     public EntityProjectile(World worldIn)
@@ -27,7 +27,7 @@ public class EntityProjectile extends EntityFallingBlock
         super(worldIn);
     }
 
-    public EntityProjectile(World worldIn, double x, double y, double z, IBlockState fallingBlockState)
+    public EntityProjectile(World worldIn, double x, double y, double z, BlockState fallingBlockState)
     {
         super(worldIn, x, y, z, fallingBlockState);
         this.block = fallingBlockState;
@@ -40,7 +40,7 @@ public class EntityProjectile extends EntityFallingBlock
 
         for (Direction side : Direction.values())
         {
-            if (side.getFrontOffsetY() == 0)
+            if (side.getYOffset() == 0)
             {
                 Block b = here.getBlock(getEntityWorld(), side);
                 if (b == Blocks.GOLDEN_RAIL)
@@ -91,7 +91,7 @@ public class EntityProjectile extends EntityFallingBlock
             Vector3 velocity = Vector3.getNewVector().setToVelocity(this);
             double d = velocity.mag() + 1;
 
-            IBlockState downState = here.offset(Direction.DOWN).getBlockState(getEntityWorld());
+            BlockState downState = here.offset(Direction.DOWN).getBlockState(getEntityWorld());
 
             Vector3 hit = here.findNextSolidBlock(getEntityWorld(), velocity, d);
             d -= 1;

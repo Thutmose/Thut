@@ -8,16 +8,19 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.GetCollisionBoxesEvent;
 
 public class Matrix3
 {
@@ -299,7 +302,8 @@ public class Matrix3
         double maxY = entityBox.maxY;
         double maxZ = entityBox.maxZ;
         double factor = 0.75d;
-        double dx = max(maxX - minX, 0.5) / factor + e.motionX, dz = max(maxZ - minZ, 0.5) / factor + e.motionZ, r;
+        Vec3d motion = e.getMotion();
+        double dx = max(maxX - minX, 0.5) / factor + motion.x, dz = max(maxZ - minZ, 0.5) / factor + motion.z, r;
 
         boolean collide = false;
         AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
@@ -667,24 +671,13 @@ public class Matrix3
         Vector3 ent = Vector3.getNewVector();
         ent.set(e);
         corners(true);
-        Entity[] parts = e.getParts();
         Matrix3 box = new Matrix3();
-        box.set(e.getEntityBoundingBox());
+        box.set(e.getBoundingBox());
         boolean hit = box.intersects(this);
-        if (parts != null)
-        {
-            for (Entity e1 : parts)
-            {
-                if (hit) break;
-                box.set(e1.getEntityBoundingBox());
-                hit = hit || box.intersects(this);
-            }
-        }
-        box = null;
         return hit;
     }
 
-    public Vector3 doTileCollision(IBlockAccess world, Entity e, Vector3 offset, Vector3 diffs, boolean move)
+    public Vector3 doTileCollision(IBlockReader world, Entity e, Vector3 offset, Vector3 diffs, boolean move)
     {
         Matrix3 box = copy().addOffsetTo(offset);
         Vector3 v1 = box.boxCentre();
@@ -703,8 +696,9 @@ public class Matrix3
             if (v.z < minZ) minZ = v.z;
         }
         double factor = 0.275d;
-        double dx = max(maxX - minX, 1) / factor + e.motionX, dy = max(maxY - minY, 1) / factor + e.motionY,
-                dz = max(maxZ - minZ, 1) / factor + e.motionZ;
+        Vec3d motion = e.getMotion();
+        double dx = max(maxX - minX, 1) / factor + motion.x, dy = max(maxY - minY, 1) / factor + motion.y,
+                dz = max(maxZ - minZ, 1) / factor + motion.z;
         dx = Math.abs(dx);
         dy = Math.abs(dy);
         dz = Math.abs(dz);
@@ -822,13 +816,13 @@ public class Matrix3
         return doTileCollision(world, aabbs, e, offset, diffs, true);
     }
 
-    public Vector3 doTileCollision(IBlockAccess world, List<AxisAlignedBB> aabbs, Entity e, Vector3 offset,
+    public Vector3 doTileCollision(IBlockReader world, List<AxisAlignedBB> aabbs, Entity e, Vector3 offset,
             Vector3 diffs)
     {
         return doTileCollision(world, aabbs, e, offset, diffs, false);
     }
 
-    public Vector3 doTileCollision(IBlockAccess world, List<AxisAlignedBB> aabbs, Entity e, Vector3 offset,
+    public Vector3 doTileCollision(IBlockReader world, List<AxisAlignedBB> aabbs, Entity e, Vector3 offset,
             Vector3 diffs, boolean moveEntity)
     {
         Vector3 temp1 = Vector3.getNewVector();
@@ -854,7 +848,7 @@ public class Matrix3
             double mY = 0;
             for (Entity e1 : e.getRecursivePassengers())
             {
-                mY = Math.max(mY, e1.height + e.getMountedYOffset());
+                mY = Math.max(mY, e1.getHeight() + e.getMountedYOffset());
             }
             maxY += mY;
         }
@@ -979,17 +973,17 @@ public class Matrix3
             }
             else
             {
-                dy = -boundingBox.calculateYOffset(aabb, -temp1.y);
+                dy = -yOffset(boundingBox, aabb, -temp1.y);
                 if (dy != temp1.y)
                 {
                     temp1.y = dy;
                 }
-                dx = -boundingBox.calculateXOffset(aabb, -temp1.x);
+                dx = -xOffset(boundingBox, aabb, -temp1.x);
                 if (dx != temp1.x)
                 {
                     temp1.x = dx;
                 }
-                dz = -boundingBox.calculateZOffset(aabb, -temp1.z);
+                dz = -zOffset(boundingBox, aabb, -temp1.z);
                 if (dz != temp1.z)
                 {
                     temp1.z = dz;
@@ -999,7 +993,22 @@ public class Matrix3
         return temp1;
     }
 
-    public boolean doTileCollision(IBlockAccess world, List<AxisAlignedBB> aabbs, Vector3 location, Entity e,
+    private double xOffset(AxisAlignedBB box, AxisAlignedBB aabb, double x)
+    {
+        return box.calculateXOffset(aabb, x);
+    }
+
+    private double yOffset(AxisAlignedBB box, AxisAlignedBB aabb, double x)
+    {
+        return box.calculateYOffset(aabb, x);
+    }
+
+    private double zOffset(AxisAlignedBB box, AxisAlignedBB aabb, double x)
+    {
+        return box.calculateZOffset(aabb, x);
+    }
+
+    public boolean doTileCollision(IBlockReader world, List<AxisAlignedBB> aabbs, Vector3 location, Entity e,
             Vector3 diffs)
     {
 
@@ -1026,7 +1035,7 @@ public class Matrix3
             double mY = 0;
             for (Entity e1 : e.getRecursivePassengers())
             {
-                mY = Math.max(mY, e1.height + e.getMountedYOffset());
+                mY = Math.max(mY, e1.getHeight() + e.getMountedYOffset());
             }
             maxY += mY;
         }
@@ -1064,7 +1073,7 @@ public class Matrix3
         return rows[i].get(j);
     }
 
-    public List<AxisAlignedBB> getCollidingBoxes(AxisAlignedBB box, World world, IBlockAccess access)
+    public List<AxisAlignedBB> getCollidingBoxes(AxisAlignedBB box, World world, IBlockReader access)
     {
         if (collidingBoundingBoxes == null) collidingBoundingBoxes = new ArrayList<AxisAlignedBB>();
 
@@ -1084,15 +1093,15 @@ public class Matrix3
                 {
                     BlockPos blockpos = new BlockPos(k1, i2, l1);
 
-                    IBlockState iblockstate = access.getBlockState(blockpos);
-                    if (iblockstate == null) iblockstate = Blocks.AIR.getDefaultState();
-                    Block block = iblockstate.getBlock();
-                    if (block.isCollidable())
+                    BlockState state = access.getBlockState(blockpos);
+                    if (state == null) state = Blocks.AIR.getDefaultState();
+                    VoxelShape shape = state.getCollisionShape(access, blockpos);
+                    List<AxisAlignedBB> boxes = shape.toBoundingBoxList();
+                    if (!boxes.isEmpty())
                     {
-                        iblockstate.addCollisionBoxToList(world, blockpos, box, collidingBoundingBoxes, null, false);
-                        net.minecraftforge.common.MinecraftForge.EVENT_BUS
-                                .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world, null, box,
-                                        collidingBoundingBoxes));
+                        collidingBoundingBoxes.addAll(boxes);
+                        MinecraftForge.EVENT_BUS
+                                .post(new GetCollisionBoxesEvent(world, null, box, collidingBoundingBoxes));
                     }
                 }
             }
@@ -1170,7 +1179,7 @@ public class Matrix3
         return intersects(cornersB);
     }
 
-    public boolean isInMaterial(IBlockAccess world, Vector3 location, Vector3 offset, Material m)
+    public boolean isInMaterial(IBlockReader world, Vector3 location, Vector3 offset, Material m)
     {
         boolean ret = false;
         Vector3 ent = location;

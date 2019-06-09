@@ -8,7 +8,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -126,14 +126,14 @@ public class BlockEntityWorld extends World
     }
 
     @Override
-    public IBlockState getBlockState(BlockPos pos)
+    public BlockState getBlockState(BlockPos pos)
     {
         if (blockEntity.getBlocks() == null) { return world.getBlockState(pos); }
         int i = pos.getX() - MathHelper.floor(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));
         int k = pos.getZ() - MathHelper.floor(entity.posZ + blockEntity.getMin().getZ());
         if (!inBounds(pos)) { return world.getBlockState(pos); }
-        IBlockState state = blockEntity.getBlocks()[i][j][k];
+        BlockState state = blockEntity.getBlocks()[i][j][k];
         if (state == null) return world.getBlockState(pos);
         return state;
     }
@@ -159,7 +159,7 @@ public class BlockEntityWorld extends World
     @Override
     public boolean isAirBlock(BlockPos pos)
     {
-        IBlockState state = getBlockState(pos);
+        BlockState state = getBlockState(pos);
         return state.getBlock().isAir(state, this, pos);
     }
 
@@ -220,7 +220,7 @@ public class BlockEntityWorld extends World
                     int y = j;
                     int z = chunkZ * 16 + k;
                     pos.setPos(x, y, z);
-                    IBlockState state = getBlockState(pos);
+                    BlockState state = getBlockState(pos);
                     if (state.getBlock() == Blocks.AIR) continue;
                     ExtendedBlockStorage storage = ret.getBlockStorageArray()[j >> 4];
                     if (storage == null)
@@ -246,7 +246,7 @@ public class BlockEntityWorld extends World
      * this). Flag 4 prevents the block from being re-rendered, if this is a
      * client world. Flags can be added together. */
     @Override
-    public boolean setBlockState(BlockPos pos, IBlockState newState, int flags)
+    public boolean setBlockState(BlockPos pos, BlockState newState, int flags)
     {
         int i = pos.getX() - MathHelper.floor(entity.posX + blockEntity.getMin().getX());
         int j = (int) (pos.getY() - Math.round(entity.posY + blockEntity.getMin().getY()));

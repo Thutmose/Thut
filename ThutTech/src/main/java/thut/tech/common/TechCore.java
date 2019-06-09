@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
@@ -177,7 +177,7 @@ public class TechCore
                 || !evt.getPlayerEntity().isSneaking() || evt.getItemStack().getItem() != Items.STICK
                 || evt.getFace() == Direction.DOWN || evt.getFace() == Direction.UP)
             return;
-        IBlockState state = evt.getWorld().getBlockState(evt.getPos());
+        BlockState state = evt.getWorld().getBlockState(evt.getPos());
         if (state.getBlock() == ThutBlocks.lift && state.getValue(BlockLift.VARIANT) == EnumType.CONTROLLER)
         {
             TileEntityLiftAccess te = (TileEntityLiftAccess) evt.getWorld().getTileEntity(evt.getPos());

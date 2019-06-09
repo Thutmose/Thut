@@ -2,7 +2,7 @@ package thut.api.entity.blockentity;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -52,7 +52,7 @@ public class BlockEntityInteractHandler
             hitZ = (float) (trace.hitVec.z - pos.getZ());
             side = trace.sideHit;
         }
-        IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
+        BlockState state = blockEntity.getFakeWorld().getBlockState(pos);
         boolean activate = CompatWrapper.interactWithBlock(state.getBlock(), blockEntity.getFakeWorld(), pos, state,
                 player, hand, stack, side, hitX, hitY, hitZ);
         if (activate) return EnumActionResult.SUCCESS;

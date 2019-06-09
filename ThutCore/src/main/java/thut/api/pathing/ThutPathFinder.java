@@ -13,8 +13,8 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -25,7 +25,7 @@ import net.minecraft.util.IntHashMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import thut.api.maths.Matrix3;
 import thut.api.maths.Vector3;
 
@@ -60,7 +60,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     }
 
     /** Used to find obstacles */
-    protected final IBlockAccess          worldMap;
+    protected final IBlockReader          worldMap;
     /** The path being generated */
     /** The path being generated forward */
     protected final ThutPath              pathf        = new ThutPath();
@@ -84,7 +84,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
 
     Vector3                               v1           = Vector3.getNewVector();
 
-    public ThutPathFinder(IBlockAccess world, IPathingMob entity)
+    public ThutPathFinder(IBlockReader world, IPathingMob entity)
     {
         super(null);
         this.worldMap = world;
@@ -128,7 +128,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         return this.createEntityPath(pathpoint3);
     }
 
-    private boolean canFit(Vector3 e, IBlockState b)
+    private boolean canFit(Vector3 e, BlockState b)
     {
         // TODO get this done again.
         // double dz = b.getBlockBoundsMaxZ() - b.getBlockBoundsMinZ();
@@ -221,14 +221,14 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     @Override
     /** Creates a path from an entity to a specified location within a minimum
      * distance */
-    public Path createEntityPathTo(IBlockAccess blockaccess, Entity entityIn, BlockPos targetPos, float dist)
+    public Path createEntityPathTo(IBlockReader blockaccess, Entity entityIn, BlockPos targetPos, float dist)
     {
         return createEntityPathTo(targetPos.getX(), targetPos.getY(), targetPos.getZ(), dist);
     }
 
     @Override
     /** Creates a path from one entity to another within a minimum distance */
-    public Path createEntityPathTo(IBlockAccess world, Entity entity, Entity target, float distance)
+    public Path createEntityPathTo(IBlockReader world, Entity entity, Entity target, float distance)
     {
         return this.createEntityPathTo(target.posX, target.getEntityBoundingBox().minY + 0.5f, target.posZ, distance);
     }
@@ -271,9 +271,9 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 Direction side = Direction.values()[(i + num) % 6];
                 if (side == getDirFromPoint(current)) continue;
                 Vector3 opp = getOpposite(side, check);
-                int x = current.xCoord + side.getFrontOffsetX() * (l + 1);
-                int y = current.yCoord + side.getFrontOffsetY() * (l + 1);
-                int z = current.zCoord + side.getFrontOffsetZ() * (l + 1);
+                int x = current.xCoord + side.getXOffset() * (l + 1);
+                int y = current.yCoord + side.getYOffset() * (l + 1);
+                int z = current.zCoord + side.getZOffset() * (l + 1);
 
                 boolean safe = false;
                 PathPoint point = openPoint(x, y, z);
@@ -282,7 +282,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                     PathPoint point1 = openPoint(x, y - 1, z);
                     if (!point.isFirst)
                     {
-                        IBlockState down = v0.set(point1).getBlockState(worldMap);
+                        BlockState down = v0.set(point1).getBlockState(worldMap);
                         v1.set(point1);
                         float f1 = this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
 
@@ -314,7 +314,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                     {
                         if (!point.isFirst)
                         {
-                            IBlockState down = v0.set(point1).getBlockState(worldMap);
+                            BlockState down = v0.set(point1).getBlockState(worldMap);
                             v1.set(point1);
                             float f1 = this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
                             if (down.getMaterial().isLiquid())
@@ -343,7 +343,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                         point1 = openPoint(x, y - 2, z);
                         if (!point.isFirst)
                         {
-                            IBlockState down = v0.set(point1).getBlockState(worldMap);
+                            BlockState down = v0.set(point1).getBlockState(worldMap);
                             v1.set(point1);
                             float f1 = this.mob.getBlockPathWeight(worldMap, v1.offsetBy(DOWN));
                             // check if this causes cmod exp
@@ -518,7 +518,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
         Vector3 v = v0.set(point).addTo(0.5, 0, 0.5);
         point.x = point.xCoord + 0.5f;
         point.z = point.zCoord + 0.5f;
-        IBlockState state = v.getBlockState(worldMap);
+        BlockState state = v.getBlockState(worldMap);
         Block b = state.getBlock();
         if (mob.getBlockPathWeight(worldMap, v) < 0) { return false; }
         Material m = state.getMaterial();
@@ -533,7 +533,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
                 return true;
             for (Direction side : Direction.HORIZONTALS)
             {
-                v.set(point).addTo(0.5 + side.getFrontOffsetX() * 0.5, 0, 0.5 + side.getFrontOffsetZ() * 0.5);
+                v.set(point).addTo(0.5 + side.getXOffset() * 0.5, 0, 0.5 + side.getZOffset() * 0.5);
                 if (mob.fits(worldMap, v, from)
                         || mob.fits(worldMap, v.addTo(0, ((MobEntity) mob).stepHeight, 0), from))
                 {
@@ -553,7 +553,7 @@ public class ThutPathFinder extends PathFinder implements IPathFinder
     protected boolean isSafe(Vector3 size, PathPoint point, Vector3 from)
     {
         BlockPos pos = new BlockPos(point.xCoord, point.yCoord, point.zCoord);
-        IBlockState state = worldMap.getBlockState(pos.down());
+        BlockState state = worldMap.getBlockState(pos.down());
         Material mDown = state.getMaterial();
         boolean water = mob.swims();
         boolean air = mob.flys() || mob.floats();

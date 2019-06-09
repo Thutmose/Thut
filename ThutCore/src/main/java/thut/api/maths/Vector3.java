@@ -14,31 +14,32 @@ import com.google.common.base.Predicate;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.command.ICommandSource;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.Explosion;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.provider.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.IFluidBlock;
 import thut.lib.CompatWrapper;
 
 /** @author Thutmose */
@@ -149,7 +150,7 @@ public class Vector3
      * @param direction
      * @param range
      * @return */
-    public static Vector3 findNextSolidBlock(IBlockAccess world, Vector3 source, Vector3 direction, double range)
+    public static Vector3 findNextSolidBlock(IBlockReader world, Vector3 source, Vector3 direction, double range)
     {
         direction = direction.normalize();
         double xprev = source.x, yprev = source.y, zprev = source.z;
@@ -193,7 +194,7 @@ public class Vector3
      * @param direction
      * @param range
      * @return */
-    public static Vector3 getNextSurfacePoint(IBlockAccess world, Vector3 source, Vector3 direction, double range)
+    public static Vector3 getNextSurfacePoint(IBlockReader world, Vector3 source, Vector3 direction, double range)
     {
         direction = direction.normalize();
 
@@ -215,95 +216,35 @@ public class Vector3
         return null;
     }
 
-    /** determines whether the source can see out as far as range in the given
-     * direction. This version ignores blocks like leaves and wood, used for
-     * finding the surface of the ground.
-     * 
-     * @param world
-     * @param source
-     * @param direction
-     * @param range
-     * @return */
-    public static Vector3 getNextSurfacePoint2(IBlockAccess world, Vector3 source, Vector3 direction, double range)
-    {
-        direction = direction.normalize();
-        double dx, dy, dz;
-        Vector3 temp = Vector3.getNewVector();
-        for (double i = 0; i < range; i += 0.5)
-        {
-            dx = i * direction.x;
-            dy = i * direction.y;
-            dz = i * direction.z;
-
-            double xtest = (source.x + dx), ytest = (source.y + dy), ztest = (source.z + dz);
-
-            boolean check = isNotSurfaceBlock((World) world, temp.set(xtest, ytest, ztest));
-            if (!check) { return Vector3.getNewVector().set(xtest, ytest, ztest); }
-        }
-        return null;
-    }
-
     public static int Int(double x)
     {
         return MathHelper.floor(x);
     }
 
-    public static boolean isNotSurfaceBlock(World world, Vector3 v)
-    {
-        IBlockState state = v.getBlockState(world);
-        Block b = state.getBlock();
-
-        if (b instanceof IFluidBlock)
-        {
-            Fluid f = ((IFluidBlock) b).getFluid();
-            return f.getViscosity() < Integer.MAX_VALUE;
-        }
-
-        boolean ret = (b == null || v.getBlockMaterial(world).isReplaceable() || v.isClearOfBlocks(world)
-                || !state.isNormalCube() || b.isLeaves(state, world, v.getPos()) || b.isWood(world, v.getPos()))
-                && v.y > 1;
-
-        return ret;
-    }
-
-    public static boolean isPointClearBlocks(double x, double y, double z, IBlockAccess world)
+    public static boolean isPointClearBlocks(double x, double y, double z, IBlockReader world)
     {
         int x0 = MathHelper.floor(x), y0 = MathHelper.floor(y), z0 = MathHelper.floor(z);
         BlockPos pos;
-        IBlockState state = world.getBlockState(pos = new BlockPos(x0, y0, z0));
+        BlockState state = world.getBlockState(pos = new BlockPos(x0, y0, z0));
         if (state == null) return true;
-        Block block = state.getBlock();
-
-        if (state.isNormalCube()) return false;
-
-        if (block == null || block == Blocks.AIR || !block.isCollidable()) return true;
-
-        List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
-        Vector3 v = getNewVector().set(x, y, z);
-
-        if (world instanceof World)
-            state.addCollisionBoxToList((World) world, pos, v.getAABB().grow(0.03, 0.03, 0.03), aabbs, null, false);
-        if (aabbs.size() == 0) return true;
-
+        VoxelShape shape = state.getCollisionShape(world, pos);
+        List<AxisAlignedBB> aabbs = shape.toBoundingBoxList();
         for (AxisAlignedBB aabb : aabbs)
         {
             if (aabb != null)
             {
-                if (y <= aabb.maxY && y >= aabb.minY) return false;
-                if (z <= aabb.maxZ && z >= aabb.minZ) return false;
-                if (x <= aabb.maxX && x >= aabb.minX) return false;
+                if (aabb.contains(x, y, z)) return false;
             }
         }
-
         return true;
     }
 
     public static boolean isVisibleEntityFromEntity(Entity looker, Entity target)
     {
         if (looker == null || target == null) return false;
-        return looker.getEntityWorld().rayTraceBlocks(
-                new Vec3d(looker.posX, looker.posY + looker.getEyeHeight(), looker.posZ),
-                new Vec3d(target.posX, target.posY + target.getEyeHeight(), target.posZ), false, true, false) == null;
+        if (looker instanceof LivingEntity) return ((LivingEntity) looker).canEntityBeSeen(target);
+        // TODO consider other raytrace here.
+        return false;
     }
 
     /** determines whether the source can see out as far as range in the given
@@ -314,17 +255,11 @@ public class Vector3
      * @param direction
      * @param range
      * @return */
-    public static boolean isVisibleRange(IBlockAccess world, Vector3 source, Vector3 direction, double range)
+    public static boolean isVisibleRange(IBlockReader world, Vector3 source, Vector3 direction, double range)
     {
         direction = direction.normalize();
 
-        if (world instanceof World)
-        {
-            direction.scalarMultBy(range).addTo(source);
-            return ((World) world).rayTraceBlocks(new Vec3d(source.x, source.y, source.z),
-                    new Vec3d(direction.x, direction.y, direction.z), false, true, false) == null;
-        }
-
+        // TODO see if there is any vanilla raytrace that works nicely hwere.
         double dx, dy, dz;
         for (double i = 0; i < range; i += 0.0625)
         {
@@ -439,7 +374,7 @@ public class Vector3
 
     public static Vector3 readFromNBT(CompoundNBT nbt, String tag)
     {
-        if (!nbt.hasKey(tag + "x")) return null;
+        if (!nbt.contains(tag + "x")) return null;
 
         Vector3 ret = Vector3.getNewVector();
         ret.x = nbt.getDouble(tag + "x");
@@ -508,7 +443,7 @@ public class Vector3
         if (e != null && bool)
         {
             this.x = e.posX;
-            this.y = e.posY + e.height / 2;
+            this.y = e.posY + e.getHeight() / 2;
             this.z = e.posZ;
         }
         else if (e != null)
@@ -634,7 +569,7 @@ public class Vector3
             {
                 for (Entity e : targets)
                 {
-                    if (e instanceof LivingEntity && !ret.contains(e) && !e.isPassengerOrBeingRiddenBy(excluded))
+                    if (e instanceof LivingEntity && !ret.contains(e) && !e.isRidingOrBeingRiddenBy(excluded))
                     {
                         ret.add(e);
                     }
@@ -644,7 +579,7 @@ public class Vector3
         return ret;
     }
 
-    public int blockCount(IBlockAccess world, Block block, int range)
+    public int blockCount(IBlockReader world, Block block, int range)
     {
         int ret = 0;
         Vector3 v = this.copy();
@@ -666,7 +601,7 @@ public class Vector3
     {
         int ret = 0;
         Vector3 v = this.copy();
-        Chunk chunk = world.getChunkFromBlockCoords(new BlockPos(intX(), 0, intZ()));
+        Chunk chunk = world.getChunk(new BlockPos(intX(), 0, intZ()));
         Block testBlock;
         for (int i = -range / 2; i <= range / 2; i++)
             for (int j = -range / 2; j <= range / 2; j++)
@@ -683,7 +618,7 @@ public class Vector3
                     if (!(i1 == i2 && k1 == k2 && j1 == j2)) continue;
                     v.set(this);
                     Vector3 test = v.addTo(i, j, k);
-                    testBlock = chunk.getBlockState(test.intX(), test.intY(), test.intZ()).getBlock();
+                    testBlock = chunk.getBlockState(test.getPos()).getBlock();
                     if (testBlock == block)
                     {
                         ret++;
@@ -693,24 +628,7 @@ public class Vector3
         return ret;
     }
 
-    public void breakBlock(World world, boolean drop)
-    {
-        if (getBlock(world) != null)
-        {
-            world.destroyBlock(getPos(), drop);
-        }
-    }
-
-    public void breakBlock(World world, int fortune, boolean drop)
-    {
-        if (getBlock(world) != null)
-        {
-            if (drop) getBlock(world).dropBlockAsItem(world, getPos(), getBlockState(world), fortune);
-            world.destroyBlock(getPos(), false);
-        }
-    }
-
-    public boolean canSeeSky(IBlockAccess world)
+    public boolean canSeeSky(IBlockReader world)
     {
         return getTopBlockY(world) <= y;
     }
@@ -720,21 +638,22 @@ public class Vector3
         return this.set(0, 0, 0);
     }
 
-    public boolean clearOfBlocks(IBlockAccess worldMap)
+    public boolean clearOfBlocks(IBlockReader world)
     {
 
-        IBlockState state = getBlockState(worldMap);
+        BlockState state = getBlockState(world);
         if (state == null) return true;
         Block block = state.getBlock();
 
-        if (state.isNormalCube()) return false;
+        if (state.isOpaqueCube(world, getPos())) return false;
 
-        if (block == null || block == Blocks.AIR || !state.getMaterial().blocksMovement() || !block.isCollidable())
+        if (block == null || block.isAir(state, world, pos) || !state.getMaterial().blocksMovement()
+                || !state.isSolid())
             return true;
 
         List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
-
-        aabbs.add(state.getBoundingBox(worldMap, getPos()));
+        VoxelShape shape = state.getCollisionShape(world, pos);
+        aabbs.addAll(shape.toBoundingBoxList());
 
         if (aabbs.size() == 0) return true;
 
@@ -742,12 +661,9 @@ public class Vector3
         {
             if (aabb != null)
             {
-                if (y <= aabb.maxY && y >= aabb.minY) return false;
-                if (z <= aabb.maxZ && z >= aabb.minZ) return false;
-                if (x <= aabb.maxX && x >= aabb.minX) return false;
+                if (aabb.contains(x, y, z)) return false;
             }
         }
-
         return true;
     }
 
@@ -807,7 +723,7 @@ public class Vector3
     }
 
     @SuppressWarnings("unchecked")
-    public Vector3 findClosestVisibleObject(IBlockAccess world, boolean water, int sightDistance, Object matching)
+    public Vector3 findClosestVisibleObject(IBlockReader world, boolean water, int sightDistance, Object matching)
     {
         int size = Math.min(sightDistance, 30);
         List<Object> list = new ArrayList<Object>();
@@ -871,14 +787,14 @@ public class Vector3
                 if (!(rTest.sameBlock(rTestPrev)))
                 {
                     rTestAbs.set(rTest).addTo(this);
-                    IBlockState state = rTestAbs.getBlockState(world);
+                    BlockState state = rTestAbs.getBlockState(world);
                     if (state == null) continue loop;
                     Block b = state.getBlock();
                     if (predicateList)
                     {
                         for (Object o : list)
                         {
-                            if (((Predicate<IBlockState>) o).apply(state))
+                            if (((Predicate<BlockState>) o).apply(state))
                             {
                                 ret.set(rTestAbs);
                                 return ret;
@@ -941,7 +857,7 @@ public class Vector3
         return null;
     }
 
-    public Vector3 findNextSolidBlock(IBlockAccess world, Vector3 direction, double range)
+    public Vector3 findNextSolidBlock(IBlockReader world, Vector3 direction, double range)
     {
         return findNextSolidBlock(world, this, direction, range);
     }
@@ -981,7 +897,7 @@ public class Vector3
 
             if (effect && world.isRemote)
             {
-                world.spawnParticle(EnumParticleTypes.TOWN_AURA, xtest, ytest, ztest, 0, 0, 0);
+                world.addParticle(ParticleTypes.MYCELIUM, xtest, ytest, ztest, 0, 0, 0);
             }
 
             if (!((int) xtest == (int) xprev && (int) ytest == (int) yprev && (int) ztest == (int) zprev))
@@ -1065,70 +981,42 @@ public class Vector3
         return Matrix3.getAABB(x, y, z, x, y, z);
     }
 
-    public Biome getBiome(Chunk chunk, BiomeProvider mngr)
-    {
-        return chunk.getBiome(new BlockPos(intX() & 15, 0, intZ() & 15), mngr);// .getBiomeGenForWorldCoords();
-    }
-
     public Biome getBiome(World world)
     {
         return world.getBiome(new BlockPos(intX(), 0, intZ()));
     }
 
-    public int getBiomeID(World world)
+    public Block getBlock(IBlockReader worldMap)
     {
-        return Biome.getIdForBiome(getBiome(world));
-    }
-
-    public Block getBlock(IBlockAccess worldMap)
-    {
-        IBlockState state = worldMap.getBlockState((getPos()));
+        BlockState state = worldMap.getBlockState((getPos()));
         if (state == null) return Blocks.AIR;
         return state.getBlock();
     }
 
-    public Block getBlock(IBlockAccess world, Direction side)
+    public Block getBlock(IBlockReader world, Direction side)
     {
         Vector3 other = offset(side);
         Block ret = other.getBlock(world);
         return ret;
     }
 
-    public int getBlockId(IBlockAccess world)
+    public Material getBlockMaterial(IBlockReader world)
     {
-        return Block.getIdFromBlock(world.getBlockState((getPos())).getBlock());
-    }
-
-    public Material getBlockMaterial(IBlockAccess world)
-    {
-        IBlockState state = world.getBlockState((getPos()));
+        BlockState state = world.getBlockState((getPos()));
         if (state == null || state.getBlock() == null) { return Material.AIR; }
         return state.getMaterial();
     }
 
-    public int getBlockMetadata(IBlockAccess world)
-    {
-        IBlockState state = world.getBlockState((getPos()));
-        Block b = state.getBlock();
-        return b.getMetaFromState(state);
-    }
-
-    public IBlockState getBlockState(IBlockAccess world)
+    public BlockState getBlockState(IBlockReader world)
     {
         return world.getBlockState(getPos());
     }
 
-    @SuppressWarnings("deprecation")
-    public float getExplosionResistance(Explosion boom, IBlockAccess world)
+    public float getExplosionResistance(Explosion boom, IWorldReader world)
     {
-        IBlockState state = getBlockState(world);
-        if (state == null) return 0;
-        Block block = state.getBlock();
-        if (block != null && !block.isAir(state, world, getPos())) { return world instanceof World
-                ? block.getExplosionResistance((World) world, pos, boom.getExplosivePlacedBy(), boom)
-                : block.getExplosionResistance(boom.getExplosivePlacedBy()); }
-        return 0;
-
+        BlockState state = getBlockState(world);
+        if (state == null || state.getBlock().isAir(state, world, getPos())) return 0;
+        return state.getExplosionResistance(world, pos, boom.getExplosivePlacedBy(), boom);
     }
 
     public int getLightValue(World world)
@@ -1143,24 +1031,8 @@ public class Vector3
 
     public int getMaxY(World world, int x, int z)
     {
-        Vector3 temp = Vector3.getNewVector().set(x, y, z);
-        Chunk chunk = world.getChunkFromBlockCoords(getPos());
-        int y;
-        for (y = chunk.getHeight(getPos()); y > 5; y--)
-        {
-            IBlockState state = world.getBlockState(new BlockPos(intX(), y, intZ()));
-            if (state == null) continue;
-            if (state.getMaterial().isSolid())
-            {
-                break;
-            }
-        }
-        if (Int(y) == intY()) return y;
-        while (isNotSurfaceBlock(world, temp))
-        {
-            y--;
-            temp.y = y;
-        }
+        Chunk chunk = world.getChunk(getPos());
+        int y = chunk.getTopBlockY(Type.MOTION_BLOCKING, intX() & 15, intZ() & 15);
         return y;
     }
 
@@ -1195,12 +1067,12 @@ public class Vector3
         return pos;
     }
 
-    public TileEntity getTileEntity(IBlockAccess world)
+    public TileEntity getTileEntity(IBlockReader world)
     {
         return world.getTileEntity(getPos());
     }
 
-    public TileEntity getTileEntity(IBlockAccess world, Direction side)
+    public TileEntity getTileEntity(IBlockReader world, Direction side)
     {
         Vector3 other = offset(side);
         TileEntity ret = other.getTileEntity(world);
@@ -1213,13 +1085,13 @@ public class Vector3
         return Vector3.getNewVector().set(intX(), y, intZ());
     }
 
-    public int getTopBlockY(IBlockAccess world)
+    public int getTopBlockY(IBlockReader world)
     {
         int ret = 255;
         {
             for (ret = 255; ret > 1; ret--)
             {
-                IBlockState state = world.getBlockState(new BlockPos(intX(), ret, intZ()));
+                BlockState state = world.getBlockState(new BlockPos(intX(), ret, intZ()));
                 if (state == null) continue;
                 if (state.getMaterial().isSolid()) { return ret; }
             }
@@ -1271,26 +1143,22 @@ public class Vector3
         return MathHelper.floor(z);
     }
 
-    public boolean isAir(IBlockAccess world)
+    public boolean isAir(IBlockReader world)
     {
         Material m;
         if (world instanceof World)
         {
-            IBlockState state = world.getBlockState((getPos()));
+            BlockState state = world.getBlockState((getPos()));
             return state.getBlock() == null || (m = getBlockMaterial(world)) == null || m == Material.AIR
-                    || state.getBlock().isAir(state, world, getPos());// ||world.isAirBlock(intX(),
-            // intY(),
-            // intZ())
+                    || state.getBlock().isAir(state, world, getPos());
         }
-        return (m = getBlockMaterial(world)) == null || m == Material.AIR;// ||world.isAirBlock(intX(),
-                                                                          // intY(),
-                                                                          // intZ())
+        return (m = getBlockMaterial(world)) == null || m == Material.AIR;
     }
 
-    public boolean isClearOfBlocks(IBlockAccess world)
+    public boolean isClearOfBlocks(IBlockReader world)
     {
         boolean ret = false;
-        IBlockState state = world.getBlockState(getPos());
+        BlockState state = world.getBlockState(getPos());
         if (state == null) return true;
 
         ret = isAir(world);
@@ -1299,12 +1167,8 @@ public class Vector3
         if (!ret) ret = ret || !getBlockMaterial(world).blocksMovement();
         if (!ret)
         {
-            Block block = state.getBlock();
-            if (state.isNormalCube()) return false;
-            if (block == null || block == Blocks.AIR || !block.isCollidable()) return true;
-            List<AxisAlignedBB> aabbs = new ArrayList<AxisAlignedBB>();
-            if (world instanceof World)
-                state.addCollisionBoxToList((World) world, pos, getAABB().grow(0.03, 0.03, 0.03), aabbs, null, false);
+            VoxelShape shape = state.getCollisionShape(world, getPos());
+            List<AxisAlignedBB> aabbs = shape.toBoundingBoxList();
             if (aabbs.size() == 0) return true;
             for (AxisAlignedBB aabb : aabbs)
             {
@@ -1325,38 +1189,36 @@ public class Vector3
         return x == 0 && z == 0 && y == 0;
     }
 
-    public boolean isEntityClearOfBlocks(IBlockAccess world, Entity e)
+    public boolean isEntityClearOfBlocks(IBlockReader world, Entity e)
     {
         boolean ret = false;
-
+        EntitySize size = e.getSize(e.getPose());
         Vector3 v = Vector3.getNewVector();
         Vector3 v1 = Vector3.getNewVector();
         v.set(this);
-        ret = v.addTo(v1.set(0, e.height, 0)).isClearOfBlocks(world);
-        if (!ret) return ret;
-
-        for (int i = -1; i <= 1; i++)
-            for (int j = -1; j <= 1; j++)
-                ret = ret && v.set(this).addTo(v1.set(i * e.width / 2, 0, j * e.width / 2)).isClearOfBlocks(world);
+        ret = v.addTo(v1.set(0, size.height, 0)).isClearOfBlocks(world);
         if (!ret) return ret;
 
         for (int i = -1; i <= 1; i++)
             for (int j = -1; j <= 1; j++)
                 ret = ret
-                        && v.set(this).addTo(v1.set(i * e.width / 2, e.height, j * e.width / 2)).isClearOfBlocks(world);
+                        && v.set(this).addTo(v1.set(i * size.width / 2, 0, j * size.width / 2)).isClearOfBlocks(world);
+        if (!ret) return ret;
+
+        for (int i = -1; i <= 1; i++)
+            for (int j = -1; j <= 1; j++)
+                ret = ret && v.set(this).addTo(v1.set(i * size.width / 2, size.height, j * size.width / 2))
+                        .isClearOfBlocks(world);
 
         return ret;
     }
 
-    /** TODO fix this once forge fluids work again Whether or not a certain
-     * block is considered a fluid.
-     * 
-     * @param world
+    /** @param world
      *            - world the block is in
      * @return if the block is a liquid */
     public boolean isFluid(World world)
     {
-        return FluidRegistry.lookupFluidForBlock(getBlock(world)) != null;
+        return !world.getFluidState(getPos()).isEmpty();
     }
 
     public boolean isNaN()
@@ -1366,7 +1228,7 @@ public class Vector3
 
     public boolean isOnSurface(Chunk chunk)
     {
-        return chunk.getHeightValue(intX() & 15, intZ() & 15) <= y;
+        return chunk.getTopBlockY(Type.MOTION_BLOCKING, intX() & 15, intZ() & 15) <= y;
     }
 
     public boolean isOnSurface(World world)
@@ -1374,21 +1236,15 @@ public class Vector3
         return getMaxY(world) <= y;
     }
 
-    public boolean isOnSurfaceIgnoringDecorationAndWater(Chunk chunk, IBlockAccess world)
+    public boolean isOnSurfaceIgnoringDecorationAndWater(Chunk chunk, IBlockReader world)
     {
-        int h = chunk.getHeightValue(intX() & 15, intZ() & 15);
-        if (h <= y) return true;
-        for (int i = h; i > y; i--)
-        {
-            Material m = world.getBlockState(new BlockPos(intX(), i, intZ())).getMaterial();
-            if (!(m == Material.WATER || m == Material.AIR || m == Material.LEAVES || m == Material.WOOD)) return false;
-        }
-        return true;
+        int h = chunk.getTopBlockY(Type.WORLD_SURFACE_WG, intX() & 15, intZ() & 15);
+        return (h <= y);
     }
 
     public boolean isPointClearOfEntity(double x, double y, double z, Entity e)
     {
-        AxisAlignedBB aabb = e.getEntityBoundingBox();
+        AxisAlignedBB aabb = e.getBoundingBox();
 
         if (y <= aabb.maxY && y >= aabb.minY) return false;
         if (z <= aabb.maxZ && z >= aabb.minZ) return false;
@@ -1397,13 +1253,13 @@ public class Vector3
         return true;
     }
 
-    public boolean isSideSolid(IBlockAccess world, Direction side)
+    public boolean isSideSolid(IBlockReader world, Direction side)
     {
-        boolean ret = world.isSideSolid(getPos(), side, false);
-        return ret;
+        BlockState state = getBlockState(world);
+        return state.canBeConnectedTo(world, getPos(), side);
     }
 
-    public boolean isVisible(IBlockAccess world, Vector3 location)
+    public boolean isVisible(IBlockReader world, Vector3 location)
     {
         Vector3 direction = location.subtract(this);
         double range = direction.mag();
@@ -1521,7 +1377,7 @@ public class Vector3
 
     public Vector3 offsetBy(Direction side)
     {
-        return addTo(side.getFrontOffsetX(), side.getFrontOffsetY(), side.getFrontOffsetZ());
+        return addTo(side.getXOffset(), side.getYOffset(), side.getZOffset());
     }
 
     public Vector3 reverse()
@@ -1641,7 +1497,7 @@ public class Vector3
         if (e != null && b)
         {
             this.x = e.posX;
-            this.y = e.posY + e.height / 2;
+            this.y = e.posY + e.getHeight() / 2;
             this.z = e.posZ;
         }
         else if (e != null)
@@ -1655,9 +1511,9 @@ public class Vector3
 
     public Vector3 set(Direction dir)
     {
-        this.x = dir.getFrontOffsetX();
-        this.y = dir.getFrontOffsetY();
-        this.z = dir.getFrontOffsetZ();
+        this.x = dir.getXOffset();
+        this.y = dir.getYOffset();
+        this.z = dir.getZOffset();
         return this;
     }
 
@@ -1697,7 +1553,7 @@ public class Vector3
         else if (o instanceof Direction)
         {
             Direction side = (Direction) o;
-            this.set(side.getFrontOffsetX(), side.getFrontOffsetY(), side.getFrontOffsetZ());
+            this.set(side.getXOffset(), side.getYOffset(), side.getZOffset());
         }
         else if (o instanceof Vector3)
         {
@@ -1707,11 +1563,6 @@ public class Vector3
         {
             BlockPos c = (BlockPos) o;
             this.set(c.getX(), c.getY(), c.getZ());
-        }
-        else if (o instanceof ICommandSource)
-        {
-            ICommandSource c = (ICommandSource) o;
-            this.set(c.getPosition());
         }
         else if (o instanceof PathPoint)
         {
@@ -1752,7 +1603,9 @@ public class Vector3
 
     public void setAir(World world)
     {
-        world.setBlockToAir(getPos());
+        // TODO maybe see if there is a way to find the default "air" for this
+        // world
+        world.setBlockState(getPos(), Blocks.AIR.getDefaultState());
     }
 
     public void setBiome(Biome biome, World world)
@@ -1760,19 +1613,18 @@ public class Vector3
         int x = intX();
         int z = intZ();
 
-        Chunk chunk = world.getChunkFromBlockCoords(new BlockPos(x, 0, z));
-        byte[] biomes = chunk.getBiomeArray();
-        byte newBiome = (byte) Biome.getIdForBiome(biome);
+        Chunk chunk = world.getChunk(new BlockPos(x, 0, z));
+        Biome[] biomes = chunk.getBiomes();
 
         int chunkX = Math.abs(x & 15);
         int chunkZ = Math.abs(z & 15);
 
         int point = chunkX + 16 * chunkZ;
 
-        if (biomes[point] != newBiome)
+        if (biomes[point] != biome)
         {
-            biomes[point] = newBiome;
-            chunk.setBiomeArray(biomes);
+            biomes[point] = biome;
+            chunk.setBiomes(biomes);
             chunk.markDirty();
         }
     }
@@ -1798,27 +1650,20 @@ public class Vector3
         return false;
     }
 
-    public void setBlock(World world, IBlockState defaultState)
+    public void setBlock(World world, BlockState defaultState)
     {
         world.setBlockState(getPos(), defaultState);
     }
 
-    public boolean setBlockId(World world, int id, int meta, int flag)
-    {
-        return setBlock(world, Block.getBlockById(id), meta, flag);
-    }
-
     public Vector3 setToVelocity(Entity e)
     {
-        set(e.motionX, e.motionY, e.motionZ);
+        set(e.getMotion());
         return this;
     }
 
     public void setVelocities(Entity e)
     {
-        e.motionX = x;
-        e.motionY = y;
-        e.motionZ = z;
+        e.setMotion(x, y, z);
     }
 
     /** Subtracts vectorB from vectorA
@@ -1878,9 +1723,9 @@ public class Vector3
 
     public void writeToNBT(CompoundNBT nbt, String tag)
     {
-        nbt.setDouble(tag + "x", x);
-        nbt.setDouble(tag + "y", y);
-        nbt.setDouble(tag + "z", z);
+        nbt.putDouble(tag + "x", x);
+        nbt.putDouble(tag + "y", y);
+        nbt.putDouble(tag + "z", z);
     }
 
     @Override

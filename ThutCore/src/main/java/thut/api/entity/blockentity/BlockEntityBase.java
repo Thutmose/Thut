@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -56,7 +56,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     Random                     r                 = new Random();
     public UUID                owner;
     public List<AxisAlignedBB> blockBoxes        = Lists.newArrayList();
-    public IBlockState[][][]   blocks            = null;
+    public BlockState[][][]   blocks            = null;
     public TileEntity[][][]    tiles             = null;
     BlockEntityUpdater         collider;
     BlockEntityInteractHandler interacter;
@@ -321,16 +321,16 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         if (nbt.hasKey("Blocks"))
         {
             CompoundNBT blockTag = nbt.getCompound("Blocks");
-            int sizeX = blockTag.getInteger("BlocksLengthX");
-            int sizeZ = blockTag.getInteger("BlocksLengthZ");
-            int sizeY = blockTag.getInteger("BlocksLengthY");
+            int sizeX = blockTag.getInt("BlocksLengthX");
+            int sizeZ = blockTag.getInt("BlocksLengthZ");
+            int sizeY = blockTag.getInt("BlocksLengthY");
             if (sizeX == 0 || sizeZ == 0)
             {
-                sizeX = sizeZ = nbt.getInteger("BlocksLength");
+                sizeX = sizeZ = nbt.getInt("BlocksLength");
             }
             if (sizeY == 0) sizeY = 1;
-            int version = blockTag.getInteger("v");
-            blocks = new IBlockState[sizeX][sizeY][sizeZ];
+            int version = blockTag.getInt("v");
+            blocks = new BlockState[sizeX][sizeY][sizeZ];
             tiles = new TileEntity[sizeX][sizeY][sizeZ];
             for (int i = 0; i < sizeX; i++)
                 for (int k = 0; k < sizeY; k++)
@@ -339,24 +339,24 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
                         int n = -1;
                         if (blockTag.hasKey("I" + i + "," + j))
                         {
-                            n = blockTag.getInteger("I" + i + "," + j);
+                            n = blockTag.getInt("I" + i + "," + j);
                         }
                         else if (blockTag.hasKey("I" + i + "," + k + "," + j))
                         {
-                            n = blockTag.getInteger("I" + i + "," + k + "," + j);
+                            n = blockTag.getInt("I" + i + "," + k + "," + j);
                         }
                         if (n == -1) continue;
-                        IBlockState state;
+                        BlockState state;
                         if (version == 0)
                         {
                             Block b = Block.getBlockFromItem(Item.getItemById(n));
-                            int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
+                            int meta = blockTag.getInt("M" + i + "," + k + "," + j);
                             state = b.getStateFromMeta(meta);
                         }
                         else
                         {
                             Block b = Block.getBlockById(n);
-                            int meta = blockTag.getInteger("M" + i + "," + k + "," + j);
+                            int meta = blockTag.getInt("M" + i + "," + k + "," + j);
                             state = b.getStateFromMeta(meta);
                         }
                         blocks[i][k][j] = state;
@@ -450,7 +450,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
                 {
                     for (int j = 0; j < sizeZ; j++)
                     {
-                        IBlockState b = blocks[i][k][j];
+                        BlockState b = blocks[i][k][j];
                         if (b == null) continue;
                         blocksTag.setInteger("I" + i + "," + k + "," + j, Block.getIdFromBlock(b.getBlock()));
                         blocksTag.setInteger("M" + i + "," + k + "," + j, b.getBlock().getMetaFromState(b));
@@ -480,12 +480,12 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     {
         super.writeEntityToNBT(nbt);
         CompoundNBT vector = new CompoundNBT();
-        vector.setDouble("minx", boundMin.getX());
-        vector.setDouble("miny", boundMin.getY());
-        vector.setDouble("minz", boundMin.getZ());
-        vector.setDouble("maxx", boundMax.getX());
-        vector.setDouble("maxy", boundMax.getY());
-        vector.setDouble("maxz", boundMax.getZ());
+        vector.putDouble("minx", boundMin.getX());
+        vector.putDouble("miny", boundMin.getY());
+        vector.putDouble("minz", boundMin.getZ());
+        vector.putDouble("maxx", boundMax.getX());
+        vector.putDouble("maxy", boundMax.getY());
+        vector.putDouble("maxz", boundMax.getZ());
         nbt.setTag("bounds", vector);
         try
         {
@@ -557,13 +557,13 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     }
 
     @Override
-    public void setBlocks(IBlockState[][][] blocks)
+    public void setBlocks(BlockState[][][] blocks)
     {
         this.blocks = blocks;
     }
 
     @Override
-    public IBlockState[][][] getBlocks()
+    public BlockState[][][] getBlocks()
     {
         return blocks;
     }

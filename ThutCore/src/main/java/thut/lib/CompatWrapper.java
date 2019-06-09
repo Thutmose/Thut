@@ -7,7 +7,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList.EntityEggInfo;
 import net.minecraft.entity.player.PlayerEntity;
@@ -64,7 +64,7 @@ public class CompatWrapper
         return ret;
     }
 
-    public static boolean interactWithBlock(Block block, World worldIn, BlockPos pos, IBlockState state,
+    public static boolean interactWithBlock(Block block, World worldIn, BlockPos pos, BlockState state,
             PlayerEntity playerIn, Hand hand, @Nullable ItemStack heldItem, Direction side, float hitX, float hitY,
             float hitZ)
     {
@@ -77,7 +77,7 @@ public class CompatWrapper
     }
 
     @SuppressWarnings("deprecation")
-    public static IBlockState getBlockStateFromMeta(Block block, int meta)
+    public static BlockState getBlockStateFromMeta(Block block, int meta)
     {
         return block.getStateFromMeta(meta);
     }

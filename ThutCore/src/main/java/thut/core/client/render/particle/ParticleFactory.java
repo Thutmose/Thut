@@ -7,7 +7,7 @@ import com.google.common.collect.Maps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
@@ -28,7 +28,7 @@ public class ParticleFactory
     {
         for (Integer i : particleTypes.keySet())
         {
-            EnumParticleTypes vanilla = EnumParticleTypes.getParticleFromId(i);
+            ParticleTypes vanilla = ParticleTypes.getParticleFromId(i);
             if (vanilla != null)
             {
                 factories.put(vanilla.getParticleName(), particleTypes.get(i));
@@ -52,12 +52,12 @@ public class ParticleFactory
         if (fact != null)
         {
             int id = 0;
-            EnumParticleTypes vanilla = null;
-            vanilla = EnumParticleTypes.getByName(name);
+            ParticleTypes vanilla = null;
+            vanilla = ParticleTypes.getByName(name);
             if (vanilla == null)
             {
                 if (name.contains("smoke"))
-                    vanilla = name.contains("large") ? EnumParticleTypes.SMOKE_LARGE : EnumParticleTypes.SMOKE_NORMAL;
+                    vanilla = name.contains("large") ? ParticleTypes.SMOKE_LARGE : ParticleTypes.SMOKE_NORMAL;
             }
             if (vanilla != null) id = vanilla.getParticleID();
             Particle par = fact.createParticle(id, ThutCore.proxy.getWorld(), location.x, location.y, location.z,

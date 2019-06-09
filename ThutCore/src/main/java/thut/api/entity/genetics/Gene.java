@@ -1,6 +1,6 @@
 package thut.api.entity.genetics;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 
@@ -32,7 +32,7 @@ public interface Gene
      * only called if this gene is expressed.
      * 
      * @param genes */
-    default void onUpdateTick(LivingEntity mob)
+    default void onUpdateTick(Entity entity)
     {
 
     }

@@ -21,7 +21,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -100,7 +100,7 @@ public class PacketHandler
                     try
                     {
                         CompoundNBT nbt = buffer.readCompoundTag();
-                        BlockPos pos = new BlockPos(nbt.getInteger("x"), nbt.getInteger("y"), nbt.getInteger("z"));
+                        BlockPos pos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
                         TileEntity tile = player.getEntityWorld().getTileEntity(pos);
                         if (tile != null) tile.readFromNBT(nbt);
                         // else System.err.println("No Tile Entity found at " +
@@ -120,7 +120,7 @@ public class PacketHandler
                         Map<Integer, String> map = Maps.newHashMap();
                         for (String s : nbt.getKeySet())
                         {
-                            map.put(nbt.getInteger(s), s);
+                            map.put(nbt.getInt(s), s);
                         }
                         BiomeType.setMap(map);
                     }
@@ -141,7 +141,7 @@ public class PacketHandler
                         {
                             // Check if the mob somehow was removed from chunk
                             // lists, if so, add it back in.
-                            Chunk chunk = e.getEntityWorld().getChunkFromBlockCoords(e.getPosition());
+                            Chunk chunk = e.getEntityWorld().getChunk(e.getPosition());
                             ClassInheritanceMultiMap<Entity>[] entityLists = chunk.getEntityLists();
                             int k = MathHelper.floor(e.posY / 16.0D);
                             if (k < 0)
@@ -170,8 +170,8 @@ public class PacketHandler
                     try
                     {
                         CompoundNBT nbt = buffer.readCompoundTag();
-                        Chunk chunk = player.getEntityWorld().getChunk(nbt.getInteger("c_x"),
-                                nbt.getInteger("c_z"));
+                        Chunk chunk = player.getEntityWorld().getChunk(nbt.getInt("c_x"),
+                                nbt.getInt("c_z"));
                         ITerrainProvider terrain = chunk.getCapability(CapabilityTerrain.TERRAIN_CAP, null);
                         CapabilityTerrain.TERRAIN_CAP.readNBT(terrain, null, nbt);
                     }
@@ -345,7 +345,7 @@ public class PacketHandler
                 vTemp.set(toFill);
                 vTemp.addTo(vMid);
                 if (provider.getPlayer() == null || provider.getPlayer().getEntityWorld() == null) { return; }
-                provider.getPlayer().getEntityWorld().spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y,
+                provider.getPlayer().getEntityWorld().spawnParticle(ParticleTypes.EXPLOSION_LARGE, vTemp.x, vTemp.y,
                         vTemp.z, 0, 0, 0);
                 if (n > max) break;
             }

@@ -8,7 +8,7 @@ import javax.vecmath.Vector3f;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
@@ -152,7 +152,7 @@ public class BlockEntityUpdater
                 {
                     List<AxisAlignedBB> toAdd = Lists.newArrayList();
                     pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
-                    IBlockState state = blockEntity.getFakeWorld().getBlockState(pos);
+                    BlockState state = blockEntity.getFakeWorld().getBlockState(pos);
                     state = state.getActualState(blockEntity.getFakeWorld(), pos);
                     try
                     {

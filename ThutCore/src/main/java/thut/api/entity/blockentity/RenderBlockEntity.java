@@ -4,8 +4,8 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -26,7 +26,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.IModel;
@@ -159,13 +159,13 @@ public class RenderBlockEntity<T extends LivingEntity> extends RenderLivingBase<
 
     private void drawBlockAt(BlockPos pos, IBlockEntity entity)
     {
-        IBlockState iblockstate = entity.getFakeWorld().getBlockState(pos);
-        if (iblockstate.getMaterial() != Material.AIR)
+        BlockState BlockState = entity.getFakeWorld().getBlockState(pos);
+        if (BlockState.getMaterial() != Material.AIR)
         {
             BlockRendererDispatcher blockrendererdispatcher = Minecraft.getInstance().getBlockRendererDispatcher();
-            IBlockState actualstate = iblockstate.getActualState(entity.getFakeWorld(), pos);
-            iblockstate = actualstate.getBlock().getExtendedState(actualstate, entity.getFakeWorld(), pos);
-            if (iblockstate.getRenderType() == EnumBlockRenderType.MODEL)
+            BlockState actualstate = BlockState.getActualState(entity.getFakeWorld(), pos);
+            BlockState = actualstate.getBlock().getExtendedState(actualstate, entity.getFakeWorld(), pos);
+            if (BlockState.getRenderType() == EnumBlockRenderType.MODEL)
             {
                 BlockPos liftPos = ((Entity) entity).getPosition();
                 GlStateManager.pushMatrix();
@@ -195,7 +195,7 @@ public class RenderBlockEntity<T extends LivingEntity> extends RenderLivingBase<
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 FMLClientHandler.instance().getClient().renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
                 IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
-                renderBakedBlockModel(entity, model, iblockstate, entity.getFakeWorld(), pos);
+                renderBakedBlockModel(entity, model, BlockState, entity.getFakeWorld(), pos);
                 if (!blend) GL11.glDisable(GL11.GL_BLEND);
                 RenderHelper.enableStandardItemLighting();
                 GlStateManager.popMatrix();
@@ -203,7 +203,7 @@ public class RenderBlockEntity<T extends LivingEntity> extends RenderLivingBase<
         }
     }
 
-    private void renderBakedBlockModel(IBlockEntity entity, IBakedModel model, IBlockState state, IBlockAccess world,
+    private void renderBakedBlockModel(IBlockEntity entity, IBakedModel model, BlockState state, IBlockReader world,
             BlockPos pos)
     {
         GlStateManager.rotate(90.0F, 0.0F, 1.0F, 0.0F);

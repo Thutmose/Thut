@@ -52,7 +52,7 @@ public class EnergyHandler
         @Override
         public void deserializeNBT(CompoundNBT nbt)
         {
-            this.energy = nbt.getInteger("E");
+            this.energy = nbt.getInt("E");
         }
     }
 

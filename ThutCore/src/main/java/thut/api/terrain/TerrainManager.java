@@ -57,9 +57,8 @@ public class TerrainManager
     @SubscribeEvent
     public void ChunkWatchEvent(ChunkWatchEvent.Watch evt)
     {
-        if (evt.getPlayer().getEntityWorld().isRemote || evt.getChunkInstance() == null) return;
-        PacketHandler.sendTerrainToClient(evt.getPlayer().getEntityWorld(), evt.getChunkInstance().getPos(),
-                evt.getPlayer());
+        if (evt.getPlayer().getEntityWorld().isRemote || evt.getPos() == null) return;
+        PacketHandler.sendTerrainToClient(evt.getPlayer().getEntityWorld(), evt.getPos(), evt.getPlayer());
     }
 
     public TerrainSegment getTerrain(World world, BlockPos p)

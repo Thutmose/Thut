@@ -10,12 +10,14 @@ import java.util.Set;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
@@ -65,59 +67,59 @@ public class ExplosionCustom extends Explosion
         }
     }
 
-    public static int            MAX_RADIUS             = 127;
-    public static int[]          MAXPERTICK             = { 10000, 50000 };
-    public static float          MINBLASTDAMAGE         = 0.1f;
-    public static boolean        AFFECTINAIR            = true;
-    public static Block          melt;
-    public static Block          solidmelt;
-    public static Block          dust;
-    public IEntityHitter         hitter                 = new IEntityHitter()
+    public static int        MAX_RADIUS             = 127;
+    public static int[]      MAXPERTICK             = { 10000, 50000 };
+    public static float      MINBLASTDAMAGE         = 0.1f;
+    public static boolean    AFFECTINAIR            = true;
+    public static Block      melt;
+    public static Block      solidmelt;
+    public static Block      dust;
+    public IEntityHitter     hitter                 = new IEntityHitter()
+                                                    {
+
+                                                        @Override
+                                                        public void hitEntity(Entity e, float power, Explosion boom)
                                                         {
+                                                            EntitySize size = e.getSize(e.getPose());
+                                                            float area = size.width * size.height;
+                                                            float damage = area * power;
+                                                            e.attackEntityFrom(DamageSource.causeExplosionDamage(boom),
+                                                                    damage);
+                                                        }
+                                                    };
 
-                                                            @Override
-                                                            public void hitEntity(Entity e, float power, Explosion boom)
-                                                            {
-                                                                float area = e.width * e.height;
-                                                                float damage = area * power;
-                                                                e.attackEntityFrom(
-                                                                        DamageSource.causeExplosionDamage(boom),
-                                                                        damage);
-                                                            }
-                                                        };
-    int                          dimension;
-    int                          currentIndex           = 0;
-    int                          nextIndex              = 0;
-    float                        minBlastDamage;
-    int                          radius                 = MAX_RADIUS;
-    public int[]                 maxPerTick;
-    World                        world;
-    Vector3                      centre;
+    int                      currentIndex           = 0;
+    int                      nextIndex              = 0;
+    float                    minBlastDamage;
+    int                      radius                 = MAX_RADIUS;
+    public int[]             maxPerTick;
+    World                    world;
+    Vector3                  centre;
 
-    float                        strength;
+    float                    strength;
 
-    public boolean               meteor                 = false;
+    public boolean           meteor                 = false;
 
-    public PlayerEntity          owner                  = null;
+    public PlayerEntity      owner                  = null;
 
-    List<Entity>                 targets                = new ArrayList<Entity>();
+    List<Entity>             targets                = new ArrayList<Entity>();
 
-    private double               explosionX;
+    private double           explosionX;
 
-    private double               explosionY;
+    private double           explosionY;
 
-    private double               explosionZ;
-    private float                explosionSize;
+    private double           explosionZ;
+    private float            explosionSize;
 
-    private boolean              isSmoking              = false;
+    private boolean          isSmoking              = false;
 
-    Entity                       exploder;
+    Entity                   exploder;
 
-    public Set<BlockPos>         affectedBlockPositions = new HashSet<BlockPos>();
+    public Set<BlockPos>     affectedBlockPositions = new HashSet<BlockPos>();
 
     Map<LivingEntity, Float> damages                = new HashMap<LivingEntity, Float>();
 
-    List<Chunk>                  affected               = new ArrayList<Chunk>();
+    List<Chunk>              affected               = new ArrayList<Chunk>();
 
     public ExplosionCustom(World world, Entity par2Entity, double x, double y, double z, float power)
     {
@@ -126,7 +128,7 @@ public class ExplosionCustom extends Explosion
 
     public ExplosionCustom(World world, Entity par2Entity, Vector3 center, float power)
     {
-        super(world, par2Entity, center.x, center.y, center.z, power, false, false);
+        super(world, par2Entity, center.x, center.y, center.z, power, false, Mode.DESTROY);
         this.world = world;
         exploder = par2Entity;
         strength = power;
@@ -135,7 +137,6 @@ public class ExplosionCustom extends Explosion
         this.explosionZ = center.z;
         explosionSize = power;
         this.centre = center.copy();
-        dimension = world.dimension.getDimension();
         minBlastDamage = MINBLASTDAMAGE;
         maxPerTick = MAXPERTICK;
     }
@@ -181,13 +182,13 @@ public class ExplosionCustom extends Explosion
 
         if (this.explosionSize >= 2.0F && this.isSmoking)
         {
-            this.world.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, this.explosionX, this.explosionY,
-                    this.explosionZ, 1.0D, 0.0D, 0.0D);
+            this.world.addParticle(ParticleTypes.EXPLOSION, this.explosionX, this.explosionY, this.explosionZ, 1.0D,
+                    0.0D, 0.0D);
         }
         else
         {
-            this.world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, this.explosionX, this.explosionY,
-                    this.explosionZ, 1.0D, 0.0D, 0.0D);
+            this.world.addParticle(ParticleTypes.EXPLOSION, this.explosionX, this.explosionY, this.explosionZ, 1.0D,
+                    0.0D, 0.0D);
         }
         MinecraftForge.EVENT_BUS.register(this);
         nextIndex = currentIndex + MAXPERTICK[0];
@@ -288,15 +289,16 @@ public class ExplosionCustom extends Explosion
      * 
      * @param destroyed
      * @param pos */
-    public void doMeteorStuff(IBlockState destroyed, BlockPos pos)
+    public void doMeteorStuff(BlockState destroyed, BlockPos pos)
     {
         if (!destroyed.getMaterial().isSolid() && !destroyed.getMaterial().isLiquid()) return;
         if (!meteor)
         {
-            world.setBlockToAir(pos);
+            // TODO possibly world specific air?
+            world.setBlockState(pos, Blocks.AIR.getDefaultState());
             return;
         }
-        float resistance = destroyed.getBlock().getExplosionResistance(world, pos, exploder, this);
+        float resistance = destroyed.getBlock().getExplosionResistance(destroyed, world, pos, exploder, this);
         if (melt == null) melt = Blocks.AIR;
         if (dust == null) dust = Blocks.AIR;
         if (resistance > 2 && !destroyed.getMaterial().isLiquid())
@@ -348,7 +350,7 @@ public class ExplosionCustom extends Explosion
         for (BlockPos pos : toRemove)
         {
             this.getAffectedBlockPositions().add(pos.toImmutable());
-            IBlockState state = world.getBlockState(pos);
+            BlockState state = world.getBlockState(pos);
             doMeteorStuff(state, pos);
         }
     }

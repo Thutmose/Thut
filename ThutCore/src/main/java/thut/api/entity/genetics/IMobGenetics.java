@@ -3,7 +3,7 @@ package thut.api.entity.genetics;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -30,12 +30,12 @@ public interface IMobGenetics
 
     /** This is called whenever the mob associated with this gene ticks.
      * 
-     * @param mob */
-    default void onUpdateTick(LivingEntity mob)
+     * @param entity */
+    default void onUpdateTick(Entity entity)
     {
         for (Alleles allele : getAlleles().values())
         {
-            allele.getExpressed().onUpdateTick(mob);
+            allele.getExpressed().onUpdateTick(entity);
         }
     }
 }

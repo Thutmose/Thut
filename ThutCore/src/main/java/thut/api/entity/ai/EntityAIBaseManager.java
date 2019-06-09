@@ -28,7 +28,7 @@ public class EntityAIBaseManager extends EntityAIBase
 
         // If not IAIMob, or self managed, then no need to run AI stuff.
         if (wrapped.selfManaged() || ai == null) return;
-        world.profiler.startSection("custom_ai");
+        world.getProfiler().startSection("custom_ai");
         // Run the ILogicRunnables on both server and client side.
         for (ILogicRunnable logic : ai.aiLogic)
         {
@@ -36,7 +36,7 @@ public class EntityAIBaseManager extends EntityAIBase
         }
         // Run Tick results from AI stuff.
         ai.runServerThreadTasks(world);
-        world.profiler.endSection();
+        world.getProfiler().endSection();
     }
 
     protected void updateEntityActionState(MobEntity mob, AIStuff ai)

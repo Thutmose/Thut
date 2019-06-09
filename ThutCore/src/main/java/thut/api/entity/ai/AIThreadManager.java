@@ -357,7 +357,7 @@ public class AIThreadManager
         }
 
         IMobGenetics genes = event.getEntity().getCapability(IMobGenetics.GENETICS_CAP, null);
-        if (genes != null) genes.onUpdateTick(event.getMobEntity());
+        if (genes != null) genes.onUpdateTick(event.getEntity());
 
         // If not IAIMob, or self managed, then no need to run AI stuff.
         if (mob == null || mob.selfManaged() || ai == null) return;
@@ -368,7 +368,7 @@ public class AIThreadManager
         }
         // Run remainder if AI server side only.
         if (!event.getEntity().getEntityWorld().isRemote)
-            updateEntityActionState((MobEntity) event.getMobEntity(), ai);
+            updateEntityActionState((MobEntity) event.getEntity(), ai);
     }
 
     protected void updateEntityActionState(MobEntity mob, AIStuff ai)

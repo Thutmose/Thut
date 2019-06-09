@@ -163,7 +163,7 @@ public class Checker
             //Continue onto next site.
             if (stop) continue;
             boom.rAbs.set(boom.r).addTo(boom.centre);
-            Chunk chunk = boom.world.getChunkFromBlockCoords(boom.rAbs.getPos());
+            Chunk chunk = boom.world.getChunk(boom.rAbs.getPos());
             if (chunk == null)
             {
                 System.out.println("No chunk at " + boom.rAbs);
@@ -326,7 +326,7 @@ public class Checker
             boom.thisShell.put(thisIndex, new Float(resHere));
             // boom.thisShell.put(thisIndex, new Float(res));
             boom.rAbs.set(boom.r).addTo(boom.centre);
-            Chunk chunk = boom.world.getChunkFromBlockCoords(boom.rAbs.getPos());
+            Chunk chunk = boom.world.getChunk(boom.rAbs.getPos());
             if (chunk == null)
             {
                 System.out.println("No chunk at " + boom.rAbs);

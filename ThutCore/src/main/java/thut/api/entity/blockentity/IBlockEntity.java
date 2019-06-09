@@ -15,8 +15,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
@@ -144,7 +144,7 @@ public interface IBlockEntity
                     }
         }
 
-        public static IBlockState[][][] checkBlocks(World world, BlockPos min, BlockPos max, BlockPos pos)
+        public static BlockState[][][] checkBlocks(World world, BlockPos min, BlockPos max, BlockPos pos)
         {
             int xMin = min.getX();
             int zMin = min.getZ();
@@ -152,7 +152,7 @@ public interface IBlockEntity
             int zMax = max.getZ();
             int yMin = min.getY();
             int yMax = max.getY();
-            IBlockState[][][] ret = new IBlockState[(xMax - xMin) + 1][(yMax - yMin) + 1][(zMax - zMin) + 1];
+            BlockState[][][] ret = new BlockState[(xMax - xMin) + 1][(yMax - yMin) + 1][(zMax - zMin) + 1];
             boolean valid = false;
             BlockPos temp;
             for (int i = xMin; i <= xMax; i++)
@@ -160,7 +160,7 @@ public interface IBlockEntity
                     for (int k = zMin; k <= zMax; k++)
                     {
                         temp = pos.add(i, j, k);
-                        IBlockState state = world.getBlockState(temp);
+                        BlockState state = world.getBlockState(temp);
                         if (BLOCKBLACKLIST.contains(state.getBlock().getRegistryName())) return null;
                         valid = valid || !state.getBlock().isAir(state, world, pos);
                         ret[i - xMin][j - yMin][k - zMin] = state;
@@ -185,10 +185,10 @@ public interface IBlockEntity
                         // TODO Apply transformation onto this pos based on
                         // whether the entity is rotated, and then also call the
                         // block's rotate method as well before placing the
-                        // IBlockState.
+                        // BlockState.
                         BlockPos pos = new BlockPos(i + xMin + entity.posX, j + yMin + entity.posY,
                                 k + zMin + entity.posZ);
-                        IBlockState state = toRevert.getFakeWorld().getBlockState(pos);
+                        BlockState state = toRevert.getFakeWorld().getBlockState(pos);
                         TileEntity tile = toRevert.getFakeWorld().getTileEntity(pos);
                         if (state != null)
                         {
@@ -308,7 +308,7 @@ public interface IBlockEntity
             max = new BlockPos(box.maxX, box.maxY, box.maxZ);
             IBlockEntity entity = (IBlockEntity) ret;
             ret.setPosition(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            IBlockState[][][] blocks = checkBlocks(world, min, max, pos);
+            BlockState[][][] blocks = checkBlocks(world, min, max, pos);
             if (blocks == null) return null;
             entity.setBlocks(blocks);
             entity.setTiles(checkTiles(world, min, max, pos));
@@ -320,9 +320,9 @@ public interface IBlockEntity
         }
     }
 
-    void setBlocks(IBlockState[][][] blocks);
+    void setBlocks(BlockState[][][] blocks);
 
-    IBlockState[][][] getBlocks();
+    BlockState[][][] getBlocks();
 
     void setTiles(TileEntity[][][] tiles);
 

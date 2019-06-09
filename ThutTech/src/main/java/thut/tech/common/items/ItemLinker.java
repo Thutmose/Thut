@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -282,7 +282,7 @@ public class ItemLinker extends Item
         }
         else
         {
-            IBlockState state = worldIn.getBlockState(pos);
+            BlockState state = worldIn.getBlockState(pos);
 
             if (state.getBlock() == ThutBlocks.lift
                     && state.getValue(BlockLift.VARIANT) == BlockLift.EnumType.CONTROLLER && !playerIn.isSneaking())

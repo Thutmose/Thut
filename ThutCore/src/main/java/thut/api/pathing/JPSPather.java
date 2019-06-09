@@ -1,7 +1,7 @@
 package thut.api.pathing;
 
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import thut.api.maths.Vector3;
 
 /** This is a modified version of the A* Pathfinding algorithm, it resembles the
@@ -16,7 +16,7 @@ public class JPSPather extends ThutPathFinder
         return MathHelper.floor(x);
     }
 
-    public JPSPather(IBlockAccess world, IPathingMob entity)
+    public JPSPather(IBlockReader world, IPathingMob entity)
     {
         super(world, entity);
     }
@@ -30,7 +30,7 @@ public class JPSPather extends ThutPathFinder
      * @param direction
      * @param range
      * @return */
-    public Vector3 findNextLocation(IBlockAccess world, Vector3 e, Vector3 source, Vector3 direction, double range)
+    public Vector3 findNextLocation(IBlockReader world, Vector3 e, Vector3 source, Vector3 direction, double range)
     {
         direction.norm();
         double xprev = source.x, yprev = source.y, zprev = source.z;

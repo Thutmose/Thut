@@ -7,7 +7,8 @@ public interface ITerrainProvider
 {
     default TerrainSegment getTerrain(World world, BlockPos p)
     {
-        return world.getChunkFromBlockCoords(p).getCapability(CapabilityTerrain.TERRAIN_CAP, null)
-                .getTerrainSegement(p);
+        CapabilityTerrain.ITerrainProvider provider = world.getChunk(p).getCapability(CapabilityTerrain.TERRAIN_CAP)
+                .orElse(null);
+        return provider.getTerrainSegement(p);
     }
 }
