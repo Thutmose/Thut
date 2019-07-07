@@ -5,24 +5,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import thut.api.maths.Vector3;
-import thut.api.network.PacketHandler;
 import thut.api.terrain.CapabilityTerrain.DefaultProvider;
 
+@Mod.EventBusSubscriber
 public class TerrainManager
 {
-
-    public static final String           TERRAIN    = "pokecubeTerrainData";
     public static final ResourceLocation TERRAINCAP = new ResourceLocation("thutcore", "terrain");
-    public ITerrainProvider              provider   = new ITerrainProvider()
-                                                    {
-                                                    };
-
     private static TerrainManager        terrain;
 
     public static void clear()
@@ -31,57 +23,44 @@ public class TerrainManager
 
     public static TerrainManager getInstance()
     {
-        if (terrain == null)
-        {
-            terrain = new TerrainManager();
-        }
-        return terrain;
-    }
-
-    private TerrainManager()
-    {
-        MinecraftForge.EVENT_BUS.register(this);
-        CapabilityManager.INSTANCE.register(CapabilityTerrain.ITerrainProvider.class, new CapabilityTerrain.Storage(),
-                CapabilityTerrain.DefaultProvider::new);
+        if (TerrainManager.terrain == null) TerrainManager.terrain = new TerrainManager();
+        return TerrainManager.terrain;
     }
 
     @SubscribeEvent
-    public void onCapabilityAttach(AttachCapabilitiesEvent<Chunk> event)
+    public static void onCapabilityAttach(final AttachCapabilitiesEvent<Chunk> event)
     {
-        if (event.getCapabilities().containsKey(TERRAINCAP)) return;
-        Chunk chunk = event.getObject();
-        DefaultProvider terrain = new DefaultProvider(chunk);
-        event.addCapability(TERRAINCAP, terrain);
+        if (event.getCapabilities().containsKey(TerrainManager.TERRAINCAP)) return;
+        final Chunk chunk = event.getObject();
+        final DefaultProvider terrain = new DefaultProvider(chunk);
+        event.addCapability(TerrainManager.TERRAINCAP, terrain);
     }
 
-    @SubscribeEvent
-    public void ChunkWatchEvent(ChunkWatchEvent.Watch evt)
+    public ITerrainProvider provider = new ITerrainProvider()
     {
-        if (evt.getPlayer().getEntityWorld().isRemote || evt.getPos() == null) return;
-        PacketHandler.sendTerrainToClient(evt.getPlayer().getEntityWorld(), evt.getPos(), evt.getPlayer());
+    };
+
+    public TerrainSegment getTerrain(final World world, final BlockPos p)
+    {
+        return this.provider.getTerrain(world, p);
     }
 
-    public TerrainSegment getTerrain(World world, BlockPos p)
+    public TerrainSegment getTerrain(final World world, final double x, final double y, final double z)
     {
-        return provider.getTerrain(world, p);
-    }
-
-    public TerrainSegment getTerrain(World world, double x, double y, double z)
-    {
-        BlockPos pos = new BlockPos(x, y, z);
-        TerrainSegment ret = getTerrain(world, pos);
+        final BlockPos pos = new BlockPos(x, y, z);
+        final TerrainSegment ret = this.getTerrain(world, pos);
         if (!world.isRemote) ret.initBiomes(world);
         return ret;
     }
 
-    public TerrainSegment getTerrainForEntity(Entity e)
+    public TerrainSegment getTerrainForEntity(final Entity e)
     {
         if (e == null) return null;
-        return getTerrain(e.getEntityWorld(), e.posX, e.posY, e.posZ);
+        return this.getTerrain(e.getEntityWorld(), e.posX, e.posY, e.posZ);
     }
 
-    public TerrainSegment getTerrian(World world, Vector3 v)
+    public TerrainSegment getTerrian(final World world, final Vector3 v)
     {
-        return getTerrain(world, v.x, v.y, v.z);
+        return this.getTerrain(world, v.x, v.y, v.z);
     }
 }

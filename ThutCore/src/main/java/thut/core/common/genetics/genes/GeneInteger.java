@@ -11,27 +11,27 @@ public abstract class GeneInteger implements Gene
     @Override
     public <T> T getValue()
     {
-        return (T) value;
+        return (T) this.value;
+    }
+
+    @Override
+    public void load(CompoundNBT tag)
+    {
+        this.value = tag.getInt("V");
+    }
+
+    @Override
+    public CompoundNBT save()
+    {
+        final CompoundNBT tag = new CompoundNBT();
+        tag.putInt("V", this.value);
+        return tag;
     }
 
     @Override
     public <T> void setValue(T value)
     {
         this.value = (Integer) value;
-    }
-
-    @Override
-    public CompoundNBT save()
-    {
-        CompoundNBT tag = new CompoundNBT();
-        tag.putInt("V", value);
-        return tag;
-    }
-
-    @Override
-    public void load(CompoundNBT tag)
-    {
-        value = tag.getInt("V");
     }
 
 }

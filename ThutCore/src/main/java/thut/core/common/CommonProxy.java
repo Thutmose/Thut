@@ -1,57 +1,17 @@
 package thut.core.common;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import thut.api.network.IPlayerProvider;
+import thut.api.terrain.TerrainManager;
 
-public class CommonProxy implements IPlayerProvider
+public class CommonProxy implements Proxy
 {
-
     @Override
-    public PlayerEntity getPlayer()
+    public void setup(FMLCommonSetupEvent event)
     {
-        return null;
-    }
+        Proxy.super.setup(event);
 
-    public PlayerEntity getPlayer(String playerName)
-    {
-        if (playerName != null) { return getWorld().getPlayerEntityByName(playerName); }
-        return null;
-    }
+        // Setup terrain manager
+        TerrainManager.getInstance();
 
-    public World getWorld()
-    {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
-    }
-
-    public void initClient()
-    {
-    }
-
-    public boolean isOnClientSide()
-    {
-        return false;
-    }
-
-    public void loadConfiguration()
-    {
-    }
-
-    public void loadSounds()
-    {
-    }
-
-    public void preinit(FMLCommonSetupEvent e)
-    {
-    }
-
-    public void registerEntities()
-    {
-    }
-
-    public void registerTEs()
-    {
     }
 }

@@ -1,7 +1,5 @@
 package thut.core.common.terrain;
 
-import static thut.api.terrain.TerrainSegment.GRIDSIZE;
-
 import java.util.List;
 
 import com.google.common.base.Predicate;
@@ -18,7 +16,7 @@ import thut.api.terrain.TerrainSegment.ISubBiomeChecker;
 public class ConfigTerrainChecker implements ISubBiomeChecker
 {
     private final List<Predicate<BlockState>> list;
-    private final BiomeType                    subbiome;
+    private final BiomeType                   subbiome;
 
     public ConfigTerrainChecker(List<Predicate<BlockState>> list, BiomeType subbiome)
     {
@@ -29,10 +27,8 @@ public class ConfigTerrainChecker implements ISubBiomeChecker
     private boolean apply(BlockState state)
     {
         if (state.getMaterial() == Material.AIR) return false;
-        for (Predicate<BlockState> predicate : list)
-        {
+        for (final Predicate<BlockState> predicate : this.list)
             if (predicate.apply(state)) return true;
-        }
         return false;
     }
 
@@ -41,18 +37,18 @@ public class ConfigTerrainChecker implements ISubBiomeChecker
     {
         if (caveAdjusted)
         {
-            Vector3 temp1 = Vector3.getNewVector();
-            int x0 = segment.chunkX * 16, y0 = segment.chunkY * 16, z0 = segment.chunkZ * 16;
-            int dx = ((v.intX() - x0) / GRIDSIZE) * GRIDSIZE;
-            int dy = ((v.intY() - y0) / GRIDSIZE) * GRIDSIZE;
-            int dz = ((v.intZ() - z0) / GRIDSIZE) * GRIDSIZE;
-            int x1 = x0 + dx, y1 = y0 + dy, z1 = z0 + dz;
-            for (int i = x1; i < x1 + GRIDSIZE; i++)
-                for (int j = y1; j < y1 + GRIDSIZE; j++)
-                    for (int k = z1; k < z1 + GRIDSIZE; k++)
+            final Vector3 temp1 = Vector3.getNewVector();
+            final int x0 = segment.chunkX * 16, y0 = segment.chunkY * 16, z0 = segment.chunkZ * 16;
+            final int dx = (v.intX() - x0) / TerrainSegment.GRIDSIZE * TerrainSegment.GRIDSIZE;
+            final int dy = (v.intY() - y0) / TerrainSegment.GRIDSIZE * TerrainSegment.GRIDSIZE;
+            final int dz = (v.intZ() - z0) / TerrainSegment.GRIDSIZE * TerrainSegment.GRIDSIZE;
+            final int x1 = x0 + dx, y1 = y0 + dy, z1 = z0 + dz;
+            for (int i = x1; i < x1 + TerrainSegment.GRIDSIZE; i++)
+                for (int j = y1; j < y1 + TerrainSegment.GRIDSIZE; j++)
+                    for (int k = z1; k < z1 + TerrainSegment.GRIDSIZE; k++)
                     {
                         temp1.set(i, j, k);
-                        if (apply(temp1.getBlockState(world))) return subbiome.getType();
+                        if (this.apply(temp1.getBlockState(world))) return this.subbiome.getType();
                     }
         }
         return -1;

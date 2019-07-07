@@ -18,11 +18,34 @@ import thut.api.terrain.TerrainSegment;
 
 public class ConfigTerrainBuilder
 {
+    private static void addToList(List<Predicate<BlockState>> list, String... conts)
+    {
+        if (conts == null) return;
+        if (conts.length < 1) return;
+        for (final String s : conts)
+        {
+            final Predicate<BlockState> b = ConfigTerrainBuilder.getState(s);
+            if (b != null) list.add(b);
+        }
+
+    }
+
+    private static void generateConfigTerrain(String[] blocks, BiomeType subbiome)
+    {
+        final List<Predicate<BlockState>> list = Lists.newArrayList();
+        ConfigTerrainBuilder.addToList(list, blocks);
+        if (!list.isEmpty())
+        {
+            final ConfigTerrainChecker checker = new ConfigTerrainChecker(list, subbiome);
+            TerrainSegment.biomeCheckers.add(checker);
+        }
+    }
+
     public static Predicate<BlockState> getState(String arguments)
     {
-        String[] args = arguments.split(" ");
+        final String[] args = arguments.split(" ");
 
-        String[] resource = args[0].split(":");
+        final String[] resource = args[0].split(":");
         final String modid = resource[0];
         final String blockName = resource[1];
         String keyTemp = null;
@@ -30,7 +53,7 @@ public class ConfigTerrainBuilder
 
         if (args.length > 1)
         {
-            String[] state = args[1].split("=");
+            final String[] state = args[1].split("=");
             keyTemp = state[0];
             valTemp = state[1];
         }
@@ -46,86 +69,56 @@ public class ConfigTerrainBuilder
             public boolean apply(BlockState input)
             {
                 if (input == null || input.getBlock() == null) return false;
-                Block block = input.getBlock();
-                ResourceLocation name = block.getRegistryName();
-                if (checks.containsKey(name) && !checks.get(name)) return false;
-                else if (!checks.containsKey(name))
+                final Block block = input.getBlock();
+                final ResourceLocation name = block.getRegistryName();
+                if (this.checks.containsKey(name) && !this.checks.get(name)) return false;
+                else if (!this.checks.containsKey(name))
                 {
-                    if (!modidPattern.matcher(name.getResourceDomain()).matches())
+                    if (!this.modidPattern.matcher(name.getNamespace()).matches())
                     {
-                        checks.put(name, false);
+                        this.checks.put(name, false);
                         return false;
                     }
-                    if (!blockPattern.matcher(name.getResourcePath()).matches())
+                    if (!this.blockPattern.matcher(name.getPath()).matches())
                     {
-                        checks.put(name, false);
+                        this.checks.put(name, false);
                         return false;
                     }
-                    checks.put(name, true);
+                    this.checks.put(name, true);
                 }
                 if (key == null) return true;
-                for (IProperty<?> prop : input.getPropertyKeys())
-                {
+                for (final IProperty<?> prop : input.getProperties())
                     if (prop.getName().equals(key))
                     {
-                        Object inputVal = input.getValue(prop);
+                        final Object inputVal = input.get(prop);
                         return inputVal.toString().equalsIgnoreCase(val);
                     }
-                }
                 return false;
             }
         };
     }
 
-    private static void addToList(List<Predicate<BlockState>> list, String... conts)
+    public static void process(List<String> values)
     {
-        if (conts == null) return;
-        if (conts.length < 1) return;
-        for (String s : conts)
-        {
-            Predicate<BlockState> b = getState(s);
-            if (b != null)
-            {
-                list.add(b);
-            }
-        }
-
-    }
-
-    public static void process(String[] values)
-    {
-        Map<String, ArrayList<String>> types = Maps.newHashMap();
-        for (String s : values)
-        {
+        final Map<String, ArrayList<String>> types = Maps.newHashMap();
+        for (final String s : values)
             try
             {
-                String[] args = s.split("->");
-                String id = args[0];
-                String val = args[1];
+                final String[] args = s.split("->");
+                final String id = args[0];
+                final String val = args[1];
                 ArrayList<String> list = types.get(id);
                 if (list == null) types.put(id, list = Lists.newArrayList());
                 list.add(val);
             }
-            catch (Exception e)
+            catch (final Exception e)
             {
                 e.printStackTrace();
             }
-        }
-        for (String type : types.keySet())
+        for (final String type : types.keySet())
         {
-            BiomeType subbiome = BiomeType.getBiome(type, true);
-            generateConfigTerrain(types.get(type).toArray(new String[0]), subbiome);
-        }
-    }
-
-    private static void generateConfigTerrain(String[] blocks, BiomeType subbiome)
-    {
-        List<Predicate<BlockState>> list = Lists.newArrayList();
-        addToList(list, blocks);
-        if (!list.isEmpty())
-        {
-            ConfigTerrainChecker checker = new ConfigTerrainChecker(list, subbiome);
-            TerrainSegment.biomeCheckers.add(checker);
+            final BiomeType subbiome = BiomeType.getBiome(type, true);
+            ConfigTerrainBuilder.generateConfigTerrain(types.get(type).toArray(new String[0]), subbiome);
         }
     }
 

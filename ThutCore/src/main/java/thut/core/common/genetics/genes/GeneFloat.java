@@ -11,7 +11,21 @@ public abstract class GeneFloat implements Gene
     @Override
     public <T> T getValue()
     {
-        return (T) value;
+        return (T) this.value;
+    }
+
+    @Override
+    public void load(CompoundNBT tag)
+    {
+        this.value = tag.getFloat("V");
+    }
+
+    @Override
+    public CompoundNBT save()
+    {
+        final CompoundNBT tag = new CompoundNBT();
+        tag.putFloat("V", this.value);
+        return tag;
     }
 
     @Override
@@ -21,23 +35,9 @@ public abstract class GeneFloat implements Gene
     }
 
     @Override
-    public CompoundNBT save()
-    {
-        CompoundNBT tag = new CompoundNBT();
-        tag.putFloat("V", value);
-        return tag;
-    }
-
-    @Override
-    public void load(CompoundNBT tag)
-    {
-        value = tag.getFloat("V");
-    }
-
-    @Override
     public String toString()
     {
-        return "" + value;
+        return "" + this.value;
     }
 
 }

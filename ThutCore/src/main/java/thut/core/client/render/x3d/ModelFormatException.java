@@ -1,6 +1,7 @@
 package thut.core.client.render.x3d;
 
-public class ModelFormatException extends RuntimeException {
+public class ModelFormatException extends RuntimeException
+{
 
     private static final long serialVersionUID = 2023547503969671835L;
 
@@ -23,6 +24,5 @@ public class ModelFormatException extends RuntimeException {
     {
         super(cause);
     }
-
 
 }

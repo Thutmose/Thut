@@ -1,80 +1,14 @@
 package thut.tech.common;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import thut.core.common.Proxy;
+import thut.tech.common.network.PacketLift;
 
-public class CommonProxy implements IGuiHandler
+public class CommonProxy implements Proxy
 {
-
     @Override
-    public Object getClientGuiElement(int guiID, PlayerEntity player, World world, int x, int y, int z)
+    public void setup(FMLCommonSetupEvent event)
     {
-        return null;
+        TechCore.packets.registerMessage(PacketLift.class, PacketLift::new);
     }
-
-    public PlayerEntity getPlayer()
-    {
-        return null;
-    }
-
-    public PlayerEntity getPlayer(String playerName)
-    {
-        if (playerName != null)
-        {
-            return getWorld().getPlayerEntityByName(playerName);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    @Override
-    public Object getServerGuiElement(int guiID, PlayerEntity player, World world, int x, int y, int z)
-    {
-        return null;
-    }
-
-    public World getWorld()
-    {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().worlds[0];
-    }
-
-    public void initClient()
-    {
-    }
-
-    public void registerBlockModels()
-    {
-    }
-
-    public void registerItemModels()
-    {
-    }
-
-    public boolean isOnClientSide()
-    {
-        return false;
-    }
-
-    public void loadConfiguration()
-    {
-    }
-
-    public void loadSounds()
-    {
-    }
-
-    public void preinit(FMLCommonSetupEvent event)
-    {
-
-    }
-
-    public void registerEntities()
-    {
-    }
-
 }

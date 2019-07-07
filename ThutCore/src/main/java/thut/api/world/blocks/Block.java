@@ -11,27 +11,35 @@ import thut.api.world.utils.Vector;
 
 public interface Block extends Keyed
 {
-    /** The world that this block lives in
-     * 
-     * @return */
-    World world();
+    /**
+     * UUID of this block (null if no info)
+     *
+     * @return
+     */
+    @Nullable
+    UUID id();
 
-    void setWorld(World world);
-
-    /** Position of this Block
-     * 
-     * @return */
-    Vector<Integer> position();
-
-    /** Stored info for this block (null if none)
-     * 
-     * @return */
+    /**
+     * Stored info for this block (null if none)
+     *
+     * @return
+     */
     @Nullable
     Info info();
 
-    /** UUID of this block (null if no info)
-     * 
-     * @return */
-    @Nullable
-    UUID id();
+    /**
+     * Position of this Block
+     *
+     * @return
+     */
+    Vector<Integer> position();
+
+    void setWorld(World world);
+
+    /**
+     * The world that this block lives in
+     *
+     * @return
+     */
+    World world();
 }

@@ -11,13 +11,38 @@ public class Data_ItemStack extends Data_Base<ItemStack>
 
     public Data_ItemStack()
     {
-        initLast(value);
+        this.initLast(this.value);
+    }
+
+    @Override
+    public ItemStack get()
+    {
+        return this.value;
     }
 
     @Override
     protected boolean isDifferent(ItemStack last, ItemStack value)
     {
         return !ItemStack.areItemStacksEqual(last, value);
+    }
+
+    @Override
+    public void read(ByteBuf buf)
+    {
+        super.read(buf);
+        final int num = buf.readInt();
+        final PacketBuffer wrapped = new PacketBuffer(Unpooled.buffer(0));
+        final byte[] dst = new byte[num];
+        buf.readBytes(dst);
+        try
+        {
+            wrapped.writeBytes(dst);
+            this.value = wrapped.readItemStack();
+        }
+        catch (final Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -34,40 +59,15 @@ public class Data_ItemStack extends Data_Base<ItemStack>
     }
 
     @Override
-    public ItemStack get()
-    {
-        return this.value;
-    }
-
-    @Override
     public void write(ByteBuf buf)
     {
         super.write(buf);
-        PacketBuffer wrapped = new PacketBuffer(Unpooled.buffer(0));
-        wrapped.writeItemStack(value);
-        int num = wrapped.readableBytes();
+        final PacketBuffer wrapped = new PacketBuffer(Unpooled.buffer(0));
+        wrapped.writeItemStack(this.value);
+        final int num = wrapped.readableBytes();
         buf.writeInt(num);
         buf.writeBytes(wrapped);
 
-    }
-
-    @Override
-    public void read(ByteBuf buf)
-    {
-        super.read(buf);
-        int num = buf.readInt();
-        PacketBuffer wrapped = new PacketBuffer(Unpooled.buffer(0));
-        byte[] dst = new byte[num];
-        buf.readBytes(dst);
-        try
-        {
-            wrapped.writeBytes(dst);
-            value = wrapped.readItemStack();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
     }
 
 }

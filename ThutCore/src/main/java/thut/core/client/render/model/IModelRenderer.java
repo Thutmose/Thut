@@ -1,5 +1,6 @@
 package thut.core.client.render.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -9,15 +10,15 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
+import thut.core.client.render.animation.Animation;
 import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
-import thut.core.client.render.tabula.components.Animation;
+import thut.core.client.render.animation.IAnimationChanger;
+import thut.core.client.render.animation.ModelHolder;
+import thut.core.client.render.texturing.IPartTexturer;
 
 public interface IModelRenderer<T extends MobEntity>
 {
-    public static final String DEFAULTPHASE = "idle";
-    static final Vector3       DEFAULTSCALE = Vector3.getNewVector().set(1);
-
     public static class Vector5
     {
         public Vector4 rotations;
@@ -39,74 +40,46 @@ public interface IModelRenderer<T extends MobEntity>
         {
             if (v.time == 0) return this;
 
-            if (Double.isNaN(rotations.x))
-            {
-                rotations = new Vector4();
-            }
-            Vector4 rotDiff = rotations.copy();
+            if (Double.isNaN(this.rotations.x)) this.rotations = new Vector4();
+            Vector4 rotDiff = this.rotations.copy();
 
-            if (rotations.x == rotations.z && rotations.z == rotations.y && rotations.y == rotations.w
-                    && rotations.w == 0)
-            {
-                rotations.x = 1;
-            }
+            if (this.rotations.x == this.rotations.z && this.rotations.z == this.rotations.y
+                    && this.rotations.y == this.rotations.w && this.rotations.w == 0) this.rotations.x = 1;
 
-            if (!v.rotations.equals(rotations))
+            if (!v.rotations.equals(this.rotations))
             {
-                rotDiff = v.rotations.subtractAngles(rotations);
+                rotDiff = v.rotations.subtractAngles(this.rotations);
 
-                rotDiff = rotations.addAngles(rotDiff.scalarMult(time));
+                rotDiff = this.rotations.addAngles(rotDiff.scalarMult(time));
             }
-            if (Double.isNaN(rotDiff.x))
-            {
-                rotDiff = new Vector4(0, 1, 0, 0);
-            }
-            Vector5 ret = new Vector5(rotDiff, v.time);
+            if (Double.isNaN(rotDiff.x)) rotDiff = new Vector4(0, 1, 0, 0);
+            final Vector5 ret = new Vector5(rotDiff, v.time);
             return ret;
         }
 
         @Override
         public String toString()
         {
-            return "|r:" + rotations + "|t:" + time;
+            return "|r:" + this.rotations + "|t:" + this.time;
         }
     }
 
+    public static final String DEFAULTPHASE = "idle";
+
+    static final Vector3 DEFAULTSCALE = Vector3.getNewVector().set(1);
+
     void doRender(T entity, double d, double d1, double d2, float f, float partialTick);
-
-    IPartTexturer getTexturer();
-
-    IAnimationChanger getAnimationChanger();
-
-    void setTexturer(IPartTexturer texturer);
-
-    void setAnimationChanger(IAnimationChanger changer);
 
     default String getAnimation(Entity entityIn)
     {
-        IAnimationHolder holder = AnimationHelper.getHolder(entityIn);
+        final IAnimationHolder holder = AnimationHelper.getHolder(entityIn);
         if (holder != null) return holder.getPendingAnimation();
         return "idle";
     }
 
-    boolean hasAnimation(String phase, Entity entity);
-
-    void renderStatus(T entity, double d, double d1, double d2, float f, float partialTick);
-
-    default void setAnimation(String phase, Entity entity)
-    {
-        IAnimationHolder holder = AnimationHelper.getHolder(entity);
-        if (holder != null) holder.setPendingAnimation(phase);
-    }
-
-    void scaleEntity(Entity entity, IModel model, float partialTick);
+    IAnimationChanger getAnimationChanger();
 
     HashMap<String, List<Animation>> getAnimations();
-
-    default Vector3 getScale()
-    {
-        return DEFAULTSCALE;
-    }
 
     default Vector3 getRotationOffset()
     {
@@ -118,4 +91,35 @@ public interface IModelRenderer<T extends MobEntity>
     {
         return null;
     }
+
+    default Vector3 getScale()
+    {
+        return IModelRenderer.DEFAULTSCALE;
+    }
+
+    IPartTexturer getTexturer();
+
+    boolean hasAnimation(String phase, Entity entity);
+
+    void renderStatus(T entity, double d, double d1, double d2, float f, float partialTick);
+
+    void scaleEntity(Entity entity, IModel model, float partialTick);
+
+    default void setAnimation(String phase, Entity entity)
+    {
+        final IAnimationHolder holder = AnimationHelper.getHolder(entity);
+        if (holder != null) holder.setPendingAnimation(phase);
+    }
+
+    void setAnimationChanger(IAnimationChanger changer);
+
+    void setRotationOffset(Vector3 offset);
+
+    void setRotations(Vector5 rotations);
+
+    void setScale(Vector3 scale);
+
+    void setTexturer(IPartTexturer texturer);
+
+    void updateModel(HashMap<String, ArrayList<Vector5>> phaseList, ModelHolder model);
 }

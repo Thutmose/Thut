@@ -1,421 +1,378 @@
 package thut.core.client.render.tabula.model.modelbase;
 
+import java.util.HashMap;
+import java.util.List;
+
 import org.lwjgl.opengl.GL11;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.google.common.collect.Lists;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import thut.api.entity.IMobColourable;
-import thut.core.client.render.model.IAnimationChanger;
-import thut.core.client.render.model.IModel.HeadInfo;
-import thut.core.client.render.model.IPartTexturer;
-import thut.core.client.render.model.IRetexturableModel;
+import thut.api.maths.Vector3;
+import thut.api.maths.Vector4;
+import thut.core.client.render.animation.IAnimationChanger;
+import thut.core.client.render.model.IExtendedModelPart;
+import thut.core.client.render.model.Vertex;
+import thut.core.client.render.tabula.components.CubeInfo;
 import thut.core.client.render.tabula.components.ModelJson;
+import thut.core.client.render.texturing.IPartTexturer;
+import thut.core.client.render.texturing.IRetexturableModel;
 
 @OnlyIn(Dist.CLIENT)
-public class TabulaRenderer extends ModelRenderer implements IRetexturableModel
+public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
 {
-    static final float        ratio        = 180f / (float) Math.PI;
+    static final float ratio = 180f / (float) Math.PI;
 
-    private float             initRotateAngleX;
-    private float             initRotateAngleY;
-    private float             initRotateAngleZ;
+    public final List<ModelBox>                   cubeList   = Lists.newArrayList();
+    private final HashMap<String, TabulaRenderer> childParts = new HashMap<>();
+    public String                                 name;
+    private IExtendedModelPart                    parent     = null;
 
-    private float             initOffsetX;
-    private float             initOffsetY;
-    private float             initOffsetZ;
+    IPartTexturer     texturer;
+    IAnimationChanger changer;
 
-    private float             initRotationPointX;
-    private float             initRotationPointY;
-    private float             initRotationPointZ;
+    public Vector4 preRot    = new Vector4();
+    public Vector4 postRot   = new Vector4();
+    public Vector4 postRot1  = new Vector4();
+    public Vector3 preTrans  = Vector3.getNewVector();
+    public Vector3 postTrans = Vector3.getNewVector();
+    public Vertex  preScale  = new Vertex(1, 1, 1);
 
-    private float             initScaleX   = 1f;
-    private float             initScaleY   = 1f;
-    private float             initScaleZ   = 1f;
-    private ModelRenderer     parent;
-    private boolean           hasInitPose;
-    private boolean           compiled;
-    private int               displayList;
-    public float              scaleX       = 1f;
-    public float              scaleY       = 1f;
-    public float              scaleZ       = 1f;
-    public String             name;
-    public String             identifier;
+    public Vector3 offset    = Vector3.getNewVector();
+    public Vector4 rotations = new Vector4();
+    public Vertex  scale     = new Vertex(1, 1, 1);
 
-    private IAnimationChanger set;
-    final ModelJson           model;
-    IPartTexturer             texturer;
-    double[]                  texOffsets   = { 0, 0 };
-    boolean                   offset       = true;
+    public int red = 255, green = 255, blue = 255, alpha = 255;
 
-    boolean                   rotate       = true;
+    public int brightness = 15728640;
 
-    boolean                   translate    = true;
+    private final int[] rgbab = new int[5];
 
-    boolean                   shouldScale  = true;
+    private boolean hidden = false;
 
-    public boolean            transluscent = false;
+    private boolean compiled;
+    private int     displayList;
+    public String   identifier;
 
-    public TabulaRenderer(ModelJson modelBase)
+    final ModelJson<?>    model;
+    public final CubeInfo info;
+
+    double[] texOffsets   = { 0, 0 };
+    boolean  shouldoffset = true;
+
+    boolean rotate = true;
+
+    boolean translate = true;
+
+    boolean shouldScale = true;
+
+    public boolean transluscent = false;
+
+    public TabulaRenderer(ModelJson<?> modelBase, CubeInfo cubeInfo)
     {
-        super(modelBase);
-        model = modelBase;
-    }
+        // super(modelBase, x, y);
+        this.model = modelBase;
 
-    public TabulaRenderer(ModelJson modelBase, int x, int y)
-    {
-        super(modelBase, x, y);
-        model = modelBase;
-        if (modelBase instanceof TabulaModelBase)
-        {
-            TabulaModelBase mowzieModelBase = modelBase;
-            mowzieModelBase.addPart(this);
-        }
-    }
+        this.info = cubeInfo;
+        this.name = cubeInfo.name;
+        this.identifier = cubeInfo.identifier;
+        this.offset.set(cubeInfo.position).scalarMultBy(0.0625);
 
-    public TabulaRenderer(ModelJson modelBase, String name)
-    {
-        super(modelBase, name);
-        model = modelBase;
+        this.rotations = Vector4.fromAngles((float) cubeInfo.rotation[0], (float) cubeInfo.rotation[1],
+                (float) cubeInfo.rotation[2]);
+
+        // Allows scaling the cube with the cubeinfo scale.
+        this.scale.x = (float) cubeInfo.scale[0];
+        this.scale.y = (float) cubeInfo.scale[1];
+        this.scale.z = (float) cubeInfo.scale[2];
+
+        if (cubeInfo.metadata != null) for (final String s : cubeInfo.metadata)
+            if (s.equalsIgnoreCase("trans")) this.transluscent = true;
+        this.hidden = cubeInfo.hidden;
+
+        final RendererModel dummy = new RendererModel(this.model, cubeInfo.txOffset[0], cubeInfo.txOffset[1]);
+        // Use cubeInfo.mcScale as the scale, this lets it work properly.
+        this.cubeList.add(new ModelBox(dummy, cubeInfo.txOffset[0], cubeInfo.txOffset[1], (float) cubeInfo.offset[0],
+                (float) cubeInfo.offset[1], (float) cubeInfo.offset[2], cubeInfo.dimensions[0], cubeInfo.dimensions[1],
+                cubeInfo.dimensions[2], (float) cubeInfo.mcScale));
     }
 
     @Override
-    public void addChild(ModelRenderer renderer)
+    public void addChild(IExtendedModelPart renderer)
     {
-        super.addChild(renderer);
+        // super.addChild((RendererModel) renderer);
+        this.childParts.put(renderer.getName(), (TabulaRenderer) renderer);
+        if (renderer instanceof TabulaRenderer) ((TabulaRenderer) renderer).setParent(this);
+    }
 
-        if (renderer instanceof TabulaRenderer)
+    public void addForRender()
+    {
+        if (!this.compiled) this.compileDisplayList(0.0625F);
+        // Apply Colour
+        boolean animateTex = false;
+        // Apply Texture
+        if (this.texturer != null)
         {
-            ((TabulaRenderer) renderer).setParent(this);
+            this.texturer.applyTexture(this.name);
+            this.texturer.shiftUVs(this.name, this.texOffsets);
+            if (this.texOffsets[0] != 0 || this.texOffsets[1] != 0) animateTex = true;
+            if (animateTex)
+            {
+                GL11.glMatrixMode(GL11.GL_TEXTURE);
+                GL11.glLoadIdentity();
+                GL11.glTranslated(this.texOffsets[0], this.texOffsets[1], 0.0F);
+                GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            }
+        }
+        GL11.glCallList(this.displayList);
+        GL11.glFlush();
+        if (animateTex)
+        {
+            GL11.glMatrixMode(GL11.GL_TEXTURE);
+            GL11.glLoadIdentity();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
     private void compileDisplayList(float scale)
     {
-        displayList = GLAllocation.generateDisplayLists(1);
-        GL11.glNewList(displayList, GL11.GL_COMPILE);
-        for (Object object : cubeList)
-        {
+        this.displayList = GLAllocation.generateDisplayLists(1);
+        GL11.glNewList(this.displayList, GL11.GL_COMPILE);
+        for (final Object object : this.cubeList)
             ((ModelBox) object).render(Tessellator.getInstance().getBuffer(), scale);
-        }
         GL11.glEndList();
-        compiled = true;
+        this.compiled = true;
     }
 
-    /** Returns the parent of this ModelRenderer */
-    public ModelRenderer getParent()
+    @Override
+    public Vector4 getDefaultRotations()
     {
-        return parent;
+        return this.rotations;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public void render(float scale, Entity entity)
+    @Override
+    public Vector3 getDefaultTranslations()
     {
-        if (set == null) return;
-        GL11.glPushMatrix();
-        // Allows specific part hiding based on entity state. should probably be
-        // somehow moved over to this class somewhere
-        isHidden = set.isPartHidden(identifier, entity, isHidden);
-        if (!isHidden && showModel)
-        {
-            translate = rotationPointX != 0 || rotationPointY != 0 || rotationPointZ != 0;
-            rotate = rotateAngleX != 0 || rotateAngleY != 0 || rotateAngleZ != 0;
-            offset = offsetX != 0 || offsetY != 0 || offsetZ != 0;
-            shouldScale = scaleX != 1 || scaleY != 1 || scaleZ != 1;
-            shouldScale = shouldScale && scaleX != 0 && scaleY != 0 && scaleZ != 0;
-            if (!compiled)
-            {
-                compileDisplayList(scale);
-            }
-            float f5 = 0.0625F;
-            if (translate) GL11.glTranslatef(rotationPointX * f5, rotationPointY * f5, rotationPointZ * f5);
-            if (offset) GL11.glTranslatef(offsetX, offsetY, offsetZ);
-            if (shouldScale) GL11.glScalef(scaleX, scaleY, scaleZ);
-            if (translate) GL11.glTranslatef(-rotationPointX * f5, -rotationPointY * f5, -rotationPointZ * f5);
-            int i;
+        return this.offset;
+    }
 
-            /** Rotate the head */
-            if (entity instanceof LivingEntity && model.tabulaModel.getHeadParts().contains(identifier))
-            {
-                rotateHead((LivingEntity) entity, model.tabulaModel.getHeadInfo(), scale);
-            }
+    @Override
+    public String getName()
+    {
+        return this.name;
+    }
 
-            GL11.glPushMatrix();
-            if (translate) GL11.glTranslatef(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
+    /** Returns the parent of this RendererModel */
+    @Override
+    public IExtendedModelPart getParent()
+    {
+        return this.parent;
+    }
 
-            if (rotate)
-            {
-                if (rotateAngleZ != 0f)
-                {
-                    GL11.glRotatef(rotateAngleZ * ratio, 0f, 0f, 1f);
-                }
-                if (rotateAngleY != 0f)
-                {
-                    GL11.glRotatef(rotateAngleY * ratio, 0f, 1f, 0f);
-                }
-                if (rotateAngleX != 0f)
-                {
-                    GL11.glRotatef(rotateAngleX * ratio, 1f, 0f, 0f);
-                }
-            }
+    @Override
+    public int[] getRGBAB()
+    {
+        this.rgbab[0] = this.red;
+        this.rgbab[1] = this.green;
+        this.rgbab[2] = this.blue;
+        this.rgbab[3] = this.alpha;
+        this.rgbab[4] = this.brightness;
+        return this.rgbab;
+    }
 
-            GL11.glPushMatrix();
+    @SuppressWarnings("unchecked")
+    @Override
+    public HashMap<String, TabulaRenderer> getSubParts()
+    {
+        return this.childParts;
+    }
 
-            // Allows specific part recolouring,
+    @Override
+    public String getType()
+    {
+        return "tbl";
+    }
 
-            int rgba = 0;
-            boolean perPart = true;
-            if (entity instanceof IMobColourable)
-            {
-                int[] cols = ((IMobColourable) entity).getRGBA();
-                rgba += cols[0];
-                rgba += cols[1] << 8;
-                rgba += cols[2] << 16;
-                rgba += cols[3] << 24;
-                if (cols[0] == 0 && cols[1] == 0 && cols[2] == 0) perPart = false;
-            }
-            else
-            {
-                rgba = 0xFFFFFFFF;
-            }
-            if (perPart) rgba = set.getColourForPart(identifier, entity, rgba);
-
-            float alpha = ((rgba >> 24) & 255) / 255f;
-            float red = ((rgba >> 16) & 255) / 255f;
-            float green = ((rgba >> 8) & 255) / 255f;
-            float blue = (rgba & 255) / 255f;
-
-            // Apply Colour
-            GL11.glColor4f(red, green, blue, alpha);
-            boolean animateTex = false;
-            // Apply Texture
-            if (texturer != null)
-            {
-                texturer.applyTexture(name);
-                texturer.shiftUVs(name, texOffsets);
-                if (texOffsets[0] != 0 || texOffsets[1] != 0) animateTex = true;
-                if (animateTex)
-                {
-                    GL11.glMatrixMode(GL11.GL_TEXTURE);
-                    GL11.glLoadIdentity();
-                    GL11.glTranslated(texOffsets[0], texOffsets[1], 0.0F);
-                    GL11.glMatrixMode(GL11.GL_MODELVIEW);
-                }
-            }
-            GL11.glCallList(displayList);
-            if (animateTex)
-            {
-                GL11.glMatrixMode(GL11.GL_TEXTURE);
-                GL11.glLoadIdentity();
-                GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            }
-            GL11.glPopMatrix();
-
-            if (childModels != null)
-            {
-                for (i = 0; i < childModels.size(); ++i)
-                {
-                    ((TabulaRenderer) childModels.get(i)).render(scale, entity);
-                }
-            }
-
-            GL11.glPopMatrix();
-
-            if (offset) GL11.glTranslatef(-offsetX, -offsetY, -offsetZ);
-            if (shouldScale) GL11.glScalef(1f / scaleX, 1f / scaleY, 1f / scaleZ);
-        }
+    private void postRender()
+    {
         GL11.glPopMatrix();
-
     }
 
-    private void rotateHead(LivingEntity entity, HeadInfo headInfo, float scale)
+    private void preRender()
     {
-        float ang;
-        float partialTicks = Minecraft.getInstance().getRenderPartialTicks();
-        float f = this.interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
-        float f1 = this.interpolateRotation(entity.prevRotationYawHead, entity.rotationYawHead, partialTicks);
-        float headYaw = f1 - f;
-        float headPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
-        float head = headYaw % 360 + 180;
-        float diff = 0;
-        if (headInfo.yawDirection != 1) head *= -1;
-        diff = (head) % 360;
-        diff = (diff + 360) % 360;
-        diff = (diff - 180) % 360;
-        diff = Math.max(diff, headInfo.yawCapMin);
-        diff = Math.min(diff, headInfo.yawCapMax);
-        ang = diff;
-        float ang2 = Math.max(headPitch, headInfo.pitchCapMin);
-        ang2 = Math.min(ang2, headInfo.pitchCapMax);
-        GL11.glTranslatef(rotationPointX * scale, rotationPointY * scale, rotationPointZ * scale);
-        rotateToParent();
-        if (headInfo.pitchDirection == 2) GlStateManager.rotate(ang, 0, 0, 1);
-        else GlStateManager.rotate(ang, 0, 1, 0);
-        GlStateManager.rotate(ang2, 1, 0, 0);
-        unRotateToParent();
-        GL11.glTranslatef(-rotationPointX * scale, -rotationPointY * scale, -rotationPointZ * scale);
+        // Rotate to the offset of the parent.
+        this.rotateToParent();
+        // Translate of offset for rotation.
+        GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+        // Rotate by this to account for a coordinate difference.
+        GL11.glRotatef(90, 1, 0, 0);
+        GL11.glTranslated(this.preTrans.x, this.preTrans.y, this.preTrans.z);
+        // UnRotate coordinate difference.
+        GL11.glRotatef(-90, 1, 0, 0);
+        // Apply initial part rotation
+        this.rotations.glRotate();
+        // Rotate by this to account for a coordinate difference.
+        GL11.glRotatef(90, 1, 0, 0);
+        // Apply PreOffset-Rotations.
+        this.preRot.glRotate();
+        // Translate by post-PreOffset amount.
+        GL11.glTranslated(this.postTrans.x, this.postTrans.y, this.postTrans.z);
+        // UnRotate coordinate difference.
+        GL11.glRotatef(-90, 1, 0, 0);
+        // Undo pre-translate offset.
+        GL11.glTranslated(-this.offset.x, -this.offset.y, -this.offset.z);
+        GL11.glPushMatrix();
+        // Translate to Offset.
+        GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+
+        // Apply first postRotation
+        this.postRot.glRotate();
+        // Apply second post rotation.
+        this.postRot1.glRotate();
+        // Scale
+        GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
     }
 
-    protected float interpolateRotation(float prevYawOffset, float yawOffset, float partialTicks)
+    public void render()
     {
-        float f;
+        if (this.hidden) return;
+        this.preRender();
+        // Renders the model.
+        this.addForRender();
+        this.postRender();
+    }
 
-        for (f = yawOffset - prevYawOffset; f < -180.0F; f += 360.0F)
+    @Override
+    public void renderAll()
+    {
+        GL11.glScalef(this.preScale.x, this.preScale.y, this.preScale.z);
+        this.render();
+        for (final IExtendedModelPart o : this.childParts.values())
         {
-            ;
+            GL11.glPushMatrix();
+            GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+            GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+            o.renderAll();
+            GL11.glPopMatrix();
         }
+    }
 
-        while (f >= 180.0F)
+    @Override
+    public void renderAllExcept(String... excludedGroupNames)
+    {
+        boolean skip = false;
+        for (final String s1 : excludedGroupNames)
+            if (skip = s1.equalsIgnoreCase(this.name)) break;
+        if (!skip) this.render();
+        for (final IExtendedModelPart o : this.childParts.values())
         {
-            f -= 360.0F;
+            GL11.glPushMatrix();
+            GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+            GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+            o.renderAllExcept(excludedGroupNames);
+            GL11.glPopMatrix();
         }
+    }
 
-        return prevYawOffset + partialTicks * f;
+    @Override
+    public void resetToInit()
+    {
+        this.preRot.set(0, 1, 0, 0);
+        this.postRot.set(0, 1, 0, 0);
+        this.postRot1.set(0, 1, 0, 0);
+        this.preTrans.clear();
+        this.postTrans.clear();
     }
 
     private void rotateToParent()
     {
-        if (parent != null)
+        if (this.parent != null) if (this.parent instanceof TabulaRenderer)
         {
-            if (parent instanceof TabulaRenderer) ((TabulaRenderer) parent).rotateToParent();
-
-            if (parent.rotateAngleZ != 0f)
-            {
-                GL11.glRotatef(parent.rotateAngleZ * (180f / (float) Math.PI), 0f, 0f, -1f);
-            }
-
-            if (parent.rotateAngleY != 0f)
-            {
-                GL11.glRotatef(parent.rotateAngleY * (180f / (float) Math.PI), 0f, -1f, 0f);
-            }
-
-            if (parent.rotateAngleX != 0f)
-            {
-                GL11.glRotatef(parent.rotateAngleX * (180f / (float) Math.PI), -1f, 0f, 0f);
-            }
+            final TabulaRenderer parent = (TabulaRenderer) this.parent;
+            parent.postRot.glRotate();
+            parent.postRot1.glRotate();
         }
     }
 
     @Override
     public void setAnimationChanger(IAnimationChanger changer)
     {
-        this.set = changer;
-        if (childModels != null) for (ModelRenderer r : childModels)
-        {
-            if (r instanceof IRetexturableModel)
-            {
-                ((IRetexturableModel) r).setAnimationChanger(changer);
-            }
-        }
-    }
-
-    /** Resets the pose to init pose */
-    public void setCurrentPoseToInitValues()
-    {
-        if (hasInitPose)
-        {
-            rotateAngleX = initRotateAngleX;
-            rotateAngleY = initRotateAngleY;
-            rotateAngleZ = initRotateAngleZ;
-
-            rotationPointX = initRotationPointX;
-            rotationPointY = initRotationPointY;
-            rotationPointZ = initRotationPointZ;
-
-            offsetX = initOffsetX;
-            offsetY = initOffsetY;
-            offsetZ = initOffsetZ;
-
-            scaleX = initScaleX;
-            scaleY = initScaleY;
-            scaleZ = initScaleZ;
-        }
+        this.changer = changer;
+        for (final TabulaRenderer part : this.childParts.values())
+            part.setAnimationChanger(changer);
     }
 
     /** Set the initialization pose to the current pose */
     public void setInitValuesToCurrentPose()
     {
-        initRotateAngleX = rotateAngleX;
-        initRotateAngleY = rotateAngleY;
-        initRotateAngleZ = rotateAngleZ;
-
-        initRotationPointX = rotationPointX;
-        initRotationPointY = rotationPointY;
-        initRotationPointZ = rotationPointZ;
-
-        initOffsetX = offsetX;
-        initOffsetY = offsetY;
-        initOffsetZ = offsetZ;
-
-        initScaleX = scaleX;
-        initScaleY = scaleY;
-        initScaleZ = scaleZ;
-
-        hasInitPose = true;
     }
 
-    /** Sets the parent of this ModelRenderer */
-    private void setParent(ModelRenderer modelRenderer)
+    /** Sets the parent of this RendererModel */
+    @Override
+    public void setParent(IExtendedModelPart modelRenderer)
     {
-        parent = modelRenderer;
+        this.parent = modelRenderer;
     }
 
-    public void setRotationAngles(float x, float y, float z)
+    @Override
+    public void setPostRotations(Vector4 angles)
     {
-        rotateAngleX = x;
-        rotateAngleY = y;
-        rotateAngleZ = z;
+        this.postRot = angles;
     }
 
-    public void setScale(float x, float y, float z)
+    @Override
+    public void setPostRotations2(Vector4 rotations)
     {
-        scaleX = x;
-        scaleY = y;
-        scaleZ = z;
+        this.postRot1 = rotations;
+    }
+
+    @Override
+    public void setPostTranslations(Vector3 point)
+    {
+        this.postTrans.set(point);
+    }
+
+    @Override
+    public void setPreRotations(Vector4 angles)
+    {
+        this.preRot = angles;
+    }
+
+    @Override
+    public void setPreScale(Vector3 scale)
+    {
+        this.preScale.x = (float) scale.x;
+        this.preScale.y = (float) scale.y;
+        this.preScale.z = (float) scale.z;
+    }
+
+    @Override
+    public void setPreTranslations(Vector3 point)
+    {
+        this.preTrans.set(point);
+    }
+
+    @Override
+    public void setRGBAB(int[] array)
+    {
+        this.red = array[0];
+        this.green = array[1];
+        this.blue = array[2];
+        this.alpha = array[3];
+        this.brightness = array[4];
     }
 
     @Override
     public void setTexturer(IPartTexturer texturer)
     {
         this.texturer = texturer;
-        if (childModels != null)
-        {
-            for (Object part : childModels)
-            {
-                if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(texturer);
-            }
-        }
-    }
-
-    private void unRotateToParent()
-    {
-        if (parent != null)
-        {
-            if (parent instanceof TabulaRenderer) ((TabulaRenderer) parent).unRotateToParent();
-
-            if (parent.rotateAngleZ != 0f)
-            {
-                GL11.glRotatef(parent.rotateAngleZ * (180f / (float) Math.PI), 0f, 0f, 1f);
-            }
-
-            if (parent.rotateAngleY != 0f)
-            {
-                GL11.glRotatef(parent.rotateAngleY * (180f / (float) Math.PI), 0f, 1f, 0f);
-            }
-
-            if (parent.rotateAngleX != 0f)
-            {
-                GL11.glRotatef(parent.rotateAngleX * (180f / (float) Math.PI), 1f, 0f, 0f);
-            }
-        }
+        for (final TabulaRenderer part : this.childParts.values())
+            part.setTexturer(texturer);
     }
 }

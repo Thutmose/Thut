@@ -6,28 +6,35 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.platform.GlStateManager;
 
 import net.minecraft.entity.Entity;
 import thut.api.maths.Vector3;
+import thut.core.client.render.animation.Animation;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
-import thut.core.client.render.tabula.components.Animation;
 
 public interface IModel
 {
     public static class HeadInfo
     {
-        /** This should be updated to match the mob, incase the IModel needs to
-         * do custom rendering itself. */
+        /**
+         * This should be updated to match the mob, incase the IModel needs to
+         * do custom rendering itself.
+         */
         public float headYaw;
-        /** This should be updated to match the mob, incase the IModel needs to
-         * do custom rendering itself. */
+        /**
+         * This should be updated to match the mob, incase the IModel needs to
+         * do custom rendering itself.
+         */
         public float headPitch;
 
         /** This is the current ticksExisted for the object being rendered.. */
-        public int   currentTick    = 0;
-        /** This is the ticksExisted before this render tick for the object
-         * being rendered */
-        public int   lastTick       = 0;
+        public int currentTick = 0;
+        /**
+         * This is the ticksExisted before this render tick for the object
+         * being rendered
+         */
+        public int lastTick    = 0;
 
         public float yawCapMax      = 180;
         public float yawCapMin      = -180;
@@ -41,29 +48,48 @@ public interface IModel
 
     public static ImmutableSet<String> emptyAnims = ImmutableSet.of();
 
-    public HashMap<String, IExtendedModelPart> getParts();
-
-    public void preProcessAnimations(Collection<List<Animation>> collection);
-
-    public Set<String> getHeadParts();
-
-    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
+    void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
             float limbSwing);
 
     default Set<String> getBuiltInAnimations()
     {
-        return emptyAnims;
+        return IModel.emptyAnims;
     }
 
-    default void setOffset(Vector3 offset)
+    HeadInfo getHeadInfo();
+
+    Set<String> getHeadParts();
+
+    HashMap<String, IExtendedModelPart> getParts();
+
+    /**
+     * Adjusts for differences in global coordinate systems.
+     *
+     * @param dy
+     */
+    default void globalFix(float dx, float dy, float dz)
     {
-
+        // These are the parameters for models exported from blender.
+        GlStateManager.rotatef(180, 0, 1, 0);
+        GlStateManager.rotatef(90, 1, 0, 0);
+        GlStateManager.translatef(0, 0, dy - 1.5f);
     }
+
+    /**
+     * @return Whether this model actually exists, if this returns false,
+     *         things will often look for a different extension.
+     */
+    boolean isValid();
+
+    void preProcessAnimations(Collection<List<Animation>> collection);
 
     default void setHeadInfo(HeadInfo in)
     {
 
     }
 
-    HeadInfo getHeadInfo();
+    default void setOffset(Vector3 offset)
+    {
+
+    }
 }

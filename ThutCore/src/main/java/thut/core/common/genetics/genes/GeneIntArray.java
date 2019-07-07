@@ -13,7 +13,21 @@ public abstract class GeneIntArray implements Gene
     @Override
     public <T> T getValue()
     {
-        return (T) value;
+        return (T) this.value;
+    }
+
+    @Override
+    public void load(CompoundNBT tag)
+    {
+        this.value = tag.getIntArray("V");
+    }
+
+    @Override
+    public CompoundNBT save()
+    {
+        final CompoundNBT tag = new CompoundNBT();
+        tag.putIntArray("V", this.value);
+        return tag;
     }
 
     @Override
@@ -23,23 +37,9 @@ public abstract class GeneIntArray implements Gene
     }
 
     @Override
-    public CompoundNBT save()
-    {
-        CompoundNBT tag = new CompoundNBT();
-        tag.putIntArray("V", value);
-        return tag;
-    }
-
-    @Override
-    public void load(CompoundNBT tag)
-    {
-        value = tag.getIntArray("V");
-    }
-
-    @Override
     public String toString()
     {
-        return "" + Arrays.toString(value);
+        return "" + Arrays.toString(this.value);
     }
 
 }

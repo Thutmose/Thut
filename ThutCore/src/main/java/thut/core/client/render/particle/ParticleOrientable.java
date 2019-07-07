@@ -5,99 +5,102 @@ import org.lwjgl.opengl.GL11;
 import com.mojang.blaze3d.platform.GlStateManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.network.PacketBuffer;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 
 public class ParticleOrientable extends ParticleBase
 {
-    private Vector4 orientation;
+    Vector4 orientation;
 
-    public ParticleOrientable(int x, int y)
+    public ParticleOrientable(final int x, final int y)
     {
         super(x, y);
-        billboard = false;
+        this.billboard = false;
     }
 
     @Override
-    public void render(double renderPartialTicks)
+    public ParticleBase read(final PacketBuffer buffer)
     {
-        // This will draw a textured, coloured quad
-        BufferBuilder tez = Tessellator.getInstance().getBuffer();
-        ResourceLocation texture;
+        super.read(buffer);
+        this.orientation = new Vector4(buffer.readFloat(), buffer.readFloat(), buffer.readFloat(), buffer.readFloat());
+        return this;
+    }
+
+    @Override
+    public void renderParticle(final BufferBuilder buffer, final ActiveRenderInfo entityIn, final float partialTicks,
+            final float rotationX, final float rotationZ, final float rotationYZ, final float rotationXY,
+            final float rotationXZ)
+    {
         GL11.glPushMatrix();
 
-        if (billboard)
+        if (this.billboard)
         {
-            RenderManager renderManager = Minecraft.getInstance().getRenderManager();
+            final EntityRendererManager renderManager = Minecraft.getInstance().getRenderManager();
             GL11.glRotatef(-renderManager.playerViewY - 45, 0.0F, 1.0F, 0.0F);
             GL11.glRotatef(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
         }
-        setColour();
+        this.setColour();
 
-        float alpha = ((rgba >> 24) & 255) / 255f;
-        float red = ((rgba >> 16) & 255) / 255f;
-        float green = ((rgba >> 8) & 255) / 255f;
-        float blue = (rgba & 255) / 255f;
+        final float alpha = (this.rgba >> 24 & 255) / 255f;
+        final float red = (this.rgba >> 16 & 255) / 255f;
+        final float green = (this.rgba >> 8 & 255) / 255f;
+        final float blue = (this.rgba & 255) / 255f;
 
-        VertexFormat format = DefaultVertexFormats.POSITION_COLOR;
-        texture = TEXTUREMAP;
-        FMLClientHandler.instance().getClient().renderEngine.bindTexture(texture);
-        format = DefaultVertexFormats.POSITION_TEX_COLOR;
+        // Tessellator.getInstance().getBuffer();
+        // ResourceLocation texture;
+        // texture = ParticleBase.TEXTUREMAP;
+        // Minecraft.getInstance().getTextureManager().bindTexture(texture);
+        final int num = this.getDuration() / this.animSpeed % this.tex.length;
 
-        int num = (getDuration() / animSpeed) % tex.length;
+        final int u = this.tex[num][0], v = this.tex[num][1];
 
-        int u = tex[num][0], v = tex[num][1];
+        final Vector3 temp = Vector3.getNewVector();
 
-        Vector3 temp = Vector3.getNewVector();
-
-        double factor = ((lifetime - getDuration()) + renderPartialTicks);
-        temp.set(velocity).scalarMultBy(factor);
-        if (getDuration() > 149)
+        final double factor = this.lifetime - this.getDuration() + partialTicks;
+        temp.set(this.velocity).scalarMultBy(factor);
+        if (this.getDuration() > 149)
         {
-            System.out.println(temp + " " + velocity.scalarMult(-lifetime));
-            System.out.println(lifetime + " " + getDuration());
+            System.out.println(temp + " " + this.velocity.scalarMult(-this.lifetime));
+            System.out.println(this.lifetime + " " + this.getDuration());
         }
-        // temp.reverse();
-        // GlStateManager.translate(temp.x, temp.y, temp.z);
-        // temp.set(velocity).scalarMultBy(lifetime);
-        GlStateManager.translate(temp.x, temp.y, temp.z);
+        GlStateManager.translated(temp.x, temp.y, temp.z);
 
-        if (orientation != null) orientation.glRotate();
+        if (this.orientation != null) this.orientation.glRotate();
 
-        double u1 = u * 1d / 16d, v1 = v * 1d / 16d;
-        double u2 = (u + 1) * 1d / 16d, v2 = (v + 1) * 1d / 16d;
-        tez.begin(GL11.GL_QUADS, format);
-        // Face 1
-        tez.pos(0.0 - size, 0.0 - size, 0.0).tex(u1, v2).color(red, green, blue, alpha).endVertex();
-        tez.pos(0.0, 0.0 - size, 0.0).tex(u2, v2).color(red, green, blue, alpha).endVertex();
-        tez.pos(0.0, 0.0 + size, 0.0).tex(u2, v1).color(red, green, blue, alpha).endVertex();
-        tez.pos(0.0 - size, 0.0 + size, 0.0).tex(u1, v1).color(red, green, blue, alpha).endVertex();
+        final double u1 = u * 1d / 16d, v1 = v * 1d / 16d;
+        final double u2 = (u + 1) * 1d / 16d, v2 = (v + 1) * 1d / 16d;
+
+        buffer.pos(0.0 - this.size, 0.0 - this.size, 0.0).tex(u1, v2).color(red, green, blue, alpha).endVertex();
+        buffer.pos(0.0, 0.0 - this.size, 0.0).tex(u2, v2).color(red, green, blue, alpha).endVertex();
+        buffer.pos(0.0, 0.0 + this.size, 0.0).tex(u2, v1).color(red, green, blue, alpha).endVertex();
+        buffer.pos(0.0 - this.size, 0.0 + this.size, 0.0).tex(u1, v1).color(red, green, blue, alpha).endVertex();
         // Face 2
-        tez.pos(0.0 - size, 0.0 - size, 0.0).tex(u1, v2).color(red, green, blue, alpha).endVertex();
-        tez.pos(0.0 - size, 0.0 + size, 0.0).tex(u1, v1).color(red, green, blue, alpha).endVertex();
-        tez.pos(0.0, 0.0 + size, 0.0).tex(u2, v1).color(red, green, blue, alpha).endVertex();
-        tez.pos(0.0, 0.0 - size, 0.0).tex(u2, v2).color(red, green, blue, alpha).endVertex();
-        Tessellator.getInstance().draw();
+        buffer.pos(0.0 - this.size, 0.0 - this.size, 0.0).tex(u1, v2).color(red, green, blue, alpha).endVertex();
+        buffer.pos(0.0 - this.size, 0.0 + this.size, 0.0).tex(u1, v1).color(red, green, blue, alpha).endVertex();
+        buffer.pos(0.0, 0.0 + this.size, 0.0).tex(u2, v1).color(red, green, blue, alpha).endVertex();
+        buffer.pos(0.0, 0.0 - this.size, 0.0).tex(u2, v2).color(red, green, blue, alpha).endVertex();
+
         GL11.glPopMatrix();
     }
 
-    public ParticleOrientable setOrientation(Vector4 orientation)
+    public ParticleOrientable setOrientation(final Vector4 orientation)
     {
         this.orientation = orientation;
         return this;
     }
 
     @Override
-    public void setVelocity(Vector3 v)
+    public void write(final PacketBuffer buffer)
     {
-        velocity = v;
+        super.write(buffer);
+        buffer.writeFloat(this.orientation.x);
+        buffer.writeFloat(this.orientation.y);
+        buffer.writeFloat(this.orientation.z);
+        buffer.writeFloat(this.orientation.w);
     }
 
 }

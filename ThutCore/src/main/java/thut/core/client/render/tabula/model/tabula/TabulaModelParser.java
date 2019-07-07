@@ -1,77 +1,62 @@
 package thut.core.client.render.tabula.model.tabula;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Map;
+import java.util.Scanner;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.IOUtils;
 
-import com.google.common.collect.Maps;
-
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.IResource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.core.client.render.tabula.components.ModelJson;
 import thut.core.client.render.tabula.json.JsonFactory;
-import thut.core.client.render.tabula.model.IModelParser;
+import thut.core.common.ThutCore;
 
-public class TabulaModelParser implements IModelParser<TabulaModel>
+public class TabulaModelParser
 {
     @OnlyIn(Dist.CLIENT)
-    public Map<TabulaModel, ModelJson> modelMap;
-
-    @Override
-    public TabulaModel decode(ByteBuf buf)
+    public static ModelJson<?> load(ResourceLocation model)
     {
-        return null; // todo
-    }
-
-    @Override
-    public void encode(ByteBuf buf, TabulaModel model)
-    {
-        // todo
-    }
-
-    @Override
-    public String getExtension()
-    {
-        return "tbl";
-    }
-
-    @Override
-    public Class<TabulaModel> getModelClass()
-    {
-        return TabulaModel.class;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public TabulaModel parse(String json) throws IOException
-    {
-        if (modelMap == null)
+        try
         {
-            modelMap = Maps.newHashMap();
+            final IResource res = Minecraft.getInstance().getResourceManager().getResource(model);
+            if (res == null) return new ModelJson<>(new TabulaModel());
+            final ZipInputStream zip = new ZipInputStream(res.getInputStream());
+            final Scanner scanner = new Scanner(zip);
+            zip.getNextEntry();
+            final String json = scanner.nextLine();
+            scanner.close();
+            return TabulaModelParser.parse(json);
         }
+        catch (final IOException e)
+        {
+            if (!(e instanceof FileNotFoundException)) ThutCore.LOGGER.error("error loading " + model, e);
+            return null;
+        }
+
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static ModelJson<?> parse(String json) throws IOException
+    {
         TabulaModel tabulaModel = null;
-        InputStream in = IOUtils.toInputStream(json, "UTF-8");
-        InputStreamReader reader = new InputStreamReader(in);
+        final InputStream in = IOUtils.toInputStream(json, "UTF-8");
+        final InputStreamReader reader = new InputStreamReader(in);
         tabulaModel = JsonFactory.getGson().fromJson(reader, TabulaModel.class);
         reader.close();
+        ModelJson<?> model = null;
         if (tabulaModel != null)
         {
-            modelMap.put(tabulaModel, new ModelJson(tabulaModel));
-            return tabulaModel;
+            model = new ModelJson<>(tabulaModel);
+            model.valid = true;
         }
-        new NullPointerException("Cannot load model").printStackTrace();
-        return null;
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void render(TabulaModel model, Entity entity)
-    {
-        modelMap.get(model).render(entity, 0f, 0f, 0f, 0f, 0f, 0.0625f);
+        else model = new ModelJson<>(new TabulaModel());
+        return model;
     }
 }

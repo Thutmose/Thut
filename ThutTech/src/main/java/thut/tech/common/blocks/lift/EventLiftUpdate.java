@@ -1,5 +1,7 @@
 package thut.tech.common.blocks.lift;
 
+import net.minecraftforge.eventbus.api.Event;
+
 public class EventLiftUpdate extends Event
 {
     private final TileEntityLiftAccess tile;
@@ -11,6 +13,6 @@ public class EventLiftUpdate extends Event
 
     public TileEntityLiftAccess getTile()
     {
-        return tile;
+        return this.tile;
     }
 }

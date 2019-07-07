@@ -7,6 +7,22 @@ public class Data_String extends Data_Base<String>
     String value = "";
 
     @Override
+    public String get()
+    {
+        return this.value;
+    }
+
+    @Override
+    public void read(ByteBuf buf)
+    {
+        super.read(buf);
+        final int len = buf.readInt();
+        final byte[] arr = new byte[len];
+        buf.readBytes(arr);
+        this.value = new String(arr);
+    }
+
+    @Override
     public void set(String value)
     {
         if (this.value.equals(value)) return;
@@ -19,28 +35,12 @@ public class Data_String extends Data_Base<String>
     }
 
     @Override
-    public String get()
-    {
-        return this.value;
-    }
-
-    @Override
     public void write(ByteBuf buf)
     {
         super.write(buf);
-        byte[] arr = value.getBytes();
+        final byte[] arr = this.value.getBytes();
         buf.writeInt(arr.length);
         buf.writeBytes(arr);
-    }
-
-    @Override
-    public void read(ByteBuf buf)
-    {
-        super.read(buf);
-        int len = buf.readInt();
-        byte[] arr = new byte[len];
-        buf.readBytes(arr);
-        value = new String(arr);
     }
 
 }

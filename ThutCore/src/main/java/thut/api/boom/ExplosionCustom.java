@@ -23,7 +23,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
@@ -32,26 +32,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.maths.Vector3;
+import thut.core.common.ThutCore;
 
 public class ExplosionCustom extends Explosion
 {
-    public static interface IEntityHitter
-    {
-        void hitEntity(Entity e, float power, Explosion boom);
-    }
-
-    static class HitEntity
-    {
-        final Entity entity;
-        final float  blastStrength;
-
-        public HitEntity(Entity entity, float blastStrength)
-        {
-            this.entity = entity;
-            this.blastStrength = blastStrength;
-        }
-    }
-
     static class BlastResult
     {
         final List<BlockPos>  results;
@@ -66,59 +50,79 @@ public class ExplosionCustom extends Explosion
         }
     }
 
-    public static int        MAX_RADIUS             = 127;
-    public static int[]      MAXPERTICK             = { 10000, 50000 };
-    public static float      MINBLASTDAMAGE         = 0.1f;
-    public static boolean    AFFECTINAIR            = true;
-    public static Block      melt;
-    public static Block      solidmelt;
-    public static Block      dust;
-    public IEntityHitter     hitter                 = new IEntityHitter()
-                                                    {
+    static class HitEntity
+    {
+        final Entity entity;
+        final float  blastStrength;
 
-                                                        @Override
-                                                        public void hitEntity(Entity e, float power, Explosion boom)
-                                                        {
-                                                            EntitySize size = e.getSize(e.getPose());
-                                                            float area = size.width * size.height;
-                                                            float damage = area * power;
-                                                            e.attackEntityFrom(DamageSource.causeExplosionDamage(boom),
-                                                                    damage);
-                                                        }
-                                                    };
+        public HitEntity(Entity entity, float blastStrength)
+        {
+            this.entity = entity;
+            this.blastStrength = blastStrength;
+        }
+    }
 
-    int                      currentIndex           = 0;
-    int                      nextIndex              = 0;
-    float                    minBlastDamage;
-    int                      radius                 = MAX_RADIUS;
-    public int[]             maxPerTick;
-    World                    world;
-    Vector3                  centre;
+    public static interface IEntityHitter
+    {
+        void hitEntity(Entity e, float power, Explosion boom);
+    }
 
-    float                    strength;
+    public static int       MAX_RADIUS     = 127;
+    public static Integer[] MAXPERTICK     = { 10000, 50000 };
+    public static float     MINBLASTDAMAGE = 0.1f;
+    public static boolean   AFFECTINAIR    = true;
+    public static Block     melt;
+    public static Block     solidmelt;
+    public static Block     dust;
+    public IEntityHitter    hitter         = (e, power, boom) ->
+                                           {
+                                               final EntitySize size = e.getSize(e.getPose());
+                                               final float area = size.width * size.height;
+                                               final float damage = area * power;
+                                               e.attackEntityFrom(DamageSource.causeExplosionDamage(boom), damage);
+                                           };
 
-    public boolean           meteor                 = false;
+    int              currentIndex = 0;
+    int              nextIndex    = 0;
+    float            minBlastDamage;
+    int              radius       = ExplosionCustom.MAX_RADIUS;
+    public Integer[] maxPerTick;
+    World            world;
+    Vector3          centre;
 
-    public PlayerEntity      owner                  = null;
+    float strength;
 
-    List<Entity>             targets                = new ArrayList<Entity>();
+    public boolean meteor = false;
 
-    private double           explosionX;
+    public PlayerEntity owner = null;
 
-    private double           explosionY;
+    List<Entity> targets = new ArrayList<>();
 
-    private double           explosionZ;
-    private float            explosionSize;
+    private final double explosionX;
 
-    private boolean          isSmoking              = false;
+    private final double explosionY;
 
-    Entity                   exploder;
+    private final double explosionZ;
+    Entity               exploder;
 
-    public Set<BlockPos>     affectedBlockPositions = new HashSet<BlockPos>();
+    public Set<BlockPos> affectedBlockPositions = new HashSet<>();
 
-    Map<LivingEntity, Float> damages                = new HashMap<LivingEntity, Float>();
+    Map<LivingEntity, Float> damages = new HashMap<>();
 
-    List<Chunk>              affected               = new ArrayList<Chunk>();
+    List<IChunk> affected = new ArrayList<>();
+
+    // TODO figure out a good way to clear these between each set of shells.
+    HashMap<Integer, Float> resists = new HashMap<>(100000, 1);
+
+    HashSet<Integer> blockedSet = new HashSet<>(100000, 1);
+
+    Int2ObjectOpenHashMap<Float> thisShell = new Int2ObjectOpenHashMap<>();
+
+    // used to speed up the checking of if a resist exists in the map
+    BitSet checked = new BitSet();
+
+    Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(), rTest = Vector3
+            .getNewVector(), rTestPrev = Vector3.getNewVector(), rTestAbs = Vector3.getNewVector();
 
     public ExplosionCustom(World world, Entity par2Entity, double x, double y, double z, float power)
     {
@@ -129,45 +133,62 @@ public class ExplosionCustom extends Explosion
     {
         super(world, par2Entity, center.x, center.y, center.z, power, false, Mode.DESTROY);
         this.world = world;
-        exploder = par2Entity;
-        strength = power;
+        this.exploder = par2Entity;
+        this.strength = power;
         this.explosionX = center.x;
         this.explosionY = center.y;
         this.explosionZ = center.z;
-        explosionSize = power;
         this.centre = center.copy();
-        minBlastDamage = MINBLASTDAMAGE;
-        maxPerTick = MAXPERTICK;
-    }
-
-    public ExplosionCustom setMaxRadius(int radius)
-    {
-        this.radius = radius;
-        return this;
+        this.minBlastDamage = ExplosionCustom.MINBLASTDAMAGE;
+        this.maxPerTick = ExplosionCustom.MAXPERTICK.clone();
     }
 
     public void addChunkPosition(Vector3 v)
     {
-        affectedBlockPositions.add(new BlockPos(v.intX(), v.intY(), v.intZ()));
+        this.affectedBlockPositions.add(new BlockPos(v.intX(), v.intY(), v.intZ()));
+    }
+
+    private void applyBlockEffects(List<BlockPos> toRemove)
+    {
+        this.getAffectedBlockPositions().clear();
+        for (final BlockPos pos : toRemove)
+        {
+            this.getAffectedBlockPositions().add(pos.toImmutable());
+            final BlockState state = this.world.getBlockState(pos);
+            this.doMeteorStuff(state, pos);
+        }
+    }
+
+    private void applyEntityEffects(List<HitEntity> affected)
+    {
+        this.targets.clear();
+        for (final HitEntity e : affected)
+        {
+            final Entity hit = e.entity;
+            final float power = e.blastStrength;
+            if (power > 0)
+            {
+                this.hitter.hitEntity(hit, power, this);
+                this.targets.add(hit);
+            }
+        }
     }
 
     public boolean canBreak(Vector3 location)
     {
-        boolean ret = true;
+        final boolean ret = true;
 
-        if (owner != null)
+        if (this.owner != null) try
         {
-            try
-            {
-                BreakEvent evt = new BreakEvent(world, location.getPos(), location.getBlockState(world), owner);
-                MinecraftForge.EVENT_BUS.post(evt);
-                if (evt.isCanceled()) return false;
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-                return false;
-            }
+            final BreakEvent evt = new BreakEvent(this.world, location.getPos(), location.getBlockState(this.world),
+                    this.owner);
+            MinecraftForge.EVENT_BUS.post(evt);
+            if (evt.isCanceled()) return false;
+        }
+        catch (final Exception e)
+        {
+            e.printStackTrace();
+            return false;
         }
 
         return ret;
@@ -176,63 +197,53 @@ public class ExplosionCustom extends Explosion
     public void doExplosion()
     {
         this.world.playSound((PlayerEntity) null, this.explosionX, this.explosionY, this.explosionZ,
-                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F,
-                (1.0F + (this.world.rand.nextFloat() - this.world.rand.nextFloat()) * 0.2F) * 0.7F);
+                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (this.world.rand.nextFloat()
+                        - this.world.rand.nextFloat()) * 0.2F) * 0.7F);
 
-        if (this.explosionSize >= 2.0F && this.isSmoking)
-        {
-            this.world.addParticle(ParticleTypes.EXPLOSION, this.explosionX, this.explosionY, this.explosionZ, 1.0D,
-                    0.0D, 0.0D);
-        }
-        else
-        {
-            this.world.addParticle(ParticleTypes.EXPLOSION, this.explosionX, this.explosionY, this.explosionZ, 1.0D,
-                    0.0D, 0.0D);
-        }
+        // if (this.explosionSize >= 2.0F && this.isSmoking)
+        // this.world.addParticle(ParticleTypes.EXPLOSION,
+        // this.explosionX, this.explosionY, this.explosionZ, 1.0D, 0.0D, 0.0D);
+        // else
+        this.world.addParticle(ParticleTypes.EXPLOSION, this.explosionX, this.explosionY, this.explosionZ, 1.0D, 0.0D,
+                0.0D);
         MinecraftForge.EVENT_BUS.register(this);
-        nextIndex = currentIndex + MAXPERTICK[0];
+        this.nextIndex = this.currentIndex + ExplosionCustom.MAXPERTICK[0];
     }
 
     @Override
     public void doExplosionA()
     {
         this.affectedBlockPositions.clear();
-
-        if (true)
-        {
-            System.err.println("This should not be run anymore");
-            new Exception().printStackTrace();
-            return;
-        }
+        ThutCore.LOGGER.error("This should not be run anymore", new Exception());
     }
 
     /** Does the second part of the explosion (sound, particles, drop spawn) */
     @Override
     public void doExplosionB(boolean par1)
     {
-
+        ThutCore.LOGGER.error("This should not be run anymore", new Exception());
     }
 
     // TODO Revisit this to make blast energy more conserved
     public void doKineticImpactor(World world, Vector3 velocity, Vector3 hitLocation, Vector3 acceleration,
             float density, float energy)
     {
-        if (density < 0 || energy <= 0) { return; }
-        int max = 63;
-        affectedBlockPositions.clear();
+        if (density < 0 || energy <= 0) return;
+        final int max = 63;
+        this.affectedBlockPositions.clear();
         if (acceleration == null) acceleration = Vector3.empty;
-        float factor = 1;
+        final float factor = 1;
         int n = 0;
-        List<Vector3> locations = new ArrayList<Vector3>();
-        List<Float> blasts = new ArrayList<Float>();
+        final List<Vector3> locations = new ArrayList<>();
+        final List<Float> blasts = new ArrayList<>();
 
         float resist = hitLocation.getExplosionResistance(this, world);
-        float blast = Math.min((energy * (resist / density)), energy);
+        float blast = Math.min(energy * (resist / density), energy);
 
         if (resist > density)
         {
             hitLocation = hitLocation.subtract(velocity.normalize());
-            ExplosionCustom boo = new ExplosionCustom(world, exploder, hitLocation, blast * factor);
+            final ExplosionCustom boo = new ExplosionCustom(world, this.exploder, hitLocation, blast * factor);
             boo.doExplosion();
             return;
         }
@@ -255,7 +266,7 @@ public class ExplosionCustom extends Explosion
                 break;
             }
             energy -= energy * (resist / density);
-            density -= (resist + 0.1);
+            density -= resist + 0.1;
         }
 
         n = locations.size();
@@ -263,105 +274,71 @@ public class ExplosionCustom extends Explosion
 
             for (int i = 0; i < n; i++)
             {
-            Vector3 source = locations.get(i);
-            float strength = Math.min(blasts.get(i), 256);
-            if (world.isAreaLoaded(source.getPos(), max))
+            final Vector3 source = locations.get(i);
+            final float strength = Math.min(blasts.get(i), 256);
+            if (world.isAreaLoaded(source.getPos(), max)) if (strength != 0)
             {
-            if (strength != 0)
-            {
-            ExplosionCustom boo = new ExplosionCustom(world, exploder, source, strength * factor);
+            final ExplosionCustom boo = new ExplosionCustom(world, this.exploder, source, strength * factor);
             boo.doExplosion();
 
-            }
             }
             }
         if (remainingEnergy > 10)
         {
             absorbedLoc = absorbedLoc.subtract(velocity.normalize());
-            ExplosionCustom boo = new ExplosionCustom(world, exploder, absorbedLoc, remainingEnergy * factor);
+            final ExplosionCustom boo = new ExplosionCustom(world, this.exploder, absorbedLoc, remainingEnergy
+                    * factor);
             boo.doExplosion();
         }
     }
 
-    /** Handles the actual block removal, has a meteor argument to allow
+    /**
+     * Handles the actual block removal, has a meteor argument to allow
      * converting to ash or dust on impact
-     * 
+     *
      * @param destroyed
-     * @param pos */
+     * @param pos
+     */
     public void doMeteorStuff(BlockState destroyed, BlockPos pos)
     {
         if (!destroyed.getMaterial().isSolid() && !destroyed.getMaterial().isLiquid()) return;
-        if (!meteor)
+        if (!this.meteor)
         {
             // TODO possibly world specific air?
-            world.setBlockState(pos, Blocks.AIR.getDefaultState());
+            this.world.setBlockState(pos, Blocks.AIR.getDefaultState());
             return;
         }
         // TODO re-implement dust/melt at some point?
-        world.setBlockState(pos, Blocks.AIR.getDefaultState());
-    }
-
-    // TODO figure out a good way to clear these between each set of shells.
-    HashMap<Integer, Float>      resists    = new HashMap<Integer, Float>(100000, 1);
-    HashSet<Integer>             blockedSet = new HashSet<>(100000, 1);
-    Int2ObjectOpenHashMap<Float> thisShell  = new Int2ObjectOpenHashMap<>();
-    // used to speed up the checking of if a resist exists in the map
-    BitSet                       checked    = new BitSet();
-    Vector3                      r          = Vector3.getNewVector(), rAbs = Vector3.getNewVector(),
-            rHat = Vector3.getNewVector(), rTest = Vector3.getNewVector(), rTestPrev = Vector3.getNewVector(),
-            rTestAbs = Vector3.getNewVector();
-
-    @SubscribeEvent
-    public void WorldUnloadEvent(Unload evt)
-    {
-        if (evt.getWorld() == world) MinecraftForge.EVENT_BUS.unregister(this);
+        this.world.setBlockState(pos, Blocks.AIR.getDefaultState());
     }
 
     @SubscribeEvent
     void doRemoveBlocks(WorldTickEvent evt)
     {
-        if (evt.phase == Phase.START || evt.world != world) return;
-        BlastResult result = new Checker(this).getBlocksToRemove();
-        applyBlockEffects(result.results);
-        applyEntityEffects(result.hit);
-        doExplosionB(false);
-        ExplosionEvent evt2 = new ExplosionEvent.Detonate(this.world, this, targets);
+        if (evt.phase == Phase.START || evt.world != this.world) return;
+        final BlastResult result = new Checker(this).getBlocksToRemove();
+        this.applyBlockEffects(result.results);
+        this.applyEntityEffects(result.hit);
+        final ExplosionEvent evt2 = new ExplosionEvent.Detonate(this.world, this, this.targets);
         MinecraftForge.EVENT_BUS.post(evt2);
-        if (result.done)
-        {
-            MinecraftForge.EVENT_BUS.unregister(this);
-        }
+        if (result.done) MinecraftForge.EVENT_BUS.unregister(this);
     }
 
-    private void applyBlockEffects(List<BlockPos> toRemove)
+    public ExplosionCustom setMaxRadius(int radius)
     {
-        this.getAffectedBlockPositions().clear();
-        for (BlockPos pos : toRemove)
-        {
-            this.getAffectedBlockPositions().add(pos.toImmutable());
-            BlockState state = world.getBlockState(pos);
-            doMeteorStuff(state, pos);
-        }
-    }
-
-    private void applyEntityEffects(List<HitEntity> affected)
-    {
-        targets.clear();
-        for (HitEntity e : affected)
-        {
-            Entity hit = e.entity;
-            float power = e.blastStrength;
-            if (power > 0)
-            {
-                hitter.hitEntity(hit, power, this);
-                targets.add(hit);
-            }
-        }
+        this.radius = radius;
+        return this;
     }
 
     public ExplosionCustom setMeteor(boolean meteor)
     {
         this.meteor = meteor;
         return this;
+    }
+
+    @SubscribeEvent
+    public void WorldUnloadEvent(Unload evt)
+    {
+        if (evt.getWorld() == this.world) MinecraftForge.EVENT_BUS.unregister(this);
     }
 }

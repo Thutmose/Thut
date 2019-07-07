@@ -1,21 +1,35 @@
 package thut.api.entity.ai;
 
-import net.minecraft.world.World;
-
-/** This is a custom version of minecraft's EntityAI, it is capable of being run
- * on separate threads to improve performance. Every method here other than
- * doMainThreadTick() must be made such that it is thread safe. <br>
- * These methods are only ever called on the server, they are never called from
- * client side. */
 public interface IAIRunnable
 {
-    /** called to execute the needed non-threadsafe tasks on the main thread. */
-    void doMainThreadTick(World world);
+    /** Last stage of tick, called after tick() */
+    void finish();
 
-    /** Will only run an AI if it is higher priority (ie lower number) or a
+    /**
+     * Should the task start running. if true, will call run next.
+     *
+     * @return
+     */
+    default void firstRun()
+    {
+
+    }
+
+    /**
+     * @return an identifier for use with saving this if it is supposed to be
+     *         saved to capability data.
+     */
+    default String getIdentifier()
+    {
+        return "";
+    }
+
+    /**
+     * Will only run an AI if it is higher priority (ie lower number) or a
      * bitwise AND of the two mutex is 0.
-     * 
-     * @return */
+     *
+     * @return
+     */
     int getMutex();
 
     /** @return the priority of this AIRunnable. Lower numbers run first. */
@@ -27,35 +41,42 @@ public interface IAIRunnable
     /** runs the task */
     void run();
 
-    /** Sets the mutex.
-     * 
+    /**
+     * Sets the mutex.
+     *
      * @param mutex
-     * @return */
+     * @return
+     */
     IAIRunnable setMutex(int mutex);
 
-    /** Sets the priority.
-     * 
+    /**
+     * Sets the priority.
+     *
      * @param prior
-     * @return */
+     * @return
+     */
     IAIRunnable setPriority(int prior);
 
-    /** Should the task start running. if true, will call run next.
-     * 
-     * @return */
+    /**
+     * Should the task start running. if true, will call run next.
+     *
+     * @return
+     */
     boolean shouldRun();
 
-    /** @return an identifier for use with saving this if it is supposed to be
-     *         saved to capability data. */
-    default String getIdentifier()
-    {
-        return "";
-    }
-
-    /** If this is saveable, should tag be synced to clients.
-     * 
-     * @return */
+    /**
+     * If this is saveable, should tag be synced to clients.
+     *
+     * @return
+     */
     default boolean sync()
     {
         return false;
+    }
+
+    /** second stage of tick code, called after run(). */
+    default void tick()
+    {
+
     }
 }

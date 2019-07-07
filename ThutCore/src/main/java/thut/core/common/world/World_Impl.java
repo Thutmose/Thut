@@ -2,6 +2,7 @@ package thut.core.common.world;
 
 import java.util.UUID;
 
+import net.minecraft.world.IWorld;
 import thut.api.world.World;
 import thut.api.world.blocks.Block;
 import thut.api.world.mobs.Mob;
@@ -11,22 +12,11 @@ import thut.core.common.world.utils.Vector_I;
 
 public class World_Impl implements World
 {
-    net.minecraft.world.World wrapped;
+    IWorld wrapped;
 
-    public World_Impl(net.minecraft.world.World wrapped)
+    public World_Impl(IWorld iWorld)
     {
-        this.wrapped = wrapped;
-    }
-
-    @Override
-    public Block getBlock(Vector<Integer> position)
-    {
-        Vector_I pos = new Vector_I(position);
-        // TODO consider caching this and cleanup stuff?
-        // Maybe store these in a chunk capability instead.
-        Block block = new Block_Impl(pos);
-
-        return block;
+        this.wrapped = iWorld;
     }
 
     @Override
@@ -37,10 +27,20 @@ public class World_Impl implements World
     }
 
     @Override
-    public boolean removeMob(Mob mob)
+    public Block getBlock(Vector<Integer> position)
     {
-        // TODO Auto-generated method stub
-        return false;
+        final Vector_I pos = new Vector_I(position);
+        // TODO consider caching this and cleanup stuff?
+        // Maybe store these in a chunk capability instead.
+        final Block block = new Block_Impl(pos);
+
+        return block;
+    }
+
+    @Override
+    public int getLevel()
+    {
+        return this.wrapped.getDimension().getType().getId();
     }
 
     @Override
@@ -51,9 +51,10 @@ public class World_Impl implements World
     }
 
     @Override
-    public int getLevel()
+    public boolean removeMob(Mob mob)
     {
-        return wrapped.dimension.getDimension();
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

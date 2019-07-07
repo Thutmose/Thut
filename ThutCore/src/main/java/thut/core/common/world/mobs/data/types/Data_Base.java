@@ -10,6 +10,26 @@ public abstract class Data_Base<T> implements Data<T>
     private boolean dirty    = false;
     private T       lastSent = null;
 
+    @Override
+    public boolean dirty()
+    {
+        if (this.dirty) return true;
+        final T value = this.get();
+        return this.isDifferent(this.lastSent, value);
+    }
+
+    @Override
+    public int getID()
+    {
+        return this.ID;
+    }
+
+    @Override
+    public int getUID()
+    {
+        return this.UID;
+    }
+
     protected void initLast(T last)
     {
         this.lastSent = last;
@@ -21,38 +41,16 @@ public abstract class Data_Base<T> implements Data<T>
     }
 
     @Override
-    public boolean dirty()
-    {
-        if (dirty) return true;
-        T value = get();
-        return isDifferent(lastSent, value);
-    }
-
-    @Override
-    public void setDirty(boolean dirty)
-    {
-        if (!dirty) lastSent = this.get();
-        else this.dirty = dirty;
-    }
-
-    @Override
-    public void write(ByteBuf buf)
-    {
-        this.dirty = false;
-        lastSent = this.get();
-        buf.writeInt(ID);
-    }
-
-    @Override
     public void read(ByteBuf buf)
     {
         this.ID = buf.readInt();
     }
 
     @Override
-    public int getID()
+    public void setDirty(boolean dirty)
     {
-        return ID;
+        if (!dirty) this.lastSent = this.get();
+        else this.dirty = dirty;
     }
 
     @Override
@@ -62,15 +60,17 @@ public abstract class Data_Base<T> implements Data<T>
     }
 
     @Override
-    public int getUID()
-    {
-        return UID;
-    }
-
-    @Override
     public void setUID(int id)
     {
         this.UID = id;
+    }
+
+    @Override
+    public void write(ByteBuf buf)
+    {
+        this.dirty = false;
+        this.lastSent = this.get();
+        buf.writeInt(this.ID);
     }
 
 }

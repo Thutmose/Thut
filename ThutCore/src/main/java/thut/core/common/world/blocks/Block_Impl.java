@@ -21,9 +21,28 @@ public class Block_Impl implements Block
     }
 
     @Override
-    public World world()
+    public UUID id()
     {
-        return world;
+        return this.id;
+    }
+
+    @Override
+    public Info info()
+    {
+        return this.info;
+    }
+
+    @Override
+    public String key()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Vector<Integer> position()
+    {
+        return this.position;
     }
 
     @Override
@@ -33,28 +52,9 @@ public class Block_Impl implements Block
     }
 
     @Override
-    public Vector<Integer> position()
+    public World world()
     {
-        return position;
-    }
-
-    @Override
-    public Info info()
-    {
-        return info;
-    }
-
-    @Override
-    public UUID id()
-    {
-        return id;
-    }
-
-    @Override
-    public String key()
-    {
-        // TODO Auto-generated method stub
-        return null;
+        return this.world;
     }
 
 }

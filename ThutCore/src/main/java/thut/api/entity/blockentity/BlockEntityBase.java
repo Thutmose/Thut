@@ -3,7 +3,6 @@ package thut.api.entity.blockentity;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
@@ -14,11 +13,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.datasync.IDataSerializer;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
@@ -28,146 +30,158 @@ import net.minecraft.util.HandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import thut.api.entity.blockentity.world.client.ClientWorldEntity;
+import thut.api.entity.blockentity.world.client.IBlockEntityWorld;
+import thut.api.entity.blockentity.world.server.ServerWorldEntity;
 import thut.core.common.ThutCore;
+import thut.core.common.network.EntityUpdate;
 
 public abstract class BlockEntityBase extends LivingEntity implements IEntityAdditionalSpawnData, IBlockEntity
 {
-    public static int          ACCELERATIONTICKS = 20;
-    public BlockPos            boundMin          = BlockPos.ZERO;
-    public BlockPos            boundMax          = BlockPos.ZERO;
-    private BlockEntityWorld   fake_world;
-    private boolean            shouldRevert      = true;
-    public double              speedUp           = 0.5;
-    public double              speedDown         = -0.5;
-    public double              speedHoriz        = 0.5;
-    public double              acceleration      = 0.05;
-    public boolean             toMoveY           = false;
-    public boolean             toMoveX           = false;
-    public boolean             toMoveZ           = false;
-    public boolean             hasPassenger      = false;
-    int                        n                 = 0;
-    boolean                    first             = true;
-    Random                     r                 = new Random();
-    public UUID                owner;
-    public List<AxisAlignedBB> blockBoxes        = Lists.newArrayList();
-    public BlockState[][][]    blocks            = null;
-    public TileEntity[][][]    tiles             = null;
-    BlockEntityUpdater         collider;
-    BlockEntityInteractHandler interacter;
+    private static class VecSer implements IDataSerializer<Vec3d>
+    {
+        @Override
+        public Vec3d copyValue(final Vec3d value)
+        {
+            return new Vec3d(value.x, value.y, value.z);
+        }
 
-    public BlockEntityBase(EntityType<? extends LivingEntity> type, World par1World)
+        @Override
+        public DataParameter<Vec3d> createKey(final int id)
+        {
+            return new DataParameter<>(id, this);
+        }
+
+        @Override
+        public Vec3d read(final PacketBuffer buf)
+        {
+            return new Vec3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+        }
+
+        @Override
+        public void write(final PacketBuffer buf, final Vec3d value)
+        {
+            buf.writeDouble(value.x);
+            buf.writeDouble(value.y);
+            buf.writeDouble(value.z);
+        }
+    }
+
+    public static final IDataSerializer<Vec3d> VEC3DSER = new VecSer();
+
+    static final DataParameter<Vec3d> velocity = EntityDataManager.<Vec3d> createKey(BlockEntityBase.class,
+            BlockEntityBase.VEC3DSER);
+    static final DataParameter<Vec3d> position = EntityDataManager.<Vec3d> createKey(BlockEntityBase.class,
+            BlockEntityBase.VEC3DSER);
+
+    public static int            ACCELERATIONTICKS = 20;
+    public BlockPos              boundMin          = BlockPos.ZERO;
+    public BlockPos              boundMax          = BlockPos.ZERO;
+    private IBlockEntityWorld<?> fake_world;
+    private boolean              shouldRevert      = true;
+    public double                speedUp           = 0.5;
+    public double                speedDown         = -0.5;
+    public double                speedHoriz        = 0.5;
+    public double                acceleration      = 0.05;
+    public boolean               toMoveY           = false;
+    public boolean               toMoveX           = false;
+    public boolean               toMoveZ           = false;
+    public boolean               hasPassenger      = false;
+    int                          n                 = 0;
+    boolean                      first             = true;
+    Random                       r                 = new Random();
+    public UUID                  owner;
+    public List<AxisAlignedBB>   blockBoxes        = Lists.newArrayList();
+    public BlockState[][][]      blocks            = null;
+    public TileEntity[][][]      tiles             = null;
+    BlockEntityUpdater           collider;
+    BlockEntityInteractHandler   interacter;
+
+    public BlockEntityBase(final EntityType<? extends LivingEntity> type, final World par1World)
     {
         super(type, par1World);
         this.ignoreFrustumCheck = true;
         this.hurtResistantTime = 0;
     }
 
-    @Override
-    public BlockEntityWorld getFakeWorld()
-    {
-        if (fake_world == null)
-        {
-            fake_world = new BlockEntityWorld(this, world);
-        }
-        return fake_world;
-    }
-
-    public BlockEntityBase(EntityType<? extends LivingEntity> type, World world, double x, double y, double z)
-    {
-        this(type, world);
-        this.setPosition(x, y, z);
-        r.setSeed(100);
-    }
-
-    @Override
-    /** Called when the entity is attacked. */
-    public boolean attackEntityFrom(DamageSource source, float amount)
-    {
-        return false;
-    }
-
-    @Override
-    /** knocks back this entity */
-    public void knockBack(Entity entityIn, float strenght, double xRatio, double zRatio)
-    {
-
-    }
-
-    protected double getSpeed(double pos, double destPos, double speed, double speedPos, double speedNeg)
-    {
-        if (!getEntityWorld().isAreaLoaded(getPosition(), 8)) { return 0; }
-        double ds = speed;
-        double dp = destPos - pos;
-        if (dp > 0)
-        {
-            boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
-            if (!tooFast)
-            {
-                ds = Math.min(speedPos, ds + acceleration * speedPos);
-            }
-            else while (ds >= 0 && tooFast)
-            {
-                ds = ds - acceleration * speedPos / 10;
-                tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) > destPos;
-            }
-            return ds;
-        }
-        else if (dp < 0)
-        {
-            speedNeg = Math.abs(speedNeg);
-            boolean tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
-            if (!tooFast)
-            {
-                ds = Math.max(-speedNeg, ds - acceleration * speedNeg);
-            }
-            else while (ds <= 0 && tooFast)
-            {
-                ds = ds + acceleration * speedNeg / 10;
-                tooFast = pos + (ds * (ACCELERATIONTICKS + 1)) < destPos;
-            }
-            return ds;
-        }
-        else return 0;
-    }
-
     abstract protected void accelerate();
 
-    /** Applies a velocity to each of the entities pushing them away from each
-     * other. Args: entity */
+    /**
+     * Applies a velocity to each of the entities pushing them away from each
+     * other. Args: entity
+     */
     @Override
-    public void applyEntityCollision(Entity entity)
+    public void applyEntityCollision(final Entity entity)
     {
-        if (collider == null)
+        if (this.collider == null)
         {
-            collider = new BlockEntityUpdater(this);
-            collider.onSetPosition();
+            this.collider = new BlockEntityUpdater(this);
+            this.collider.onSetPosition();
         }
         try
         {
-            collider.applyEntityCollision(entity);
+            this.collider.applyEntityCollision(entity);
         }
-        catch (Exception e)
+        catch (final Exception e)
         {
             e.printStackTrace();
         }
     }
 
-    /** Returns true if other Entities should be prevented from moving through
-     * this Entity. */
+    @Override
+    /** Applies the given player interaction to this Entity. */
+    public ActionResultType applyPlayerInteraction(final PlayerEntity player, final Vec3d vec, final Hand hand)
+    {
+        if (this.interacter == null) this.interacter = this.createInteractHandler();
+        try
+        {
+            return this.interacter.applyPlayerInteraction(player, vec, player.getHeldItem(hand), hand);
+        }
+        catch (final Exception e)
+        {
+            ThutCore.LOGGER.error("Error handling interactions for " + this, e);
+            return super.applyPlayerInteraction(player, vec, hand);
+        }
+    }
+
+    @Override
+    /** Called when the entity is attacked. */
+    public boolean attackEntityFrom(final DamageSource source, final float amount)
+    {
+        return false;
+    }
+
+    /**
+     * Returns true if other Entities should be prevented from moving through
+     * this Entity.
+     */
     @Override
     public boolean canBeCollidedWith()
     {
         return this.isAlive();
     }
 
-    /** Returns true if this entity should push and be pushed by other entities
-     * when colliding. */
+    /**
+     * Returns true if this entity should push and be pushed by other entities
+     * when colliding.
+     */
     @Override
     public boolean canBePushed()
+    {
+        return true;
+    }
+
+    /**
+     * This is here to prevent teleport packet processing in vanilla
+     * updates.
+     */
+    @Override
+    public boolean canPassengerSteer()
     {
         return true;
     }
@@ -178,309 +192,41 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         return false;
     }
 
-    public void checkCollision()
-    {
-        int xMin = boundMin.getX();
-        int zMin = boundMin.getZ();
-        int xMax = boundMax.getX();
-        int zMax = boundMax.getZ();
-
-        List<?> list = this.world.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(posX + (xMin - 1), posY,
-                posZ + (zMin - 1), posX + xMax + 1, posY + 64, posZ + zMax + 1));
-        if (list != null && !list.isEmpty())
-        {
-            if (list.size() == 1 && this.getRecursivePassengers() != null
-                    && !this.getRecursivePassengers().isEmpty()) { return; }
-            for (int i = 0; i < list.size(); ++i)
-            {
-                Entity entity = (Entity) list.get(i);
-                applyEntityCollision(entity);
-                if (entity instanceof ServerPlayerEntity
-                        && entity.getBoundingBox().grow(2).intersects(getBoundingBox()))
-                {
-                    hasPassenger = true;
-                }
-            }
-        }
-    }
-
     abstract protected boolean checkAccelerationConditions();
 
-    abstract protected void doMotion();
-
-    @Override
-    public void resetPositionToBB()
+    public void checkCollision()
     {
-        BlockPos min = getMin();
-        BlockPos max = getMax();
-        float xDiff = (max.getX() - min.getX()) / 2f;
-        float zDiff = (max.getZ() - min.getZ()) / 2f;
-        AxisAlignedBB axisalignedbb = this.getBoundingBox();
-        if ((xDiff % 1) != 0) this.posX = (axisalignedbb.minX + xDiff);
-        else this.posX = (axisalignedbb.minX + axisalignedbb.maxX) / 2.0D;
-        this.posY = axisalignedbb.minY;
-        if (zDiff % 1 != 0) this.posZ = (axisalignedbb.minZ + zDiff);
-        else this.posZ = (axisalignedbb.minZ + axisalignedbb.maxZ) / 2.0D;
-    }
+        final int xMin = this.boundMin.getX();
+        final int zMin = this.boundMin.getZ();
+        final int xMax = this.boundMax.getX();
+        final int zMax = this.boundMax.getZ();
 
-    /** Checks if the entity's current position is a valid location to spawn
-     * this entity. */
-    public boolean getCanSpawnHere()
-    {
-        return false;
+        final List<?> list = this.world.getEntitiesWithinAABBExcludingEntity(this, new AxisAlignedBB(this.posX + (xMin
+                - 2), this.posY, this.posZ + (zMin - 2), this.posX + xMax + 2, this.posY + 64, this.posZ + zMax + 2));
+        if (list != null && !list.isEmpty())
+        {
+            if (list.size() == 1 && this.getRecursivePassengers() != null && !this.getRecursivePassengers().isEmpty())
+                return;
+            for (int i = 0; i < list.size(); ++i)
+            {
+                final Entity entity = (Entity) list.get(i);
+                this.applyEntityCollision(entity);
+                if (entity.getBoundingBox().grow(1).intersects(this.getBoundingBox())) this.hasPassenger = true;
+                else entity.setWorld(this.getFakeWorld().getWrapped());
+            }
+        }
     }
 
     abstract protected BlockEntityInteractHandler createInteractHandler();
 
     @Override
-    /** Applies the given player interaction to this Entity. */
-    public ActionResultType applyPlayerInteraction(PlayerEntity player, Vec3d vec, Hand hand)
+    public IPacket<?> createSpawnPacket()
     {
-        if (interacter == null) interacter = createInteractHandler();
-        try
-        {
-            return interacter.applyPlayerInteraction(player, vec, player.getHeldItem(hand), hand);
-        }
-        catch (Exception e)
-        {
-            ThutCore.logger.log(Level.SEVERE, "Error handling interactions for " + this, e);
-            return super.applyPlayerInteraction(player, vec, hand);
-        }
+        // return NetworkHooks.getEntitySpawningPacket(this);
+        return super.createSpawnPacket();
     }
 
-    /** First layer of player interaction */
-    @Override
-    public boolean processInitialInteract(PlayerEntity player, Hand hand)
-    {
-        if (interacter == null) interacter = createInteractHandler();
-        return interacter.processInitialInteract(player, player.getHeldItem(hand), hand);
-    }
-
-    @Override
-    public boolean isPotionApplicable(EffectInstance par1EffectInstance)
-    {
-        return false;
-    }
-
-    abstract protected void preColliderTick();
-
-    abstract protected void onGridAlign();
-
-    @Override
-    public void tick()
-    {
-        if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
-        if (collider == null)
-        {
-            this.collider = new BlockEntityUpdater(this);
-            this.collider.onSetPosition();
-        }
-        preColliderTick();
-        this.prevPosY = this.posY;
-        this.prevPosX = this.posX;
-        this.prevPosZ = this.posZ;
-        collider.onUpdate();
-        accelerate();
-        int dy = (int) ((getMotion().x) * 16);
-        int dx = (int) ((getMotion().y) * 16);
-        int dz = (int) ((getMotion().z) * 16);
-        if (toMoveY || toMoveX || toMoveZ)
-        {
-            doMotion();
-        }
-        else if (dx == dy && dy == dz && dz == 0 && !world.isRemote)
-        {
-            BlockPos pos = getPosition();
-            boolean update = posX != pos.getX() + 0.5 || posY != Math.round(posY) || posZ != pos.getZ() + 0.5;
-            if (update)
-            {
-                onGridAlign();
-            }
-        }
-        checkCollision();
-    }
-
-    public void readBlocks(CompoundNBT nbt)
-    {
-        if (nbt.contains("Blocks"))
-        {
-            CompoundNBT blockTag = nbt.getCompound("Blocks");
-            int sizeX = blockTag.getInt("BlocksLengthX");
-            int sizeZ = blockTag.getInt("BlocksLengthZ");
-            int sizeY = blockTag.getInt("BlocksLengthY");
-            if (sizeX == 0 || sizeZ == 0)
-            {
-                sizeX = sizeZ = nbt.getInt("BlocksLength");
-            }
-            if (sizeY == 0) sizeY = 1;
-            blocks = new BlockState[sizeX][sizeY][sizeZ];
-            tiles = new TileEntity[sizeX][sizeY][sizeZ];
-            for (int i = 0; i < sizeX; i++)
-                for (int k = 0; k < sizeY; k++)
-                    for (int j = 0; j < sizeZ; j++)
-                    {
-                        String name = "B" + i + "," + k + "," + j;
-                        if (!blockTag.contains(name)) continue;
-                        BlockState state = NBTUtil.readBlockState(blockTag.getCompound(name));
-                        blocks[i][k][j] = state;
-                        if (blockTag.contains("T" + i + "," + k + "," + j))
-                        {
-                            try
-                            {
-                                CompoundNBT tag = blockTag.getCompound("T" + i + "," + k + "," + j);
-                                tiles[i][k][j] = TileEntity.create(tag);
-                            }
-                            catch (Exception e)
-                            {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-            // Call these in this order so any appropriate changes can be made.
-            this.setBlocks(blocks);
-            this.setTiles(tiles);
-        }
-    }
-
-    @Override
-    public void readAdditional(CompoundNBT nbt)
-    {
-        super.readAdditional(nbt);
-        if (nbt.contains("bounds"))
-        {
-            CompoundNBT bounds = nbt.getCompound("bounds");
-            boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
-            boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
-        }
-        readBlocks(nbt);
-    }
-
-    @Override
-    public void readSpawnData(PacketBuffer data)
-    {
-        PacketBuffer buff = new PacketBuffer(data);
-        CompoundNBT tag = new CompoundNBT();
-        try
-        {
-            tag = buff.readCompoundTag();
-            readAdditional(tag);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    /** Will get destroyed next tick. */
-    @Override
-    public void remove()
-    {
-        if (!getEntityWorld().isRemote && this.isAlive() && shouldRevert)
-        {
-            IBlockEntity.BlockEntityFormer.RevertEntity(this);
-        }
-        super.remove();
-    }
-
-    @Override
-    public void remove(boolean keepData)
-    {
-        shouldRevert = !keepData;
-        super.remove(keepData);
-    }
-
-    @Override
-    public void setPosition(double x, double y, double z)
-    {
-        super.setPosition(x, y, z);
-        if (collider != null) collider.onSetPosition();
-    }
-
-    public void writeBlocks(CompoundNBT nbt)
-    {
-        if (blocks != null)
-        {
-            CompoundNBT blocksTag = new CompoundNBT();
-            blocksTag.putInt("BlocksLengthX", blocks.length);
-            blocksTag.putInt("BlocksLengthY", blocks[0].length);
-            blocksTag.putInt("BlocksLengthZ", blocks[0][0].length);
-            int sizeX = blocks.length;
-            int sizeY = blocks[0].length;
-            int sizeZ = blocks[0][0].length;
-            for (int i = 0; i < sizeX; i++)
-            {
-                for (int k = 0; k < sizeY; k++)
-                {
-                    for (int j = 0; j < sizeZ; j++)
-                    {
-                        BlockState b = blocks[i][k][j];
-                        if (b == null) continue;
-                        blocksTag.put("B" + i + "," + k + "," + j, NBTUtil.writeBlockState(b));
-                        try
-                        {
-                            if (tiles[i][k][j] != null)
-                            {
-                                CompoundNBT tag = new CompoundNBT();
-                                tag = tiles[i][k][j].write(tag);
-                                blocksTag.put("T" + i + "," + k + "," + j, tag);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-            nbt.put("Blocks", blocksTag);
-        }
-    }
-
-    @Override
-    public void writeAdditional(CompoundNBT nbt)
-    {
-        super.writeAdditional(nbt);
-        CompoundNBT vector = new CompoundNBT();
-        vector.putDouble("minx", boundMin.getX());
-        vector.putDouble("miny", boundMin.getY());
-        vector.putDouble("minz", boundMin.getZ());
-        vector.putDouble("maxx", boundMax.getX());
-        vector.putDouble("maxy", boundMax.getY());
-        vector.putDouble("maxz", boundMax.getZ());
-        nbt.put("bounds", vector);
-        try
-        {
-            writeBlocks(nbt);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void writeSpawnData(PacketBuffer data)
-    {
-        PacketBuffer buff = new PacketBuffer(data);
-        CompoundNBT tag = new CompoundNBT();
-        writeAdditional(tag);
-        buff.writeCompoundTag(tag);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public boolean isInRangeToRenderDist(double distance)
-    {
-        return true;
-    }
-
-    /** This is here to prevent teleport packet processing in vanilla
-     * updates. */
-    @Override
-    public boolean canPassengerSteer()
-    {
-        return true;
-    }
+    abstract protected void doMotion();
 
     @Override
     public Iterable<ItemStack> getArmorInventoryList()
@@ -489,15 +235,61 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     }
 
     @Override
-    public ItemStack getHeldItem(Hand hand)
+    public BlockState[][][] getBlocks()
+    {
+        return this.blocks;
+    }
+
+    /**
+     * Checks if the entity's current position is a valid location to spawn
+     * this entity.
+     */
+    public boolean getCanSpawnHere()
+    {
+        return false;
+    }
+
+    @Override
+    public IBlockEntityWorld<?> getFakeWorld()
+    {
+        if (this.fake_world == null)
+        {
+            this.fake_world = this.world.isRemote ? new ClientWorldEntity(this.world)
+                    : new ServerWorldEntity((ServerWorld) this.world);
+            this.fake_world.setBlockEntity(this);
+        }
+        return this.fake_world;
+    }
+
+    @Override
+    public ItemStack getHeldItem(final Hand hand)
     {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public void setHeldItem(Hand hand, @Nullable ItemStack stack)
+    public BlockEntityInteractHandler getInteractor()
     {
+        if (this.interacter == null) this.interacter = this.createInteractHandler();
+        return this.interacter;
+    }
 
+    @Override
+    public BlockPos getMax()
+    {
+        return this.boundMax;
+    }
+
+    @Override
+    public BlockPos getMin()
+    {
+        return this.boundMin;
+    }
+
+    @Override
+    public Vec3d getMotion()
+    {
+        return this.getDataManager().get(BlockEntityBase.velocity);
     }
 
     @Override
@@ -506,57 +298,347 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
         return HandSide.LEFT;
     }
 
-    @Override
-    public void setBlocks(BlockState[][][] blocks)
+    protected double getSpeed(final double pos, final double destPos, final double speed, final double speedPos,
+            double speedNeg)
     {
-        this.blocks = blocks;
-    }
-
-    @Override
-    public BlockState[][][] getBlocks()
-    {
-        return blocks;
-    }
-
-    @Override
-    public void setTiles(TileEntity[][][] tiles)
-    {
-        this.tiles = tiles;
+        if (!this.getEntityWorld().isAreaLoaded(this.getPosition(), 8)) return 0;
+        double ds = speed;
+        final double dp = destPos - pos;
+        if (dp > 0)
+        {
+            boolean tooFast = pos + ds * (BlockEntityBase.ACCELERATIONTICKS + 1) > destPos;
+            if (!tooFast) ds = Math.min(speedPos, ds + this.acceleration * speedPos);
+            else while (ds >= 0 && tooFast)
+            {
+                ds = ds - this.acceleration * speedPos / 10;
+                tooFast = pos + ds * (BlockEntityBase.ACCELERATIONTICKS + 1) > destPos;
+            }
+            return ds;
+        }
+        else if (dp < 0)
+        {
+            speedNeg = Math.abs(speedNeg);
+            boolean tooFast = pos + ds * (BlockEntityBase.ACCELERATIONTICKS + 1) < destPos;
+            if (!tooFast) ds = Math.max(-speedNeg, ds - this.acceleration * speedNeg);
+            else while (ds <= 0 && tooFast)
+            {
+                ds = ds + this.acceleration * speedNeg / 10;
+                tooFast = pos + ds * (BlockEntityBase.ACCELERATIONTICKS + 1) < destPos;
+            }
+            return ds;
+        }
+        else return 0;
     }
 
     @Override
     public TileEntity[][][] getTiles()
     {
-        return tiles;
+        return this.tiles;
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public BlockPos getMin()
+    public boolean isInRangeToRenderDist(final double distance)
     {
-        return boundMin;
+        return true;
     }
 
     @Override
-    public BlockPos getMax()
+    public boolean isPotionApplicable(final EffectInstance par1EffectInstance)
     {
-        return boundMax;
+        return false;
     }
 
     @Override
-    public void setMin(BlockPos pos)
+    /** knocks back this entity */
+    public void knockBack(final Entity entityIn, final float strenght, final double xRatio, final double zRatio)
     {
-        this.boundMin = pos;
+
+    }
+
+    abstract protected void onGridAlign();
+
+    abstract protected void preColliderTick();
+
+    /** First layer of player interaction */
+    @Override
+    public boolean processInitialInteract(final PlayerEntity player, final Hand hand)
+    {
+        System.out.println(player + " " + hand);
+        if (this.interacter == null) this.interacter = this.createInteractHandler();
+        return this.interacter.processInitialInteract(player, player.getHeldItem(hand), hand);
     }
 
     @Override
-    public void setMax(BlockPos pos)
+    public void readAdditional(final CompoundNBT nbt)
+    {
+        super.readAdditional(nbt);
+        if (nbt.contains("bounds"))
+        {
+            final CompoundNBT bounds = nbt.getCompound("bounds");
+            this.boundMin = new BlockPos(bounds.getDouble("minx"), bounds.getDouble("miny"), bounds.getDouble("minz"));
+            this.boundMax = new BlockPos(bounds.getDouble("maxx"), bounds.getDouble("maxy"), bounds.getDouble("maxz"));
+        }
+        this.readBlocks(nbt);
+    }
+
+    public void readBlocks(final CompoundNBT nbt)
+    {
+        if (nbt.contains("Blocks"))
+        {
+            final CompoundNBT blockTag = nbt.getCompound("Blocks");
+            int sizeX = blockTag.getInt("BlocksLengthX");
+            int sizeZ = blockTag.getInt("BlocksLengthZ");
+            int sizeY = blockTag.getInt("BlocksLengthY");
+            if (sizeX == 0 || sizeZ == 0) sizeX = sizeZ = nbt.getInt("BlocksLength");
+            if (sizeY == 0) sizeY = 1;
+            this.blocks = new BlockState[sizeX][sizeY][sizeZ];
+            this.tiles = new TileEntity[sizeX][sizeY][sizeZ];
+            for (int i = 0; i < sizeX; i++)
+                for (int k = 0; k < sizeY; k++)
+                    for (int j = 0; j < sizeZ; j++)
+                    {
+                        final String name = "B" + i + "," + k + "," + j;
+                        if (!blockTag.contains(name)) continue;
+                        final BlockState state = NBTUtil.readBlockState(blockTag.getCompound(name));
+                        this.blocks[i][k][j] = state;
+                        if (blockTag.contains("T" + i + "," + k + "," + j)) try
+                        {
+                            final CompoundNBT tag = blockTag.getCompound("T" + i + "," + k + "," + j);
+                            this.tiles[i][k][j] = TileEntity.create(tag);
+                        }
+                        catch (final Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+            // Call these in this order so any appropriate changes can be made.
+            this.setBlocks(this.blocks);
+            this.setTiles(this.tiles);
+        }
+    }
+
+    @Override
+    public void readSpawnData(final PacketBuffer data)
+    {
+        System.out.println("read");
+        this.readAdditional(data.readCompoundTag());
+    }
+
+    @Override
+    protected void registerData()
+    {
+        super.registerData();
+        this.getDataManager().register(BlockEntityBase.velocity, new Vec3d(0, 0, 0));
+        this.getDataManager().register(BlockEntityBase.position, new Vec3d(0, 0, 0));
+    }
+
+    /** Will get destroyed next tick. */
+    @Override
+    public void remove()
+    {
+        if (!this.getEntityWorld().isRemote && this.isAlive() && this.shouldRevert) IBlockEntity.BlockEntityFormer
+                .RevertEntity(this);
+        super.remove();
+    }
+
+    @Override
+    public void remove(final boolean keepData)
+    {
+        this.shouldRevert = !keepData;
+        super.remove(keepData);
+    }
+
+    @Override
+    public void resetPositionToBB()
+    {
+        final BlockPos min = this.getMin();
+        final BlockPos max = this.getMax();
+        final float xDiff = (max.getX() - min.getX()) / 2f;
+        final float zDiff = (max.getZ() - min.getZ()) / 2f;
+        final AxisAlignedBB axisalignedbb = this.getBoundingBox();
+        if (xDiff % 1 != 0) this.posX = axisalignedbb.minX + xDiff;
+        else this.posX = (axisalignedbb.minX + axisalignedbb.maxX) / 2.0D;
+        this.posY = axisalignedbb.minY;
+        if (zDiff % 1 != 0) this.posZ = axisalignedbb.minZ + zDiff;
+        else this.posZ = (axisalignedbb.minZ + axisalignedbb.maxZ) / 2.0D;
+    }
+
+    @Override
+    public void setBlocks(final BlockState[][][] blocks)
+    {
+        this.blocks = blocks;
+    }
+
+    @Override
+    public void setFakeWorld(@SuppressWarnings("rawtypes") final IBlockEntityWorld world)
+    {
+        this.fake_world = world;
+    }
+
+    @Override
+    public void setHeldItem(final Hand hand, @Nullable final ItemStack stack)
+    {
+
+    }
+
+    @Override
+    public void setMax(final BlockPos pos)
     {
         this.boundMax = pos;
     }
 
     @Override
-    public void setFakeWorld(BlockEntityWorld world)
+    public void setMin(final BlockPos pos)
     {
-        this.fake_world = world;
+        this.boundMin = pos;
+    }
+
+    @Override
+    public void setMotion(final Vec3d vec)
+    {
+        this.getDataManager().set(BlockEntityBase.velocity, vec);
+    }
+
+    @Override
+    public void setPosition(final double x, final double y, final double z)
+    {
+        super.setPosition(x, y, z);
+        // This is null during init, when setPosition is first called.
+        if (this.getDataManager() != null)
+        {
+            if (this.isServerWorld()) this.getDataManager().set(BlockEntityBase.position, new Vec3d(this.posX,
+                    this.posY, this.posZ));
+            final Vec3d vec = this.getDataManager().get(BlockEntityBase.position);
+            this.posX = vec.x;
+            this.posY = vec.y;
+            this.posZ = vec.z;
+        }
+        if (this.collider != null) this.collider.onSetPosition();
+    }
+
+    @Override
+    public void setTiles(final TileEntity[][][] tiles)
+    {
+        this.tiles = tiles;
+    }
+
+    @Override
+    public void tick()
+    {
+        if (net.minecraftforge.common.ForgeHooks.onLivingUpdate(this)) return;
+        if (this.getBlocks() == null && this.getEntityWorld().isRemote) return;
+
+        this.prevPosX = this.posX;
+        this.prevPosY = this.posY;
+        this.prevPosZ = this.posZ;
+
+        if (this.ticksExisted % 20 == 0)
+        {
+            final Vec3d posVec = this.getPositionVec();
+            final Vec3d pos = this.getDataManager().get(BlockEntityBase.position);
+            if (posVec.distanceTo(pos) > 0.25)
+            {
+                System.out.println(posVec + " too far " + this.getMotion());
+                System.out.println(pos);
+                System.out.println(this.getMotion());
+            }
+
+            // System.out.println(posVec + " " + this.getMotion());
+            // System.out.println(pos);
+            // System.out.println(this.getMotion());
+        }
+        this.setPosition(this.posX, this.posY, this.posZ);
+
+        if (this.isServerWorld() && this.ticksExisted % 200 == 10) EntityUpdate.sendEntityUpdate(this);
+        if (this.collider == null)
+        {
+            this.collider = new BlockEntityUpdater(this);
+            this.collider.onSetPosition();
+        }
+        this.rotationYaw = 0;
+        this.rotationPitch = 0;
+        this.preColliderTick();
+        this.collider.onUpdate();
+        this.accelerate();
+        final int dy = (int) (this.getMotion().x * 16);
+        final int dx = (int) (this.getMotion().y * 16);
+        final int dz = (int) (this.getMotion().z * 16);
+        if (this.toMoveY || this.toMoveX || this.toMoveZ) this.doMotion();
+        else if (dx == dy && dy == dz && dz == 0 && !this.world.isRemote)
+        {
+            final BlockPos pos = this.getPosition();
+            final boolean update = this.posX != pos.getX() + 0.5 || this.posY != Math.round(this.posY)
+                    || this.posZ != pos.getZ() + 0.5;
+            if (update) this.onGridAlign();
+        }
+        this.checkCollision();
+    }
+
+    @Override
+    public void writeAdditional(final CompoundNBT nbt)
+    {
+        super.writeAdditional(nbt);
+        final CompoundNBT vector = new CompoundNBT();
+        vector.putDouble("minx", this.boundMin.getX());
+        vector.putDouble("miny", this.boundMin.getY());
+        vector.putDouble("minz", this.boundMin.getZ());
+        vector.putDouble("maxx", this.boundMax.getX());
+        vector.putDouble("maxy", this.boundMax.getY());
+        vector.putDouble("maxz", this.boundMax.getZ());
+        nbt.put("bounds", vector);
+        try
+        {
+            this.writeBlocks(nbt);
+        }
+        catch (final Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void writeBlocks(final CompoundNBT nbt)
+    {
+        if (this.blocks != null)
+        {
+            final CompoundNBT blocksTag = new CompoundNBT();
+            blocksTag.putInt("BlocksLengthX", this.blocks.length);
+            blocksTag.putInt("BlocksLengthY", this.blocks[0].length);
+            blocksTag.putInt("BlocksLengthZ", this.blocks[0][0].length);
+            final int sizeX = this.blocks.length;
+            final int sizeY = this.blocks[0].length;
+            final int sizeZ = this.blocks[0][0].length;
+            for (int i = 0; i < sizeX; i++)
+                for (int k = 0; k < sizeY; k++)
+                    for (int j = 0; j < sizeZ; j++)
+                    {
+                        final BlockState b = this.blocks[i][k][j];
+                        if (b == null) continue;
+                        blocksTag.put("B" + i + "," + k + "," + j, NBTUtil.writeBlockState(b));
+                        try
+                        {
+                            if (this.tiles[i][k][j] != null)
+                            {
+                                CompoundNBT tag = new CompoundNBT();
+                                tag = this.tiles[i][k][j].write(tag);
+                                blocksTag.put("T" + i + "," + k + "," + j, tag);
+                            }
+                        }
+                        catch (final Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+            nbt.put("Blocks", blocksTag);
+        }
+    }
+
+    @Override
+    public void writeSpawnData(final PacketBuffer data)
+    {
+        System.out.println("write");
+        final CompoundNBT tag = new CompoundNBT();
+        this.writeAdditional(tag);
+        data.writeCompoundTag(tag);
     }
 }

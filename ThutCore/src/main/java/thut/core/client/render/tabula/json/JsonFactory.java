@@ -7,15 +7,18 @@ import com.google.gson.GsonBuilder;
  * @author iLexiconn
  * @since 0.1.0
  */
-public class JsonFactory {
-    private static Gson gson = new Gson();
+public class JsonFactory
+{
+    private static Gson gson       = new Gson();
     private static Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
 
-    public static Gson getGson() {
-        return gson;
+    public static Gson getGson()
+    {
+        return JsonFactory.gson;
     }
 
-    public static Gson getPrettyGson() {
-        return prettyGson;
+    public static Gson getPrettyGson()
+    {
+        return JsonFactory.prettyGson;
     }
 }

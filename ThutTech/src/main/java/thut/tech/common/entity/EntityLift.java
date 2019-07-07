@@ -1,14 +1,20 @@
 package thut.tech.common.entity;
 
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.vecmath.Vector3f;
 
-import com.google.common.base.Predicate;
+import com.google.common.collect.Maps;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntitySize;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MoverType;
+import net.minecraft.entity.Pose;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -16,72 +22,74 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.world.ServerWorld;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import thut.api.entity.blockentity.BlockEntityBase;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
-import thut.api.entity.blockentity.BlockEntityWorld;
 import thut.api.maths.Vector3;
-import thut.api.network.PacketHandler;
+import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
-import thut.tech.common.handlers.ConfigHandler;
 
 public class EntityLift extends BlockEntityBase
 {
-    static final DataParameter<Integer> DESTINATIONFLOORDW = EntityDataManager.<Integer> createKey(EntityLift.class,
-            DataSerializers.VARINT);
-    static final DataParameter<Float>   DESTINATIONYDW     = EntityDataManager.<Float> createKey(EntityLift.class,
-            DataSerializers.FLOAT);
-    static final DataParameter<Float>   DESTINATIONXDW     = EntityDataManager.<Float> createKey(EntityLift.class,
-            DataSerializers.FLOAT);
-    static final DataParameter<Float>   DESTINATIONZDW     = EntityDataManager.<Float> createKey(EntityLift.class,
-            DataSerializers.FLOAT);
-    static final DataParameter<Integer> CURRENTFLOORDW     = EntityDataManager.<Integer> createKey(EntityLift.class,
-            DataSerializers.VARINT);
-    static final DataParameter<Boolean> CALLEDDW           = EntityDataManager.<Boolean> createKey(EntityLift.class,
-            DataSerializers.BOOLEAN);
-
-    public static boolean               ENERGYUSE          = false;
-    public static int                   ENERGYCOST         = 100;
-
-    public IEnergyStorage               energy             = null;
-    public UUID                         owner;
-    public double                       prevFloorY         = 0;
-    public double                       prevFloor          = 0;
-    TileEntityLiftAccess                current;
-    public int[]                        floors             = new int[128];
-    public boolean[]                    hasFloors          = new boolean[128];
-    private Vector3f                    velocity           = new Vector3f();
-
-    public EntityLift(World par1World)
+    public static class LiftTracker
     {
-        super(par1World);
+        protected static final Map<UUID, EntityLift> liftMap = Maps.newHashMap();
+    }
+
+    public static final EntityType<EntityLift> TYPE               = EntityType.Builder.create(EntityLift::new,
+            EntityClassification.MISC).disableSummoning().immuneToFire().setShouldReceiveVelocityUpdates(true)
+            .setTrackingRange(64).setUpdateInterval(1).build("lift");
+    static final DataParameter<Integer>        DESTINATIONFLOORDW = EntityDataManager.<Integer> createKey(
+            EntityLift.class, DataSerializers.VARINT);
+    static final DataParameter<Float>          DESTINATIONYDW     = EntityDataManager.<Float> createKey(
+            EntityLift.class, DataSerializers.FLOAT);
+    static final DataParameter<Float>          DESTINATIONXDW     = EntityDataManager.<Float> createKey(
+            EntityLift.class, DataSerializers.FLOAT);
+    static final DataParameter<Float>          DESTINATIONZDW     = EntityDataManager.<Float> createKey(
+            EntityLift.class, DataSerializers.FLOAT);
+    static final DataParameter<Integer>        CURRENTFLOORDW     = EntityDataManager.<Integer> createKey(
+            EntityLift.class, DataSerializers.VARINT);
+
+    static final DataParameter<Boolean> CALLEDDW  = EntityDataManager.<Boolean> createKey(EntityLift.class,
+            DataSerializers.BOOLEAN);
+    public static boolean               ENERGYUSE = false;
+
+    public static int ENERGYCOST = 100;
+
+    public static EntityLift getLiftFromUUID(final UUID liftID, final World world)
+    {
+        if (world instanceof ServerWorld)
+        {
+            final Entity e = ((ServerWorld) world).getEntityByUuid(liftID);
+            if (e instanceof EntityLift) return (EntityLift) e;
+        }
+        return LiftTracker.liftMap.get(liftID);
+    }
+
+    public IEnergyStorage energy     = null;
+    public UUID           owner;
+    public double         prevFloorY = 0;
+    public double         prevFloor  = 0;
+    TileEntityLiftAccess  current;
+    public int[]          floors     = new int[128];
+
+    public boolean[] hasFloors = new boolean[128];
+
+    private final Vector3f velocity = new Vector3f();
+
+    EntitySize size;
+
+    public EntityLift(final EntityType<EntityLift> type, final World par1World)
+    {
+        super(type, par1World);
         this.ignoreFrustumCheck = true;
         this.hurtResistantTime = 0;
-        this.isImmuneToFire = true;
-        speedUp = ConfigHandler.LiftSpeedUp;
-        speedDown = -ConfigHandler.LiftSpeedDown;
-    }
-
-    public EntityLift(World world, double x, double y, double z)
-    {
-        this(world);
-        this.setPosition(x, y, z);
-    }
-
-    @Override
-    protected boolean checkAccelerationConditions()
-    {
-        return consumePower();
-    }
-
-    @Override
-    protected BlockEntityInteractHandler createInteractHandler()
-    {
-        return new LiftInteractHandler(this);
+        this.speedUp = TechCore.config.LiftSpeedUp;
+        this.speedDown = -TechCore.config.LiftSpeedDown;
     }
 
     @Override
@@ -91,329 +99,348 @@ public class EntityLift extends BlockEntityBase
         // someone else has tried to rotate it.
         this.rotationYaw = 0;
         // Only should run the consume power check on servers.
-        if (isServerWorld() && !consumePower())
-        {
-            toMoveY = toMoveX = toMoveZ = false;
-        }
+        if (this.isServerWorld() && !this.consumePower()) this.toMoveY = this.toMoveX = this.toMoveZ = false;
         else
         {
             // Otherwise set it to move if it has a destination.
-            toMoveX = getDestX() != posX;
-            toMoveY = getDestY() != posY;
-            toMoveZ = getDestZ() != posZ;
+            this.toMoveX = this.getDestX() != this.posX;
+            this.toMoveY = this.getDestY() != this.posY;
+            this.toMoveZ = this.getDestZ() != this.posZ;
         }
 
         // Apply damping to velocities if no destination.
-        if (!toMoveX) velocity.x *= 0.5;
-        if (!toMoveZ) velocity.z *= 0.5;
-        if (!toMoveY) velocity.y *= 0.5;
+        if (!this.toMoveX) this.velocity.x *= 0.5;
+        if (!this.toMoveZ) this.velocity.z *= 0.5;
+        if (!this.toMoveY) this.velocity.y *= 0.5;
 
-        if (getCalled())
+        if (this.getCalled())
         {
-            if (toMoveY)
+            if (this.toMoveY)
             {
-                float destY = getDestY();
+                final float destY = this.getDestY();
                 // If Sufficiently close (0,01 blocks) just snap the elevator to
                 // the destination.
-                if (Math.abs(destY - posY) < 0.01)
+                if (Math.abs(destY - this.posY) < 0.01)
                 {
-                    setPosition(posX, destY, posZ);
-                    toMoveY = false;
-                    velocity.y = 0;
+                    this.setPosition(this.posX, destY, this.posZ);
+                    this.toMoveY = false;
+                    this.velocity.y = 0;
                 }
                 else
                 {
                     // Otherwise accelerate accordingly.
-                    double dy = getSpeed(posY, destY, velocity.y, speedUp, speedDown);
-                    velocity.y = (float) dy;
+                    final double dy = this.getSpeed(this.posY, destY, this.velocity.y, this.speedUp, this.speedDown);
+                    this.velocity.y = (float) dy;
                 }
             }
-            if (toMoveX)
+            if (this.toMoveX)
             {
-                float destX = getDestX();
-                if (Math.abs(destX - posX) < 0.01)
+                final float destX = this.getDestX();
+                if (Math.abs(destX - this.posX) < 0.01)
                 {
-                    setPosition(destX, posY, posZ);
-                    toMoveX = false;
-                    velocity.x = 0;
+                    this.setPosition(destX, this.posY, this.posZ);
+                    this.toMoveX = false;
+                    this.velocity.x = 0;
                 }
                 else
                 {
-                    double dx = getSpeed(posX, destX, velocity.x, speedHoriz, speedHoriz);
-                    velocity.x = (float) dx;
+                    final double dx = this.getSpeed(this.posX, destX, this.velocity.x, this.speedHoriz,
+                            this.speedHoriz);
+                    this.velocity.x = (float) dx;
                 }
             }
-            if (toMoveZ)
+            if (this.toMoveZ)
             {
-                float destZ = getDestZ();
-                if (Math.abs(destZ - posZ) < 0.01)
+                final float destZ = this.getDestZ();
+                if (Math.abs(destZ - this.posZ) < 0.01)
                 {
-                    setPosition(posX, posY, destZ);
-                    toMoveZ = false;
-                    velocity.z = 0;
+                    this.setPosition(this.posX, this.posY, destZ);
+                    this.toMoveZ = false;
+                    this.velocity.z = 0;
                 }
                 else
                 {
-                    double dz = getSpeed(posZ, destZ, velocity.z, speedHoriz, speedHoriz);
-                    velocity.z = (float) dz;
+                    final double dz = this.getSpeed(this.posZ, destZ, this.velocity.z, this.speedHoriz,
+                            this.speedHoriz);
+                    this.velocity.z = (float) dz;
                 }
             }
         }
-
-        motionX = velocity.x;
-        motionY = velocity.y;
-        motionZ = velocity.z;
+        this.setMotion(this.velocity.x, this.velocity.y, this.velocity.z);
     }
 
-    public void call(int floor)
+    public void call(final int floor)
     {
-        if (floor == 0 || floor > floors.length) { return; }
-        if (hasFloors[floor - 1])
+        if (floor == 0 || floor > this.floors.length) return;
+        if (this.hasFloors[floor - 1])
         {
-            callYValue(floors[floor - 1]);
-            setDestinationFloor(floor);
+            this.callYValue(this.floors[floor - 1]);
+            this.setDestinationFloor(floor);
         }
     }
 
-    public void callYValue(int yValue)
+    public void callYValue(final int yValue)
     {
-        setDestY(yValue);
+        this.setDestY(yValue);
+    }
+
+    @Override
+    protected boolean checkAccelerationConditions()
+    {
+        return this.consumePower();
     }
 
     private boolean consumePower()
     {
-        if (!ENERGYUSE || !getCalled()) return true;
-        if (energy == null) energy = getCapability(CapabilityEnergy.ENERGY, null);
-        if (energy == null) return true;
+        if (!EntityLift.ENERGYUSE || !this.getCalled()) return true;
+        if (this.energy == null) this.energy = this.getCapability(CapabilityEnergy.ENERGY, null).orElse(null);
+        if (this.energy == null) return true;
 
         boolean power = false;
-        Vector3 bounds = Vector3.getNewVector().set(boundMax.subtract(boundMin));
-        double volume = bounds.x * bounds.y * bounds.z;
-        int energyCost = (int) (Math.abs(getDestY() - posY) * ENERGYCOST * volume * 0.01);
+        final Vector3 bounds = Vector3.getNewVector().set(this.boundMax.subtract(this.boundMin));
+        final double volume = bounds.x * bounds.y * bounds.z;
+        int energyCost = (int) (Math.abs(this.getDestY() - this.posY) * EntityLift.ENERGYCOST * volume * 0.01);
         energyCost = Math.max(energyCost, 1);
-        int canExtract = energy.extractEnergy(energyCost, true);
+        final int canExtract = this.energy.extractEnergy(energyCost, true);
         if (canExtract == energyCost)
         {
             power = true;
-            energy.extractEnergy(energyCost, false);
+            this.energy.extractEnergy(energyCost, false);
         }
-        MinecraftForge.EVENT_BUS.post(new EventLiftConsumePower(this, (long) energyCost));
+        MinecraftForge.EVENT_BUS.post(new EventLiftConsumePower(this, energyCost));
         if (!power)
         {
             this.setDestinationFloor(-1);
-            this.setDestY((float) posY);
+            this.setDestY((float) this.posY);
             this.setCalled(false);
-            toMoveY = false;
+            this.toMoveY = false;
         }
         return power;
     }
 
     @Override
-    public void doMotion()
+    protected BlockEntityInteractHandler createInteractHandler()
     {
-        if (!toMoveX) motionX = velocity.x = 0;
-        if (!toMoveY) motionY = velocity.y = 0;
-        if (!toMoveZ) motionZ = velocity.z = 0;
-        if (getCalled())
-        {
-            this.move(MoverType.SELF, velocity.x, velocity.y, velocity.z);
-        }
-        else
-        {
-            BlockPos pos = getPosition();
-            setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
-        }
+        return new LiftInteractHandler(this);
     }
 
     @Override
-    protected void entityInit()
+    public void doMotion()
     {
-        super.entityInit();
-        this.dataManager.register(DESTINATIONFLOORDW, Integer.valueOf(0));
-        this.dataManager.register(DESTINATIONYDW, Float.valueOf(0));
-        this.dataManager.register(DESTINATIONXDW, Float.valueOf(0));
-        this.dataManager.register(DESTINATIONZDW, Float.valueOf(0));
-        this.dataManager.register(CURRENTFLOORDW, Integer.valueOf(-1));
-        this.dataManager.register(CALLEDDW, Boolean.FALSE);
+        if (!this.toMoveX) this.velocity.x = 0;
+        if (!this.toMoveY) this.velocity.y = 0;
+        if (!this.toMoveZ) this.velocity.z = 0;
+        this.setMotion(this.velocity.x, this.velocity.y, this.velocity.z);
+        if (this.getCalled()) this.move(MoverType.SELF, this.getMotion());
+        else
+        {
+            final BlockPos pos = this.getPosition();
+            this.setPosition(pos.getX() + 0.5, Math.round(this.posY), pos.getZ() + 0.5);
+        }
     }
 
     public boolean getCalled()
     {
-        return dataManager.get(CALLEDDW);
-    }
-
-    private void setCalled(boolean called)
-    {
-        dataManager.set(CALLEDDW, called);
+        return this.dataManager.get(EntityLift.CALLEDDW);
     }
 
     /** @return the destinationFloor */
     public int getCurrentFloor()
     {
-        return dataManager.get(CURRENTFLOORDW);
+        return this.dataManager.get(EntityLift.CURRENTFLOORDW);
     }
 
     /** @return the destinationFloor */
     public int getDestinationFloor()
     {
-        return dataManager.get(DESTINATIONFLOORDW);
+        return this.dataManager.get(EntityLift.DESTINATIONFLOORDW);
     }
 
     /** @return the destinationFloor */
     public float getDestX()
     {
-        return dataManager.get(DESTINATIONXDW);
+        return this.dataManager.get(EntityLift.DESTINATIONXDW);
     }
 
     /** @return the destinationFloor */
     public float getDestY()
     {
-        return dataManager.get(DESTINATIONYDW);
+        return this.dataManager.get(EntityLift.DESTINATIONYDW);
     }
 
     /** @return the destinationFloor */
     public float getDestZ()
     {
-        return dataManager.get(DESTINATIONZDW);
+        return this.dataManager.get(EntityLift.DESTINATIONZDW);
     }
 
     @Override
-    public boolean isPotionApplicable(EffectInstance par1EffectInstance)
+    public ItemStack getItemStackFromSlot(final EquipmentSlotType slotIn)
+    {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public EntitySize getSize(final Pose pose)
+    {
+        if (this.size == null) this.size = EntitySize.fixed(1 + this.getMax().getX() - this.getMin().getX(), this
+                .getMax().getY());
+        return this.size;
+    }
+
+    @Override
+    public boolean isPotionApplicable(final EffectInstance par1EffectInstance)
     {
         return false;
     }
 
     @Override
+    public void onAddedToWorld()
+    {
+        super.onAddedToWorld();
+        LiftTracker.liftMap.put(this.getUniqueID(), this);
+    }
+
+    @Override
     protected void onGridAlign()
     {
-        BlockPos pos = getPosition();
-        setCalled(false);
-        setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
-        PacketHandler.sendEntityUpdate(this);
-    }
-
-    /** @param currentFloor
-     *            the destinationFloor to set */
-    public void setCurrentFloor(int currentFloor)
-    {
-        dataManager.set(CURRENTFLOORDW, Integer.valueOf(currentFloor));
-    }
-
-    /** @param destinationFloor
-     *            the destinationFloor to set */
-    public void setDestinationFloor(int destinationFloor)
-    {
-        dataManager.set(DESTINATIONFLOORDW, Integer.valueOf(destinationFloor));
-    }
-
-    /** @param dest
-     *            the destinationFloor to set */
-    public void setDestX(float dest)
-    {
-        dataManager.set(DESTINATIONXDW, Float.valueOf(dest));
-        dataManager.set(DESTINATIONYDW, Float.valueOf((float) posY));
-        dataManager.set(DESTINATIONZDW, Float.valueOf((float) posZ));
-        setCalled(true);
-    }
-
-    /** @param dest
-     *            the destinationFloor to set */
-    public void setDestY(float dest)
-    {
-        dataManager.set(DESTINATIONYDW, Float.valueOf(dest));
-        dataManager.set(DESTINATIONXDW, Float.valueOf((float) posX));
-        dataManager.set(DESTINATIONZDW, Float.valueOf((float) posZ));
-        setCalled(true);
-    }
-
-    /** @param dest
-     *            the destinationFloor to set */
-    public void setDestZ(float dest)
-    {
-        dataManager.set(DESTINATIONZDW, Float.valueOf(dest));
-        dataManager.set(DESTINATIONYDW, Float.valueOf((float) posY));
-        dataManager.set(DESTINATIONXDW, Float.valueOf((float) posX));
-        setCalled(true);
-    }
-
-    public void setFoor(TileEntityLiftAccess te, int floor)
-    {
-        if (te.floor == 0)
-        {
-            floors[floor - 1] = te.getPos().getY() - 2;
-            hasFloors[floor - 1] = true;
-        }
-        else if (te.floor != 0)
-        {
-            hasFloors[te.floor - 1] = false;
-            floors[floor - 1] = te.getPos().getY() - 2;
-            hasFloors[floor - 1] = true;
-        }
-    }
-
-    @Override
-    public void readEntityFromNBT(CompoundNBT arg0)
-    {
-        super.readEntityFromNBT(arg0);
-        if (arg0.hasUniqueId("owner")) owner = arg0.getUniqueId("owner");
-    }
-
-    @Override
-    public void writeEntityToNBT(CompoundNBT arg0)
-    {
-        super.writeEntityToNBT(arg0);
-        if (owner != null) arg0.setUniqueId("owner", owner);
-    }
-
-    @Override
-    public void setTiles(TileEntity[][][] tiles)
-    {
-        super.setTiles(tiles);
-        for (TileEntity[][] tileArrArr : tiles)
-        {
-            for (TileEntity[] tileArr : tileArrArr)
-            {
-                for (TileEntity tile : tileArr)
-                {
-                    if (tile instanceof TileEntityLiftAccess)
-                    {
-                        ((TileEntityLiftAccess) tile).setLift(this);
-                    }
-                }
-            }
-        }
-    }
-
-    public static EntityLift getLiftFromUUID(final UUID liftID, World world)
-    {
-        EntityLift ret = null;
-        if (world instanceof BlockEntityWorld)
-        {
-            world = ((BlockEntityWorld) world).getWorld();
-        }
-        if (world instanceof ServerWorld)
-        {
-            ServerWorld worlds = (ServerWorld) world;
-            Entity entity = worlds.getEntityFromUuid(liftID);
-            if (entity instanceof EntityLift) return (EntityLift) entity;
-        }
-        else
-        {
-            List<EntityLift> entities = world.getEntities(EntityLift.class, new Predicate<EntityLift>()
-            {
-                @Override
-                public boolean apply(EntityLift input)
-                {
-                    return input.getUniqueID().equals(liftID);
-                }
-            });
-            if (!entities.isEmpty()) return entities.get(0);
-        }
-        return ret;
+        // final BlockPos pos = this.getPosition();
+        this.setCalled(false);
+        // this.setPosition(pos.getX() + 0.5, Math.round(this.posY), pos.getZ()
+        // + 0.5);
+        // EntityUpdate.sendEntityUpdate(this);
     }
 
     @Override
     protected void preColliderTick()
     {
+    }
+
+    @Override
+    public void readAdditional(final CompoundNBT arg0)
+    {
+        super.readAdditional(arg0);
+        if (arg0.hasUniqueId("owner")) this.owner = arg0.getUniqueId("owner");
+    }
+
+    @Override
+    protected void registerData()
+    {
+        super.registerData();
+        this.dataManager.register(EntityLift.DESTINATIONFLOORDW, Integer.valueOf(0));
+        this.dataManager.register(EntityLift.DESTINATIONYDW, Float.valueOf(0));
+        this.dataManager.register(EntityLift.DESTINATIONXDW, Float.valueOf(0));
+        this.dataManager.register(EntityLift.DESTINATIONZDW, Float.valueOf(0));
+        this.dataManager.register(EntityLift.CURRENTFLOORDW, Integer.valueOf(-1));
+        this.dataManager.register(EntityLift.CALLEDDW, Boolean.FALSE);
+    }
+
+    @Override
+    public void remove()
+    {
+        super.remove();
+        LiftTracker.liftMap.remove(this.getUniqueID());
+    }
+
+    private void setCalled(final boolean called)
+    {
+        this.dataManager.set(EntityLift.CALLEDDW, called);
+    }
+
+    /**
+     * @param currentFloor
+     *            the destinationFloor to set
+     */
+    public void setCurrentFloor(final int currentFloor)
+    {
+        this.dataManager.set(EntityLift.CURRENTFLOORDW, Integer.valueOf(currentFloor));
+    }
+
+    /**
+     * @param destinationFloor
+     *            the destinationFloor to set
+     */
+    public void setDestinationFloor(final int destinationFloor)
+    {
+        this.dataManager.set(EntityLift.DESTINATIONFLOORDW, Integer.valueOf(destinationFloor));
+    }
+
+    /**
+     * @param dest
+     *            the destinationFloor to set
+     */
+    public void setDestX(final float dest)
+    {
+        this.dataManager.set(EntityLift.DESTINATIONXDW, Float.valueOf(dest));
+        this.dataManager.set(EntityLift.DESTINATIONYDW, Float.valueOf((float) this.posY));
+        this.dataManager.set(EntityLift.DESTINATIONZDW, Float.valueOf((float) this.posZ));
+        this.setCalled(true);
+    }
+
+    /**
+     * @param dest
+     *            the destinationFloor to set
+     */
+    public void setDestY(final float dest)
+    {
+        this.dataManager.set(EntityLift.DESTINATIONYDW, Float.valueOf(dest));
+        this.dataManager.set(EntityLift.DESTINATIONXDW, Float.valueOf((float) this.posX));
+        this.dataManager.set(EntityLift.DESTINATIONZDW, Float.valueOf((float) this.posZ));
+        this.setCalled(true);
+    }
+
+    /**
+     * @param dest
+     *            the destinationFloor to set
+     */
+    public void setDestZ(final float dest)
+    {
+        this.dataManager.set(EntityLift.DESTINATIONZDW, Float.valueOf(dest));
+        this.dataManager.set(EntityLift.DESTINATIONYDW, Float.valueOf((float) this.posY));
+        this.dataManager.set(EntityLift.DESTINATIONXDW, Float.valueOf((float) this.posX));
+        this.setCalled(true);
+    }
+
+    public void setFoor(final TileEntityLiftAccess te, final int floor)
+    {
+        if (te.floor == 0)
+        {
+            this.floors[floor - 1] = te.getPos().getY() - 2;
+            this.hasFloors[floor - 1] = true;
+        }
+        else if (te.floor != 0)
+        {
+            this.hasFloors[te.floor - 1] = false;
+            this.floors[floor - 1] = te.getPos().getY() - 2;
+            this.hasFloors[floor - 1] = true;
+        }
+    }
+
+    @Override
+    public void setItemStackToSlot(final EquipmentSlotType slotIn, final ItemStack stack)
+    {
+    }
+
+    @Override
+    public void setSize(final EntitySize size)
+    {
+        this.size = size;
+    }
+
+    @Override
+    public void setTiles(final TileEntity[][][] tiles)
+    {
+        super.setTiles(tiles);
+        for (final TileEntity[][] tileArrArr : tiles)
+            for (final TileEntity[] tileArr : tileArrArr)
+                for (final TileEntity tile : tileArr)
+                    if (tile instanceof TileEntityLiftAccess) ((TileEntityLiftAccess) tile).setLift(this);
+    }
+
+    @Override
+    public void writeAdditional(final CompoundNBT arg0)
+    {
+        super.writeAdditional(arg0);
+        if (this.owner != null) arg0.putUniqueId("owner", this.owner);
     }
 }

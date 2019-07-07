@@ -1,10 +1,24 @@
 package thut.api.block;
 
-import net.minecraft.entity.Entity;
+import java.util.UUID;
 
-public interface IOwnableTE
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import thut.api.IOwnable;
+
+public interface IOwnableTE extends IOwnable
 {
-    boolean canEdit(Entity editor);
+    default boolean canEdit(final LivingEntity editor)
+    {
+        final UUID owner = this.getOwnerId();
+        if (owner == null) return true;
+        if (editor == null) return false;
+        return editor.getUniqueID().equals(owner) || editor instanceof PlayerEntity && ((PlayerEntity) editor)
+                .isCreative();
+    }
 
-    void setPlacer(Entity placer);
+    default void setPlacer(final LivingEntity placer)
+    {
+        this.setOwner(placer);
+    }
 }

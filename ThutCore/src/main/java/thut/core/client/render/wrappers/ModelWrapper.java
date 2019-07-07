@@ -10,24 +10,24 @@ import com.google.common.collect.Sets;
 import com.mojang.blaze3d.platform.GlStateManager;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
+import thut.core.client.render.animation.Animation;
 import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
+import thut.core.client.render.animation.IAnimationChanger;
 import thut.core.client.render.animation.ModelHolder;
-import thut.core.client.render.model.IAnimationChanger;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.model.IModel;
 import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.model.IModelRenderer.Vector5;
-import thut.core.client.render.model.IRetexturableModel;
-import thut.core.client.render.tabula.components.Animation;
+import thut.core.client.render.model.ModelFactory;
+import thut.core.client.render.texturing.IRetexturableModel;
 
-public class ModelWrapper extends ModelBase implements IModel
+public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IModel
 {
     public final ModelHolder       model;
     public final IModelRenderer<?> renderer;
@@ -35,10 +35,49 @@ public class ModelWrapper extends ModelBase implements IModel
     protected float                rotationPointX = 0, rotationPointY = 0, rotationPointZ = 0;
     protected float                rotateAngleX   = 0, rotateAngleY = 0, rotateAngleZ = 0, rotateAngle = 0;
 
+    private final Vector5 rots = new Vector5();
+
     public ModelWrapper(ModelHolder model, IModelRenderer<?> renderer)
     {
         this.model = model;
         this.renderer = renderer;
+    }
+
+    @Override
+    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
+            float limbSwing)
+    {
+        this.imodel.applyAnimation(entity, animate, renderer, partialTicks, limbSwing);
+    }
+
+    @Override
+    public HeadInfo getHeadInfo()
+    {
+        return this.imodel.getHeadInfo();
+    }
+
+    @Override
+    public Set<String> getHeadParts()
+    {
+        return this.imodel.getHeadParts();
+    }
+
+    @Override
+    public HashMap<String, IExtendedModelPart> getParts()
+    {
+        return this.imodel.getParts();
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return this.imodel.isValid();
+    }
+
+    @Override
+    public void preProcessAnimations(Collection<List<Animation>> collection)
+    {
+        this.imodel.preProcessAnimations(collection);
     }
 
     /** Sets the models various rotation angles then renders the model. */
@@ -46,34 +85,27 @@ public class ModelWrapper extends ModelBase implements IModel
     public void render(Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
             float headPitch, float scale)
     {
+        if (this.imodel == null) this.imodel = ModelFactory.create(this.model);
         GlStateManager.pushMatrix();
         GlStateManager.disableCull();
-        HeadInfo info = imodel.getHeadInfo();
-        if (info != null)
+        final HeadInfo info = this.imodel.getHeadInfo();
+        if (info != null) info.currentTick = entityIn.ticksExisted;
+        final IAnimationChanger animChanger = this.renderer.getAnimationChanger();
+        final Set<String> excluded = Sets.newHashSet();
+        if (animChanger != null) for (final String partName : this.imodel.getParts().keySet())
+            if (animChanger.isPartHidden(partName, entityIn, false)) excluded.add(partName);
+        for (final String partName : this.imodel.getParts().keySet())
         {
-            info.currentTick = entityIn.ticksExisted;
-        }
-        IAnimationChanger animChanger = renderer.getAnimationChanger();
-        Set<String> excluded = Sets.newHashSet();
-        if (animChanger != null) for (String partName : imodel.getParts().keySet())
-        {
-            if (animChanger.isPartHidden(partName, entityIn, false))
-            {
-                excluded.add(partName);
-            }
-        }
-        for (String partName : imodel.getParts().keySet())
-        {
-            IExtendedModelPart part = imodel.getParts().get(partName);
+            final IExtendedModelPart part = this.imodel.getParts().get(partName);
             if (part == null) continue;
-            int[] rgbab = part.getRGBAB();
+            final int[] rgbab = part.getRGBAB();
             if (animChanger != null)
             {
-                int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
-                int rgb = animChanger.getColourForPart(partName, entityIn, default_);
+                final int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
+                final int rgb = animChanger.getColourForPart(partName, entityIn, default_);
                 if (rgb != default_)
                 {
-                    Color col = new Color(rgb);
+                    final Color col = new Color(rgb);
                     rgbab[0] = col.getRed();
                     rgbab[1] = col.getGreen();
                     rgbab[2] = col.getBlue();
@@ -82,111 +114,86 @@ public class ModelWrapper extends ModelBase implements IModel
             part.setRGBAB(rgbab);
             try
             {
-                if (renderer.getTexturer() != null)
-                {
-                    renderer.getTexturer().bindObject(entityIn);
-                }
-                if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(renderer.getTexturer());
+                if (this.renderer.getTexturer() != null) this.renderer.getTexturer().bindObject(entityIn);
+                if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(this.renderer
+                        .getTexturer());
+
                 if (part.getParent() == null)
                 {
                     GlStateManager.pushMatrix();
-                    part.renderAllExcept(renderer, excluded.toArray(new String[excluded.size()]));
+                    part.renderAllExcept(this.renderer, excluded.toArray(new String[excluded.size()]));
                     GlStateManager.popMatrix();
                 }
             }
-            catch (Exception e)
+            catch (final Exception e)
             {
                 e.printStackTrace();
             }
         }
-        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.color4f(1, 1, 1, 1);
         GlStateManager.enableCull();
         GlStateManager.popMatrix();
-        if (info != null)
-        {
-            info.lastTick = entityIn.ticksExisted;
-        }
+        if (info != null) info.lastTick = entityIn.ticksExisted;
     }
 
-    /** Sets the model's various rotation angles. For bipeds, par1 and par2 are
+    protected void rotate()
+    {
+        GlStateManager.rotatef(this.rotateAngle, this.rotateAngleX, this.rotateAngleY, this.rotateAngleZ);
+    }
+
+    /**
+     * setLivingAnimations <br>
+     * <br>
+     * Used for easily adding entity-dependent animations. The second and third
+     * float params here are the same second and third as in the
+     * setRotationAngles method.
+     */
+    @Override
+    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTickTime)
+    {
+        if (this.imodel == null) this.imodel = ModelFactory.create(this.model);
+        if (this.renderer.getAnimationChanger() != null) this.renderer.setAnimation(this.renderer.getAnimationChanger()
+                .modifyAnimation((MobEntity) entityIn, partialTickTime, this.renderer.getAnimation(entityIn)),
+                entityIn);
+        this.applyAnimation(entityIn, AnimationHelper.getHolder(entityIn), this.renderer, partialTickTime, limbSwing);
+    }
+
+    @Override
+    public void setOffset(Vector3 point)
+    {
+        this.setRotationPoint((float) point.x, (float) point.y, (float) point.z);
+    }
+
+    /**
+     * was setRotationAngles <br>
+     * <br>
+     * Sets the model's various rotation angles. For bipeds, par1 and par2 are
      * used for animating the movement of arms and legs, where par1 represents
      * the time(so that arms and legs swing back and forth) and par2 represents
-     * how "far" arms and legs can swing at most. */
+     * how "far" arms and legs can swing at most.
+     */
+
     @Override
-    public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
-            float headPitch, float scaleFactor, Entity entityIn)
+    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks,
+            float netHeadYaw, float headPitch, float scaleFactor)
     {
-        HeadInfo info = imodel.getHeadInfo();
+        if (this.imodel == null) this.imodel = ModelFactory.create(this.model);
+        final HeadInfo info = this.imodel.getHeadInfo();
         if (info != null)
         {
             info.headPitch = headPitch;
             info.headYaw = netHeadYaw;
         }
-        transformGlobal(renderer.getAnimation(entityIn), entityIn, Minecraft.getInstance().getRenderPartialTicks(),
-                netHeadYaw, headPitch);
-    }
-
-    /** Used for easily adding entity-dependent animations. The second and third
-     * float params here are the same second and third as in the
-     * setRotationAngles method. */
-    @Override
-    public void setLivingAnimations(LivingEntity entityIn, float limbSwing, float limbSwingAmount,
-            float partialTickTime)
-    {
-        if (renderer.getAnimationChanger() != null) renderer.setAnimation(renderer.getAnimationChanger()
-                .modifyAnimation((MobEntity) entityIn, partialTickTime, renderer.getAnimation(entityIn)), entityIn);
-        applyAnimation(entityIn, AnimationHelper.getHolder(entityIn), renderer, partialTickTime, limbSwing);
-    }
-
-    @Override
-    public HashMap<String, IExtendedModelPart> getParts()
-    {
-        return imodel.getParts();
-    }
-
-    @Override
-    public void preProcessAnimations(Collection<List<Animation>> collection)
-    {
-        imodel.preProcessAnimations(collection);
-    }
-
-    private final Vector5 rots = new Vector5();
-
-    protected void transformGlobal(String currentPhase, Entity entity, float partialTick, float rotationYaw,
-            float rotationPitch)
-    {
-        Vector5 rotations = renderer.getRotations();
-        if (rotations == null)
-        {
-            rotations = rots;
-        }
-        this.setRotationAngles(rotations.rotations);
-        this.setOffset(renderer.getRotationOffset());
-        float dy = rotationPointY - 1.5f;
-        this.rotate();
-        GlStateManager.rotate(180, 0, 1, 0);
-        GlStateManager.rotate(90, 1, 0, 0);
-        GlStateManager.translate(0, 0, dy);
-        this.translate();
-        renderer.scaleEntity(entity, this, partialTick);
-    }
-
-    protected void rotate()
-    {
-        GlStateManager.rotate(rotateAngle, rotateAngleX, rotateAngleY, rotateAngleZ);
-    }
-
-    private void translate()
-    {
-        GlStateManager.translate(rotationPointX, rotationPointY, rotationPointZ);
+        this.transformGlobal(this.renderer.getAnimation(entityIn), entityIn, Minecraft.getInstance()
+                .getRenderPartialTicks(), netHeadYaw, headPitch);
     }
 
     public void setRotationAngles(Vector4 rotations)
     {
-        rotateAngle = rotations.w;
-        rotateAngleX = rotations.x;
-        rotateAngleY = rotations.y;
-        rotateAngleZ = rotations.z;
+        this.rotateAngle = rotations.w;
+        this.rotateAngleX = rotations.x;
+        this.rotateAngleY = rotations.y;
+        this.rotateAngleZ = rotations.z;
     }
 
     public void setRotationPoint(float par1, float par2, float par3)
@@ -196,29 +203,22 @@ public class ModelWrapper extends ModelBase implements IModel
         this.rotationPointZ = par3;
     }
 
-    @Override
-    public void setOffset(Vector3 point)
+    protected void transformGlobal(String currentPhase, Entity entity, float partialTick, float rotationYaw,
+            float rotationPitch)
     {
-        setRotationPoint((float) point.x, (float) point.y, (float) point.z);
+        Vector5 rotations = this.renderer.getRotations();
+        if (rotations == null) rotations = this.rots;
+        this.setRotationAngles(rotations.rotations);
+        this.setOffset(this.renderer.getRotationOffset());
+        this.rotate();
+        this.imodel.globalFix(this.rotationPointX, this.rotationPointY, this.rotationPointZ);
+        this.translate();
+        this.renderer.scaleEntity(entity, this, partialTick);
     }
 
-    @Override
-    public Set<String> getHeadParts()
+    private void translate()
     {
-        return imodel.getHeadParts();
-    }
-
-    @Override
-    public HeadInfo getHeadInfo()
-    {
-        return imodel.getHeadInfo();
-    }
-
-    @Override
-    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
-            float limbSwing)
-    {
-        imodel.applyAnimation(entity, animate, renderer, partialTicks, limbSwing);
+        GlStateManager.translatef(this.rotationPointX, this.rotationPointY, this.rotationPointZ);
     }
 
 }

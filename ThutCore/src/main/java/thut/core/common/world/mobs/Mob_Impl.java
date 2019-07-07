@@ -3,11 +3,12 @@ package thut.core.common.world.mobs;
 import java.util.UUID;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import thut.api.world.World;
 import thut.api.world.mobs.Mob;
 import thut.api.world.mobs.ai.AI;
@@ -30,19 +31,96 @@ public class Mob_Impl implements Mob, ICapabilityProvider
     final Vector_D  position = new Vector_D();
     final Vector_D  velocity = new Vector_D();
 
+    @Override
+    public AI getAI()
+    {
+        return this.ai;
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing)
+    {
+        return this.entity.getCapability(capability, facing);
+    }
+
+    @Override
+    public float getMaxHealth()
+    {
+        float num = 0;
+        if (this.entity instanceof MobEntity) num = ((MobEntity) this.entity).getMaxHealth();
+        return num;
+    }
+
+    @Override
+    public UUID id()
+    {
+        return this.entity.getUniqueID();
+    }
+
+    @Override
+    public Info info()
+    {
+        return this.info;
+    }
+
+    @Override
+    public boolean inWorld()
+    {
+        return this.entity.addedToChunk;
+    }
+
+    @Override
+    public boolean isDead()
+    {
+        return !this.entity.isAlive();
+    }
+
+    @Override
+    public String key()
+    {
+        return this.key;
+    }
+
+    @Override
+    public boolean onClient()
+    {
+        return this.entity.getEntityWorld().isRemote;
+    }
+
+    @Override
+    public Vector<Double> position()
+    {
+        this.position.setValue(0, this.entity.posX);
+        this.position.setValue(1, this.entity.posY);
+        this.position.setValue(2, this.entity.posZ);
+        return this.position;
+    }
+
+    @Override
+    public void setDead()
+    {
+        this.entity.remove();
+    }
+
     public void setEntity(Entity entity)
     {
         if (this.world != null) this.world.removeMob(this);
         this.entity = entity;
         this.world = WorldManager.instance().getWorld(this.entity.dimension);
         this.world.addMob(this);
-        this.key = EntityList.getEntityString(entity);
+        this.key = entity.getType().toString();
     }
 
     @Override
-    public World world()
+    public void setHealth(float health)
     {
-        return world;
+        if (this.entity instanceof MobEntity) ((MobEntity) this.entity).setHealth(health);
+    }
+
+    @Override
+    public void setID(UUID id)
+    {
+        this.entity.setUniqueId(id);
     }
 
     @Override
@@ -52,114 +130,32 @@ public class Mob_Impl implements Mob, ICapabilityProvider
     }
 
     @Override
-    public Vector<Integer> worldPos()
-    {
-        ((Vector_D) position()).toInts(worldPos);
-        return worldPos;
-    }
-
-    @Override
-    public Vector<Double> position()
-    {
-        position.setValue(0, entity.posX);
-        position.setValue(1, entity.posY);
-        position.setValue(2, entity.posZ);
-        return position;
-    }
-
-    @Override
     public Vector<Double> velocity()
     {
-        velocity.setValue(0, entity.motionX);
-        velocity.setValue(1, entity.motionY);
-        velocity.setValue(2, entity.motionZ);
-        return velocity;
+        final Vec3d motion = this.entity.getMotion();
+        this.velocity.setValue(0, motion.x);
+        this.velocity.setValue(1, motion.y);
+        this.velocity.setValue(2, motion.z);
+        return this.velocity;
     }
 
     @Override
-    public Info info()
+    public World world()
     {
-        return info;
+        return this.world;
     }
 
     @Override
-    public UUID id()
+    public Vector<Integer> worldPos()
     {
-        return entity.getUniqueID();
-    }
-
-    @Override
-    public void setID(UUID id)
-    {
-        entity.setUniqueId(id);
-    }
-
-    @Override
-    public boolean onClient()
-    {
-        return entity.getEntityWorld().isRemote;
-    }
-
-    @Override
-    public boolean inWorld()
-    {
-        return entity.addedToChunk;
-    }
-
-    @Override
-    public AI getAI()
-    {
-        return ai;
-    }
-
-    @Override
-    public boolean hasCapability(Capability<?> capability, Direction facing)
-    {
-        return entity.hasCapability(capability, facing);
-    }
-
-    @Override
-    public <T> T getCapability(Capability<T> capability, Direction facing)
-    {
-        return entity.getCapability(capability, facing);
-    }
-
-    @Override
-    public boolean isDead()
-    {
-        return entity.isDead;
-    }
-
-    @Override
-    public String key()
-    {
-        return key;
+        ((Vector_D) this.position()).toInts(this.worldPos);
+        return this.worldPos;
     }
 
     @Override
     public Object wrapped()
     {
-        return entity;
-    }
-
-    @Override
-    public void setDead()
-    {
-        this.entity.setDead();
-    }
-
-    @Override
-    public float getMaxHealth()
-    {
-        float num = 0;
-        if (this.entity instanceof MobEntity) num = ((MobEntity) entity).getMaxHealth();
-        return num;
-    }
-
-    @Override
-    public void setHealth(float health)
-    {
-        if (this.entity instanceof MobEntity) ((MobEntity) this.entity).setHealth(health);
+        return this.entity;
     }
 
 }

@@ -7,6 +7,19 @@ public class Data_Byte extends Data_Base<Byte>
     Byte value = 0;
 
     @Override
+    public Byte get()
+    {
+        return this.value;
+    }
+
+    @Override
+    public void read(ByteBuf buf)
+    {
+        super.read(buf);
+        this.value = buf.readByte();
+    }
+
+    @Override
     public void set(Byte value)
     {
         if (this.value.equals(value)) return;
@@ -19,23 +32,10 @@ public class Data_Byte extends Data_Base<Byte>
     }
 
     @Override
-    public Byte get()
-    {
-        return this.value;
-    }
-
-    @Override
     public void write(ByteBuf buf)
     {
         super.write(buf);
-        buf.writeByte(value);
-    }
-
-    @Override
-    public void read(ByteBuf buf)
-    {
-        super.read(buf);
-        value = buf.readByte();
+        buf.writeByte(this.value);
     }
 
 }

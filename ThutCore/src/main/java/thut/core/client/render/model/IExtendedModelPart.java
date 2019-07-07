@@ -9,11 +9,6 @@ public interface IExtendedModelPart extends IModelCustom
 {
     void addChild(IExtendedModelPart child);
 
-    default void removeChild(String name)
-    {
-        getSubParts().remove(name);
-    }
-
     Vector4 getDefaultRotations();
 
     Vector3 getDefaultTranslations();
@@ -24,11 +19,21 @@ public interface IExtendedModelPart extends IModelCustom
 
     int[] getRGBAB();
 
-    HashMap<String, IExtendedModelPart> getSubParts();
+    <T> HashMap<String, T> getSubParts();
 
     String getType();
 
+    default void removeChild(String name)
+    {
+        this.getSubParts().remove(name);
+    }
+
     void resetToInit();
+
+    default void setHidden(boolean hidden)
+    {
+
+    }
 
     void setParent(IExtendedModelPart parent);
 
@@ -40,14 +45,9 @@ public interface IExtendedModelPart extends IModelCustom
 
     void setPreRotations(Vector4 rotations);
 
-    void setPreTranslations(Vector3 translations);
-
     void setPreScale(Vector3 scale);
 
-    default void setHidden(boolean hidden)
-    {
-
-    }
+    void setPreTranslations(Vector3 translations);
 
     void setRGBAB(int[] arrays);
 }

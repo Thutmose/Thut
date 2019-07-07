@@ -1,69 +1,50 @@
 package thut.tech.common.items;
 
-import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.item.crafting.SpecialRecipe;
+import net.minecraft.item.crafting.SpecialRecipeSerializer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import thut.lib.CompatWrapper;
-import thut.lib.IDefaultRecipe;
+import thut.tech.common.TechCore;
 
-public class RecipeReset implements IDefaultRecipe
+public class RecipeReset extends SpecialRecipe
 {
+    public static final IRecipeSerializer<RecipeReset> SERIALIZER = IRecipeSerializer.register("thuttech:resetlinker",
+            new SpecialRecipeSerializer<>(RecipeReset::new));
 
-    @Override
-    public boolean matches(InventoryCrafting inv, World worldIn)
+    public RecipeReset(final ResourceLocation idIn)
     {
-        return !getCraftingResult(inv).isEmpty();
+        super(idIn);
     }
 
     @Override
-    public ItemStack getCraftingResult(InventoryCrafting inv)
+    public ItemStack getCraftingResult(final CraftingInventory inv)
     {
         int n = 0;
         boolean matched = false;
         for (int i = 0; i < inv.getSizeInventory(); i++)
         {
-            ItemStack stack = inv.getStackInSlot(i);
-            if (CompatWrapper.isValid(stack))
-            {
-                if (stack.getItem() == ItemLinker.instance)
-                {
-                    matched = true;
-                }
-                n++;
-            }
+            final ItemStack stack = inv.getStackInSlot(i);
+            if (stack.getItem() == TechCore.LINKER) matched = true;
+            n++;
         }
         if (n != 1) matched = false;
-        if (matched) return getRecipeOutput();
+        if (matched) return new ItemStack(TechCore.LINKER);
         return ItemStack.EMPTY;
     }
 
     @Override
-    public ItemStack getRecipeOutput()
+    public IRecipeSerializer<?> getSerializer()
     {
-        return new ItemStack(ItemLinker.instance);
-    }
-
-    ResourceLocation registryName;
-
-    @Override
-    public IRecipe setRegistryName(ResourceLocation name)
-    {
-        registryName = name;
-        return this;
+        return RecipeReset.SERIALIZER;
     }
 
     @Override
-    public ResourceLocation getRegistryName()
+    public boolean matches(final CraftingInventory inv, final World worldIn)
     {
-        return registryName;
-    }
-
-    @Override
-    public Class<IRecipe> getRegistryType()
-    {
-        return IRecipe.class;
+        return !this.getCraftingResult(inv).isEmpty();
     }
 
 }

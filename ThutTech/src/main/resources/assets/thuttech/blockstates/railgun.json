@@ -1,6 +1,0 @@
-{
-   "variants": {
-	   "normal": { "model": "thuttech:railgun" },
-	   "inventory": { "model": "thuttech:railgun" }
-    }
-}

@@ -11,27 +11,27 @@ public abstract class GeneTagCompound implements Gene
     @Override
     public <T> T getValue()
     {
-        return (T) value;
+        return (T) this.value;
+    }
+
+    @Override
+    public void load(CompoundNBT tag)
+    {
+        this.value = tag.getCompound("V");
+    }
+
+    @Override
+    public CompoundNBT save()
+    {
+        final CompoundNBT tag = new CompoundNBT();
+        tag.put("V", this.value);
+        return tag;
     }
 
     @Override
     public <T> void setValue(T value)
     {
         this.value = (CompoundNBT) value;
-    }
-
-    @Override
-    public CompoundNBT save()
-    {
-        CompoundNBT tag = new CompoundNBT();
-        tag.setTag("V", value);
-        return tag;
-    }
-
-    @Override
-    public void load(CompoundNBT tag)
-    {
-        value = tag.getCompound("V");
     }
 
 }

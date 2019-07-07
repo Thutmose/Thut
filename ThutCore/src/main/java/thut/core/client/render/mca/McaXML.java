@@ -14,8 +14,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.collect.Lists;
 
-import thut.core.client.render.model.TextureCoordinate;
 import thut.core.client.render.model.Vertex;
+import thut.core.client.render.texturing.TextureCoordinate;
 import thut.core.client.render.x3d.ModelFormatException;
 
 public class McaXML
@@ -40,47 +40,39 @@ public class McaXML
 
         public Vertex[] getNormals()
         {
-            for (MapEntry entry : entries)
-            {
-                if (entry.savable.type.equals("Normal")) { return entry.savable.getFloats(); }
-            }
+            for (final MapEntry entry : this.entries)
+                if (entry.savable.type.equals("Normal")) return entry.savable.getFloats();
             return null;
         }
 
         public Integer[] getOrder()
         {
-            for (MapEntry entry : entries)
-            {
+            for (final MapEntry entry : this.entries)
                 if (entry.savable.type.equals("Index"))
                 {
-                    String[] offset = entry.savable.data2.data.split(" ");
-                    Integer[] order = new Integer[offset.length];
+                    final String[] offset = entry.savable.data2.data.split(" ");
+                    final Integer[] order = new Integer[offset.length];
                     for (int i = 0; i < offset.length; i++)
                     {
-                        String s1 = offset[i];
-                        order[i] = (Integer.parseInt(s1));
+                        final String s1 = offset[i];
+                        order[i] = Integer.parseInt(s1);
                     }
                     return order;
                 }
-            }
             return null;
         }
 
         public TextureCoordinate[] getTex()
         {
-            for (MapEntry entry : entries)
-            {
-                if (entry.savable.type.equals("TexCoord")) { return entry.savable.getTexture(entry.savable.data1.data); }
-            }
+            for (final MapEntry entry : this.entries)
+                if (entry.savable.type.equals("TexCoord")) return entry.savable.getTexture(entry.savable.data1.data);
             return null;
         }
 
         public Vertex[] getVerts()
         {
-            for (MapEntry entry : entries)
-            {
-                if (entry.savable.type.equals("Position")) { return entry.savable.getFloats(); }
-            }
+            for (final MapEntry entry : this.entries)
+                if (entry.savable.type.equals("Position")) return entry.savable.getFloats();
             return null;
         }
     }
@@ -200,42 +192,43 @@ public class McaXML
     {
         private static Vertex[] parseVertices(String line, String type) throws ModelFormatException
         {
-            ArrayList<Vertex> ret = new ArrayList<Vertex>();
-            float scale = type.equals("Position") ? 1 / 16f : 1;
-            String[] points = line.split(" ");
-            if (points.length
-                    % 3 != 0) { throw new ModelFormatException("Invalid number of elements in the points string"); }
+            final ArrayList<Vertex> ret = new ArrayList<>();
+            final float scale = type.equals("Position") ? 1 / 16f : 1;
+            final String[] points = line.split(" ");
+            if (points.length % 3 != 0) throw new ModelFormatException(
+                    "Invalid number of elements in the points string");
             for (int i = 0; i < points.length; i += 3)
             {
-                Vertex toAdd = new Vertex(Float.parseFloat(points[i]) * scale, Float.parseFloat(points[i + 1]) * scale,
-                        Float.parseFloat(points[i + 2]) * scale);
+                final Vertex toAdd = new Vertex(Float.parseFloat(points[i]) * scale, Float.parseFloat(points[i + 1])
+                        * scale, Float.parseFloat(points[i + 2]) * scale);
                 ret.add(toAdd);
             }
             return ret.toArray(new Vertex[ret.size()]);
         }
+
         @XmlAttribute(name = "buffer_type")
-        String          type;
+        String    type;
         @XmlElement(name = "dataFloat")
-        DataFloat       data1;
+        DataFloat data1;
 
         @XmlElement(name = "dataUnsignedInt")
         DataUnsignedInt data2;
 
         public Vertex[] getFloats()
         {
-            return parseVertices(data1.data, type);
+            return Savable.parseVertices(this.data1.data, this.type);
         }
 
         public TextureCoordinate[] getTexture(String point)
         {
-            ArrayList<TextureCoordinate> ret = new ArrayList<TextureCoordinate>();
-            String[] points = point.split(" ");
-            if (points.length % 2 != 0) { throw new ModelFormatException(
-                    "Invalid number of elements in the points string " + points.length); }
+            final ArrayList<TextureCoordinate> ret = new ArrayList<>();
+            final String[] points = point.split(" ");
+            if (points.length % 2 != 0) throw new ModelFormatException(
+                    "Invalid number of elements in the points string " + points.length);
             for (int i = 0; i < points.length; i += 2)
             {
-                TextureCoordinate toAdd = new TextureCoordinate(Float.parseFloat(points[i]),
-                        1 - Float.parseFloat(points[i + 1]));
+                final TextureCoordinate toAdd = new TextureCoordinate(Float.parseFloat(points[i]), 1 - Float.parseFloat(
+                        points[i + 1]));
                 ret.add(toAdd);
             }
             return ret.toArray(new TextureCoordinate[ret.size()]);
@@ -292,8 +285,8 @@ public class McaXML
 
     public McaXML(InputStream stream) throws JAXBException
     {
-        JAXBContext jaxbContext = JAXBContext.newInstance(Mca.class);
-        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        model = (Mca) unmarshaller.unmarshal(new InputStreamReader(stream));
+        final JAXBContext jaxbContext = JAXBContext.newInstance(Mca.class);
+        final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        this.model = (Mca) unmarshaller.unmarshal(new InputStreamReader(stream));
     }
 }

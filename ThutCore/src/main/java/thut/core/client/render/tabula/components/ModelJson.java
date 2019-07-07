@@ -1,333 +1,316 @@
 package thut.core.client.render.tabula.components;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import org.lwjgl.opengl.GL11;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.mojang.blaze3d.platform.GlStateManager;
 
 import net.minecraft.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import thut.api.entity.IMobColourable;
+import thut.api.maths.Vector4;
+import thut.core.client.render.animation.Animation;
+import thut.core.client.render.animation.AnimationHelper;
 import thut.core.client.render.animation.CapabilityAnimation.IAnimationHolder;
-import thut.core.client.render.model.IAnimationChanger;
-import thut.core.client.render.model.IPartTexturer;
+import thut.core.client.render.animation.IAnimationChanger;
+import thut.core.client.render.model.IExtendedModelPart;
+import thut.core.client.render.model.IModelRenderer;
+import thut.core.client.render.tabula.model.IModel;
 import thut.core.client.render.tabula.model.modelbase.TabulaModelBase;
 import thut.core.client.render.tabula.model.modelbase.TabulaRenderer;
 import thut.core.client.render.tabula.model.tabula.TabulaModel;
+import thut.core.client.render.texturing.IPartTexturer;
 
 @OnlyIn(Dist.CLIENT)
-public class ModelJson extends TabulaModelBase
+public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements IModel
 {
-    public TabulaModel                             tabulaModel;
+    public TabulaModel tabulaModel;
 
-    public Map<String, TabulaRenderer>             nameMap       = Maps.newHashMap();
-    public Map<String, TabulaRenderer>             identifierMap = Maps.newHashMap();
+    public HashMap<String, IExtendedModelPart> nameMap       = Maps.newHashMap();
+    public Map<String, TabulaRenderer>         identifierMap = Maps.newHashMap();
 
-    /** This is an ordered list of CubeGroup Identifiers. It is used to ensure
-     * that translucent parts render in the correct order. */
-    ArrayList<String>                              groupIdents   = Lists.newArrayList();
-    /** Map of CubeGroup Identifiers to Sets of Root parts on the group. Uses
-     * the above list to get keys */
-    public Map<String, Collection<TabulaRenderer>> groupMap      = Maps.newHashMap();
+    /**
+     * This is an ordered list of CubeGroup Identifiers. It is used to ensure
+     * that translucent parts render in the correct order.
+     */
+    ArrayList<String>                              groupIdents = Lists.newArrayList();
+    /**
+     * Map of CubeGroup Identifiers to Sets of Root parts on the group. Uses
+     * the above list to get keys
+     */
+    public Map<String, Collection<TabulaRenderer>> groupMap    = Maps.newHashMap();
 
-    /** Map of names to animations, used to get animations for rendering more
-     * easily */
-    public HashMap<String, List<Animation>>        animationMap  = Maps.newHashMap();
+    /**
+     * Map of names to animations, used to get animations for rendering more
+     * easily
+     */
+    public HashMap<String, List<Animation>> animationMap = Maps.newHashMap();
 
-    public IPartTexturer                           texturer;
-    public IAnimationChanger                       changer;
+    public IPartTexturer     texturer;
+    public IAnimationChanger changer;
+
+    private String modelName;
+    private String authorName;
+
+    final Set<String> head = Sets.newHashSet();
+    final HeadInfo    info = new HeadInfo();
+
+    public boolean valid = false;
 
     public ModelJson(TabulaModel model)
     {
-        tabulaModel = model;
+        this.tabulaModel = model;
 
-        textureWidth = model.getTextureWidth();
-        textureHeight = model.getTextureHeight();
+        this.textureWidth = model.getTextureWidth();
+        this.textureHeight = model.getTextureHeight();
 
-        ArrayList<Animation> animations = model.getAnimations();
+        final ArrayList<Animation> animations = model.getAnimations();
 
-        for (Animation animation : animations)
+        if (animations != null) for (final Animation animation : animations)
         {
-            List<Animation> anims = animationMap.get(animation.name);
-            if (anims == null) animationMap.put(animation.name, anims = Lists.newArrayList());
+            List<Animation> anims = this.animationMap.get(animation.name);
+            if (anims == null) this.animationMap.put(animation.name, anims = Lists.newArrayList());
             anims.add(animation);
         }
-        for (CubeInfo c : model.getCubes())
-        {
-            cube(c, null, "null");
-        }
+        for (final CubeInfo c : model.getCubes())
+            this.cube(c, null, "null");
 
-        for (CubeGroup g : model.getCubeGroups())
-        {
-            cubeGroup(g);
-        }
+        for (final CubeGroup g : model.getCubeGroups())
+            this.cubeGroup(g);
         // The groups come in in the opposite order from what is needed here, so
         // reverse it
-        Collections.reverse(groupIdents);
-
-        setInitPose();
+        Collections.reverse(this.groupIdents);
     }
 
-    private TabulaRenderer createModelRenderer(CubeInfo cubeInfo)
+    @Override
+    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
+            float limbSwing)
     {
-        TabulaRenderer cube = new TabulaRenderer(this, cubeInfo.txOffset[0], cubeInfo.txOffset[1]);
-        cube.name = cubeInfo.name;
-        cube.identifier = cubeInfo.identifier;
-        cube.setRotationPoint((float) cubeInfo.position[0], (float) cubeInfo.position[1], (float) cubeInfo.position[2]);
-        cube.rotateAngleX = (float) Math.toRadians((float) cubeInfo.rotation[0]);
-        cube.rotateAngleY = (float) Math.toRadians((float) cubeInfo.rotation[1]);
-        cube.rotateAngleZ = (float) Math.toRadians((float) cubeInfo.rotation[2]);
+        this.updateAnimation(entity, renderer, renderer.getAnimation(entity), partialTicks, this.getHeadInfo().headYaw,
+                this.getHeadInfo().headYaw, limbSwing);
+    }
 
-        if (Math.abs(cube.rotateAngleX) < 1e-6) cube.rotateAngleX = 0;
-        if (Math.abs(cube.rotateAngleY) < 1e-6) cube.rotateAngleY = 0;
-        if (Math.abs(cube.rotateAngleZ) < 1e-6) cube.rotateAngleZ = 0;
-
-        // Allows scaling the cube with the cubeinfo scale.
-        cube.scaleX = (float) cubeInfo.scale[0];
-        cube.scaleY = (float) cubeInfo.scale[1];
-        cube.scaleZ = (float) cubeInfo.scale[2];
-
-        // Allows mirrored textures
-        cube.mirror = cubeInfo.txMirror;
-        // Allows hidden textures
-        cube.isHidden = cubeInfo.hidden;
-
-        if (cubeInfo.metadata != null)
-        {
-            for (String s : cubeInfo.metadata)
-            {
-                if (s.equalsIgnoreCase("trans"))
-                {
-                    cube.transluscent = true;
-                }
-            }
-        }
-        // Use cubeInfo.mcScale as the scale, this lets it work properly.
-        cube.addBox((float) cubeInfo.offset[0], (float) cubeInfo.offset[1], (float) cubeInfo.offset[2],
-                cubeInfo.dimensions[0], cubeInfo.dimensions[1], cubeInfo.dimensions[2], (float) cubeInfo.mcScale);
-
+    private TabulaRenderer createRendererModel(CubeInfo cubeInfo)
+    {
+        final TabulaRenderer cube = new TabulaRenderer(this, cubeInfo);
+        this.addPart(cube);
         return cube;
     }
 
     private void cube(CubeInfo cube, TabulaRenderer parent, String group)
     {
-        TabulaRenderer modelRenderer = createModelRenderer(cube);
+        final TabulaRenderer modelRenderer = this.createRendererModel(cube);
 
-        nameMap.put(cube.name, modelRenderer);
-        identifierMap.put(cube.identifier, modelRenderer);
+        this.nameMap.put(cube.name, modelRenderer);
+        this.identifierMap.put(cube.identifier, modelRenderer);
 
-        if (parent != null)
-        {
-            parent.addChild(modelRenderer);
-        }
+        if (parent != null) parent.addChild(modelRenderer);
 
         // Only add root parts to the group set.
         if (parent == null)
         {
             ArrayList<TabulaRenderer> cubes;
-            if (groupMap.containsKey(group))
-            {
-                cubes = (ArrayList<TabulaRenderer>) groupMap.get(group);
-            }
+            if (this.groupMap.containsKey(group)) cubes = (ArrayList<TabulaRenderer>) this.groupMap.get(group);
             else
             {
                 cubes = Lists.newArrayList();
-                groupMap.put(group, cubes);
-                groupIdents.add(group);
+                this.groupMap.put(group, cubes);
+                this.groupIdents.add(group);
             }
             cubes.add(modelRenderer);
 
-            Collections.sort(cubes, new Comparator<TabulaRenderer>()
+            Collections.sort(cubes, (o1, o2) ->
             {
-                @Override
-                public int compare(TabulaRenderer o1, TabulaRenderer o2)
-                {
-                    String name1 = o1.name;
-                    String name2 = o2.name;
-                    if (o1.transluscent && !o2.transluscent) return 1;
-                    if (o2.transluscent && !o1.transluscent) return -1;
-                    return name1.compareTo(name2);
-                }
+                final String name1 = o1.name;
+                final String name2 = o2.name;
+                if (o1.transluscent && !o2.transluscent) return 1;
+                if (o2.transluscent && !o1.transluscent) return -1;
+                return name1.compareTo(name2);
             });
         }
-        for (CubeInfo c : cube.children)
-        {
-            cube(c, modelRenderer, group);
-        }
+        for (final CubeInfo c : cube.children)
+            this.cube(c, modelRenderer, group);
     }
 
     private void cubeGroup(CubeGroup group)
     {
-        for (CubeInfo cube : group.cubes)
-        {
-            cube(cube, null, group.identifier);
-        }
+        for (final CubeInfo cube : group.cubes)
+            this.cube(cube, null, group.identifier);
 
-        for (CubeGroup c : group.cubeGroups)
-        {
-            cubeGroup(c);
-        }
-    }
-
-    public TabulaRenderer getCube(String name)
-    {
-        return nameMap.get(name);
-    }
-
-    public boolean isAnimationInProgress(IAnimationHolder animate)
-    {
-        return !animate.getPlaying().isEmpty();
+        for (final CubeGroup c : group.cubeGroups)
+            this.cubeGroup(c);
     }
 
     @Override
-    public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float rotationYaw,
-            float rotationPitch, float scale)
+    public String getAuthor()
     {
-        this.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, rotationYaw, rotationPitch, scale, entity);
-
-        double[] scales = tabulaModel.getScale();
-        GL11.glScaled(scales[0], scales[1], scales[2]);
-
-        // Render based on the group, this ensures they are correctly rendered.
-        for (String s : groupIdents)
-        {
-            Collection<TabulaRenderer> cubes = groupMap.get(s);
-            for (TabulaRenderer cube : cubes)
-            {
-                if (cube != null)
-                {
-                    if (texturer != null) texturer.bindObject(entity);
-                    cube.setTexturer(texturer);
-                    cube.setAnimationChanger(changer);
-                    cube.render(0.0625f, entity);
-                }
-            }
-        }
+        return this.authorName;
     }
 
-    /** Sets the model's various rotation angles. For bipeds, limbSwing and
-     * limbSwingAmount are used for animating the movement of arms and legs,
-     * where limbSwing represents the time(so that arms and legs swing back and
-     * forth) and limbSwingAmount represents how "far" arms and legs can swing
-     * at most.
-     *
-     * @see net.minecraft.entity.Entity
-     * @since 0.1.0 */
     @Override
-    public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float rotationYaw,
-            float rotationPitch, float scaleFactor, Entity entity)
+    public Set<String> getBuiltInAnimations()
     {
-        super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, rotationYaw, rotationPitch, scaleFactor,
-                entity);
+        return this.animationMap.keySet();
     }
 
-    /** Starts running the given animation.
-     * 
-     * @param id */
-    public void startAnimation(String id, IAnimationHolder animate)
+    @Override
+    public int getCubeCount()
     {
-        if (!id.equals(animate.getCurrentAnimation())) stopAnimation(animate);
-        if (animate.getPlaying().isEmpty())
-        {
-            animate.setCurrentAnimation(id);
-            List<Animation> anims = animationMap.get(id);
-            if (anims == null) stopAnimation(animate);
-            else animate.getPlaying().addAll(anims);
-        }
+        // TODO Auto-generated method stub
+        return 0;
     }
 
-    public void startAnimation(List<Animation> list, IAnimationHolder animate)
+    @Override
+    public HeadInfo getHeadInfo()
     {
-        if (list == null || list.isEmpty())
-        {
-            stopAnimation(animate);
-            return;
-        }
-        String name = list.get(0).name;
-        if (!name.equals(animate.getCurrentAnimation())) stopAnimation(animate);
-        if (animate.getPlaying().isEmpty())
-        {
-            animate.setCurrentAnimation(name);
-            List<Animation> anims = list;
-            animate.getPlaying().addAll(anims);
-        }
+        return this.info;
     }
 
-    /** Stop all current running animations.
-     *
-     * @since 0.1.0 */
-    public void stopAnimation(IAnimationHolder animate)
+    @Override
+    public Set<String> getHeadParts()
     {
-        animate.clean();
+        return this.head;
     }
 
-    public void stopAnimation(Animation toStop, IAnimationHolder animate)
+    @Override
+    public String getName()
     {
-        animate.getPlaying().remove(toStop);
-        animate.setStep(toStop, 0);
+        return this.modelName;
     }
 
-    public void updateAnimation(IAnimationHolder animate, Animation animation, int tick, float partialTick,
-            float limbSwing)
+    @Override
+    public HashMap<String, IExtendedModelPart> getParts()
     {
-        int aniTick = animate.getStep(animation);
-        if (aniTick == 0) aniTick = tick;
-        float time1 = aniTick;
-        float limbSpeedFactor = 2.f;
-        float time2 = 0;
-        int animationLength = animation.getLength();
-        time2 = (time2 + limbSwing * limbSpeedFactor) % animationLength;
-        time1 = (time1 + partialTick) % animationLength;
-        animate.setStep(animation, tick);
-        for (Entry<String, ArrayList<AnimationComponent>> entry : animation.sets.entrySet())
-        {
-            TabulaRenderer animating = identifierMap.get(entry.getKey());
-            for (AnimationComponent component : entry.getValue())
-            {
-                float time = component.limbBased ? time2 : time1;
-                if (time >= component.startKey)
+        return this.nameMap;
+    }
+
+    @Override
+    public void globalFix(float dx, float dy, float dz)
+    {
+        GlStateManager.translatef(0, -0.125f, 0);
+    }
+
+    private boolean isHead(String partName)
+    {
+        return this.getHeadParts().contains(partName);
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return this.valid;
+    }
+
+    @Override
+    public void preProcessAnimations(Collection<List<Animation>> collection)
+    {
+        for (final TabulaRenderer render : this.parts)
+            for (final String id : render.info.metadata)
+                if (id.equalsIgnoreCase("head"))
                 {
-                    float componentTimer = time - component.startKey;
-
-                    if (componentTimer > component.length)
-                    {
-                        componentTimer = component.length;
-                    }
-                    animating.scaleX += (float) (component.scaleChange[0] / component.length * componentTimer);
-                    animating.scaleY += (float) (component.scaleChange[1] / component.length * componentTimer);
-                    animating.scaleZ += (float) (component.scaleChange[2] / component.length * componentTimer);
-
-                    animating.rotationPointX += component.posChange[0] / component.length * componentTimer;
-                    animating.rotationPointY += component.posChange[1] / component.length * componentTimer;
-                    animating.rotationPointZ += component.posChange[2] / component.length * componentTimer;
-
-                    animating.rotateAngleX += Math
-                            .toRadians(component.rotChange[0] / component.length * componentTimer);
-                    animating.rotateAngleY += Math
-                            .toRadians(component.rotChange[1] / component.length * componentTimer);
-                    animating.rotateAngleZ += Math
-                            .toRadians(component.rotChange[2] / component.length * componentTimer);
-
-                    animating.rotationPointX += component.posOffset[0];
-                    animating.rotationPointY += component.posOffset[1];
-                    animating.rotationPointZ += component.posOffset[2];
-
-                    // Rotate by the Rotation Offset of the animation.
-                    animating.rotateAngleX += Math.toRadians(component.rotOffset[0]);
-                    animating.rotateAngleY += Math.toRadians(component.rotOffset[1]);
-                    animating.rotateAngleZ += Math.toRadians(component.rotOffset[2]);
-
+                    this.head.add(render.name);
+                    this.head.add(render.identifier);
                 }
+    }
+
+    protected void updateAnimation(Entity entity, IModelRenderer<?> renderer, String currentPhase, float partialTicks,
+            float headYaw, float headPitch, float limbSwing)
+    {
+        for (final String partName : this.getParts().keySet())
+        {
+            final IExtendedModelPart part = this.getParts().get(partName);
+            this.updateSubParts(entity, renderer, currentPhase, partialTicks, part, headYaw, headPitch, limbSwing);
+        }
+    }
+
+    private void updateSubParts(Entity entity, IModelRenderer<?> renderer, String currentPhase, float partialTick,
+            IExtendedModelPart parent, float headYaw, float headPitch, float limbSwing)
+    {
+        if (parent == null) return;
+        final HeadInfo info = this.getHeadInfo();
+        // System.out.println(entity);
+        parent.resetToInit();
+        final boolean anim = renderer.getAnimations().containsKey(currentPhase);
+        if (anim) if (AnimationHelper.doAnimation(renderer.getAnimations().get(currentPhase), entity, parent.getName(),
+                parent, partialTick, limbSwing))
+        {
+        }
+        if (info != null && this.isHead(parent.getName()))
+        {
+            float ang;
+            float ang2 = -info.headPitch;
+            float head = info.headYaw + 180;
+            float diff = 0;
+            if (info.yawDirection != -1) head *= -1;
+            diff = head % 360;
+            diff = (diff + 360) % 360;
+            diff = (diff - 180) % 360;
+            diff = Math.max(diff, info.yawCapMin);
+            diff = Math.min(diff, info.yawCapMax);
+            ang = diff;
+            ang2 = Math.max(ang2, info.pitchCapMin);
+            ang2 = Math.min(ang2, info.pitchCapMax);
+            Vector4 dir;
+            if (info.yawAxis == 0) dir = new Vector4(info.yawDirection, 0, 0, ang);
+            else if (info.yawAxis == 2) dir = new Vector4(0, 0, info.yawDirection, ang);
+            else dir = new Vector4(0, info.yawDirection, 0, ang);
+            Vector4 dir2;
+            if (info.pitchAxis == 2) dir2 = new Vector4(0, 0, info.yawDirection, ang2);
+            else if (info.pitchAxis == 1) dir2 = new Vector4(0, info.yawDirection, 0, ang2);
+            else dir2 = new Vector4(info.yawDirection, 0, 0, ang2);
+            parent.setPostRotations(dir);
+            parent.setPostRotations2(dir2);
+        }
+
+        final int red = 255, green = 255, blue = 255;
+        final int brightness = entity.getBrightnessForRender();
+        final int alpha = 255;
+        final int[] rgbab = parent.getRGBAB();
+        if (entity instanceof IMobColourable)
+        {
+            final IMobColourable poke = (IMobColourable) entity;
+            rgbab[0] = poke.getRGBA()[0];
+            rgbab[1] = poke.getRGBA()[1];
+            rgbab[2] = poke.getRGBA()[2];
+            rgbab[3] = poke.getRGBA()[3];
+        }
+        else
+        {
+            rgbab[0] = red;
+            rgbab[1] = green;
+            rgbab[2] = blue;
+            rgbab[3] = alpha;
+            rgbab[4] = brightness;
+        }
+        rgbab[4] = brightness;
+        final IAnimationChanger animChanger = renderer.getAnimationChanger();
+        if (animChanger != null)
+        {
+            final int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
+            final int rgb = animChanger.getColourForPart(parent.getName(), entity, default_);
+            if (rgb != default_)
+            {
+                final Color col = new Color(rgb);
+                rgbab[0] = col.getRed();
+                rgbab[1] = col.getGreen();
+                rgbab[2] = col.getBlue();
             }
+        }
+        parent.setRGBAB(rgbab);
+        for (final String partName : parent.getSubParts().keySet())
+        {
+            final IExtendedModelPart part = (IExtendedModelPart) parent.getSubParts().get(partName);
+            this.updateSubParts(entity, renderer, currentPhase, partialTick, part, headYaw, headPitch, limbSwing);
         }
     }
 }

@@ -8,23 +8,23 @@ public abstract class Vector_Base<T extends Number> implements Vector<T>
 
     public Vector_Base()
     {
-        init();
-    }
-
-    /** Construct the Typed array here. */
-    abstract void init();
-
-    @Override
-    public T[] getVector()
-    {
-        // TODO Auto-generated method stub
-        return array;
+        this.init();
     }
 
     @Override
     public int getDim()
     {
-        return array.length;
+        return this.array.length;
     }
+
+    @Override
+    public T[] getVector()
+    {
+        // TODO Auto-generated method stub
+        return this.array;
+    }
+
+    /** Construct the Typed array here. */
+    abstract void init();
 
 }

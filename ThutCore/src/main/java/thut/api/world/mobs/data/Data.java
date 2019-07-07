@@ -4,23 +4,23 @@ import io.netty.buffer.ByteBuf;
 
 public interface Data<T>
 {
-    int getUID();
-
-    void setUID(int id);
-
-    int getID();
-
-    void setID(int id);
-
-    void set(T value);
+    boolean dirty();
 
     T get();
 
-    boolean dirty();
+    int getID();
+
+    int getUID();
+
+    void read(ByteBuf buf);
+
+    void set(T value);
 
     void setDirty(boolean dirty);
 
-    void write(ByteBuf buf);
+    void setID(int id);
 
-    void read(ByteBuf buf);
+    void setUID(int id);
+
+    void write(ByteBuf buf);
 }

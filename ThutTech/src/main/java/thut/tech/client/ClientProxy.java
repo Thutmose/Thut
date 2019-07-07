@@ -1,133 +1,115 @@
 package thut.tech.client;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.statemap.StateMap;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.model.ModelBakery;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.state.IProperty;
-import net.minecraft.world.World;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import thut.api.ThutBlocks;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import thut.api.maths.Vector3;
 import thut.tech.client.render.RenderLift;
 import thut.tech.client.render.RenderLiftController;
 import thut.tech.common.CommonProxy;
-import thut.tech.common.blocks.lift.BlockLift;
+import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.entity.EntityLift;
-import thut.tech.common.items.ItemLinker;
 
 public class ClientProxy extends CommonProxy
 {
-
-    @Override
-    public Object getClientGuiElement(int id, PlayerEntity player, World world, int x, int y, int z)
+    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
+    public void RenderBounds(final DrawBlockHighlightEvent event)
     {
-        return null;
-    }
-
-    @Override
-    public PlayerEntity getPlayer()
-    {
-        return getPlayer(null);
-    }
-
-    @Override
-    public PlayerEntity getPlayer(String playerName)
-    {
-        if (isOnClientSide())
+        if (!(event.getTarget() instanceof BlockRayTraceResult)) return;
+        final BlockRayTraceResult target = (BlockRayTraceResult) event.getTarget();
+        ItemStack held;
+        final PlayerEntity player = Minecraft.getInstance().player;
+        if (!(held = player.getHeldItemMainhand()).isEmpty() || !(held = player.getHeldItemOffhand()).isEmpty())
         {
-            if (playerName != null)
+            BlockPos pos = target.getPos();
+            if (pos == null || held.getItem() != TechCore.LINKER) return;
+            if (!player.world.getBlockState(pos).getMaterial().isSolid())
             {
-                return getWorld().getPlayerEntityByName(playerName);
+                final Vec3d loc = player.getPositionVector().add(0, player.getEyeHeight(), 0).add(player.getLookVec()
+                        .scale(2));
+                pos = new BlockPos(loc);
             }
-            else
+
+            if (held.getTag() != null && held.getTag().contains("min"))
             {
-                return Minecraft.getInstance().player;
+                BlockPos min = Vector3.readFromNBT(held.getTag().getCompound("min"), "").getPos();
+                BlockPos max = pos;
+                AxisAlignedBB box = new AxisAlignedBB(min, max);
+                min = new BlockPos(box.minX, box.minY, box.minZ);
+                max = new BlockPos(box.maxX, box.maxY, box.maxZ).add(1, 1, 1);
+                box = new AxisAlignedBB(min, max);
+                final float partialTicks = event.getPartialTicks();
+                final double d0 = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks;
+                final double d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks;
+                final double d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks;
+                box = box.offset(-d0, -d1 - player.getEyeHeight(), -d2);
+                GlStateManager.enableBlend();
+                GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+                        GlStateManager.DestFactor.ZERO);
+                GlStateManager.color4f(0.0F, 0.0F, 0.0F, 0.4F);
+                GlStateManager.lineWidth(2.0F);
+                GlStateManager.disableTexture();
+                GlStateManager.depthMask(false);
+                GlStateManager.color4f(1.0F, 0.0F, 0.0F, 1F);
+                final Tessellator tessellator = Tessellator.getInstance();
+                final BufferBuilder vertexbuffer = tessellator.getBuffer();
+                vertexbuffer.begin(3, DefaultVertexFormats.POSITION);
+                vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
+                tessellator.draw();
+                vertexbuffer.begin(3, DefaultVertexFormats.POSITION);
+                vertexbuffer.pos(box.minX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.minZ).endVertex();
+                tessellator.draw();
+                vertexbuffer.begin(1, DefaultVertexFormats.POSITION);
+                vertexbuffer.pos(box.minX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.minZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.maxX, box.maxY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.minY, box.maxZ).endVertex();
+                vertexbuffer.pos(box.minX, box.maxY, box.maxZ).endVertex();
+                tessellator.draw();
+                GlStateManager.depthMask(true);
+                GlStateManager.enableTexture();
+                GlStateManager.disableBlend();
             }
         }
-        else
-        {
-            return super.getPlayer(playerName);
-        }
     }
 
     @Override
-    public World getWorld()
+    public void setupClient(final FMLClientSetupEvent event)
     {
-        if (isOnClientSide())
-        {
-            return Minecraft.getInstance().world;
-        }
-        else
-        {
-            return super.getWorld();
-        }
-    }
+        MinecraftForge.EVENT_BUS.register(this);
+        RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, (manager) -> new RenderLift(manager));
 
-    @Override
-    public void registerItemModels()
-    {
-        super.registerItemModels();
-        Item lift = Item.getItemFromBlock(ThutBlocks.lift);
-        ModelBakery.registerItemVariants(lift, new ModelResourceLocation("thuttech:liftcontroller", "inventory"),
-                new ModelResourceLocation("thuttech:lift", "inventory"));
-    }
-
-    @Override
-    public void registerBlockModels()
-    {
-        super.registerBlockModels();
-        ModelLoader.setCustomStateMapper(ThutBlocks.lift, (new StateMap.Builder()).withName(BlockLift.VARIANT)
-                .ignore(new IProperty[] { BlockLift.CALLED, BlockLift.CURRENT }).build());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController<>());
     }
-
-    @Override
-    public void initClient()
-    {
-        Item lift = Item.getItemFromBlock(ThutBlocks.lift);
-        Minecraft.getInstance().getRenderItem().getItemModelMesher().register(lift, 0,
-                new ModelResourceLocation("thuttech:lift", "inventory"));
-        Minecraft.getInstance().getRenderItem().getItemModelMesher().register(lift, 1,
-                new ModelResourceLocation("thuttech:liftcontroller", "inventory"));
-        Minecraft.getInstance().getRenderItem().getItemModelMesher().register(ItemLinker.instance, 0,
-                new ModelResourceLocation("thuttech:devicelinker", "inventory"));
-    }
-
-    @Override
-    public boolean isOnClientSide()
-    {
-        return FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT;
-    }
-
-    @Override
-    public void loadSounds()
-    {
-    }
-
-    @Override
-    public void preinit(FMLCommonSetupEvent event)
-    {
-        super.preinit(event);
-        RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, new IRenderFactory<LivingEntity>()
-        {
-            @Override
-            public Render<? super LivingEntity> createRenderFor(RenderManager manager)
-            {
-                return new RenderLift(manager);
-            }
-        });
-    }
-
 }

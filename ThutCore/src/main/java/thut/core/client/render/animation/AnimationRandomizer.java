@@ -13,8 +13,6 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
-import thut.core.client.render.model.IAnimationChanger;
-import thut.core.client.render.tabula.components.Animation;
 
 public class AnimationRandomizer implements IAnimationChanger
 {
@@ -46,41 +44,47 @@ public class AnimationRandomizer implements IAnimationChanger
         {
             this.chance = chance;
             this.name = animation.name;
-            duration = animation.getLength();
+            this.duration = animation.getLength();
         }
     }
 
     // TODO way to clean this up.
-    Map<Integer, AnimationSet>         running    = Maps.newHashMap();
+    Map<Integer, AnimationSet> running = Maps.newHashMap();
 
-    Map<String, List<RandomAnimation>> sets       = Maps.newHashMap();
+    Map<String, List<RandomAnimation>> sets = Maps.newHashMap();
 
-    Map<String, Set<LoadedAnimSet>>    loadedSets = Maps.newHashMap();
+    Map<String, Set<LoadedAnimSet>> loadedSets = Maps.newHashMap();
 
     public AnimationRandomizer(Node node)
     {
-        NodeList parts = node.getChildNodes();
+        final NodeList parts = node.getChildNodes();
         for (int i = 0; i < parts.getLength(); i++)
         {
-            Node part = parts.item(i);
+            final Node part = parts.item(i);
             if (part.getAttributes() == null) continue;
-            String parent = part.getAttributes().getNamedItem("parent").getNodeValue();
-            String name = part.getAttributes().getNamedItem("name").getNodeValue();
-            double chance = Double.parseDouble(part.getAttributes().getNamedItem("chance").getNodeValue());
-            LoadedAnimSet set = new LoadedAnimSet();
+            final String parent = part.getAttributes().getNamedItem("parent").getNodeValue();
+            final String name = part.getAttributes().getNamedItem("name").getNodeValue();
+            final double chance = Double.parseDouble(part.getAttributes().getNamedItem("chance").getNodeValue());
+            final LoadedAnimSet set = new LoadedAnimSet();
             set.chance = chance;
             set.name = name;
-            Set<LoadedAnimSet> sets = loadedSets.get(parent);
-            if (sets == null) loadedSets.put(parent, sets = Sets.newHashSet());
+            Set<LoadedAnimSet> sets = this.loadedSets.get(parent);
+            if (sets == null) this.loadedSets.put(parent, sets = Sets.newHashSet());
             sets.add(set);
         }
     }
 
     private void addAnimationSet(Animation animation, double chance, String parent)
     {
-        List<RandomAnimation> anims = sets.get(parent);
-        if (anims == null) sets.put(parent, anims = Lists.newArrayList());
+        List<RandomAnimation> anims = this.sets.get(parent);
+        if (anims == null) this.sets.put(parent, anims = Lists.newArrayList());
         anims.add(new RandomAnimation(animation, chance));
+    }
+
+    @Override
+    public void addChild(IAnimationChanger randomizer)
+    {
+        // Nope
     }
 
     @Override
@@ -89,27 +93,28 @@ public class AnimationRandomizer implements IAnimationChanger
         return default_;
     }
 
+    @Override
+    public WornOffsets getOffsets(String part)
+    {
+        return null;
+    }
+
+    @Override
     public void init(Set<Animation> existingAnimations)
     {
-        Set<String> animations = Sets.newHashSet();
-        for (Animation existing : existingAnimations)
+        final Set<String> animations = Sets.newHashSet();
+        for (final Animation existing : existingAnimations)
+            if (this.loadedSets.containsKey(existing.name)) animations.add(existing.name);
+        for (final String s : animations)
         {
-            if (loadedSets.containsKey(existing.name)) animations.add(existing.name);
-        }
-        for (String s : animations)
-        {
-            Set<LoadedAnimSet> set = loadedSets.get(s);
-            for (LoadedAnimSet loaded : set)
-            {
-                for (Animation anim : existingAnimations)
-                {
+            final Set<LoadedAnimSet> set = this.loadedSets.get(s);
+            for (final LoadedAnimSet loaded : set)
+                for (final Animation anim : existingAnimations)
                     if (anim.name.equals(loaded.name))
                     {
-                        addAnimationSet(anim, loaded.chance, s);
+                        this.addAnimationSet(anim, loaded.chance, s);
                         break;
                     }
-                }
-            }
         }
     }
 
@@ -122,29 +127,44 @@ public class AnimationRandomizer implements IAnimationChanger
     @Override
     public String modifyAnimation(MobEntity entity, float partialTicks, String phase)
     {
-        if (running.containsKey(entity.getEntityId()))
+        if (this.running.containsKey(entity.getEntityId()))
         {
-            AnimationSet anim = running.get(entity.getEntityId());
+            final AnimationSet anim = this.running.get(entity.getEntityId());
             phase = anim.anim.name;
-            if (anim.set < entity.ticksExisted)
-            {
-                running.remove(entity.getEntityId());
-            }
+            if (anim.set < entity.ticksExisted) this.running.remove(entity.getEntityId());
             return phase;
         }
-        else if (sets.containsKey(phase))
+        else if (this.sets.containsKey(phase))
         {
-            List<RandomAnimation> set = sets.get(phase);
-            int rand = entity.getRNG().nextInt(set.size());
-            RandomAnimation anim = set.get(rand);
+            final List<RandomAnimation> set = this.sets.get(phase);
+            final int rand = entity.getRNG().nextInt(set.size());
+            final RandomAnimation anim = set.get(rand);
             if (Math.random() < anim.chance)
             {
-                AnimationSet aSet = new AnimationSet(anim);
+                final AnimationSet aSet = new AnimationSet(anim);
                 aSet.set = entity.ticksExisted + aSet.anim.duration;
-                running.put(entity.getEntityId(), aSet);
+                this.running.put(entity.getEntityId(), aSet);
                 phase = anim.name;
             }
         }
         return phase;
+    }
+
+    @Override
+    public void parseDyeables(Set<String> set)
+    {
+        // Nope
+    }
+
+    @Override
+    public void parseShearables(Set<String> set)
+    {
+        // Nope
+    }
+
+    @Override
+    public void parseWornOffsets(Map<String, WornOffsets> map)
+    {
+        // Nope
     }
 }

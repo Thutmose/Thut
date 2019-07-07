@@ -2,102 +2,96 @@ package thut.core.common.world.mobs.data;
 
 import java.util.List;
 
-import javax.xml.ws.handler.MessageContext;
-
 import com.google.common.collect.Lists;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import thut.api.network.PacketHandler;
 import thut.api.world.mobs.data.Data;
 import thut.api.world.mobs.data.DataSync;
 import thut.core.common.ThutCore;
+import thut.core.common.network.Packet;
 
-public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync, IMessage>
+public class PacketDataSync extends Packet
 {
-    public int           id;
-    public List<Data<?>> data = Lists.newArrayList();
+    public static void sync(Entity tracked, DataSync data, int entity_id, boolean all)
+    {
+        final List<Data<?>> list = all ? data.getAll() : data.getDirty();
+        // Nothing to sync.
+        if (list == null || tracked == null) return;
+        final PacketDataSync packet = new PacketDataSync();
+        packet.data = list;
+        packet.id = entity_id;
+        ThutCore.packets.sendToTracking(packet, tracked);
+        if (tracked instanceof ServerPlayerEntity) ThutCore.packets.sendTo(packet, (ServerPlayerEntity) tracked);
+    }
 
     public static void sync(ServerPlayerEntity syncTo, DataSync data, int entity_id, boolean all)
     {
-        List<Data<?>> list = all ? data.getAll() : data.getDirty();
+        final List<Data<?>> list = all ? data.getAll() : data.getDirty();
         // Nothing to sync.
         if (list == null) return;
-        PacketDataSync packet = new PacketDataSync();
+        final PacketDataSync packet = new PacketDataSync();
         packet.data = list;
         packet.id = entity_id;
-        PacketHandler.packetPipeline.sendTo(packet, syncTo);
+        ThutCore.packets.sendTo(packet, syncTo);
     }
 
-    public static void sync(List<ServerPlayerEntity> syncTo, DataSync data, int entity_id, boolean all)
-    {
-        List<Data<?>> list = all ? data.getAll() : data.getDirty();
-        // Nothing to sync.
-        if (list == null || syncTo.isEmpty()) return;
-        PacketDataSync packet = new PacketDataSync();
-        packet.data = list;
-        packet.id = entity_id;
-        for (ServerPlayerEntity player : syncTo)
-            PacketHandler.packetPipeline.sendTo(packet, player);
-    }
+    public int id;
+
+    public List<Data<?>> data = Lists.newArrayList();
 
     public PacketDataSync()
     {
+        super(null);
     }
 
-    @Override
-    public IMessage onMessage(final PacketDataSync message, final MessageContext ctx)
+    public PacketDataSync(PacketBuffer buf)
     {
-        PlayerEntity player;
-        player = ThutCore.proxy.getPlayer();
-        int id = message.id;
-        World world = player.getEntityWorld();
-        Entity mob = world.getEntityByID(id);
-        if (mob == null) return null;
-        DataSync sync = SyncHandler.getData(mob);
-        if (sync == null) return null;
-        sync.update(message.data);
-        return null;
-    }
-
-    @Override
-    public void fromBytes(ByteBuf buf)
-    {
-        id = buf.readInt();
-        byte num = buf.readByte();
-        if (num > 0)
+        super(buf);
+        this.id = buf.readInt();
+        final byte num = buf.readByte();
+        if (num > 0) for (int i = 0; i < num; i++)
         {
-            for (int i = 0; i < num; i++)
+            final int uid = buf.readInt();
+            try
             {
-                int uid = buf.readInt();
-                try
-                {
-                    Data<?> val = DataSync_Impl.makeData(uid);
-                    val.read(buf);
-                    data.add(val);
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+                final Data<?> val = DataSync_Impl.makeData(uid);
+                val.read(buf);
+                this.data.add(val);
+            }
+            catch (final Exception e)
+            {
+                e.printStackTrace();
             }
         }
     }
 
     @Override
-    public void toBytes(ByteBuf buf)
+    public void handleClient()
     {
-        buf.writeInt(id);
-        byte num = (byte) (data.size());
+        PlayerEntity player;
+        player = ThutCore.proxy.getPlayer();
+        final World world = player.getEntityWorld();
+        final Entity mob = world.getEntityByID(this.id);
+        if (mob == null) return;
+        final DataSync sync = SyncHandler.getData(mob);
+        if (sync == null) return;
+        sync.update(this.data);
+        return;
+    }
+
+    @Override
+    public void write(PacketBuffer buf)
+    {
+        buf.writeInt(this.id);
+        final byte num = (byte) this.data.size();
         buf.writeByte(num);
         for (int i = 0; i < num; i++)
         {
-            Data<?> val = data.get(i);
+            final Data<?> val = this.data.get(i);
             buf.writeInt(val.getUID());
             val.write(buf);
         }

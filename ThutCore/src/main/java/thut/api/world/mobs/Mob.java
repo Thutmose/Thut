@@ -8,83 +8,109 @@ import thut.api.world.mobs.ai.AI;
 import thut.api.world.utils.Info;
 import thut.api.world.utils.Vector;
 
-/** This is a Mob, it is located at a point, which is a Vector, and lives in a
+/**
+ * This is a Mob, it is located at a point, which is a Vector, and lives in a
  * World, it can move, with a velocity (which is also a Vector).<br>
  * <br>
  * In other words, this mob lives on the tangent bundle of the configuration
  * manifold represented by the World.
- * 
- * @author Thutmose */
+ *
+ * @author Thutmose
+ */
 public interface Mob extends Keyed
 {
-    /** The world this mob lives in.
-     * 
-     * @return */
-    World world();
+    /**
+     * The AI object for this mob.
+     *
+     * @return
+     */
+    AI getAI();
 
-    void setWorld(World world);
+    /**
+     * Maximum health this mob can have.
+     *
+     * @return
+     */
+    float getMaxHealth();
 
-    /** Where this mob is on the world grid.
-     * 
-     * @return */
-    Vector<Integer> worldPos();
+    /**
+     * UUID of this mob.
+     *
+     * @return
+     */
+    UUID id();
 
-    /** Where the mob is
-     * 
-     * @return */
-    Vector<Double> position();
-
-    /** How fast this mob is moving
-     * 
-     * @return */
-    Vector<Double> velocity();
-
-    /** This is the client side version of the mob.
-     * 
-     * @return */
-    boolean onClient();
+    /**
+     * Stored info for this mob.
+     *
+     * @return
+     */
+    Info info();
 
     /** @return Whether is actually added to a world. */
     boolean inWorld();
 
-    /** If true, this mob is dead, and will be cleaned up from the world.
-     * 
-     * @return */
+    /**
+     * If true, this mob is dead, and will be cleaned up from the world.
+     *
+     * @return
+     */
     boolean isDead();
+
+    /**
+     * This is the client side version of the mob.
+     *
+     * @return
+     */
+    boolean onClient();
+
+    /**
+     * Where the mob is
+     *
+     * @return
+     */
+    Vector<Double> position();
 
     /** Sets this mob as dead. */
     void setDead();
 
-    /** Stored info for this mob.
-     * 
-     * @return */
-    Info info();
-
-    /** The AI object for this mob.
-     * 
-     * @return */
-    AI getAI();
-
-    /** UUID of this mob.
-     * 
-     * @return */
-    UUID id();
+    /**
+     * Sets the current health for this mob.
+     *
+     * @param health
+     */
+    void setHealth(float health);
 
     void setID(UUID id);
 
-    /** This is whatever is being wrapped by this Mob, it is usually something
+    void setWorld(World world);
+
+    /**
+     * How fast this mob is moving
+     *
+     * @return
+     */
+    Vector<Double> velocity();
+
+    /**
+     * The world this mob lives in.
+     *
+     * @return
+     */
+    World world();
+
+    /**
+     * Where this mob is on the world grid.
+     *
+     * @return
+     */
+    Vector<Integer> worldPos();
+
+    /**
+     * This is whatever is being wrapped by this Mob, it is usually something
      * like an Entity.
-     * 
-     * @return */
+     *
+     * @return
+     */
     Object wrapped();
-
-    /** Maximum health this mob can have.
-     * 
-     * @return */
-    float getMaxHealth();
-
-    /** Sets the current health for this mob.
-     * 
-     * @param health */
-    void setHealth(float health);
 }

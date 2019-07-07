@@ -1,6 +1,5 @@
 package thut.core.client.render.x3d;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -19,9 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
-import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 import com.google.common.collect.Lists;
@@ -69,7 +66,7 @@ public class X3dXML
 
             public Vertex[] getVertices()
             {
-                return parseVertices(point);
+                return IndexedTriangleSet.parseVertices(this.point);
             }
         }
 
@@ -81,7 +78,7 @@ public class X3dXML
 
             public Vertex[] getNormals()
             {
-                return parseVertices(vector);
+                return IndexedTriangleSet.parseVertices(this.vector);
             }
         }
 
@@ -91,46 +88,46 @@ public class X3dXML
             @XmlAttribute(name = "point")
             String point;
 
-            public thut.core.client.render.model.TextureCoordinate[] getTexture()
+            public thut.core.client.render.texturing.TextureCoordinate[] getTexture()
             {
-                ArrayList<thut.core.client.render.model.TextureCoordinate> ret = new ArrayList<thut.core.client.render.model.TextureCoordinate>();
-                String[] points = point.split(" ");
-                if (points.length % 2 != 0) { throw new ModelFormatException(
-                        "Invalid number of elements in the points string " + points.length); }
+                final ArrayList<thut.core.client.render.texturing.TextureCoordinate> ret = new ArrayList<>();
+                final String[] points = this.point.split(" ");
+                if (points.length % 2 != 0) throw new ModelFormatException(
+                        "Invalid number of elements in the points string " + points.length);
                 for (int i = 0; i < points.length; i += 2)
                 {
-                    thut.core.client.render.model.TextureCoordinate toAdd = new thut.core.client.render.model.TextureCoordinate(
+                    final thut.core.client.render.texturing.TextureCoordinate toAdd = new thut.core.client.render.texturing.TextureCoordinate(
                             Float.parseFloat(points[i]), 1 - Float.parseFloat(points[i + 1]));
                     ret.add(toAdd);
                 }
-                return ret.toArray(new thut.core.client.render.model.TextureCoordinate[ret.size()]);
+                return ret.toArray(new thut.core.client.render.texturing.TextureCoordinate[ret.size()]);
             }
         }
 
         private static Vertex[] parseVertices(String line) throws ModelFormatException
         {
-            ArrayList<Vertex> ret = new ArrayList<Vertex>();
+            final ArrayList<Vertex> ret = new ArrayList<>();
 
-            String[] points = line.split(" ");
-            if (points.length
-                    % 3 != 0) { throw new ModelFormatException("Invalid number of elements in the points string"); }
+            final String[] points = line.split(" ");
+            if (points.length % 3 != 0) throw new ModelFormatException(
+                    "Invalid number of elements in the points string");
             for (int i = 0; i < points.length; i += 3)
             {
-                Vertex toAdd = new Vertex(Float.parseFloat(points[i]), Float.parseFloat(points[i + 1]),
-                        Float.parseFloat(points[i + 2]));
+                final Vertex toAdd = new Vertex(Float.parseFloat(points[i]), Float.parseFloat(points[i + 1]), Float
+                        .parseFloat(points[i + 2]));
                 ret.add(toAdd);
             }
             return ret.toArray(new Vertex[ret.size()]);
         }
 
         @XmlAttribute(name = "solid")
-        boolean           solid;
+        boolean solid;
 
         @XmlAttribute(name = "normalPerVertex")
-        boolean           normalPerVertex;
+        boolean normalPerVertex;
 
         @XmlAttribute(name = "index")
-        String            index;
+        String index;
 
         @XmlElement(name = "Coordinate")
         Coordinate        points;
@@ -141,30 +138,30 @@ public class X3dXML
 
         public Vertex[] getNormals()
         {
-            return normals.getNormals();
+            return this.normals.getNormals();
         }
 
         public Integer[] getOrder()
         {
-            String[] offset = index.split(" ");
-            Integer[] order = new Integer[offset.length];
+            final String[] offset = this.index.split(" ");
+            final Integer[] order = new Integer[offset.length];
             for (int i = 0; i < offset.length; i++)
             {
-                String s1 = offset[i];
-                order[i] = (Integer.parseInt(s1));
+                final String s1 = offset[i];
+                order[i] = Integer.parseInt(s1);
             }
             return order;
         }
 
-        public thut.core.client.render.model.TextureCoordinate[] getTexture()
+        public thut.core.client.render.texturing.TextureCoordinate[] getTexture()
         {
-            if (textures == null) return null;
-            return textures.getTexture();
+            if (this.textures == null) return null;
+            return this.textures.getTexture();
         }
 
         public Vertex[] getVertices()
         {
-            return points.getVertices();
+            return this.points.getVertices();
         }
     }
 
@@ -195,29 +192,20 @@ public class X3dXML
 
         public Vector3f getDiffuse()
         {
-            if (diffuse == null)
-            {
-                diffuse = fromString(diffuseColor);
-            }
-            return diffuse;
+            if (this.diffuse == null) this.diffuse = X3dXML.fromString(this.diffuseColor);
+            return this.diffuse;
         }
 
         public Vector3f getEmissive()
         {
-            if (emissive == null)
-            {
-                emissive = fromString(emissiveColor);
-            }
-            return emissive;
+            if (this.emissive == null) this.emissive = X3dXML.fromString(this.emissiveColor);
+            return this.emissive;
         }
 
         public Vector3f getSpecular()
         {
-            if (specular == null)
-            {
-                specular = fromString(specularColor);
-            }
-            return specular;
+            if (this.specular == null) this.specular = X3dXML.fromString(this.specularColor);
+            return this.specular;
         }
     }
 
@@ -266,36 +254,33 @@ public class X3dXML
 
         public Set<String> getChildNames()
         {
-            Set<String> ret = Sets.newHashSet();
-            for (Transform t : transforms)
-            {
+            final Set<String> ret = Sets.newHashSet();
+            for (final Transform t : this.transforms)
                 if (t.getGroupName() != null) ret.add(t.getGroupName());
-            }
             return ret;
         }
 
         public String getGroupName()
         {
-            if (group == null && getIfsTransform() != this) { return getIfsTransform().getGroupName(); }
-            if (group == null || group.DEF == null) return getIfsTransform().DEF.replace("_ifs_TRANSFORM", "");
-            return group.DEF.substring("group_ME_".length());
+            if (this.group == null && this.getIfsTransform() != this) return this.getIfsTransform().getGroupName();
+            if (this.group == null || this.group.DEF == null) return this.getIfsTransform().DEF.replace(
+                    "_ifs_TRANSFORM", "");
+            return this.group.DEF.substring("group_ME_".length());
         }
 
         public Transform getIfsTransform()
         {
-            if (DEF.endsWith("ifs_TRANSFORM")) return this;
+            if (this.DEF.endsWith("ifs_TRANSFORM")) return this;
 
-            for (Transform t : transforms)
-            {
-                if (t.DEF.equals(DEF.replace("_TRANSFORM", "_ifs_TRANSFORM"))) return t;
-            }
+            for (final Transform t : this.transforms)
+                if (t.DEF.equals(this.DEF.replace("_TRANSFORM", "_ifs_TRANSFORM"))) return t;
             return null;
         }
 
         @Override
         public String toString()
         {
-            return DEF + " " + transforms;
+            return this.DEF + " " + this.transforms;
         }
     }
 
@@ -309,7 +294,7 @@ public class X3dXML
     private static Vector3f fromString(String vect)
     {
         if (vect == null) vect = "0 0 0";
-        String[] var = vect.split(" ");
+        final String[] var = vect.split(" ");
         return new Vector3f(Float.parseFloat(var[0]), Float.parseFloat(var[1]), Float.parseFloat(var[2]));
     }
 
@@ -317,26 +302,19 @@ public class X3dXML
 
     public X3dXML(InputStream stream) throws JAXBException
     {
-        JAXBContext jc = JAXBContext.newInstance(X3D.class);
+        final JAXBContext jc = JAXBContext.newInstance(X3D.class);
         try
         {
-            SAXParserFactory spf = SAXParserFactory.newInstance();
+            final SAXParserFactory spf = SAXParserFactory.newInstance();
             spf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            XMLReader xmlReader = spf.newSAXParser().getXMLReader();
-            xmlReader.setEntityResolver(new EntityResolver()
-            {
-                @Override
-                public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
-                {
-                    return new InputSource(new StringReader(""));
-                }
-            });
-            InputSource inputSource = new InputSource(new InputStreamReader(stream));
-            SAXSource source = new SAXSource(xmlReader, inputSource);
-            Unmarshaller unmarshaller = jc.createUnmarshaller();
-            model = (X3D) unmarshaller.unmarshal(source);
+            final XMLReader xmlReader = spf.newSAXParser().getXMLReader();
+            xmlReader.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+            final InputSource inputSource = new InputSource(new InputStreamReader(stream));
+            final SAXSource source = new SAXSource(xmlReader, inputSource);
+            final Unmarshaller unmarshaller = jc.createUnmarshaller();
+            this.model = (X3D) unmarshaller.unmarshal(source);
         }
-        catch (Exception e)
+        catch (final Exception e)
         {
             e.printStackTrace();
         }

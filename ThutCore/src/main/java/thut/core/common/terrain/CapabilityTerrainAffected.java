@@ -10,6 +10,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,86 +18,81 @@ import thut.api.terrain.TerrainEffectEvent;
 import thut.api.terrain.TerrainManager;
 import thut.api.terrain.TerrainSegment;
 import thut.api.terrain.TerrainSegment.ITerrainEffect;
-import thut.reference.Reference;
+import thut.core.common.ThutCore;
 
 public class CapabilityTerrainAffected
 {
-    private static final ResourceLocation            TERRAINEFFECTCAP = new ResourceLocation(Reference.MOD_ID,
-            "terrainEffects");
-    @CapabilityInject(ITerrainAffected.class)
-    public static final Capability<ITerrainAffected> TERRAIN_CAP      = null;
-
-    public static interface ITerrainAffected
-    {
-        void onTerrainTick();
-
-        LivingEntity getAttached();
-
-        void attach(LivingEntity mob);
-    }
-
     public static class DefaultAffected implements ITerrainAffected, ICapabilityProvider
     {
-        private LivingEntity           theMob;
-        private TerrainSegment             terrain;
-        private Collection<ITerrainEffect> effects;
+        private final LazyOptional<ITerrainAffected> holder = LazyOptional.of(() -> this);
+        private LivingEntity                         theMob;
+        private TerrainSegment                       terrain;
+        private Collection<ITerrainEffect>           effects;
+
+        @Override
+        public void attach(LivingEntity mob)
+        {
+            this.theMob = mob;
+        }
+
+        @Override
+        public LivingEntity getAttached()
+        {
+            return this.theMob;
+        }
+
+        @Override
+        public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing)
+        {
+            return CapabilityTerrainAffected.TERRAIN_CAP.orEmpty(capability, this.holder);
+        }
 
         public void onTerrainEntry(TerrainSegment entered)
         {
-            if (entered == terrain || theMob == null) return;
-            terrain = entered;
-            effects = terrain.getEffects();
+            if (entered == this.terrain || this.theMob == null) return;
+            this.terrain = entered;
+            this.effects = this.terrain.getEffects();
 
-            for (ITerrainEffect effect : effects)
+            for (final ITerrainEffect effect : this.effects)
             {
-                TerrainEffectEvent event = new TerrainEffectEvent(theMob, effect.getIdenitifer(), true);
-                if (!MinecraftForge.EVENT_BUS.post(event)) effect.doEffect(theMob, true);
+                final TerrainEffectEvent event = new TerrainEffectEvent(this.theMob, effect.getIdenitifer(), true);
+                if (!MinecraftForge.EVENT_BUS.post(event)) effect.doEffect(this.theMob, true);
             }
         }
 
         @Override
         public void onTerrainTick()
         {
-            if (theMob == null) return;
-            TerrainSegment current = TerrainManager.getInstance().getTerrainForEntity(theMob);
-            if (current != terrain)
+            if (this.theMob == null) return;
+            final TerrainSegment current = TerrainManager.getInstance().getTerrainForEntity(this.theMob);
+            if (current != this.terrain)
             {
-                onTerrainEntry(current);
+                this.onTerrainEntry(current);
                 return;
             }
-            if (effects == null) return;
-            for (ITerrainEffect effect : effects)
+            if (this.effects == null) return;
+            for (final ITerrainEffect effect : this.effects)
             {
-                TerrainEffectEvent event = new TerrainEffectEvent(theMob, effect.getIdenitifer(), false);
-                if (!MinecraftForge.EVENT_BUS.post(event)) effect.doEffect(theMob, false);
+                final TerrainEffectEvent event = new TerrainEffectEvent(this.theMob, effect.getIdenitifer(), false);
+                if (!MinecraftForge.EVENT_BUS.post(event)) effect.doEffect(this.theMob, false);
             }
-        }
-
-        @Override
-        public LivingEntity getAttached()
-        {
-            return theMob;
-        }
-
-        @Override
-        public void attach(LivingEntity mob)
-        {
-            theMob = mob;
-        }
-
-        @Override
-        public boolean hasCapability(Capability<?> capability, Direction facing)
-        {
-            return capability == TERRAIN_CAP;
-        }
-
-        @Override
-        public <T> T getCapability(Capability<T> capability, Direction facing)
-        {
-            return hasCapability(capability, facing) ? TERRAIN_CAP.cast(this) : null;
         }
 
     }
+
+    public static interface ITerrainAffected
+    {
+        void attach(LivingEntity mob);
+
+        LivingEntity getAttached();
+
+        void onTerrainTick();
+    }
+
+    private static final ResourceLocation TERRAINEFFECTCAP = new ResourceLocation(ThutCore.MODID, "terrainEffects");
+
+    @CapabilityInject(ITerrainAffected.class)
+    public static final Capability<ITerrainAffected> TERRAIN_CAP = null;
 
     public CapabilityTerrainAffected()
     {
@@ -104,22 +100,20 @@ public class CapabilityTerrainAffected
     }
 
     @SubscribeEvent
-    public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
+    public void EntityUpdate(LivingUpdateEvent evt)
     {
-        if (!(event.getObject() instanceof LivingEntity) || event.getCapabilities().containsKey(TERRAINEFFECTCAP))
-            return;
-        DefaultAffected effects = new DefaultAffected();
-        effects.attach((LivingEntity) event.getObject());
-        event.addCapability(TERRAINEFFECTCAP, effects);
+        final ITerrainAffected effects = evt.getEntity().getCapability(CapabilityTerrainAffected.TERRAIN_CAP, null)
+                .orElse(null);
+        if (effects != null) effects.onTerrainTick();
     }
 
     @SubscribeEvent
-    public void EntityUpdate(LivingUpdateEvent evt)
+    public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
     {
-        ITerrainAffected effects = evt.getMobEntity().getCapability(TERRAIN_CAP, null);
-        if (effects != null)
-        {
-            effects.onTerrainTick();
-        }
+        if (!(event.getObject() instanceof LivingEntity) || event.getCapabilities().containsKey(
+                CapabilityTerrainAffected.TERRAINEFFECTCAP)) return;
+        final DefaultAffected effects = new DefaultAffected();
+        effects.attach((LivingEntity) event.getObject());
+        event.addCapability(CapabilityTerrainAffected.TERRAINEFFECTCAP, effects);
     }
 }

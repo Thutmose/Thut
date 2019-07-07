@@ -11,7 +11,21 @@ public abstract class GeneBoolean implements Gene
     @Override
     public <T> T getValue()
     {
-        return (T) value;
+        return (T) this.value;
+    }
+
+    @Override
+    public void load(CompoundNBT tag)
+    {
+        this.value = tag.getBoolean("V");
+    }
+
+    @Override
+    public CompoundNBT save()
+    {
+        final CompoundNBT tag = new CompoundNBT();
+        tag.putBoolean("V", this.value);
+        return tag;
     }
 
     @Override
@@ -21,23 +35,9 @@ public abstract class GeneBoolean implements Gene
     }
 
     @Override
-    public CompoundNBT save()
-    {
-        CompoundNBT tag = new CompoundNBT();
-        tag.putBoolean("V", value);
-        return tag;
-    }
-
-    @Override
-    public void load(CompoundNBT tag)
-    {
-        value = tag.getBoolean("V");
-    }
-
-    @Override
     public String toString()
     {
-        return "" + value;
+        return "" + this.value;
     }
 
 }

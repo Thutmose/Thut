@@ -1,0 +1,8 @@
+{
+   "variants": {
+	   "called=true,current=true": { "model": "thuttech:block/controller" },
+	   "called=true,current=false": { "model": "thuttech:block/controller" },
+	   "called=false,current=true": { "model": "thuttech:block/controller" },
+	   "called=false,current=false": { "model": "thuttech:block/controller" }
+    }
+}

@@ -9,8 +9,10 @@ import java.io.InputStreamReader;
  * @author iLexiconn
  * @since 0.1.0
  */
-public class JsonHelper {
-    public static JsonTabulaModel parseTabulaModel(InputStream stream) {
+public class JsonHelper
+{
+    public static JsonTabulaModel parseTabulaModel(InputStream stream)
+    {
         return JsonFactory.getGson().fromJson(new InputStreamReader(stream), JsonTabulaModel.class);
     }
 }

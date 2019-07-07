@@ -1,5 +1,7 @@
 package thut.core.client.render.animation;
 
+import org.w3c.dom.Node;
+
 import net.minecraft.util.ResourceLocation;
 
 public class ModelHolder
@@ -15,6 +17,11 @@ public class ModelHolder
         this.texture = texture;
         this.animation = animation;
         this.name = name;
+    }
+
+    public void handleCustomTextures(Node node)
+    {
+
     }
 
 }

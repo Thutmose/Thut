@@ -11,10 +11,11 @@ public class Ownable_Impl extends Mob_Impl implements Ownable
     Mob  owner_mob;
 
     @Override
-    public void setOwnerId(UUID owner)
+    public Mob getOwner()
     {
-        this.owner_id = owner;
-        this.owner_mob = world().getMob(owner);
+        if (this.owner_id == null) return null;
+        else if (this.owner_mob == null) this.owner_mob = this.world().getMob(this.owner_id);
+        return this.owner_mob;
     }
 
     @Override
@@ -24,11 +25,10 @@ public class Ownable_Impl extends Mob_Impl implements Ownable
     }
 
     @Override
-    public Mob getOwner()
+    public void setOwnerId(UUID owner)
     {
-        if (this.owner_id == null) return null;
-        else if (this.owner_mob == null) this.owner_mob = world().getMob(this.owner_id);
-        return this.owner_mob;
+        this.owner_id = owner;
+        this.owner_mob = this.world().getMob(owner);
     }
 
 }

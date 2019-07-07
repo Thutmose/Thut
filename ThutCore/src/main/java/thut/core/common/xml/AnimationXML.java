@@ -17,34 +17,34 @@ public class AnimationXML
     public static class AnimationComponent
     {
         @XmlAttribute(name = "hidden")
-        boolean hidden        = false;
+        boolean hidden = false;
         @XmlAttribute(name = "length")
-        int     length        = 0;
+        int     length = 0;
         @XmlAttribute(name = "name")
-        String  name          = "";
+        String  name   = "";
 
         @XmlAttribute(name = "opacityChange")
-        double  opacityChange = 0.0D;
+        double opacityChange = 0.0D;
         @XmlAttribute(name = "opacityOffset")
-        double  opacityOffset = 0.0D;
+        double opacityOffset = 0.0D;
 
         @XmlAttribute(name = "posChange")
-        String  posChange     = "0,0,0";
+        String posChange = "0,0,0";
         @XmlAttribute(name = "posOffset")
-        String  posOffset     = "0,0,0";
+        String posOffset = "0,0,0";
 
         @XmlAttribute(name = "rotChange")
-        String  rotChange     = "0,0,0";
+        String rotChange = "0,0,0";
         @XmlAttribute(name = "rotOffset")
-        String  rotOffset     = "0,0,0";
+        String rotOffset = "0,0,0";
 
         @XmlAttribute(name = "scaleChange")
-        String  scaleChange   = "0,0,0";
+        String scaleChange = "0,0,0";
         @XmlAttribute(name = "scaleOffset")
-        String  scaleOffset   = "0,0,0";
+        String scaleOffset = "0,0,0";
 
         @XmlAttribute(name = "startKey")
-        int     startKey      = 0;
+        int startKey = 0;
     }
 
     @XmlRootElement(name = "part")

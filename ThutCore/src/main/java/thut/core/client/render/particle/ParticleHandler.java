@@ -7,101 +7,89 @@ import org.lwjgl.opengl.GL11;
 import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.ParticleStatus;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityViewRenderEvent.RenderFogEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import thut.api.maths.Vector3;
 
 public class ParticleHandler
 {
-    private static ParticleHandler instance;
-
     private static class ParticlePacket
     {
         final Vector3   location;
         final IParticle particle;
 
-        public ParticlePacket(Vector3 v, IParticle p)
+        public ParticlePacket(final Vector3 v, final IParticle p)
         {
-            location = v;
-            particle = p;
+            this.location = v;
+            this.particle = p;
         }
 
         public void kill()
         {
-            particle.kill();
+            this.particle.kill();
         }
     }
 
-    public static ParticleHandler Instance()
+    static List<ParticlePacket> particles = Lists.newArrayList();
+
+    public static void addParticle(final Vector3 location, final IParticle particle)
     {
-        if (instance == null)
+        if (particle == null || location == null || Minecraft
+                .getInstance().gameSettings.particles == ParticleStatus.MINIMAL) return;
+        synchronized (ParticleHandler.particles)
         {
-            instance = new ParticleHandler();
-            MinecraftForge.EVENT_BUS.register(instance);
-        }
-        return instance;
-    }
-
-    List<ParticlePacket> particles = Lists.newArrayList();
-
-    public void addParticle(Vector3 location, IParticle particle)
-    {
-        if (particle == null || location == null || Minecraft.getInstance().gameSettings.particleSetting > 1) return;
-        synchronized (particles)
-        {
-            particles.add(new ParticlePacket(location.copy(), particle));
+            ParticleHandler.particles.add(new ParticlePacket(location.copy(), particle));
         }
     }
 
-    public void clear()
+    public static void clear()
     {
-        particles.clear();
+        ParticleHandler.particles.clear();
     }
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onRenderWorldPost(RenderFogEvent event)
+    public static void onRenderWorldPost(final RenderFogEvent event)
     {
         try
         {
-            synchronized (particles)
+            synchronized (ParticleHandler.particles)
             {
                 GL11.glPushMatrix();
-                List<ParticlePacket> list = Lists.newArrayList();
-                for (int i = 0; i < particles.size(); i++)
+                final List<ParticlePacket> list = Lists.newArrayList();
+                for (int i = 0; i < ParticleHandler.particles.size(); i++)
                 {
-                    ParticlePacket packet = this.particles.get(i);
-                    IParticle particle = packet.particle;
-                    Vector3 target = packet.location;
+                    final ParticlePacket packet = ParticleHandler.particles.get(i);
+                    final IParticle particle = packet.particle;
+                    final Vector3 target = packet.location;
                     if (particle.getDuration() < 0)
                     {
                         packet.kill();
                         list.add(packet);
                         continue;
                     }
-                    PlayerEntity player = Minecraft.getInstance().player;
-                    Vector3 source = Vector3.getNewVector().set(player.lastTickPosX, player.lastTickPosY,
+                    final PlayerEntity player = Minecraft.getInstance().player;
+                    final Vector3 source = Vector3.getNewVector().set(player.lastTickPosX, player.lastTickPosY,
                             player.lastTickPosZ);
                     GL11.glPushMatrix();
                     source.set(target.subtract(source));
                     GL11.glTranslated(source.x, source.y, source.z);
-                    double d0 = (-player.posX + player.lastTickPosX) * event.getRenderPartialTicks();
-                    double d1 = (-player.posY + player.lastTickPosY) * event.getRenderPartialTicks();
-                    double d2 = (-player.posZ + player.lastTickPosZ) * event.getRenderPartialTicks();
+                    final double d0 = (-player.posX + player.lastTickPosX) * event.getRenderPartialTicks();
+                    final double d1 = (-player.posY + player.lastTickPosY) * event.getRenderPartialTicks();
+                    final double d2 = (-player.posZ + player.lastTickPosZ) * event.getRenderPartialTicks();
                     source.set(d0, d1, d2);
                     GL11.glTranslated(source.x, source.y, source.z);
-                    particle.render(event.getRenderPartialTicks());
+                    // particle.render(event.getRenderPartialTicks());
                     GL11.glPopMatrix();
-                    if (particle.lastTick() != event.getEntity().getEntityWorld().getGameTime())
+                    if (particle.lastTick() != player.getEntityWorld().getGameTime())
                     {
                         particle.setDuration(particle.getDuration() - 1);
-                        particle.setLastTick(event.getEntity().getEntityWorld().getGameTime());
+                        particle.setLastTick(player.getEntityWorld().getGameTime());
                     }
                     if (particle.getDuration() < 0)
                     {
@@ -111,25 +99,18 @@ public class ParticleHandler
                 }
                 GL11.glPopMatrix();
                 for (int i = 0; i < list.size(); i++)
-                {
-                    particles.remove(list.get(i));
-                }
+                    ParticleHandler.particles.remove(list.get(i));
             }
         }
-        catch (Throwable e)
+        catch (final Throwable e)
         {
             e.printStackTrace();
         }
     }
 
     @SubscribeEvent
-    public void WorldUnloadEvent(Unload evt)
+    public static void WorldUnloadEvent(final Unload evt)
     {
-        if (evt.getWorld().dimension.getDimension() == 0
-                && FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT)
-        {
-            clear();
-        }
-
+        ParticleHandler.clear();
     }
 }

@@ -9,6 +9,22 @@ public class Data_UUID extends Data_Base<UUID>
     UUID value = null;
 
     @Override
+    public UUID get()
+    {
+        return this.value;
+    }
+
+    @Override
+    public void read(ByteBuf buf)
+    {
+        super.read(buf);
+        final long lsb = buf.readLong();
+        final long msb = buf.readLong();
+        if (lsb != -1 && msb != -1) this.value = new UUID(msb, lsb);
+        else this.value = null;
+    }
+
+    @Override
     public void set(UUID value)
     {
         if (value == null)
@@ -22,40 +38,18 @@ public class Data_UUID extends Data_Base<UUID>
     }
 
     @Override
-    public UUID get()
-    {
-        return this.value;
-    }
-
-    @Override
     public void write(ByteBuf buf)
     {
         super.write(buf);
         long lsb = -1;
         long msb = -1;
-        if (value != null)
+        if (this.value != null)
         {
-            lsb = value.getLeastSignificantBits();
-            msb = value.getMostSignificantBits();
+            lsb = this.value.getLeastSignificantBits();
+            msb = this.value.getMostSignificantBits();
         }
         buf.writeLong(lsb);
         buf.writeLong(msb);
-    }
-
-    @Override
-    public void read(ByteBuf buf)
-    {
-        super.read(buf);
-        long lsb = buf.readLong();
-        long msb = buf.readLong();
-        if (lsb != -1 && msb != -1)
-        {
-            value = new UUID(msb, lsb);
-        }
-        else
-        {
-            value = null;
-        }
     }
 
 }

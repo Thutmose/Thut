@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
 
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,26 +18,26 @@ public class WorldManager
 
     public static WorldManager instance()
     {
-        return instance;
+        return WorldManager.instance;
     }
 
-    Map<Integer, World> worldDimMap = Maps.newHashMap();
+    Map<DimensionType, World> worldDimMap = Maps.newHashMap();
+
+    @Nullable
+    public World getWorld(DimensionType dimension)
+    {
+        return this.worldDimMap.get(dimension);
+    }
 
     @SubscribeEvent
     public void WorldLoadEvent(Load evt)
     {
-        worldDimMap.put(evt.getWorld().dimension.getDimension(), new World_Impl(evt.getWorld()));
+        this.worldDimMap.put(evt.getWorld().getDimension().getType(), new World_Impl(evt.getWorld()));
     }
 
     @SubscribeEvent
     public void WorldUnLoadEvent(Unload evt)
     {
-        worldDimMap.remove(evt.getWorld().dimension.getDimension());
-    }
-
-    @Nullable
-    public World getWorld(Integer dim)
-    {
-        return worldDimMap.get(dim);
+        this.worldDimMap.remove(evt.getWorld().getDimension().getType());
     }
 }

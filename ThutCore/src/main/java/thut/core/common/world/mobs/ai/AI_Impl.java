@@ -10,7 +10,7 @@ public class AI_Impl implements AI
     @Override
     public Mob getAttackTarget()
     {
-        return target;
+        return this.target;
     }
 
     @Override

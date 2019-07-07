@@ -8,45 +8,29 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.EnergyStorage;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import thut.tech.Reference;
+import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.TileEntityLiftAccess;
 import thut.tech.common.entity.EntityLift;
 
+@Mod.EventBusSubscriber
 public class EnergyHandler
 {
-    private static final ResourceLocation ENERGY = new ResourceLocation(Reference.MOD_ID, "energy");
-
     /** Pretty standard storable EnergyStorage. */
     public static class ProviderLift extends EnergyStorage implements ICapabilitySerializable<CompoundNBT>
     {
+        private final LazyOptional<IEnergyStorage> holder = LazyOptional.of(() -> this);
+
         public ProviderLift()
         {
-            super(ConfigHandler.maxLiftEnergy, ConfigHandler.maxLiftEnergy);
-        }
-
-        @Override
-        public boolean hasCapability(Capability<?> capability, Direction facing)
-        {
-            return capability == CapabilityEnergy.ENERGY;
-        }
-
-        @Override
-        public <T> T getCapability(Capability<T> capability, Direction facing)
-        {
-            return (capability == CapabilityEnergy.ENERGY) ? CapabilityEnergy.ENERGY.cast(this) : null;
-        }
-
-        @Override
-        public CompoundNBT serializeNBT()
-        {
-            CompoundNBT tag = new CompoundNBT();
-            tag.putInt("E", getEnergyStored());
-            return tag;
+            super(TechCore.config.maxLiftEnergy, TechCore.config.maxLiftEnergy);
         }
 
         @Override
@@ -54,111 +38,113 @@ public class EnergyHandler
         {
             this.energy = nbt.getInt("E");
         }
+
+        @Override
+        public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing)
+        {
+            return CapabilityEnergy.ENERGY.orEmpty(capability, this.holder);
+        }
+
+        @Override
+        public CompoundNBT serializeNBT()
+        {
+            final CompoundNBT tag = new CompoundNBT();
+            tag.putInt("E", this.getEnergyStored());
+            return tag;
+        }
     }
 
-    /** This is essentially a wrapper for the lift's energy storage capability.
+    /**
+     * This is essentially a wrapper for the lift's energy storage capability.
      * This allows interfacing with the lift's energy via any of the connected
-     * controllers. */
+     * controllers.
+     */
     public static class ProviderLiftController implements ICapabilityProvider, IEnergyStorage
     {
-        final TileEntityLiftAccess tile;
-        IEnergyStorage             lift = null;
+        private final LazyOptional<IEnergyStorage> holder = LazyOptional.of(() -> this);
+        final TileEntityLiftAccess                 tile;
+        IEnergyStorage                             lift   = null;
 
         public ProviderLiftController(TileEntityLiftAccess tile)
         {
             this.tile = tile;
         }
 
-        private void updateLift()
-        {
-            if (tile.lift == null)
-            {
-                lift = null;
-            }
-            else
-            {
-                lift = tile.lift.getCapability(CapabilityEnergy.ENERGY, null);
-            }
-        }
-
-        @Override
-        public boolean hasCapability(Capability<?> capability, Direction facing)
-        {
-            return capability == CapabilityEnergy.ENERGY;
-        }
-
-        @Override
-        public <T> T getCapability(Capability<T> capability, Direction facing)
-        {
-            return hasCapability(capability, facing) ? CapabilityEnergy.ENERGY.cast(this) : null;
-        }
-
-        @Override
-        public int receiveEnergy(int maxReceive, boolean simulate)
-        {
-            updateLift();
-            if (lift != null) return lift.receiveEnergy(maxReceive, simulate);
-            return 0;
-        }
-
-        @Override
-        public int extractEnergy(int maxExtract, boolean simulate)
-        {
-            updateLift();
-            if (lift != null) return lift.extractEnergy(maxExtract, simulate);
-            return 0;
-        }
-
-        @Override
-        public int getEnergyStored()
-        {
-            updateLift();
-            if (lift != null) return lift.getEnergyStored();
-            return 0;
-        }
-
-        @Override
-        public int getMaxEnergyStored()
-        {
-            updateLift();
-            if (lift != null) return lift.getMaxEnergyStored();
-            return 0;
-        }
-
         @Override
         public boolean canExtract()
         {
-            updateLift();
-            if (lift != null) return lift.canExtract();
+            this.updateLift();
+            if (this.lift != null) return this.lift.canExtract();
             return false;
         }
 
         @Override
         public boolean canReceive()
         {
-            updateLift();
-            if (lift != null) return lift.canReceive();
+            this.updateLift();
+            if (this.lift != null) return this.lift.canReceive();
             return false;
+        }
+
+        @Override
+        public int extractEnergy(int maxExtract, boolean simulate)
+        {
+            this.updateLift();
+            if (this.lift != null) return this.lift.extractEnergy(maxExtract, simulate);
+            return 0;
+        }
+
+        @Override
+        public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing)
+        {
+            return CapabilityEnergy.ENERGY.orEmpty(capability, this.holder);
+        }
+
+        @Override
+        public int getEnergyStored()
+        {
+            this.updateLift();
+            if (this.lift != null) return this.lift.getEnergyStored();
+            return 0;
+        }
+
+        @Override
+        public int getMaxEnergyStored()
+        {
+            this.updateLift();
+            if (this.lift != null) return this.lift.getMaxEnergyStored();
+            return 0;
+        }
+
+        @Override
+        public int receiveEnergy(int maxReceive, boolean simulate)
+        {
+            this.updateLift();
+            if (this.lift != null) return this.lift.receiveEnergy(maxReceive, simulate);
+            return 0;
+        }
+
+        private void updateLift()
+        {
+            if (this.tile.lift == null) this.lift = null;
+            else this.lift = this.tile.lift.getCapability(CapabilityEnergy.ENERGY, null).orElse(null);
         }
     }
 
+    private static final ResourceLocation ENERGY = new ResourceLocation(Reference.MOD_ID, "energy");
+
     @SubscribeEvent
     /** Adds the energy capability to the lift mobs. */
-    public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
+    public static void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
     {
-        if (event.getObject() instanceof EntityLift)
-        {
-            event.addCapability(ENERGY, new ProviderLift());
-        }
+        if (event.getObject() instanceof EntityLift) event.addCapability(EnergyHandler.ENERGY, new ProviderLift());
     }
 
     @SubscribeEvent
     /** Adds the energy capability to the lift controllers. */
-    public void onTileCapabilityAttach(AttachCapabilitiesEvent<TileEntity> event)
+    public static void onTileCapabilityAttach(AttachCapabilitiesEvent<TileEntity> event)
     {
-        if (event.getObject() instanceof TileEntityLiftAccess)
-        {
-            event.addCapability(ENERGY, new ProviderLiftController((TileEntityLiftAccess) event.getObject()));
-        }
+        if (event.getObject() instanceof TileEntityLiftAccess) event.addCapability(EnergyHandler.ENERGY,
+                new ProviderLiftController((TileEntityLiftAccess) event.getObject()));
     }
 }
