@@ -33,14 +33,14 @@ public class BlockEntityChunkProvider extends AbstractChunkProvider
     private final Map<BlockPos, Chunk> chunks     = Maps.newHashMap();
     private BlockPos                   lastOrigin = null;
 
-    public BlockEntityChunkProvider(ClientWorldEntity worldIn)
+    public BlockEntityChunkProvider(final ClientWorldEntity worldIn)
     {
         this.world = worldIn;
         this.lightManager = new WorldLightManager(this, true, worldIn.getDimension().hasSkyLight());
     }
 
     @Override
-    public IChunk getChunk(int chunkX, int chunkZ, ChunkStatus status, boolean load)
+    public IChunk getChunk(final int chunkX, final int chunkZ, final ChunkStatus status, final boolean load)
     {
         final AxisAlignedBB chunkBox = new AxisAlignedBB(chunkX * 16, 0, chunkZ * 16, chunkX * 16 + 15, this.world
                 .getDimension().getHeight(), chunkZ * 16 + 15);
@@ -80,7 +80,7 @@ public class BlockEntityChunkProvider extends AbstractChunkProvider
                         ret.getSections()[j >> 4] = storage;
                     }
                     // TODO what is this boolean
-                    storage.set(i & 15, j & 15, k & 15, state, false);
+                    storage.setBlockState(i & 15, j & 15, k & 15, state, false);
                     final TileEntity tile = this.world.getTileEntity(pos);
                     if (tile != null) ret.addTileEntity(tile);
                 }
@@ -106,7 +106,7 @@ public class BlockEntityChunkProvider extends AbstractChunkProvider
         return this.world;
     }
 
-    private boolean intersects(AxisAlignedBB other)
+    private boolean intersects(final AxisAlignedBB other)
     {
         final IBlockEntity mob = this.world.getBlockEntity();
         final BlockPos pos = ((Entity) mob).getPosition();
@@ -123,7 +123,7 @@ public class BlockEntityChunkProvider extends AbstractChunkProvider
     }
 
     @Override
-    public void tick(BooleanSupplier hasTimeLeft)
+    public void tick(final BooleanSupplier hasTimeLeft)
     {
         // Not sure if we should tick?
     }

@@ -31,7 +31,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -134,13 +133,12 @@ public class ThutCore
     // You can use EventBusSubscriber to automatically subscribe events on the
     // contained class (this is subscribing to the MOD
     // Event bus for receiving Registry Events)
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = ThutCore.MODID)
     public static class RegistryEvents
     {
         @SubscribeEvent
         public static void registerParticles(final RegistryEvent.Register<ParticleType<? extends IParticleData>> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(ThutCore.MODID)) return;
             ThutCore.LOGGER.debug("Registering Particle Types");
             event.getRegistry().register(ThutParticles.AURORA.setRegistryName(ThutCore.MODID, "aurora"));
             event.getRegistry().register(ThutParticles.LEAF.setRegistryName(ThutCore.MODID, "leaf"));

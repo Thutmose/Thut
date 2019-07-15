@@ -89,18 +89,19 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
 {
     private static class NoopChunkStatusListener implements IChunkStatusListener
     {
+
         @Override
-        public void func_219508_a(final ChunkPos p_219508_1_, final ChunkStatus p_219508_2_)
+        public void start(final ChunkPos arg0)
         {
         }
 
         @Override
-        public void func_219509_a(final ChunkPos p_219509_1_)
+        public void statusChanged(final ChunkPos arg0, final ChunkStatus arg1)
         {
         }
 
         @Override
-        public void func_219510_b()
+        public void stop()
         {
         }
     }

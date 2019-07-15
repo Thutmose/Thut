@@ -6,7 +6,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.config.ModConfig.Type;
@@ -47,13 +46,12 @@ public class ThutCrafts
     // You can use EventBusSubscriber to automatically subscribe events on the
     // contained class (this is subscribing to the MOD
     // Event bus for receiving Registry Events)
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = Reference.MODID)
     public static class RegistryEvents
     {
         @SubscribeEvent
         public static void registerEntities(final RegistryEvent.Register<EntityType<?>> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MODID)) return;
             // register a new mob here
             EntityCraft.CRAFTTYPE.setRegistryName(Reference.MODID, "craft");
             event.getRegistry().register(EntityCraft.CRAFTTYPE);
@@ -62,7 +60,6 @@ public class ThutCrafts
         @SubscribeEvent
         public static void registerItems(final RegistryEvent.Register<Item> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MODID)) return;
             // register items
             event.getRegistry().register(ThutCrafts.CRAFTMAKER);
         }
