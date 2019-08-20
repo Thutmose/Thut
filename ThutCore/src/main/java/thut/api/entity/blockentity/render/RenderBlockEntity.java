@@ -22,7 +22,6 @@ import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -64,7 +63,6 @@ public class RenderBlockEntity<T extends LivingEntity> extends LivingRenderer<T,
         if (!(entity instanceof IBlockEntity)) return;
         try
         {
-            this.b = Tessellator.getInstance().getBuffer();
             final IBlockEntity blockEntity = (IBlockEntity) entity;
             GL11.glPushMatrix();
             GL11.glTranslated(x, y + 0.5, z);
@@ -77,24 +75,6 @@ public class RenderBlockEntity<T extends LivingEntity> extends LivingRenderer<T,
                 GL11.glRotatef(pitch, 0, 0, 1);
             }
             final MutableBlockPos pos = new MutableBlockPos();
-
-            final BlockPos liftPos = ((Entity) entity).getPosition();
-            liftPos.getX();
-            // GL11.glTranslated(-liftPos.getX(), 0.5 - liftPos.getY(),
-            // -liftPos.getZ());
-
-            // final int xMin = MathHelper.floor(blockEntity.getMin().getX() +
-            // liftPos.getX());
-            // final int xMax = MathHelper.floor(blockEntity.getMax().getX() +
-            // liftPos.getX());
-            // final int zMin = MathHelper.floor(blockEntity.getMin().getZ() +
-            // liftPos.getZ());
-            // final int zMax = MathHelper.floor(blockEntity.getMax().getZ() +
-            // liftPos.getZ());
-            // final int yMin = MathHelper.floor(blockEntity.getMin().getY() +
-            // liftPos.getY());
-            // final int yMax = MathHelper.floor(blockEntity.getMax().getY() +
-            // liftPos.getY());
 
             final int xMin = MathHelper.floor(blockEntity.getMin().getX());
             final int xMax = MathHelper.floor(blockEntity.getMax().getX());
@@ -121,11 +101,6 @@ public class RenderBlockEntity<T extends LivingEntity> extends LivingRenderer<T,
                     }
             GL11.glPopMatrix();
 
-            GlStateManager.enableTexture();
-            GlStateManager.enableLighting();
-            GlStateManager.enableCull();
-            GlStateManager.disableBlend();
-            GlStateManager.depthMask(true);
         }
         catch (final Exception e)
         {
@@ -144,34 +119,22 @@ public class RenderBlockEntity<T extends LivingEntity> extends LivingRenderer<T,
         {
             final BlockRendererDispatcher blockrendererdispatcher = Minecraft.getInstance()
                     .getBlockRendererDispatcher();
-            final BlockState actualstate = BlockState.getExtendedState((IBlockReader) entity.getFakeWorld(), pos);
-            BlockState = actualstate.getBlock().getExtendedState(actualstate, (IBlockReader) entity.getFakeWorld(),
+            BlockState actualstate = BlockState.getExtendedState((IBlockReader) entity.getFakeWorld(), pos);
+            actualstate = actualstate.getBlock().getExtendedState(actualstate, (IBlockReader) entity.getFakeWorld(),
                     pos);
-            if (BlockState.getRenderType() == BlockRenderType.MODEL)
+            if (actualstate.getRenderType() == BlockRenderType.MODEL)
             {
                 GlStateManager.pushMatrix();
                 GlStateManager.rotatef(90.0F, 0.0F, 1.0F, 0.0F);
                 GlStateManager.rotatef(-180.0F, 1.0F, 0.0F, 0.0F);
                 GlStateManager.translatef(0.5F, 0.5F, 0.5F);
-                RenderHelper.disableStandardItemLighting();
-
-                final boolean blend = GL11.glGetBoolean(GL11.GL_BLEND);
-                GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
-                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-                GlStateManager.enableBlend();
-
-                GlStateManager.disableCull();
-
-                if (Minecraft.isAmbientOcclusionEnabled()) GlStateManager.shadeModel(7425);
-                else GlStateManager.shadeModel(7424);
+                GlStateManager.disableLighting();
                 final float f7 = 1.0F;
                 GlStateManager.scalef(-f7, -f7, f7);
                 GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-                this.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
                 final IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
-                this.renderBakedBlockModel(entity, model, BlockState, (IBlockReader) entity.getFakeWorld(), pos);
-                if (!blend) GL11.glDisable(GL11.GL_BLEND);
-                RenderHelper.enableStandardItemLighting();
+                this.renderBakedBlockModel(entity, model, actualstate, ((LivingEntity) entity).getEntityWorld(), pos);
+                GlStateManager.enableLighting();
                 GlStateManager.popMatrix();
             }
         }
@@ -252,16 +215,26 @@ public class RenderBlockEntity<T extends LivingEntity> extends LivingRenderer<T,
     }
 
     private void renderBakedBlockModel(final IBlockEntity entity, final IBakedModel model, final BlockState state,
-            final IBlockReader world, final BlockPos pos)
+            final IBlockReader world, BlockPos pos)
     {
         GlStateManager.rotatef(90.0F, 0.0F, 1.0F, 0.0F);
+
+        final BlockPos origin = ((LivingEntity) entity).getPosition();
+        pos = origin.subtract(pos);
+
+        GlStateManager.translatef(-pos.getX(), -pos.getY(), -pos.getZ());
+
         final Tessellator tessellator = Tessellator.getInstance();
         final BufferBuilder buffer = tessellator.getBuffer();
+        this.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+
         Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelRenderer().renderModelSmooth(entity
-                .getFakeWorld().getWrapped(), model, state, pos, buffer, false, new Random(), 0,
+                .getFakeWorld().getWrapped(), model, state, origin, buffer, false, new Random(), 0,
                 EmptyModelData.INSTANCE);
         tessellator.draw();
+
+        GlStateManager.translatef(pos.getX(), pos.getY(), pos.getZ());
         return;
     }
 

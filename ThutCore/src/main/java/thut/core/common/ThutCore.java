@@ -21,7 +21,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.ServerWorld;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
@@ -82,23 +82,23 @@ public class ThutCore
             // Probably a block entity to interact with here.
             if (event.getWorld().isAirBlock(event.getPos()))
             {
-                final PlayerEntity player = event.getEntityPlayer();
-                final Vec3d face = event.getEntityPlayer().getEyePosition(0);
-                final Vec3d look = event.getEntityPlayer().getLookVec();
-                final AxisAlignedBB box = event.getEntityPlayer().getBoundingBox().grow(3, 3, 3);
+                final PlayerEntity player = event.getPlayer();
+                final Vec3d face = event.getPlayer().getEyePosition(0);
+                final Vec3d look = event.getPlayer().getLookVec();
+                final AxisAlignedBB box = event.getPlayer().getBoundingBox().grow(3, 3, 3);
                 final EntityRayTraceResult var = ProjectileHelper.func_221273_a(player, face, look, box,
                         e -> e instanceof IBlockEntity, 3);
                 if (var != null && var.getType() == EntityRayTraceResult.Type.ENTITY)
                 {
                     final IBlockEntity entity = (IBlockEntity) var.getEntity();
-                    if (entity.getInteractor().processInitialInteract(event.getEntityPlayer(), event.getItemStack(),
-                            event.getHand()))
+                    if (entity.getInteractor().processInitialInteract(event.getPlayer(), event.getItemStack(), event
+                            .getHand()))
                     {
                         event.setCanceled(true);
                         return;
                     }
-                    if (entity.getInteractor().interactInternal(event.getEntityPlayer(), event.getPos(), event
-                            .getItemStack(), event.getHand()) != ActionResultType.PASS)
+                    if (entity.getInteractor().interactInternal(event.getPlayer(), event.getPos(), event.getItemStack(),
+                            event.getHand()) != ActionResultType.PASS)
                     {
                         event.setCanceled(true);
                         return;

@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.StairsBlock;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MoverType;
@@ -35,9 +34,7 @@ import thut.core.common.network.EntityUpdate;
 
 public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEntity
 {
-    public static final EntityType<EntityCraft> CRAFTTYPE = EntityType.Builder.create(EntityCraft::new,
-            EntityClassification.MISC).disableSummoning().immuneToFire().setShouldReceiveVelocityUpdates(true)
-            .setTrackingRange(64).setUpdateInterval(1).build("craft");
+    public static final EntityType<EntityCraft> CRAFTTYPE = new BlockEntityType<>(EntityCraft::new);
 
     @SuppressWarnings("unchecked")
     static final DataParameter<Seat>[]  SEAT       = new DataParameter[10];
@@ -62,7 +59,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
 
     EntitySize size;
 
-    public EntityCraft(EntityType<EntityCraft> type, World par1World)
+    public EntityCraft(final EntityType<EntityCraft> type, final World par1World)
     {
         super(type, par1World);
         this.ignoreFrustumCheck = true;
@@ -183,7 +180,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
         this.setMotion(vx, vy, vz);
     }
 
-    public void addSeat(Vector3f seat)
+    public void addSeat(final Vector3f seat)
     {
         final Seat toSet = this.getSeat(this.getSeatCount());
         toSet.seat.set(seat);
@@ -192,7 +189,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    protected boolean canFitPassenger(Entity passenger)
+    protected boolean canFitPassenger(final Entity passenger)
     {
         return this.getPassengers().size() < this.getSeatCount();
     }
@@ -249,7 +246,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public ItemStack getItemStackFromSlot(EquipmentSlotType slotIn)
+    public ItemStack getItemStackFromSlot(final EquipmentSlotType slotIn)
     {
         return ItemStack.EMPTY;
     }
@@ -261,7 +258,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public Entity getPassenger(Vector3f seatl)
+    public Entity getPassenger(final Vector3f seatl)
     {
         UUID id = null;
         for (int i = 0; i < this.getSeatCount(); i++)
@@ -294,7 +291,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public Vector3f getSeat(Entity passenger)
+    public Vector3f getSeat(final Entity passenger)
     {
         final Vector3f ret = null;
         if (passenger.getServer() == null) System.out.println(this.getSeatCount() + " " + this.getSeat(0));
@@ -306,7 +303,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
         return ret;
     }
 
-    Seat getSeat(int index)
+    Seat getSeat(final int index)
     {
         return this.dataManager.get(EntityCraft.SEAT[index]);
     }
@@ -329,7 +326,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public EntitySize getSize(Pose pose)
+    public EntitySize getSize(final Pose pose)
     {
         if (this.size == null) this.size = EntitySize.fixed(1 + this.getMax().getX() - this.getMin().getX(), this
                 .getMax().getY());
@@ -357,7 +354,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public void readAdditional(CompoundNBT nbt)
+    public void readAdditional(final CompoundNBT nbt)
     {
         super.readAdditional(nbt);
         this.energy = nbt.getInt("energy");
@@ -384,7 +381,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    protected void removePassenger(Entity passenger)
+    protected void removePassenger(final Entity passenger)
     {
         super.removePassenger(passenger);
         if (!this.world.isRemote) for (int i = 0; i < this.getSeatCount(); i++)
@@ -395,28 +392,28 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
             }
     }
 
-    public void setEnergy(int energy)
+    public void setEnergy(final int energy)
     {
         this.energy = energy;
     }
 
     @Override
-    public void setItemStackToSlot(EquipmentSlotType slotIn, ItemStack stack)
+    public void setItemStackToSlot(final EquipmentSlotType slotIn, final ItemStack stack)
     {
     }
 
     /** @return the destinationFloor */
-    public void setMainSeat(int seat)
+    public void setMainSeat(final int seat)
     {
         this.dataManager.set(EntityCraft.MAINSEATDW, seat);
     }
 
-    void setSeatCount(int count)
+    void setSeatCount(final int count)
     {
         this.dataManager.set(EntityCraft.SEATCOUNT, count);
     }
 
-    void setSeatID(int index, UUID id)
+    void setSeatID(final int index, final UUID id)
     {
         Seat toSet = this.getSeat(index);
         final UUID old = toSet.getEntityId();
@@ -429,13 +426,13 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public void setSize(EntitySize size)
+    public void setSize(final EntitySize size)
     {
         this.size = size;
     }
 
     @Override
-    public void updatePassenger(Entity passenger)
+    public void updatePassenger(final Entity passenger)
     {
         if (this.isPassenger(passenger))
         {
@@ -445,7 +442,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public void updateSeat(int index, UUID id)
+    public void updateSeat(final int index, final UUID id)
     {
         final Seat seat = (Seat) this.getSeat(index).clone();
         seat.setEntityId(id);
@@ -453,7 +450,7 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     }
 
     @Override
-    public void writeAdditional(CompoundNBT nbt)
+    public void writeAdditional(final CompoundNBT nbt)
     {
         super.writeAdditional(nbt);
         nbt.putInt("energy", this.energy);

@@ -11,10 +11,10 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import thut.api.entity.blockentity.IBlockEntity;
@@ -29,9 +29,9 @@ public class CommonProxy implements Proxy
     public void interactRightClickBlock(final PlayerInteractEvent.RightClickBlock evt)
     {
         if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack().isEmpty() || !evt
-                .getEntityPlayer().isSneaking() || evt.getItemStack().getItem() != ThutCrafts.CRAFTMAKER) return;
+                .getPlayer().isSneaking() || evt.getItemStack().getItem() != ThutCrafts.CRAFTMAKER) return;
         final ItemStack itemstack = evt.getItemStack();
-        final PlayerEntity playerIn = evt.getEntityPlayer();
+        final PlayerEntity playerIn = evt.getPlayer();
         final World worldIn = evt.getWorld();
         final BlockPos pos = evt.getPos();
         if (itemstack.hasTag() && playerIn.isSneaking() && itemstack.getTag().contains("min"))
@@ -79,9 +79,9 @@ public class CommonProxy implements Proxy
     public void interactRightClickBlock(final PlayerInteractEvent.RightClickItem evt)
     {
         if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack().isEmpty() || !evt
-                .getEntityPlayer().isSneaking() || evt.getItemStack().getItem() != ThutCrafts.CRAFTMAKER) return;
+                .getPlayer().isSneaking() || evt.getItemStack().getItem() != ThutCrafts.CRAFTMAKER) return;
         final ItemStack itemstack = evt.getItemStack();
-        final PlayerEntity playerIn = evt.getEntityPlayer();
+        final PlayerEntity playerIn = evt.getPlayer();
         final World worldIn = evt.getWorld();
         if (itemstack.hasTag() && playerIn.isSneaking() && itemstack.getTag().contains("min") && itemstack.getTag()
                 .getLong("time") != worldIn.getDayTime())

@@ -25,12 +25,12 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.WorldTickEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import thut.api.maths.Vector3;
 import thut.core.common.ThutCore;
 
@@ -42,7 +42,7 @@ public class ExplosionCustom extends Explosion
         final List<HitEntity> hit;
         final boolean         done;
 
-        public BlastResult(List<BlockPos> results, List<HitEntity> hit, boolean done)
+        public BlastResult(final List<BlockPos> results, final List<HitEntity> hit, final boolean done)
         {
             this.results = results;
             this.hit = hit;
@@ -55,7 +55,7 @@ public class ExplosionCustom extends Explosion
         final Entity entity;
         final float  blastStrength;
 
-        public HitEntity(Entity entity, float blastStrength)
+        public HitEntity(final Entity entity, final float blastStrength)
         {
             this.entity = entity;
             this.blastStrength = blastStrength;
@@ -124,12 +124,13 @@ public class ExplosionCustom extends Explosion
     Vector3 r = Vector3.getNewVector(), rAbs = Vector3.getNewVector(), rHat = Vector3.getNewVector(), rTest = Vector3
             .getNewVector(), rTestPrev = Vector3.getNewVector(), rTestAbs = Vector3.getNewVector();
 
-    public ExplosionCustom(World world, Entity par2Entity, double x, double y, double z, float power)
+    public ExplosionCustom(final World world, final Entity par2Entity, final double x, final double y, final double z,
+            final float power)
     {
         this(world, par2Entity, Vector3.getNewVector().set(x, y, z), power);
     }
 
-    public ExplosionCustom(World world, Entity par2Entity, Vector3 center, float power)
+    public ExplosionCustom(final World world, final Entity par2Entity, final Vector3 center, final float power)
     {
         super(world, par2Entity, center.x, center.y, center.z, power, false, Mode.DESTROY);
         this.world = world;
@@ -143,12 +144,12 @@ public class ExplosionCustom extends Explosion
         this.maxPerTick = ExplosionCustom.MAXPERTICK.clone();
     }
 
-    public void addChunkPosition(Vector3 v)
+    public void addChunkPosition(final Vector3 v)
     {
         this.affectedBlockPositions.add(new BlockPos(v.intX(), v.intY(), v.intZ()));
     }
 
-    private void applyBlockEffects(List<BlockPos> toRemove)
+    private void applyBlockEffects(final List<BlockPos> toRemove)
     {
         this.getAffectedBlockPositions().clear();
         for (final BlockPos pos : toRemove)
@@ -159,7 +160,7 @@ public class ExplosionCustom extends Explosion
         }
     }
 
-    private void applyEntityEffects(List<HitEntity> affected)
+    private void applyEntityEffects(final List<HitEntity> affected)
     {
         this.targets.clear();
         for (final HitEntity e : affected)
@@ -174,7 +175,7 @@ public class ExplosionCustom extends Explosion
         }
     }
 
-    public boolean canBreak(Vector3 location)
+    public boolean canBreak(final Vector3 location)
     {
         final boolean ret = true;
 
@@ -219,13 +220,13 @@ public class ExplosionCustom extends Explosion
 
     /** Does the second part of the explosion (sound, particles, drop spawn) */
     @Override
-    public void doExplosionB(boolean par1)
+    public void doExplosionB(final boolean par1)
     {
         ThutCore.LOGGER.error("This should not be run anymore", new Exception());
     }
 
     // TODO Revisit this to make blast energy more conserved
-    public void doKineticImpactor(World world, Vector3 velocity, Vector3 hitLocation, Vector3 acceleration,
+    public void doKineticImpactor(final World world, final Vector3 velocity, Vector3 hitLocation, Vector3 acceleration,
             float density, float energy)
     {
         if (density < 0 || energy <= 0) return;
@@ -299,7 +300,7 @@ public class ExplosionCustom extends Explosion
      * @param destroyed
      * @param pos
      */
-    public void doMeteorStuff(BlockState destroyed, BlockPos pos)
+    public void doMeteorStuff(final BlockState destroyed, final BlockPos pos)
     {
         if (!destroyed.getMaterial().isSolid() && !destroyed.getMaterial().isLiquid()) return;
         if (!this.meteor)
@@ -313,7 +314,7 @@ public class ExplosionCustom extends Explosion
     }
 
     @SubscribeEvent
-    void doRemoveBlocks(WorldTickEvent evt)
+    void doRemoveBlocks(final WorldTickEvent evt)
     {
         if (evt.phase == Phase.START || evt.world != this.world) return;
         final BlastResult result = new Checker(this).getBlocksToRemove();
@@ -324,20 +325,20 @@ public class ExplosionCustom extends Explosion
         if (result.done) MinecraftForge.EVENT_BUS.unregister(this);
     }
 
-    public ExplosionCustom setMaxRadius(int radius)
+    public ExplosionCustom setMaxRadius(final int radius)
     {
         this.radius = radius;
         return this;
     }
 
-    public ExplosionCustom setMeteor(boolean meteor)
+    public ExplosionCustom setMeteor(final boolean meteor)
     {
         this.meteor = meteor;
         return this;
     }
 
     @SubscribeEvent
-    public void WorldUnloadEvent(Unload evt)
+    public void WorldUnloadEvent(final Unload evt)
     {
         if (evt.getWorld() == this.world) MinecraftForge.EVENT_BUS.unregister(this);
     }

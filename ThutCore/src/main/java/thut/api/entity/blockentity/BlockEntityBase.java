@@ -10,6 +10,8 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,11 +32,13 @@ import net.minecraft.util.HandSide;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.network.FMLPlayMessages.SpawnEntity;
+import net.minecraftforge.fml.network.NetworkHooks;
 import thut.api.entity.blockentity.world.client.ClientWorldEntity;
 import thut.api.entity.blockentity.world.client.IBlockEntityWorld;
 import thut.api.entity.blockentity.world.server.ServerWorldEntity;
@@ -43,6 +47,23 @@ import thut.core.common.network.EntityUpdate;
 
 public abstract class BlockEntityBase extends LivingEntity implements IEntityAdditionalSpawnData, IBlockEntity
 {
+    public static class BlockEntityType<T extends BlockEntityBase> extends EntityType<T>
+    {
+
+        public BlockEntityType(final EntityType.IFactory<T> factory)
+        {
+            super(factory, EntityClassification.MISC, true, false, true, true, new EntitySize(1, 1, true), c -> true,
+                    c -> 64, c -> 1, null);
+        }
+
+        @Override
+        public T customClientSpawn(final SpawnEntity packet, final World world)
+        {
+            return this.create(world);
+        }
+
+    }
+
     private static class VecSer implements IDataSerializer<Vec3d>
     {
         @Override
@@ -173,7 +194,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     @Override
     public boolean canBePushed()
     {
-        return true;
+        return false;
     }
 
     /**
@@ -222,8 +243,7 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     @Override
     public IPacket<?> createSpawnPacket()
     {
-        // return NetworkHooks.getEntitySpawningPacket(this);
-        return super.createSpawnPacket();
+        return NetworkHooks.getEntitySpawningPacket(this);
     }
 
     abstract protected void doMotion();
@@ -364,7 +384,6 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     @Override
     public boolean processInitialInteract(final PlayerEntity player, final Hand hand)
     {
-        System.out.println(player + " " + hand);
         if (this.interacter == null) this.interacter = this.createInteractHandler();
         return this.interacter.processInitialInteract(player, player.getHeldItem(hand), hand);
     }
@@ -421,7 +440,6 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     @Override
     public void readSpawnData(final PacketBuffer data)
     {
-        System.out.println("read");
         this.readAdditional(data.readCompoundTag());
     }
 
@@ -636,7 +654,6 @@ public abstract class BlockEntityBase extends LivingEntity implements IEntityAdd
     @Override
     public void writeSpawnData(final PacketBuffer data)
     {
-        System.out.println("write");
         final CompoundNBT tag = new CompoundNBT();
         this.writeAdditional(tag);
         data.writeCompoundTag(tag);

@@ -62,7 +62,6 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.Explosion.Mode;
 import net.minecraft.world.LightType;
 import net.minecraft.world.ServerTickList;
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
@@ -77,6 +76,7 @@ import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.raid.Raid;
 import net.minecraft.world.raid.RaidManager;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.SessionLockException;
 import net.minecraft.world.storage.WorldInfo;
@@ -151,6 +151,16 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
     {
         // TO DO Auto-generated method stub
         this.getWrapped().addNewPlayer(p_217435_1_);
+    }
+
+    @Override
+    public void addOptionalParticle(final IParticleData p_217404_1_, final boolean p_217404_2_,
+            final double p_217404_3_, final double p_217404_5_, final double p_217404_7_, final double p_217404_9_,
+            final double p_217404_11_, final double p_217404_13_)
+    {
+        // TO DO Auto-generated method stub
+        this.getWrapped().addOptionalParticle(p_217404_1_, p_217404_2_, p_217404_3_, p_217404_5_, p_217404_7_,
+                p_217404_9_, p_217404_11_, p_217404_13_);
     }
 
     @Override
@@ -423,16 +433,6 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
     {
         // TO DO Auto-generated method stub
         return this.getWrapped().func_217400_a(p_217400_1_, p_217400_2_);
-    }
-
-    @Override
-    public void func_217404_b(final IParticleData p_217404_1_, final boolean p_217404_2_, final double p_217404_3_,
-            final double p_217404_5_, final double p_217404_7_, final double p_217404_9_, final double p_217404_11_,
-            final double p_217404_13_)
-    {
-        // TO DO Auto-generated method stub
-        this.getWrapped().func_217404_b(p_217404_1_, p_217404_2_, p_217404_3_, p_217404_5_, p_217404_7_, p_217404_9_,
-                p_217404_11_, p_217404_13_);
     }
 
     @Override
@@ -1396,12 +1396,12 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
         this.getWrapped().markChunkDirty(pos, unusedTileEntity);
     }
 
-    @Override
-    public void markForRerender(final BlockPos p_217396_1_)
-    {
-        // TO DO Auto-generated method stub
-        this.getWrapped().markForRerender(p_217396_1_);
-    }
+    // @Override
+    // public void markForRerender(final BlockPos p_217396_1_)
+    // {
+    // // TO DO Auto-generated method stub
+    // this.getWrapped().markForRerender(p_217396_1_);
+    // }
 
     @Override
     public void neighborChanged(final BlockPos pos, final Block blockIn, final BlockPos fromPos)

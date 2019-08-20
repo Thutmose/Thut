@@ -31,7 +31,7 @@ public class BlockEntityUpdater
 {
     public static boolean autoBlacklist = false;
 
-    public static boolean isWhitelisted(TileEntity tile)
+    public static boolean isWhitelisted(final TileEntity tile)
     {
         final ResourceLocation id = TileEntityType.getId(tile.getType());
         return id == null ? true : !IBlockEntity.TEBLACKLIST.contains(id.toString());
@@ -42,13 +42,13 @@ public class BlockEntityUpdater
     List<AxisAlignedBB> blockBoxes = Lists.newArrayList();
     Set<TileEntity>     erroredSet = Sets.newHashSet();
 
-    public BlockEntityUpdater(IBlockEntity rocket)
+    public BlockEntityUpdater(final IBlockEntity rocket)
     {
         this.blockEntity = rocket;
         this.theEntity = (Entity) rocket;
     }
 
-    public void applyEntityCollision(Entity entity)
+    public void applyEntityCollision(final Entity entity)
     {
         // TODO instead of this, apply appropriate transformation to the
         // entity's box, and then collide off that, then apply appropriate
@@ -309,7 +309,6 @@ public class BlockEntityUpdater
             }
             if (entity.getServer() == null) entity.setWorld((World) this.blockEntity.getFakeWorld());
             final Vec3d motion = new Vec3d(temp1.x, temp1.y, temp1.z);
-            // if (!(entity instanceof ServerPlayerEntity))
             entity.move(MoverType.SELF, motion);
 
             dx = motion_b.x;

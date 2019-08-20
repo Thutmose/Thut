@@ -2,9 +2,9 @@ package thut.api.terrain;
 
 import java.util.HashMap;
 
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import thut.api.maths.Vector3;

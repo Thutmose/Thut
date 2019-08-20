@@ -34,7 +34,7 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     IBlockEntity   mob;
     public boolean creating;
 
-    public ClientWorldEntity(World world)
+    public ClientWorldEntity(final World world)
     {
         super(world.getWorldInfo(), world.getDimension().getType(), (worldIn,
                 dimensionIn) -> new BlockEntityChunkProvider((ClientWorldEntity) worldIn), world.getProfiler(),
@@ -43,19 +43,19 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     }
 
     @Override
-    public void func_217399_a(MapData p_217399_1_)
+    public void func_217399_a(final MapData p_217399_1_)
     {
         this.world.func_217399_a(p_217399_1_);
     }
 
     @Override
-    public MapData func_217406_a(String p_217406_1_)
+    public MapData func_217406_a(final String p_217406_1_)
     {
         return this.world.func_217406_a(p_217406_1_);
     }
 
     @Override
-    public Biome getBiome(BlockPos pos)
+    public Biome getBiome(final BlockPos pos)
     {
         return this.world.getBiome(pos);
     }
@@ -67,7 +67,7 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     }
 
     @Override
-    public BlockState getBlockState(BlockPos pos)
+    public BlockState getBlockState(final BlockPos pos)
     {
         final BlockState state = this.getBlock(pos);
         if (state == null) return this.world.getBlockState(pos);
@@ -76,13 +76,13 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public int getCombinedLight(BlockPos pos, int minLight)
+    public int getCombinedLight(final BlockPos pos, final int minLight)
     {
         return this.world.getCombinedLight(pos, minLight);
     }
 
     @Override
-    public Entity getEntityByID(int id)
+    public Entity getEntityByID(final int id)
     {
         return this.world.getEntityByID(id);
     }
@@ -124,7 +124,7 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     }
 
     @Override
-    public int getStrongPower(BlockPos pos, Direction direction)
+    public int getStrongPower(final BlockPos pos, final Direction direction)
     {
         return this.world.getStrongPower(pos, direction);
     }
@@ -136,7 +136,7 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     }
 
     @Override
-    public TileEntity getTileEntity(BlockPos pos)
+    public TileEntity getTileEntity(final BlockPos pos)
     {
         final TileEntity tile = this.getTile(pos);
         if (tile == null) return this.world.getTileEntity(pos);
@@ -156,46 +156,48 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     }
 
     @Override
-    public boolean isAirBlock(BlockPos pos)
+    public boolean isAirBlock(final BlockPos pos)
     {
         final BlockState state = this.getBlockState(pos);
         return state.getBlock().isAir(state, this, pos);
     }
 
     @Override
-    public void notifyBlockUpdate(BlockPos pos, BlockState oldState, BlockState newState, int flags)
+    public void notifyBlockUpdate(final BlockPos pos, final BlockState oldState, final BlockState newState,
+            final int flags)
     {
         this.world.notifyBlockUpdate(pos, oldState, newState, flags);
     }
 
     @Override
-    public void playEvent(PlayerEntity p_217378_1_, int p_217378_2_, BlockPos p_217378_3_, int p_217378_4_)
+    public void playEvent(final PlayerEntity p_217378_1_, final int p_217378_2_, final BlockPos p_217378_3_,
+            final int p_217378_4_)
     {
         this.world.playEvent(p_217378_1_, p_217378_2_, p_217378_3_, p_217378_4_);
     }
 
     @Override
-    public void playMovingSound(PlayerEntity p_217384_1_, Entity p_217384_2_, SoundEvent p_217384_3_,
-            SoundCategory p_217384_4_, float p_217384_5_, float p_217384_6_)
+    public void playMovingSound(final PlayerEntity p_217384_1_, final Entity p_217384_2_, final SoundEvent p_217384_3_,
+            final SoundCategory p_217384_4_, final float p_217384_5_, final float p_217384_6_)
     {
         this.world.playMovingSound(p_217384_1_, p_217384_2_, p_217384_3_, p_217384_4_, p_217384_5_, p_217384_6_);
     }
 
     @Override
-    public void playSound(PlayerEntity player, double x, double y, double z, SoundEvent soundIn, SoundCategory category,
-            float volume, float pitch)
+    public void playSound(final PlayerEntity player, final double x, final double y, final double z,
+            final SoundEvent soundIn, final SoundCategory category, final float volume, final float pitch)
     {
         this.world.playSound(player, x, y, z, soundIn, category, volume, pitch);
     }
 
     @Override
-    public void sendBlockBreakProgress(int breakerId, BlockPos pos, int progress)
+    public void sendBlockBreakProgress(final int breakerId, final BlockPos pos, final int progress)
     {
         this.world.sendBlockBreakProgress(breakerId, pos, progress);
     }
 
     @Override
-    public void setBlockEntity(IBlockEntity mob)
+    public void setBlockEntity(final IBlockEntity mob)
     {
         IBlockEntityWorld.super.setBlockEntity(mob);
         this.mob = mob;
@@ -208,14 +210,14 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
      * client world. Flags can be added together.
      */
     @Override
-    public boolean setBlockState(BlockPos pos, BlockState newState, int flags)
+    public boolean setBlockState(final BlockPos pos, final BlockState newState, final int flags)
     {
         if (this.setBlock(pos, newState)) return true;
         else return this.world.setBlockState(pos, newState, flags);
     }
 
     @Override
-    public void setTileEntity(BlockPos pos, @Nullable TileEntity tileEntityIn)
+    public void setTileEntity(final BlockPos pos, @Nullable final TileEntity tileEntityIn)
     {
         if (this.setTile(pos, tileEntityIn)) return;
         this.getWrapped().setTileEntity(pos, tileEntityIn);
