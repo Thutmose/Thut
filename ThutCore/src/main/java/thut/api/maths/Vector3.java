@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Predicate;
 
@@ -36,7 +35,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap.Type;
-import net.minecraftforge.fluids.Fluid;
 
 /** @author Thutmose */
 public class Vector3
@@ -103,8 +101,6 @@ public class Vector3
     public static final int     length  = 3;
     public static Vector3       vecMult = Vector3.getNewVector();
     public static double[][]    rotBox  = new double[3][3];
-
-    public static Map<String, Fluid> fluids;
 
     static Vector3 move1 = Vector3.getNewVector();
 

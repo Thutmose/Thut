@@ -422,24 +422,10 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
     }
 
     @Override
-    public void func_217399_a(final MapData p_217399_1_)
-    {
-        // TO DO Auto-generated method stub
-        this.getWrapped().func_217399_a(p_217399_1_);
-    }
-
-    @Override
     public boolean func_217400_a(final BlockPos p_217400_1_, final Entity p_217400_2_)
     {
         // TO DO Auto-generated method stub
         return this.getWrapped().func_217400_a(p_217400_1_, p_217400_2_);
-    }
-
-    @Override
-    public MapData func_217406_a(final String p_217406_1_)
-    {
-        // TO DO Auto-generated method stub
-        return this.getWrapped().func_217406_a(p_217406_1_);
     }
 
     @Override
@@ -727,17 +713,6 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
         return this.getWrapped().getCombinedLight(pos, minLight);
     }
 
-    // @Override
-    // public Stream<VoxelShape> getCollisionBoxes(final Entity entityIn, final
-    // VoxelShape shape,
-    // final Set<Entity> breakOnEntityCollide)
-    // {
-    // Stream<VoxelShape> var = this.getWrapped().
-    // // TO DO Auto-generated method stub
-    // return this.getWrapped().getCollisionBoxes(entityIn, shape,
-    // breakOnEntityCollide);
-    // }
-
     @Override
     public Teleporter getDefaultTeleporter()
     {
@@ -751,6 +726,17 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
         // TO DO Auto-generated method stub
         return this.getWrapped().getDifficultyForLocation(pos);
     }
+
+    // @Override
+    // public Stream<VoxelShape> getCollisionBoxes(final Entity entityIn, final
+    // VoxelShape shape,
+    // final Set<Entity> breakOnEntityCollide)
+    // {
+    // Stream<VoxelShape> var = this.getWrapped().
+    // // TO DO Auto-generated method stub
+    // return this.getWrapped().getCollisionBoxes(entityIn, shape,
+    // breakOnEntityCollide);
+    // }
 
     @Override
     public List<EnderDragonEntity> getDragons()
@@ -901,6 +887,13 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
     {
         // TO DO Auto-generated method stub
         return this.getWrapped().getLightValue(p_217298_1_);
+    }
+
+    @Override
+    public MapData getMapData(final String p_217406_1_)
+    {
+        // TO DO Auto-generated method stub
+        return this.getWrapped().getMapData(p_217406_1_);
     }
 
     @Override
@@ -1396,19 +1389,19 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
         this.getWrapped().markChunkDirty(pos, unusedTileEntity);
     }
 
-    // @Override
-    // public void markForRerender(final BlockPos p_217396_1_)
-    // {
-    // // TO DO Auto-generated method stub
-    // this.getWrapped().markForRerender(p_217396_1_);
-    // }
-
     @Override
     public void neighborChanged(final BlockPos pos, final Block blockIn, final BlockPos fromPos)
     {
         // TO DO Auto-generated method stub
         this.getWrapped().neighborChanged(pos, blockIn, fromPos);
     }
+
+    // @Override
+    // public void markForRerender(final BlockPos p_217396_1_)
+    // {
+    // // TO DO Auto-generated method stub
+    // this.getWrapped().markForRerender(p_217396_1_);
+    // }
 
     @Override
     public void notifyBlockUpdate(final BlockPos pos, final BlockState oldState, final BlockState newState,
@@ -1511,6 +1504,13 @@ public class ServerWorldEntity extends ServerWorld implements IBlockEntityWorld<
     {
         // TO DO Auto-generated method stub
         return this.getWrapped().rayTraceBlocks(p_217299_1_);
+    }
+
+    @Override
+    public void registerMapData(final MapData p_217399_1_)
+    {
+        // TO DO Auto-generated method stub
+        this.getWrapped().registerMapData(p_217399_1_);
     }
 
     @Override

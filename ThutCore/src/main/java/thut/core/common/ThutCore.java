@@ -13,7 +13,6 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.INBT;
 import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.particles.IParticleData;
 import net.minecraft.particles.ParticleType;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
@@ -137,7 +136,7 @@ public class ThutCore
     public static class RegistryEvents
     {
         @SubscribeEvent
-        public static void registerParticles(final RegistryEvent.Register<ParticleType<? extends IParticleData>> event)
+        public static void registerParticles(final RegistryEvent.Register<ParticleType<?>> event)
         {
             ThutCore.LOGGER.debug("Registering Particle Types");
             event.getRegistry().register(ThutParticles.AURORA.setRegistryName(ThutCore.MODID, "aurora"));

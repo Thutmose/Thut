@@ -281,7 +281,8 @@ public class BlockEntityUpdater
                 Minecraft.getInstance().gameSettings.viewBobbing = false;
                 }
             /** This is for clearing jump values on client. */
-            if (player.getEntityWorld().isRemote) player.getEntityData().putInt("lastStandTick", player.ticksExisted);
+            if (player.getEntityWorld().isRemote) player.getPersistentData().putInt("lastStandTick",
+                    player.ticksExisted);
             if (!player.abilities.isFlying)
             {
                 entity.onGround = true;
@@ -307,6 +308,7 @@ public class BlockEntityUpdater
                 entity.fall(entity.fallDistance, 0);
                 entity.fallDistance = 0;
             }
+            // TODO find way to get same effect without doing this.
             if (entity.getServer() == null) entity.setWorld((World) this.blockEntity.getFakeWorld());
             final Vec3d motion = new Vec3d(temp1.x, temp1.y, temp1.z);
             entity.move(MoverType.SELF, motion);

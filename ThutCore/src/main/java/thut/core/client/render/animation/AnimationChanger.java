@@ -46,12 +46,12 @@ public class AnimationChanger implements IAnimationChanger
     }
 
     @Override
-    public void addChild(IAnimationChanger animationRandomizer)
+    public void addChild(final IAnimationChanger animationRandomizer)
     {
         this.children.add(animationRandomizer);
     }
 
-    private void checkWildCard(String partIdentifier)
+    private void checkWildCard(final String partIdentifier)
     {
         if (!this.checkWildCard.contains(partIdentifier))
         {
@@ -74,7 +74,7 @@ public class AnimationChanger implements IAnimationChanger
     }
 
     @Override
-    public int getColourForPart(String partIdentifier, Entity entity, int default_)
+    public int getColourForPart(final String partIdentifier, final Entity entity, final int default_)
     {
         this.checkWildCard(partIdentifier);
         dye:
@@ -86,7 +86,7 @@ public class AnimationChanger implements IAnimationChanger
             final Function<Integer, Integer> offset = this.colourOffsets.get(partIdentifier);
             int colour = pokemob.getDyeColour() & 15;
             if (offset != null) colour = offset.apply(colour);
-            rgba += DyeColor.byId(colour).func_196057_c();
+            rgba += DyeColor.byId(colour).getSwappedColorValue();
             return rgba;
         }
         for (final IAnimationChanger child : this.children)
@@ -98,20 +98,20 @@ public class AnimationChanger implements IAnimationChanger
     }
 
     @Override
-    public WornOffsets getOffsets(String part)
+    public WornOffsets getOffsets(final String part)
     {
         return this.wornOffsets.get(part);
     }
 
     @Override
-    public void init(Set<Animation> existingAnimations)
+    public void init(final Set<Animation> existingAnimations)
     {
         for (final IAnimationChanger child : this.children)
             child.init(existingAnimations);
     }
 
     @Override
-    public boolean isPartHidden(String part, Entity entity, boolean default_)
+    public boolean isPartHidden(final String part, final Entity entity, final boolean default_)
     {
         this.checkWildCard(part);
         for (final IAnimationChanger child : this.children)
@@ -122,7 +122,7 @@ public class AnimationChanger implements IAnimationChanger
     }
 
     @Override
-    public String modifyAnimation(MobEntity entity, float partialTicks, String phase)
+    public String modifyAnimation(final MobEntity entity, final float partialTicks, final String phase)
     {
         for (final IAnimationChanger child : this.children)
         {
@@ -133,19 +133,19 @@ public class AnimationChanger implements IAnimationChanger
     }
 
     @Override
-    public void parseDyeables(Set<String> set)
+    public void parseDyeables(final Set<String> set)
     {
         this.dyeables.addAll(set);
     }
 
     @Override
-    public void parseShearables(Set<String> set)
+    public void parseShearables(final Set<String> set)
     {
         this.shearables.addAll(set);
     }
 
     @Override
-    public void parseWornOffsets(Map<String, WornOffsets> map)
+    public void parseWornOffsets(final Map<String, WornOffsets> map)
     {
         this.wornOffsets.putAll(map);
     }

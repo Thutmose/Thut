@@ -43,18 +43,6 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     }
 
     @Override
-    public void func_217399_a(final MapData p_217399_1_)
-    {
-        this.world.func_217399_a(p_217399_1_);
-    }
-
-    @Override
-    public MapData func_217406_a(final String p_217406_1_)
-    {
-        return this.world.func_217406_a(p_217406_1_);
-    }
-
-    @Override
     public Biome getBiome(final BlockPos pos)
     {
         return this.world.getBiome(pos);
@@ -85,6 +73,12 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
     public Entity getEntityByID(final int id)
     {
         return this.world.getEntityByID(id);
+    }
+
+    @Override
+    public MapData getMapData(final String p_217406_1_)
+    {
+        return this.world.getMapData(p_217406_1_);
     }
 
     @Override
@@ -188,6 +182,12 @@ public class ClientWorldEntity extends World implements IBlockEntityWorld<World>
             final SoundEvent soundIn, final SoundCategory category, final float volume, final float pitch)
     {
         this.world.playSound(player, x, y, z, soundIn, category, volume, pitch);
+    }
+
+    @Override
+    public void registerMapData(final MapData p_217399_1_)
+    {
+        this.world.registerMapData(p_217399_1_);
     }
 
     @Override
