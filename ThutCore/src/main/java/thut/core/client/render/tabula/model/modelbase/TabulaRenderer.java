@@ -73,7 +73,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
 
     public boolean transluscent = false;
 
-    public TabulaRenderer(ModelJson<?> modelBase, CubeInfo cubeInfo)
+    public TabulaRenderer(final ModelJson<?> modelBase, final TabulaRenderer parent, final CubeInfo cubeInfo)
     {
         // super(modelBase, x, y);
         this.model = modelBase;
@@ -103,7 +103,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public void addChild(IExtendedModelPart renderer)
+    public void addChild(final IExtendedModelPart renderer)
     {
         // super.addChild((RendererModel) renderer);
         this.childParts.put(renderer.getName(), (TabulaRenderer) renderer);
@@ -140,7 +140,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void compileDisplayList(float scale)
+    private void compileDisplayList(final float scale)
     {
         this.displayList = GLAllocation.generateDisplayLists(1);
         GL11.glNewList(this.displayList, GL11.GL_COMPILE);
@@ -264,7 +264,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public void renderAllExcept(String... excludedGroupNames)
+    public void renderAllExcept(final String... excludedGroupNames)
     {
         boolean skip = false;
         for (final String s1 : excludedGroupNames)
@@ -301,7 +301,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public void setAnimationChanger(IAnimationChanger changer)
+    public void setAnimationChanger(final IAnimationChanger changer)
     {
         this.changer = changer;
         for (final TabulaRenderer part : this.childParts.values())
@@ -315,37 +315,37 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
 
     /** Sets the parent of this RendererModel */
     @Override
-    public void setParent(IExtendedModelPart modelRenderer)
+    public void setParent(final IExtendedModelPart modelRenderer)
     {
         this.parent = modelRenderer;
     }
 
     @Override
-    public void setPostRotations(Vector4 angles)
+    public void setPostRotations(final Vector4 angles)
     {
         this.postRot = angles;
     }
 
     @Override
-    public void setPostRotations2(Vector4 rotations)
+    public void setPostRotations2(final Vector4 rotations)
     {
         this.postRot1 = rotations;
     }
 
     @Override
-    public void setPostTranslations(Vector3 point)
+    public void setPostTranslations(final Vector3 point)
     {
         this.postTrans.set(point);
     }
 
     @Override
-    public void setPreRotations(Vector4 angles)
+    public void setPreRotations(final Vector4 angles)
     {
         this.preRot = angles;
     }
 
     @Override
-    public void setPreScale(Vector3 scale)
+    public void setPreScale(final Vector3 scale)
     {
         this.preScale.x = (float) scale.x;
         this.preScale.y = (float) scale.y;
@@ -353,13 +353,13 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public void setPreTranslations(Vector3 point)
+    public void setPreTranslations(final Vector3 point)
     {
         this.preTrans.set(point);
     }
 
     @Override
-    public void setRGBAB(int[] array)
+    public void setRGBAB(final int[] array)
     {
         this.red = array[0];
         this.green = array[1];
@@ -369,7 +369,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public void setTexturer(IPartTexturer texturer)
+    public void setTexturer(final IPartTexturer texturer)
     {
         this.texturer = texturer;
         for (final TabulaRenderer part : this.childParts.values())

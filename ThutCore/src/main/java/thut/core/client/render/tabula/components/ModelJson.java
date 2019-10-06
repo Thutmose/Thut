@@ -67,7 +67,7 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
 
     public boolean valid = false;
 
-    public ModelJson(TabulaModel model)
+    public ModelJson(final TabulaModel model)
     {
         this.tabulaModel = model;
 
@@ -93,23 +93,23 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
     }
 
     @Override
-    public void applyAnimation(Entity entity, IAnimationHolder animate, IModelRenderer<?> renderer, float partialTicks,
-            float limbSwing)
+    public void applyAnimation(final Entity entity, final IAnimationHolder animate, final IModelRenderer<?> renderer,
+            final float partialTicks, final float limbSwing)
     {
         this.updateAnimation(entity, renderer, renderer.getAnimation(entity), partialTicks, this.getHeadInfo().headYaw,
                 this.getHeadInfo().headYaw, limbSwing);
     }
 
-    private TabulaRenderer createRendererModel(CubeInfo cubeInfo)
+    private TabulaRenderer createRendererModel(final CubeInfo cubeInfo, final TabulaRenderer parent)
     {
-        final TabulaRenderer cube = new TabulaRenderer(this, cubeInfo);
+        final TabulaRenderer cube = new TabulaRenderer(this, parent, cubeInfo);
         this.addPart(cube);
         return cube;
     }
 
-    private void cube(CubeInfo cube, TabulaRenderer parent, String group)
+    private void cube(final CubeInfo cube, final TabulaRenderer parent, final String group)
     {
-        final TabulaRenderer modelRenderer = this.createRendererModel(cube);
+        final TabulaRenderer modelRenderer = this.createRendererModel(cube, parent);
 
         this.nameMap.put(cube.name, modelRenderer);
         this.identifierMap.put(cube.identifier, modelRenderer);
@@ -142,7 +142,7 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
             this.cube(c, modelRenderer, group);
     }
 
-    private void cubeGroup(CubeGroup group)
+    private void cubeGroup(final CubeGroup group)
     {
         for (final CubeInfo cube : group.cubes)
             this.cube(cube, null, group.identifier);
@@ -195,12 +195,12 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
     }
 
     @Override
-    public void globalFix(float dx, float dy, float dz)
+    public void globalFix(final float dx, final float dy, final float dz)
     {
-        GlStateManager.translatef(0, -0.125f, 0);
+        GlStateManager.translated(0, 1, 0);
     }
 
-    private boolean isHead(String partName)
+    private boolean isHead(final String partName)
     {
         return this.getHeadParts().contains(partName);
     }
@@ -212,7 +212,7 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
     }
 
     @Override
-    public void preProcessAnimations(Collection<List<Animation>> collection)
+    public void preProcessAnimations(final Collection<List<Animation>> collection)
     {
         for (final TabulaRenderer render : this.parts)
             for (final String id : render.info.metadata)
@@ -223,8 +223,8 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
                 }
     }
 
-    protected void updateAnimation(Entity entity, IModelRenderer<?> renderer, String currentPhase, float partialTicks,
-            float headYaw, float headPitch, float limbSwing)
+    protected void updateAnimation(final Entity entity, final IModelRenderer<?> renderer, final String currentPhase,
+            final float partialTicks, final float headYaw, final float headPitch, final float limbSwing)
     {
         for (final String partName : this.getParts().keySet())
         {
@@ -233,8 +233,9 @@ public class ModelJson<T extends Entity> extends TabulaModelBase<T> implements I
         }
     }
 
-    private void updateSubParts(Entity entity, IModelRenderer<?> renderer, String currentPhase, float partialTick,
-            IExtendedModelPart parent, float headYaw, float headPitch, float limbSwing)
+    private void updateSubParts(final Entity entity, final IModelRenderer<?> renderer, final String currentPhase,
+            final float partialTick, final IExtendedModelPart parent, final float headYaw, final float headPitch,
+            final float limbSwing)
     {
         if (parent == null) return;
         final HeadInfo info = this.getHeadInfo();
