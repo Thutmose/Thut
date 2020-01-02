@@ -388,13 +388,13 @@ public class TileEntityLiftAccess extends TileEntity implements ITickable, Simpl
             IBlockState state = world.getBlockState(getPos());
             boolean old = state.getValue(BlockLift.CURRENT);
             boolean callPanel = false;
-            if (!old && !lift.getCalled()) for (EnumFacing face : EnumFacing.HORIZONTALS)
+            if (!lift.getCalled()) for (EnumFacing face : EnumFacing.HORIZONTALS)
             {
                 callPanel |= callFaces[face.ordinal()];
             }
             // Call panels should only respond to redstone signals if they are
             // not supposed to be emitting one themselves.
-            if (callPanel && !old && !lift.getCalled() && !check)
+            if (callPanel && !lift.getCalled())
             {
                 if (world.isBlockPowered(getPos())) lift.call(floor);
             }

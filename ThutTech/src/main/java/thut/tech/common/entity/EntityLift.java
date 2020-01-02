@@ -220,8 +220,7 @@ public class EntityLift extends BlockEntityBase
         }
         else
         {
-            BlockPos pos = getPosition();
-            setPosition(pos.getX() + 0.5, Math.round(posY), pos.getZ() + 0.5);
+            this.onGridAlign();
         }
     }
 

@@ -42,7 +42,7 @@ public class PacketDataSync implements IMessage, IMessageHandler<PacketDataSync,
         packet.data = list;
         packet.id = entity_id;
         for (EntityPlayerMP player : syncTo)
-            PacketHandler.packetPipeline.sendTo(packet, player);
+            if (player != null) PacketHandler.packetPipeline.sendTo(packet, player);
     }
 
     public PacketDataSync()
