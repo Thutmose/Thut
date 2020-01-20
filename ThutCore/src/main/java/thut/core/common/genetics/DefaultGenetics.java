@@ -44,8 +44,8 @@ public class DefaultGenetics implements IMobGenetics
                 Gene gene2 = a2.getExpressed();
 
                 // Get the genes based on if epigenes or not.
-                gene1 = gene1.getEpigeneticRate() < rand.nextFloat() ? gene1 : a1.getAlleles()[rand.nextInt(2)];
-                gene2 = gene2.getEpigeneticRate() < rand.nextFloat() ? gene2 : a2.getAlleles()[rand.nextInt(2)];
+                gene1 = gene1.getEpigeneticRate() > rand.nextFloat() ? gene1 : a1.getAlleles()[rand.nextInt(2)];
+                gene2 = gene2.getEpigeneticRate() > rand.nextFloat() ? gene2 : a2.getAlleles()[rand.nextInt(2)];
 
                 // Apply mutations if needed.
                 if (gene1.getMutationRate() > rand.nextFloat()) gene1 = gene1.mutate(parent1, parent2);
