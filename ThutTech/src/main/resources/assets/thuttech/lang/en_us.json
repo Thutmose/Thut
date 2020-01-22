@@ -7,7 +7,8 @@
 
     "_comment": "Items",
     "item.thuttech.lift": "Elevator",
-    "item.thuttech.linker": "Device Linker",
+    "item.thuttech.linker": "Device Linker (Unlinked)",
+    "item.thuttech.linker.linked": "Device Linker (Linked)",
 
     "_comment": "Chat Messages",
     "msg.liftSet": "Elevator bound to Linker",

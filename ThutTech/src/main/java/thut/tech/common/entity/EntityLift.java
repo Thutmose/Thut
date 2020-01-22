@@ -72,7 +72,7 @@ public class EntityLift extends BlockEntityBase
     public UUID           owner;
     public double         prevFloorY = 0;
     public double         prevFloor  = 0;
-    ControllerTile  current;
+    ControllerTile        current;
     public int[]          floors     = new int[128];
 
     public boolean[] hasFloors = new boolean[128];
@@ -388,16 +388,18 @@ public class EntityLift extends BlockEntityBase
 
     public void setFoor(final ControllerTile te, final int floor)
     {
-        if (te.floor == 0)
+        boolean changed = false;
+        final int prev = te.floor;
+        if (floor > 0)
         {
             this.floors[floor - 1] = te.getPos().getY() - 2;
             this.hasFloors[floor - 1] = true;
+            changed = true;
         }
-        else if (te.floor != 0)
+        if (changed)
         {
-            this.hasFloors[te.floor - 1] = false;
-            this.floors[floor - 1] = te.getPos().getY() - 2;
-            this.hasFloors[floor - 1] = true;
+            if (prev != 0 && prev != floor) this.hasFloors[prev - 1] = false;
+            EntityUpdate.sendEntityUpdate(this);
         }
     }
 

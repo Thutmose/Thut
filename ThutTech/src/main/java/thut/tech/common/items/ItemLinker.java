@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import thut.tech.common.TechCore;
@@ -97,6 +98,14 @@ public class ItemLinker extends Item
     {
         if (stack.getTag() == null) stack.setTag(new CompoundNBT());
         stack.getTag().putString("lift", lift.getCachedUniqueIdString());
+    }
+
+    @Override
+    public ITextComponent getDisplayName(final ItemStack stack)
+    {
+        if (stack.hasTag() && stack.getTag().contains("lift")) return new TranslationTextComponent(
+                "item.thuttech.linker.linked");
+        return super.getDisplayName(stack);
     }
 
     @Override
