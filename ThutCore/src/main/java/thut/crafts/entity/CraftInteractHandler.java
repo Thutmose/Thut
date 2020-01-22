@@ -1,7 +1,6 @@
 package thut.crafts.entity;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Vector3f;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.StairsBlock;
@@ -11,26 +10,27 @@ import net.minecraft.item.Items;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import thut.api.entity.IMultiplePassengerEntity.Seat;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.api.entity.blockentity.IBlockEntity;
+import thut.api.maths.vecmath.Vector3f;
 
 public class CraftInteractHandler extends BlockEntityInteractHandler
 {
     final EntityCraft craft;
 
-    public CraftInteractHandler(EntityCraft lift)
+    public CraftInteractHandler(final EntityCraft lift)
     {
         super(lift);
         this.craft = lift;
     }
 
     @Override
-    public ActionResultType applyPlayerInteraction(PlayerEntity player, Vec3d vec, ItemStack stack, Hand hand)
+    public ActionResultType applyPlayerInteraction(final PlayerEntity player, Vec3d vec, final ItemStack stack,
+            final Hand hand)
     {
         if (player.isSneaking()) return ActionResultType.PASS;
         final ActionResultType result = super.applyPlayerInteraction(player, vec, stack, hand);
@@ -61,14 +61,15 @@ public class CraftInteractHandler extends BlockEntityInteractHandler
     }
 
     @Override
-    public ActionResultType interactInternal(PlayerEntity player, BlockPos pos, ItemStack stack, Hand hand)
+    public ActionResultType interactInternal(final PlayerEntity player, BlockPos pos, final ItemStack stack,
+            final Hand hand)
     {
         final BlockState state = this.craft.getFakeWorld().getBlock(pos);
         if (state != null && state.getBlock() instanceof StairsBlock)
         {
             if (this.craft.getSeatCount() == 0)
             {
-                final MutableBlockPos pos1 = new MutableBlockPos();
+                final BlockPos.MutableBlockPos pos1 = new BlockPos.MutableBlockPos();
                 final int xMin = this.craft.getMin().getX();
                 final int zMin = this.craft.getMin().getZ();
                 final int yMin = this.craft.getMin().getY();
@@ -112,7 +113,7 @@ public class CraftInteractHandler extends BlockEntityInteractHandler
     }
 
     @Override
-    public boolean processInitialInteract(PlayerEntity player, @Nullable ItemStack stack, Hand hand)
+    public boolean processInitialInteract(final PlayerEntity player, @Nullable final ItemStack stack, final Hand hand)
     {
         if (stack.getItem() == Items.BLAZE_ROD) if (!player.world.isRemote)
         {

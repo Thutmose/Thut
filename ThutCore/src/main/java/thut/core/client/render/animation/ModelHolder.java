@@ -10,6 +10,8 @@ public class ModelHolder
     public ResourceLocation texture;
     public ResourceLocation animation;
     public String           name;
+    //This is set by the model factory.
+    public String           extension = "";
 
     public ModelHolder(ResourceLocation model, ResourceLocation texture, ResourceLocation animation, String name)
     {

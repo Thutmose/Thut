@@ -32,7 +32,7 @@ public class ModelFactory
     public static IModel create(ModelHolder model)
     {
         final String path = model.model.getPath();
-        final String ext = path.contains(".") ? path.substring(path.lastIndexOf(".") + 1, path.length()) : "";
+        String ext = path.contains(".") ? path.substring(path.lastIndexOf(".") + 1, path.length()) : "";
         if (ext.isEmpty())
         {
             IModel ret = null;
@@ -42,16 +42,22 @@ public class ModelFactory
                 final ResourceLocation model1 = new ResourceLocation(model.model.getNamespace(), path + "." + ext1);
                 ThutCore.LOGGER.debug("Checking " + model1);
                 ret = factory.create(model1);
+                ext = ext1;
                 if (ret != null && ret.isValid()) break;
             }
             if (ret == null) ret = new X3dModel();
             if (!ret.isValid()) ThutCore.LOGGER.error("No Model found for " + model.model);
-            else ThutCore.LOGGER.debug("Successfully loaded model for " + model.model);
+            else
+            {
+                ThutCore.LOGGER.debug("Successfully loaded model for " + model.model);
+                model.extension = ext;
+            }
             return ret;
         }
         else
         {
             final IFactory<?> factory = ModelFactory.modelFactories.get(ext);
+            model.extension = ext;
             return factory.create(model.model);
         }
     }

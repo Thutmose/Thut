@@ -11,7 +11,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.AbstractChunkProvider;
@@ -55,7 +54,7 @@ public class BlockEntityChunkProvider extends AbstractChunkProvider
             this.chunks.clear();
         }
 
-        final MutableBlockPos pos = new MutableBlockPos();
+        final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         pos.setPos(chunkX, 0, chunkZ);
         final BlockPos immut = pos.toImmutable();
         if (this.chunks.containsKey(immut)) return this.chunks.get(immut);

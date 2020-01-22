@@ -283,6 +283,9 @@ public class AnimationLoader
 
                 final IModelRenderer<?> loaded = renderer;
                 loaded.updateModel(phaseList, holder);
+                
+                //Test for messing with tbl models
+                if(holder.extension.equals("tbl")) offset = offset.add(0, -0.5, 0);
 
                 // Set the global transforms
                 loaded.setRotationOffset(offset);
