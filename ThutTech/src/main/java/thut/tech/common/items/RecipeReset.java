@@ -47,4 +47,10 @@ public class RecipeReset extends SpecialRecipe
         return !this.getCraftingResult(inv).isEmpty();
     }
 
+    @Override
+    public boolean canFit(final int width, final int height)
+    {
+        return width * height > 0;
+    }
+
 }

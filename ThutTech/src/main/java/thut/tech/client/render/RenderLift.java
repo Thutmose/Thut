@@ -1,79 +1,20 @@
 package thut.tech.client.render;
 
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import thut.api.entity.blockentity.render.RenderBlockEntity;
 import thut.tech.common.entity.EntityLift;
 
 public class RenderLift extends RenderBlockEntity<EntityLift>
 {
-    public static RenderLift hackyRenderer;
-
-    @SubscribeEvent
-    public static void hackyRender(RenderWorldLastEvent event)
-    {
-        // TODO hacky render
-        // Minecraft mc = Minecraft.getInstance();
-        // Entity cameraEntity = mc.getRenderViewEntity();
-        // BlockPos renderingVector = cameraEntity.getPosition();
-        // Frustum frustum = new Frustum();
-        // float partialTicks = event.getPartialTicks();
-        // double viewX = cameraEntity.lastTickPosX + (cameraEntity.posX -
-        // cameraEntity.lastTickPosX) * partialTicks;
-        // double viewY = cameraEntity.lastTickPosY + (cameraEntity.posY -
-        // cameraEntity.lastTickPosY) * partialTicks;
-        // double viewZ = cameraEntity.lastTickPosZ + (cameraEntity.posZ -
-        // cameraEntity.lastTickPosZ) * partialTicks;
-        // frustum.setPosition(viewX, viewY, viewZ);
-        // ClientWorld client = mc.world;
-        // List<Entity> entities = client.loadedEntityList;
-        // EntityRendererManager renderManager =
-        // Minecraft.getInstance().getRenderManager();
-        // for (Entity entity : entities)
-        // if (entity != null && entity instanceof EntityLift && entity !=
-        // mc.player
-        // && entity.isInRangeToRender3d(renderingVector.getX(),
-        // renderingVector.getY(),
-        // renderingVector.getZ())
-        // && (entity.ignoreFrustumCheck ||
-        // frustum.isBoundingBoxInFrustum(entity.getBoundingBox()))
-        // && entity.isAlive() && entity.getRecursivePassengers().isEmpty())
-        // try
-        // {
-        // EntityLift lift = (EntityLift) entity;
-        // double d0 = lift.lastTickPosX + (lift.posX - lift.lastTickPosX) *
-        // partialTicks - renderManager.viewerPosX;
-        // double d1 = lift.lastTickPosY + (lift.posY - lift.lastTickPosY) *
-        // partialTicks - renderManager.viewerPosY;
-        // double d2 = lift.lastTickPosZ + (lift.posZ - lift.lastTickPosZ) *
-        // partialTicks - renderManager.viewerPosZ;
-        // float f = lift.prevRotationYaw + (lift.rotationYaw -
-        // lift.prevRotationYaw) * partialTicks;
-        // ConfigHandler.hackyRender = false;
-        // hackyRenderer.doRender(lift, d0, d1, d2, f, partialTicks);
-        // ConfigHandler.hackyRender = true;
-        // }
-        // catch (Throwable t)
-        // {
-        //
-        // }
-    }
-
-    public RenderLift(EntityRendererManager manager)
+    public RenderLift(final EntityRendererManager manager)
     {
         super(manager);
-        // if (ConfigHandler.hackyRender)
-        // {
-        // MinecraftForge.EVENT_BUS.register(RenderLift.class);
-        // hackyRenderer = this;
-        // }
     }
 
     @Override
-    public void doRender(EntityLift entity, double x, double y, double z, float entityYaw, float partialTicks)
+    public void doRender(final EntityLift entity, final double x, final double y, final double z, final float entityYaw,
+            final float partialTicks)
     {
-        // if (!ConfigHandler.hackyRender)
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
     }
 }

@@ -57,7 +57,6 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
                     stack.setCount(num);
                     player.dropItem(stack, false, true);
                 }
-                this.lift.setHealth(0);
                 this.lift.remove();
             }
             return true;
@@ -103,7 +102,6 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
                     stack.setCount(num);
                     player.dropItem(stack, false, true);
                 }
-                this.lift.setHealth(0);
                 this.lift.remove();
             }
             return true;

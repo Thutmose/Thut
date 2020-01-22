@@ -27,7 +27,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import thut.api.entity.blockentity.render.RenderBlockEntity;
 import thut.api.maths.Vector3;
 import thut.crafts.CommonProxy;
@@ -151,12 +150,6 @@ public class ClientProxy extends CommonProxy
                 GlStateManager.disableBlend();
             }
         }
-    }
-
-    @Override
-    public void setup(final FMLCommonSetupEvent event)
-    {
-        super.setup(event);
     }
 
     @Override

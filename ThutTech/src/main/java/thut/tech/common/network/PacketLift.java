@@ -5,7 +5,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import thut.core.common.network.Packet;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.ControllerTile;
 
 public class PacketLift extends Packet
 {
@@ -31,9 +31,9 @@ public class PacketLift extends Packet
     public void handleServer(final ServerPlayerEntity player)
     {
         final TileEntity tile = player.getEntityWorld().getTileEntity(this.pos);
-        if (tile instanceof TileEntityLiftAccess)
+        if (tile instanceof ControllerTile)
         {
-            final TileEntityLiftAccess te = (TileEntityLiftAccess) tile;
+            final ControllerTile te = (ControllerTile) tile;
             if (te.lift == null) return;
             te.buttonPress(this.button, this.call);
             te.calledFloor = te.lift.getDestinationFloor();

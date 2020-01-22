@@ -8,7 +8,6 @@ import javax.vecmath.Vector3f;
 import com.google.common.collect.Maps;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MoverType;
@@ -19,19 +18,19 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.EffectInstance;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import thut.api.entity.blockentity.BlockEntityBase;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.api.maths.Vector3;
+import thut.core.common.network.EntityUpdate;
 import thut.tech.common.TechCore;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.ControllerTile;
 
 public class EntityLift extends BlockEntityBase
 {
@@ -40,19 +39,18 @@ public class EntityLift extends BlockEntityBase
         protected static final Map<UUID, EntityLift> liftMap = Maps.newHashMap();
     }
 
-    public static final EntityType<EntityLift> TYPE               = EntityType.Builder.create(EntityLift::new,
-            EntityClassification.MISC).disableSummoning().immuneToFire().setShouldReceiveVelocityUpdates(true)
-            .setTrackingRange(64).setUpdateInterval(1).build("lift");
-    static final DataParameter<Integer>        DESTINATIONFLOORDW = EntityDataManager.<Integer> createKey(
-            EntityLift.class, DataSerializers.VARINT);
-    static final DataParameter<Float>          DESTINATIONYDW     = EntityDataManager.<Float> createKey(
-            EntityLift.class, DataSerializers.FLOAT);
-    static final DataParameter<Float>          DESTINATIONXDW     = EntityDataManager.<Float> createKey(
-            EntityLift.class, DataSerializers.FLOAT);
-    static final DataParameter<Float>          DESTINATIONZDW     = EntityDataManager.<Float> createKey(
-            EntityLift.class, DataSerializers.FLOAT);
-    static final DataParameter<Integer>        CURRENTFLOORDW     = EntityDataManager.<Integer> createKey(
-            EntityLift.class, DataSerializers.VARINT);
+    public static final EntityType<EntityLift> TYPE = new BlockEntityType<>(EntityLift::new);
+
+    static final DataParameter<Integer> DESTINATIONFLOORDW = EntityDataManager.<Integer> createKey(EntityLift.class,
+            DataSerializers.VARINT);
+    static final DataParameter<Float>   DESTINATIONYDW     = EntityDataManager.<Float> createKey(EntityLift.class,
+            DataSerializers.FLOAT);
+    static final DataParameter<Float>   DESTINATIONXDW     = EntityDataManager.<Float> createKey(EntityLift.class,
+            DataSerializers.FLOAT);
+    static final DataParameter<Float>   DESTINATIONZDW     = EntityDataManager.<Float> createKey(EntityLift.class,
+            DataSerializers.FLOAT);
+    static final DataParameter<Integer> CURRENTFLOORDW     = EntityDataManager.<Integer> createKey(EntityLift.class,
+            DataSerializers.VARINT);
 
     static final DataParameter<Boolean> CALLEDDW  = EntityDataManager.<Boolean> createKey(EntityLift.class,
             DataSerializers.BOOLEAN);
@@ -74,7 +72,7 @@ public class EntityLift extends BlockEntityBase
     public UUID           owner;
     public double         prevFloorY = 0;
     public double         prevFloor  = 0;
-    TileEntityLiftAccess  current;
+    ControllerTile  current;
     public int[]          floors     = new int[128];
 
     public boolean[] hasFloors = new boolean[128];
@@ -275,23 +273,11 @@ public class EntityLift extends BlockEntityBase
     }
 
     @Override
-    public ItemStack getItemStackFromSlot(final EquipmentSlotType slotIn)
-    {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
     public EntitySize getSize(final Pose pose)
     {
         if (this.size == null) this.size = EntitySize.fixed(1 + this.getMax().getX() - this.getMin().getX(), this
                 .getMax().getY());
         return this.size;
-    }
-
-    @Override
-    public boolean isPotionApplicable(final EffectInstance par1EffectInstance)
-    {
-        return false;
     }
 
     @Override
@@ -304,11 +290,10 @@ public class EntityLift extends BlockEntityBase
     @Override
     protected void onGridAlign()
     {
-        // final BlockPos pos = this.getPosition();
         this.setCalled(false);
-        // this.setPosition(pos.getX() + 0.5, Math.round(this.posY), pos.getZ()
-        // + 0.5);
-        // EntityUpdate.sendEntityUpdate(this);
+        final BlockPos pos = this.getPosition();
+        this.setPosition(pos.getX() + 0.5, Math.round(this.posY), pos.getZ() + 0.5);
+        EntityUpdate.sendEntityUpdate(this);
     }
 
     @Override
@@ -401,7 +386,7 @@ public class EntityLift extends BlockEntityBase
         this.setCalled(true);
     }
 
-    public void setFoor(final TileEntityLiftAccess te, final int floor)
+    public void setFoor(final ControllerTile te, final int floor)
     {
         if (te.floor == 0)
         {
@@ -434,7 +419,7 @@ public class EntityLift extends BlockEntityBase
         for (final TileEntity[][] tileArrArr : tiles)
             for (final TileEntity[] tileArr : tileArrArr)
                 for (final TileEntity tile : tileArr)
-                    if (tile instanceof TileEntityLiftAccess) ((TileEntityLiftAccess) tile).setLift(this);
+                    if (tile instanceof ControllerTile) ((ControllerTile) tile).setLift(this);
     }
 
     @Override

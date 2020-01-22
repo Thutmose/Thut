@@ -26,8 +26,8 @@ import thut.core.common.config.Config;
 import thut.core.common.network.PacketHandler;
 import thut.tech.Reference;
 import thut.tech.client.ClientProxy;
-import thut.tech.common.blocks.lift.BlockLift;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.ControllerBlock;
+import thut.tech.common.blocks.lift.ControllerTile;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.handlers.ConfigHandler;
 import thut.tech.common.items.ItemLinker;
@@ -84,8 +84,8 @@ public class TechCore
         {
             if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MOD_ID)) return;
             // register a new mob here
-            TileEntityLiftAccess.TYPE.setRegistryName(Reference.MOD_ID, "controller");
-            event.getRegistry().register(TileEntityLiftAccess.TYPE);
+            ControllerTile.TYPE.setRegistryName(Reference.MOD_ID, "controller");
+            event.getRegistry().register(ControllerTile.TYPE);
         }
     }
 
@@ -93,7 +93,7 @@ public class TechCore
             "comms"), Reference.NETVERSION);
     public static final CommonProxy   proxy          = DistExecutor.runForDist(() -> () -> new ClientProxy(),
             () -> () -> new CommonProxy());
-    public static final Block         LIFTCONTROLLER = new BlockLift(Block.Properties.create(Material.IRON)
+    public static final Block         LIFTCONTROLLER = new ControllerBlock(Block.Properties.create(Material.IRON)
             .hardnessAndResistance(3.5f)).setRegistryName(Reference.MOD_ID, "controller");
     public static final Item          LIFT           = new Item(new Item.Properties().group(ThutCore.THUTITEMS))
             .setRegistryName(Reference.MOD_ID, "lift");

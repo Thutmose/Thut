@@ -22,10 +22,10 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import thut.api.maths.Vector3;
 import thut.tech.client.render.RenderLift;
-import thut.tech.client.render.RenderLiftController;
+import thut.tech.client.render.ControllerRenderer;
 import thut.tech.common.CommonProxy;
 import thut.tech.common.TechCore;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.ControllerTile;
 import thut.tech.common.entity.EntityLift;
 
 public class ClientProxy extends CommonProxy
@@ -41,7 +41,7 @@ public class ClientProxy extends CommonProxy
         if (!(held = player.getHeldItemMainhand()).isEmpty() || !(held = player.getHeldItemOffhand()).isEmpty())
         {
             BlockPos pos = target.getPos();
-            if (pos == null || held.getItem() != TechCore.LINKER) return;
+            if (pos == null || held.getItem() != TechCore.LIFT) return;
             if (!player.world.getBlockState(pos).getMaterial().isSolid())
             {
                 final Vec3d loc = player.getPositionVector().add(0, player.getEyeHeight(), 0).add(player.getLookVec()
@@ -110,6 +110,6 @@ public class ClientProxy extends CommonProxy
         MinecraftForge.EVENT_BUS.register(this);
         RenderingRegistry.registerEntityRenderingHandler(EntityLift.class, (manager) -> new RenderLift(manager));
 
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLiftAccess.class, new RenderLiftController<>());
+        ClientRegistry.bindTileEntitySpecialRenderer(ControllerTile.class, new ControllerRenderer<>());
     }
 }

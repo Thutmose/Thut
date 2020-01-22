@@ -17,7 +17,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import thut.tech.Reference;
 import thut.tech.common.TechCore;
-import thut.tech.common.blocks.lift.TileEntityLiftAccess;
+import thut.tech.common.blocks.lift.ControllerTile;
 import thut.tech.common.entity.EntityLift;
 
 @Mod.EventBusSubscriber
@@ -62,10 +62,10 @@ public class EnergyHandler
     public static class ProviderLiftController implements ICapabilityProvider, IEnergyStorage
     {
         private final LazyOptional<IEnergyStorage> holder = LazyOptional.of(() -> this);
-        final TileEntityLiftAccess                 tile;
+        final ControllerTile                 tile;
         IEnergyStorage                             lift   = null;
 
-        public ProviderLiftController(TileEntityLiftAccess tile)
+        public ProviderLiftController(ControllerTile tile)
         {
             this.tile = tile;
         }
@@ -144,7 +144,7 @@ public class EnergyHandler
     /** Adds the energy capability to the lift controllers. */
     public static void onTileCapabilityAttach(AttachCapabilitiesEvent<TileEntity> event)
     {
-        if (event.getObject() instanceof TileEntityLiftAccess) event.addCapability(EnergyHandler.ENERGY,
-                new ProviderLiftController((TileEntityLiftAccess) event.getObject()));
+        if (event.getObject() instanceof ControllerTile) event.addCapability(EnergyHandler.ENERGY,
+                new ProviderLiftController((ControllerTile) event.getObject()));
     }
 }
