@@ -68,7 +68,7 @@ public class CommonProxy implements Proxy
             final CompoundNBT min = new CompoundNBT();
             Vector3.getNewVector().set(pos).writeToNBT(min, "");
             itemstack.getTag().put("min", min);
-            final String message = "msg.lift.setcorner";
+            final String message = "msg.craft.setcorner";
             if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, pos));
             evt.setCanceled(true);
             itemstack.getTag().putLong("time", worldIn.getDayTime());
@@ -101,7 +101,7 @@ public class CommonProxy implements Proxy
             final int dw = Math.max(max.getX() - min.getX(), max.getZ() - min.getZ());
             if (max.getY() - min.getY() > 15 || dw > 2 * 10 + 1)
             {
-                final String message = "msg.lift.toobig";
+                final String message = "msg.craft.toobig";
                 if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message));
                 return;
             }
