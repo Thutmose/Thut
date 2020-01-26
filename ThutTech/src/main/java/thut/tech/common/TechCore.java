@@ -18,7 +18,6 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import thut.core.common.ThutCore;
@@ -46,15 +45,12 @@ public class TechCore
         @SubscribeEvent
         public static void registerBlocks(final RegistryEvent.Register<Block> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MOD_ID)) return;
             event.getRegistry().register(TechCore.LIFTCONTROLLER);
         }
 
         @SubscribeEvent
         public static void registerEntities(final RegistryEvent.Register<EntityType<?>> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MOD_ID)) return;
-            // register a new mob here
             EntityLift.TYPE.setRegistryName(Reference.MOD_ID, "lift");
             event.getRegistry().register(EntityLift.TYPE);
         }
@@ -62,7 +58,6 @@ public class TechCore
         @SubscribeEvent
         public static void registerItems(final RegistryEvent.Register<Item> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MOD_ID)) return;
             event.getRegistry().register(TechCore.LIFT);
             event.getRegistry().register(TechCore.LINKER);
             final BlockItem controller = new BlockItem(TechCore.LIFTCONTROLLER, new Item.Properties().group(
@@ -75,77 +70,45 @@ public class TechCore
         @SubscribeEvent
         public static void registerRecipes(final RegistryEvent.Register<IRecipeSerializer<?>> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MOD_ID)) return;
             event.getRegistry().register(RecipeReset.SERIALIZER);
         }
 
         @SubscribeEvent
         public static void registerTiles(final RegistryEvent.Register<TileEntityType<?>> event)
         {
-            if (!ModLoadingContext.get().getActiveContainer().getModId().equals(Reference.MOD_ID)) return;
-            // register a new mob here
+            ControllerTile.TYPE = TileEntityType.Builder.create(ControllerTile::new, TechCore.LIFTCONTROLLER).build(
+                    null);
             ControllerTile.TYPE.setRegistryName(Reference.MOD_ID, "controller");
             event.getRegistry().register(ControllerTile.TYPE);
         }
     }
 
-    public final static PacketHandler packets        = new PacketHandler(new ResourceLocation(Reference.MOD_ID,
-            "comms"), Reference.NETVERSION);
-    public static final CommonProxy   proxy          = DistExecutor.runForDist(() -> () -> new ClientProxy(),
+    public final static PacketHandler packets = new PacketHandler(new ResourceLocation(Reference.MOD_ID, "comms"),
+            Reference.NETVERSION);
+    public static final CommonProxy   proxy   = DistExecutor.runForDist(() -> () -> new ClientProxy(),
             () -> () -> new CommonProxy());
-    public static final Block         LIFTCONTROLLER = new ControllerBlock(Block.Properties.create(Material.IRON)
-            .hardnessAndResistance(3.5f)).setRegistryName(Reference.MOD_ID, "controller");
-    public static final Item          LIFT           = new Item(new Item.Properties().group(ThutCore.THUTITEMS))
-            .setRegistryName(Reference.MOD_ID, "lift");
-    public static final Item          LINKER         = new ItemLinker(new Item.Properties().group(ThutCore.THUTITEMS))
-            .setRegistryName(Reference.MOD_ID, "linker");
 
-    public static TechCore instance;
-
-    // public static Logger logger = Logger.getLogger("thuttech");
-    // protected static FileHandler logHandler = null;
-    //
-    // private static void initLogger()
-    // {
-    // logger.setLevel(Level.ALL);
-    // try
-    // {
-    // File logfile = new File("." + File.separator + "logs", "thuttech.log");
-    // if ((logfile.exists() || logfile.createNewFile()) && logfile.canWrite()
-    // && logHandler == null)
-    // {
-    // logHandler = new FileHandler(logfile.getPath());
-    // logHandler.setFormatter(new LogFormatter());
-    // logger.addHandler(logHandler);
-    // }
-    // }
-    // catch (SecurityException | IOException e)
-    // {
-    // e.printStackTrace();
-    // }
-    // }
-    //
-    // public static ItemStack getInfoBook()
-    // {
-    // String name = I18n.translateToLocal("ttinfobook.json");
-    // ItemStack stack = new ItemStack(Items.WRITTEN_BOOK);
-    // try
-    // {
-    // stack.setTag(JsonToNBT.getTagFromJson(name));
-    // }
-    // catch (NBTException e)
-    // {
-    // e.printStackTrace();
-    // }
-    // return stack;
-    // }
+    public static Block LIFTCONTROLLER;
+    public static Item  LIFT;
+    public static Item  LINKER;
 
     public static final ConfigHandler config = new ConfigHandler(Reference.MOD_ID);
 
+    static void init()
+    {
+        TechCore.LIFTCONTROLLER = new ControllerBlock(Block.Properties.create(Material.IRON).hardnessAndResistance(
+                3.5f)).setRegistryName(Reference.MOD_ID, "controller");
+        TechCore.LIFT = new Item(new Item.Properties().group(ThutCore.THUTITEMS)).setRegistryName(Reference.MOD_ID,
+                "lift");
+        TechCore.LINKER = new ItemLinker(new Item.Properties().group(ThutCore.THUTITEMS)).setRegistryName(
+                Reference.MOD_ID, "linker");
+    }
+
     public TechCore()
     {
-        TechCore.instance = this;
         MinecraftForge.EVENT_BUS.register(this);
+
+        TechCore.init();
 
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(TechCore.proxy::setup);

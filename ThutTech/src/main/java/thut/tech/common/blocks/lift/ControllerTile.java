@@ -35,8 +35,7 @@ import thut.tech.common.network.PacketLift;
 public class ControllerTile extends TileEntity implements ITickableTileEntity// ,
 // SimpleComponent
 {
-    public static final TileEntityType<? extends TileEntity> TYPE = TileEntityType.Builder.create(ControllerTile::new,
-            TechCore.LIFTCONTROLLER).build(null);
+    public static TileEntityType<? extends TileEntity> TYPE;
 
     public int                    power        = 0;
     public int                    prevPower    = 1;
