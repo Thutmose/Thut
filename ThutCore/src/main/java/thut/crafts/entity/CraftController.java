@@ -21,7 +21,7 @@ public class CraftController
         this.entity = entityCraft;
     }
 
-    public void doServerTick(final IBlockEntityWorld<?> iBlockEntityWorld)
+    public void doServerTick(final IBlockEntityWorld iBlockEntityWorld)
     {
         if (!this.entity.isBeingRidden()) return;
 

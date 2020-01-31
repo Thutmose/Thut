@@ -170,7 +170,8 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             else renderengine.bindTexture(this.overlay);
             // System.out.println(order);
             float dz = -0.001f * (1 + order);
-            if (monitor.getWorld() instanceof IBlockEntityWorld<?>) dz -= 0.004f;
+            // TODO replace this with something like a built in tag?
+            if (monitor.getWorld() instanceof IBlockEntityWorld) dz -= 0.004f;
             floor -= 1;
             final double x = (double) (3 - floor & 3) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
             final float r = colour.getRed() / 255f;

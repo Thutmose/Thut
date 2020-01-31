@@ -279,7 +279,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public void sendUpdate(final ServerPlayerEntity player)
     {
-        if (this.world instanceof IBlockEntityWorld<?>) return;
+        if (this.world instanceof IBlockEntityWorld) return;
         TileUpdate.sendUpdate(this);
     }
 
@@ -323,7 +323,8 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         this.world = worldIn;
         if (worldIn instanceof IBlockEntityWorld)
         {
-            final IBlockEntity blockEntity = ((IBlockEntityWorld<?>) worldIn).getBlockEntity();
+            // TODO replace this with something like a built in tag?
+            final IBlockEntity blockEntity = ((IBlockEntityWorld) worldIn).getBlockEntity();
             if (blockEntity instanceof EntityLift) this.setLift((EntityLift) blockEntity);
         }
     }
