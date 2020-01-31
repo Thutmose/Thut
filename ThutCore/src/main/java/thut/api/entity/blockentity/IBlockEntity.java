@@ -25,7 +25,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import thut.api.entity.blockentity.world.client.IBlockEntityWorld;
+import thut.api.entity.blockentity.world.IBlockEntityWorld;
 import thut.api.maths.Vector3.MutableBlockPos;
 
 public interface IBlockEntity

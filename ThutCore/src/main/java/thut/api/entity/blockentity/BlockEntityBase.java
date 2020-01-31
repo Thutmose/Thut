@@ -33,8 +33,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.network.FMLPlayMessages.SpawnEntity;
 import net.minecraftforge.fml.network.NetworkHooks;
-import thut.api.entity.blockentity.world.client.ClientWorldEntity;
-import thut.api.entity.blockentity.world.client.IBlockEntityWorld;
+import thut.api.entity.blockentity.world.WorldEntity;
+import thut.api.entity.blockentity.world.IBlockEntityWorld;
 import thut.core.common.ThutCore;
 import thut.core.common.network.EntityUpdate;
 
@@ -270,7 +270,7 @@ public abstract class BlockEntityBase extends Entity implements IEntityAdditiona
     {
         if (this.fake_world == null)
         {
-            this.fake_world = new ClientWorldEntity(this.world);
+            this.fake_world = new WorldEntity(this.world);
             this.fake_world.setBlockEntity(this);
         }
         return this.fake_world;

@@ -1,4 +1,4 @@
-package thut.api.entity.blockentity.world.client;
+package thut.api.entity.blockentity.world;
 
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -26,13 +26,13 @@ import thut.api.entity.blockentity.IBlockEntity;
 
 public class BlockEntityChunkProvider extends AbstractChunkProvider
 {
-    private final ClientWorldEntity world;
+    private final WorldEntity world;
     private final WorldLightManager lightManager;
 
     private final Map<BlockPos, Chunk> chunks     = Maps.newHashMap();
     private BlockPos                   lastOrigin = null;
 
-    public BlockEntityChunkProvider(final ClientWorldEntity worldIn)
+    public BlockEntityChunkProvider(final WorldEntity worldIn)
     {
         this.world = worldIn;
         this.lightManager = new WorldLightManager(this, true, worldIn.getWorld().getDimension().hasSkyLight());

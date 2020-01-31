@@ -1,4 +1,4 @@
-package thut.api.entity.blockentity.world.client;
+package thut.api.entity.blockentity.world;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.fluid.IFluidState;
@@ -7,13 +7,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import thut.api.entity.blockentity.IBlockEntity;
 
-public class ClientWorldEntity implements IBlockEntityWorld
+public class WorldEntity implements IBlockEntityWorld
 {
     final World    world;
     IBlockEntity   mob;
     public boolean creating;
 
-    public ClientWorldEntity(final World world)
+    public WorldEntity(final World world)
     {
         this.world = world;
     }

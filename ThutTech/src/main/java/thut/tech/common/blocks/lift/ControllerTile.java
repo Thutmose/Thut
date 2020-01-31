@@ -25,7 +25,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.extensions.IForgeTileEntity;
 import thut.api.entity.blockentity.IBlockEntity;
-import thut.api.entity.blockentity.world.client.IBlockEntityWorld;
+import thut.api.entity.blockentity.world.IBlockEntityWorld;
 import thut.api.maths.Vector3;
 import thut.core.common.network.TileUpdate;
 import thut.tech.common.TechCore;

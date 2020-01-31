@@ -1,4 +1,4 @@
-package thut.api.entity.blockentity.world.client;
+package thut.api.entity.blockentity.world;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
