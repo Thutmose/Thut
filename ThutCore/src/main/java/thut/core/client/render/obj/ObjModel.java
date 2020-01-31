@@ -1,13 +1,17 @@
-package thut.core.client.render.x3d;
+package thut.core.client.render.obj;
 
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,7 +22,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import thut.api.entity.IMobColourable;
-import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.Animation;
 import thut.core.client.render.animation.AnimationComponent;
@@ -31,50 +34,38 @@ import thut.core.client.render.model.IModelCustom;
 import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.model.Vertex;
 import thut.core.client.render.model.parts.Material;
-import thut.core.client.render.model.parts.Mesh;
 import thut.core.client.render.texturing.IPartTexturer;
 import thut.core.client.render.texturing.IRetexturableModel;
-import thut.core.client.render.x3d.X3dXML.Appearance;
-import thut.core.client.render.x3d.X3dXML.IndexedTriangleSet;
-import thut.core.client.render.x3d.X3dXML.Transform;
+import thut.core.client.render.texturing.TextureCoordinate;
 import thut.core.common.ThutCore;
 
-public class X3dModel implements IModelCustom, IModel, IRetexturableModel
+public class ObjModel implements IModelCustom, IModel, IRetexturableModel
 {
     public HashMap<String, IExtendedModelPart> parts = new HashMap<>();
     Map<String, Material>                      mats  = Maps.newHashMap();
     Set<String>                                heads = Sets.newHashSet();
     final HeadInfo                             info  = new HeadInfo();
     public String                              name;
-    protected boolean                          valid = true;
+    private boolean                            valid = true;
 
-    public X3dModel()
+    public ObjModel()
     {
         this.valid = false;
     }
 
-    public X3dModel(final ResourceLocation l)
+    public ObjModel(final ResourceLocation l)
     {
         this();
         this.loadModel(l);
-    }
-
-    private void addChildren(final Set<Transform> allTransforms, final Transform transform)
-    {
-        for (final Transform f : transform.transforms)
-            if (!f.DEF.contains("ifs_TRANSFORM"))
-            {
-                allTransforms.add(f);
-                this.addChildren(allTransforms, f);
-            }
     }
 
     @Override
     public void applyAnimation(final Entity entity, final IAnimationHolder animate, final IModelRenderer<?> renderer,
             final float partialTicks, final float limbSwing)
     {
-        this.updateAnimation(entity, renderer, renderer.getAnimation(entity), partialTicks, this.getHeadInfo().headYaw,
-                this.getHeadInfo().headYaw, limbSwing);
+        // this.updateAnimation(entity, renderer, renderer.getAnimation(entity),
+        // partialTicks, this.getHeadInfo().headYaw,
+        // this.getHeadInfo().headYaw, limbSwing);
     }
 
     @Override
@@ -87,42 +78,6 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
     public Set<String> getHeadParts()
     {
         return this.heads;
-    }
-
-    private Material getMaterial(final X3dXML.Appearance appearance)
-    {
-        final X3dXML.Material mat = appearance.material;
-        if (mat == null) return null;
-        String matName = mat.DEF;
-        final boolean isDef = matName != null;
-        if (matName == null) matName = mat.USE.substring(3);
-        else matName = matName.substring(3);
-        Material material = this.mats.get(matName);
-        if (material == null || isDef)
-        {
-            String texName;
-            if (appearance.tex != null && appearance.tex.DEF != null)
-            {
-                texName = appearance.tex.DEF.substring(3);
-                if (texName.contains("_png")) texName = texName.substring(0, texName.lastIndexOf("_png"));
-            }
-            else texName = null;
-            if (material == null) material = new Material(matName, texName, mat.getDiffuse(), mat.getSpecular(), mat
-                    .getEmissive(), mat.ambientIntensity, mat.shininess, mat.transparency);
-            if (isDef)
-            {
-                if (material.texture == null) material.texture = texName;
-                material.ambientIntensity = mat.ambientIntensity;
-                material.shininess = mat.shininess;
-                material.transparency = mat.transparency;
-                material.emissiveColor = mat.getEmissive();
-                material.specularColor = mat.getSpecular();
-                material.diffuseColor = mat.getDiffuse();
-                material.emissiveMagnitude = Math.min(1, (float) (mat.getEmissive().length() / Math.sqrt(3)) / 0.8f);
-            }
-            this.mats.put(matName, material);
-        }
-        return material;
     }
 
     @Override
@@ -153,9 +108,8 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
                 this.valid = false;
                 return;
             }
-            final X3dXML xml = new X3dXML(res.getInputStream());
+            this.makeObjects(res.getInputStream());
             res.close();
-            this.makeObjects(xml);
         }
         catch (final Exception e)
         {
@@ -164,63 +118,100 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         }
     }
 
-    public HashMap<String, IExtendedModelPart> makeObjects(final X3dXML xml) throws Exception
-    {
-        final Map<String, Set<String>> childMap = Maps.newHashMap();
-        final Set<Transform> allTransforms = Sets.newHashSet();
-        for (final Transform f : xml.model.scene.transforms)
-        {
-            allTransforms.add(f);
-            this.addChildren(allTransforms, f);
-        }
-        for (Transform t : allTransforms)
-        {
-            String[] offset = t.translation.split(" ");
-            final Vector3 translation = Vector3.getNewVector().set(Float.parseFloat(offset[0]), Float.parseFloat(
-                    offset[1]), Float.parseFloat(offset[2]));
-            offset = t.scale.split(" ");
-            final Vertex scale = new Vertex(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]), Float.parseFloat(
-                    offset[2]));
-            offset = t.rotation.split(" ");
-            final Vector4 rotations = new Vector4(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]), Float
-                    .parseFloat(offset[2]), (float) Math.toDegrees(Float.parseFloat(offset[3])));
-            final Set<String> children = t.getChildNames();
-            t = t.getIfsTransform();
-            // Probably a lamp or camera in this case?
-            if (t == null) continue;
-            final X3dXML.Group group = t.group;
-            final String name = t.getGroupName();
-            final List<Mesh> shapes = Lists.newArrayList();
-            for (final X3dXML.Shape shape : group.shapes)
-            {
-                final IndexedTriangleSet triangleSet = shape.triangleSet;
-                final X3dMesh renderShape = new X3dMesh(triangleSet.getOrder(), triangleSet.getVertices(), triangleSet
-                        .getNormals(), triangleSet.getTexture());
-                shapes.add(renderShape);
-                final Appearance appearance = shape.appearance;
-                final Material material = this.getMaterial(appearance);
-                if (material != null) renderShape.setMaterial(material);
-            }
-            final X3dPart o = new X3dPart(name);
-            o.shapes = shapes;
-            o.rotations.set(rotations.x, rotations.y, rotations.z, rotations.w);
-            o.offset.set(translation);
-            o.scale = scale;
-            this.parts.put(name, o);
-            childMap.put(name, children);
-        }
-        for (final Map.Entry<String, Set<String>> entry : childMap.entrySet())
-        {
-            final String key = entry.getKey();
+    private static final Pattern WHITE_SPACE = Pattern.compile("\\s+");
 
-            if (this.parts.get(key) != null)
+    public HashMap<String, IExtendedModelPart> makeObjects(final InputStream stream) throws Exception
+    {
+        final InputStreamReader isReader = new InputStreamReader(stream);
+        // Creating a BufferedReader object
+        final BufferedReader reader = new BufferedReader(isReader);
+        String line;
+
+        final List<Vertex> vertices = Lists.newArrayList();
+        final List<Vertex> normals = Lists.newArrayList();
+        final List<TextureCoordinate> tex = Lists.newArrayList();
+        final List<int[][]> faces = Lists.newArrayList();
+
+        String currentPart = "";
+
+        while ((line = reader.readLine()) != null)
+        {
+            if (line.startsWith("#") || line.trim().isEmpty()) continue;
+            final String[] fields = ObjModel.WHITE_SPACE.split(line, 2);
+            final String key = fields[0];
+            final String data = fields[1];
+            final String[] splitData = ObjModel.WHITE_SPACE.split(data);
+
+            if (key.equalsIgnoreCase("o"))
             {
-                final IExtendedModelPart part = this.parts.get(key);
-                for (final String s : entry.getValue())
-                    if (this.parts.get(s) != null && this.parts.get(s) != part) part.addChild(this.parts.get(s));
+                if (!currentPart.isEmpty())
+                {
+                    final List<Vertex> vertices2 = Lists.newArrayList();
+                    final List<Vertex> normals2 = Lists.newArrayList();
+                    final List<TextureCoordinate> tex2 = Lists.newArrayList();
+                    final List<Integer> order = Lists.newArrayList();
+                    int i = 0;
+                    for (final int[][] facepair : faces)
+                        for (final int[] element : facepair)
+                        {
+                            final Vertex v = vertices.get(element[0] - 1);
+                            final TextureCoordinate coord = tex.get(element[1] - 1);
+                            Vertex norm = new Vertex(0, 0);
+                            if (normals.size() > element[0] - 1) norm = normals.get(element[0] - 1);
+                            vertices2.add(v);
+                            normals2.add(norm);
+                            tex2.add(coord);
+                            order.add(i++);
+                        }
+                    final ObjMesh mesh = new ObjMesh(order.toArray(new Integer[0]), vertices2.toArray(new Vertex[0]),
+                            normals2.toArray(new Vertex[0]), tex2.toArray(new TextureCoordinate[0]));
+                    final ObjPart part = new ObjPart(currentPart);
+                    part.shapes.add(mesh);
+                    this.parts.put(currentPart, part);
+                }
+                currentPart = data;
+            }
+            if (key.equalsIgnoreCase("v"))
+            {
+                final float[] coords = this.parseFloats(splitData);
+                final Vertex pos = new Vertex(coords[0], coords[1], coords[2]);
+                vertices.add(pos);
+            }
+            else if (key.equalsIgnoreCase("vn"))
+            {
+                final float[] coords = this.parseFloats(splitData);
+                final Vertex pos = new Vertex(coords[0], coords[1], coords[2]);
+                normals.add(pos);
+            }
+            else if (key.equalsIgnoreCase("vt"))
+            {
+                final float[] coords = this.parseFloats(splitData);
+                final TextureCoordinate pos = new TextureCoordinate(coords[0], 1 - coords[1]);
+                tex.add(pos);
+            }
+            else if (key.equals("f"))
+            {
+                final int[][] facepairs = new int[splitData.length][2];
+                for (int i = 0; i < splitData.length; i++)
+                {
+                    final String[] pts = splitData[i].split("/");
+                    facepairs[i][0] = Integer.parseInt(pts[0]);
+                    facepairs[i][1] = Integer.parseInt(pts[1]);
+                }
+                faces.add(facepairs);
             }
         }
+
         return this.parts;
+    }
+
+    private float[] parseFloats(final String[] data) // Helper converting
+                                                     // strings to floats
+    {
+        final float[] ret = new float[data.length];
+        for (int i = 0; i < data.length; i++)
+            ret[i] = Float.parseFloat(data[i]);
+        return ret;
     }
 
     @Override

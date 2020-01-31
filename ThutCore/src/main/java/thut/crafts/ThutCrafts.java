@@ -70,20 +70,21 @@ public class ThutCrafts
 
     public static Proxy proxy = DistExecutor.runForDist(() -> () -> new ClientProxy(), () -> () -> new CommonProxy());
 
-    public static Item CRAFTMAKER = new Item(new Item.Properties().group(ThutCore.THUTITEMS)).setRegistryName(
-            Reference.MODID, "craftmaker");
+    public static Item CRAFTMAKER;
 
     public static CraftsConfig conf = new CraftsConfig();
 
     public ThutCrafts()
     {
+        ThutCrafts.CRAFTMAKER = new Item(new Item.Properties().group(ThutCore.THUTITEMS)).setRegistryName(
+                Reference.MODID, "craftmaker");
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         // Register the doClientStuff method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
 
         // Register Config stuff
-        Config.setupConfigs(ThutCrafts.conf, Reference.MODID, Reference.MODID);
+        Config.setupConfigs(ThutCrafts.conf, ThutCore.MODID, Reference.MODID);
     }
 
     private void doClientStuff(final FMLClientSetupEvent event)

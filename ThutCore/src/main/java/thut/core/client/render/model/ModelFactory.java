@@ -9,7 +9,8 @@ import com.google.common.collect.Maps;
 
 import net.minecraft.util.ResourceLocation;
 import thut.core.client.render.animation.ModelHolder;
-import thut.core.client.render.tabula.model.tabula.TabulaModelParser;
+import thut.core.client.render.mca.McaModel;
+import thut.core.client.render.obj.ObjModel;
 import thut.core.client.render.x3d.X3dModel;
 import thut.core.common.ThutCore;
 
@@ -26,10 +27,13 @@ public class ModelFactory
     static
     {
         ModelFactory.registerIModel("x3d", X3dModel::new);
-        ModelFactory.registerIModel("tbl", TabulaModelParser::load);
+        ModelFactory.registerIModel("mca", McaModel::new);
+        ModelFactory.registerIModel("obj", ObjModel::new);
+        // ModelFactory.registerIModel("tbl", TabulaModelParser::load);
+        // ModelFactory.registerIModel("tbl", TblModel::new);
     }
 
-    public static IModel create(ModelHolder model)
+    public static IModel create(final ModelHolder model)
     {
         final String path = model.model.getPath();
         String ext = path.contains(".") ? path.substring(path.lastIndexOf(".") + 1, path.length()) : "";
@@ -67,7 +71,7 @@ public class ModelFactory
         return ModelFactory.modelFactories.keySet();
     }
 
-    public static void registerIModel(String extension, IFactory<?> clazz)
+    public static void registerIModel(final String extension, final IFactory<?> clazz)
     {
         ModelFactory.modelFactories.put(extension, clazz);
         if (!ModelFactory.knownExtension.contains(extension)) ModelFactory.knownExtension.add(extension);

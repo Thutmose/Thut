@@ -1,6 +1,6 @@
 package thut.core.client.render.mca;
 
-import java.io.InputStream;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +10,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.IResource;
+import net.minecraft.util.ResourceLocation;
 import thut.core.client.render.mca.McaXML.Buffers;
 import thut.core.client.render.mca.McaXML.Children;
 import thut.core.client.render.mca.McaXML.GeometryNode;
@@ -17,41 +20,23 @@ import thut.core.client.render.mca.McaXML.Rot;
 import thut.core.client.render.mca.McaXML.SceneNode;
 import thut.core.client.render.mca.McaXML.Translation;
 import thut.core.client.render.model.IExtendedModelPart;
-import thut.core.client.render.x3d.Shape;
+import thut.core.client.render.model.parts.Mesh;
+import thut.core.client.render.x3d.X3dMesh;
 import thut.core.client.render.x3d.X3dModel;
-import thut.core.client.render.x3d.X3dObject;
+import thut.core.client.render.x3d.X3dPart;
+import thut.core.client.render.x3d.X3dXML;
+import thut.core.common.ThutCore;
 
 public class McaModel extends X3dModel
 {
-    // public McaModel(ResourceLocation l)
-    // {
-    // super();
-    // loadModel(l);
-    // }
 
-    public McaModel(InputStream l)
+    public McaModel(final ResourceLocation l)
     {
         super();
         this.loadModel(l);
     }
 
-    // public void loadModel(ResourceLocation model)
-    // {
-    // try
-    // {
-    // IResource res =
-    // Minecraft.getInstance().getResourceManager().getResource(model);
-    // InputStream stream = res.getInputStream();
-    // McaXML xml = new McaXML(stream);
-    // makeObjects(xml);
-    // }
-    // catch (Exception e)
-    // {
-    // e.printStackTrace();
-    // }
-    // }
-
-    private void addChildren(Set<Children> set, Children node)
+    private void addChildren(final Set<Children> set, final Children node)
     {
         if (node.geometry != null) set.add(node);
         for (final SceneNode child : node.scenes)
@@ -61,7 +46,7 @@ public class McaModel extends X3dModel
         }
     }
 
-    private Set<String> getChildren(Children parent)
+    private Set<String> getChildren(final Children parent)
     {
         final Set<String> ret = Sets.newHashSet();
         for (final SceneNode child : parent.scenes)
@@ -69,20 +54,30 @@ public class McaModel extends X3dModel
         return ret;
     }
 
-    public void loadModel(InputStream stream)
+    @Override
+    public void loadModel(final ResourceLocation model)
     {
+        this.valid = true;
         try
         {
-            final McaXML xml = new McaXML(stream);
+            final IResource res = Minecraft.getInstance().getResourceManager().getResource(model);
+            if (res == null)
+            {
+                this.valid = false;
+                return;
+            }
+            final X3dXML xml = new X3dXML(res.getInputStream());
+            res.close();
             this.makeObjects(xml);
         }
         catch (final Exception e)
         {
-            e.printStackTrace();
+            this.valid = false;
+            if (!(e instanceof FileNotFoundException)) ThutCore.LOGGER.error("error loading " + model, e);
         }
     }
 
-    HashMap<String, IExtendedModelPart> makeObjects(McaXML xml) throws Exception
+    HashMap<String, IExtendedModelPart> makeObjects(final McaXML xml) throws Exception
     {
         final Set<Children> scenes = Sets.newHashSet();
         this.addChildren(scenes, xml.model.node.children);
@@ -95,9 +90,9 @@ public class McaModel extends X3dModel
             final Rot rot = node.parent.transform.rotation;
             final Buffers buffers = geom.mesh.buffers;
             final String name = node.parent.name;
-            final X3dObject o = new X3dObject(name);
-            final List<Shape> shapes = Lists.newArrayList();
-            final Shape shape = new Shape(buffers.getOrder(), buffers.getVerts(), buffers.getNormals(), buffers
+            final X3dPart o = new X3dPart(name);
+            final List<Mesh> shapes = Lists.newArrayList();
+            final X3dMesh shape = new X3dMesh(buffers.getOrder(), buffers.getVerts(), buffers.getNormals(), buffers
                     .getTex());
             shapes.add(shape);
             o.shapes = shapes;

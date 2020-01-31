@@ -3,7 +3,7 @@ package thut.api.terrain;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -40,16 +40,16 @@ public class TerrainManager
     {
     };
 
-    public TerrainSegment getTerrain(final World world, final BlockPos p)
+    public TerrainSegment getTerrain(final IWorld world, final BlockPos p)
     {
         return this.provider.getTerrain(world, p);
     }
 
-    public TerrainSegment getTerrain(final World world, final double x, final double y, final double z)
+    public TerrainSegment getTerrain(final IWorld world, final double x, final double y, final double z)
     {
         final BlockPos pos = new BlockPos(x, y, z);
         final TerrainSegment ret = this.getTerrain(world, pos);
-        if (!world.isRemote) ret.initBiomes(world);
+        if (!world.isRemote()) ret.initBiomes(world);
         return ret;
     }
 
@@ -59,7 +59,7 @@ public class TerrainManager
         return this.getTerrain(e.getEntityWorld(), e.posX, e.posY, e.posZ);
     }
 
-    public TerrainSegment getTerrian(final World world, final Vector3 v)
+    public TerrainSegment getTerrian(final IWorld world, final Vector3 v)
     {
         return this.getTerrain(world, v.x, v.y, v.z);
     }

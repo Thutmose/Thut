@@ -1,4 +1,4 @@
-package thut.core.client.render.tabula.model.modelbase;
+package thut.core.client.render.model.parts;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,34 +7,23 @@ import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Lists;
 
-import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.model.RendererModel;
-import net.minecraft.client.renderer.model.ModelBox;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.IAnimationChanger;
 import thut.core.client.render.model.IExtendedModelPart;
 import thut.core.client.render.model.Vertex;
-import thut.core.client.render.tabula.components.CubeInfo;
-import thut.core.client.render.tabula.components.ModelJson;
 import thut.core.client.render.texturing.IPartTexturer;
 import thut.core.client.render.texturing.IRetexturableModel;
 
-@OnlyIn(Dist.CLIENT)
-public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
+public abstract class Part implements IExtendedModelPart, IRetexturableModel
 {
-    static final float ratio = 180f / (float) Math.PI;
+    public List<Mesh> shapes = Lists.newArrayList();
 
-    public final List<ModelBox>                   cubeList   = Lists.newArrayList();
-    private final HashMap<String, TabulaRenderer> childParts = new HashMap<>();
-    public String                                 name;
-    private IExtendedModelPart                    parent     = null;
-
-    IPartTexturer     texturer;
-    IAnimationChanger changer;
+    private final HashMap<String, IExtendedModelPart> childParts = new HashMap<>();
+    private final String                              name;
+    private IExtendedModelPart                        parent     = null;
+    IPartTexturer                                     texturer;
+    IAnimationChanger                                 changer;
 
     public Vector4 preRot    = new Vector4();
     public Vector4 postRot   = new Vector4();
@@ -55,99 +44,25 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
 
     private boolean hidden = false;
 
-    private boolean compiled;
-    private int     displayList;
-    public String   identifier;
-
-    final ModelJson<?>    model;
-    public final CubeInfo info;
-
-    double[] texOffsets   = { 0, 0 };
-    boolean  shouldoffset = true;
-
-    boolean rotate = true;
-
-    boolean translate = true;
-
-    boolean shouldScale = true;
-
-    public boolean transluscent = false;
-
-    public TabulaRenderer(final ModelJson<?> modelBase, final TabulaRenderer parent, final CubeInfo cubeInfo)
+    public Part(final String name)
     {
-        // super(modelBase, x, y);
-        this.model = modelBase;
-
-        this.info = cubeInfo;
-        this.name = cubeInfo.name;
-        this.identifier = cubeInfo.identifier;
-        this.offset.set(cubeInfo.position).scalarMultBy(0.0625);
-
-        this.rotations = Vector4.fromAngles((float) cubeInfo.rotation[0], (float) cubeInfo.rotation[1],
-                (float) cubeInfo.rotation[2]);
-
-        // Allows scaling the cube with the cubeinfo scale.
-        this.scale.x = (float) cubeInfo.scale[0];
-        this.scale.y = (float) cubeInfo.scale[1];
-        this.scale.z = (float) cubeInfo.scale[2];
-
-        if (cubeInfo.metadata != null) for (final String s : cubeInfo.metadata)
-            if (s.equalsIgnoreCase("trans")) this.transluscent = true;
-        this.hidden = cubeInfo.hidden;
-
-        final RendererModel dummy = new RendererModel(this.model, cubeInfo.txOffset[0], cubeInfo.txOffset[1]);
-        // Use cubeInfo.mcScale as the scale, this lets it work properly.
-        this.cubeList.add(new ModelBox(dummy, cubeInfo.txOffset[0], cubeInfo.txOffset[1], (float) cubeInfo.offset[0],
-                (float) cubeInfo.offset[1], (float) cubeInfo.offset[2], cubeInfo.dimensions[0], cubeInfo.dimensions[1],
-                cubeInfo.dimensions[2], (float) cubeInfo.mcScale));
+        this.name = name;
     }
 
     @Override
-    public void addChild(final IExtendedModelPart renderer)
+    public void addChild(final IExtendedModelPart subPart)
     {
-        // super.addChild((RendererModel) renderer);
-        this.childParts.put(renderer.getName(), (TabulaRenderer) renderer);
-        if (renderer instanceof TabulaRenderer) ((TabulaRenderer) renderer).setParent(this);
+        this.childParts.put(subPart.getName(), subPart);
+        subPart.setParent(this);
     }
 
     public void addForRender()
     {
-        if (!this.compiled) this.compileDisplayList(0.0625F);
-        // Apply Colour
-        boolean animateTex = false;
-        // Apply Texture
-        if (this.texturer != null)
-        {
-            this.texturer.applyTexture(this.name);
-            this.texturer.shiftUVs(this.name, this.texOffsets);
-            if (this.texOffsets[0] != 0 || this.texOffsets[1] != 0) animateTex = true;
-            if (animateTex)
-            {
-                GL11.glMatrixMode(GL11.GL_TEXTURE);
-                GL11.glLoadIdentity();
-                GL11.glTranslated(this.texOffsets[0], this.texOffsets[1], 0.0F);
-                GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            }
-        }
-        GL11.glCallList(this.displayList);
-        GL11.glFlush();
-        if (animateTex)
-        {
-            GL11.glMatrixMode(GL11.GL_TEXTURE);
-            GL11.glLoadIdentity();
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        }
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private void compileDisplayList(final float scale)
-    {
-        this.displayList = GLAllocation.generateDisplayLists(1);
-        GL11.glNewList(this.displayList, GL11.GL_COMPILE);
-        for (final Object object : this.cubeList)
-            ((ModelBox) object).render(Tessellator.getInstance().getBuffer(), scale);
-        GL11.glEndList();
-        this.compiled = true;
+        // Set colours.
+        GL11.glColor4f(this.red / 255f, this.green / 255f, this.blue / 255f, this.alpha / 255f);
+        // Render each Shape
+        for (final Mesh s : this.shapes)
+            s.renderShape(this.texturer);
     }
 
     @Override
@@ -168,7 +83,6 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
         return this.name;
     }
 
-    /** Returns the parent of this RendererModel */
     @Override
     public IExtendedModelPart getParent()
     {
@@ -188,15 +102,9 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
 
     @SuppressWarnings("unchecked")
     @Override
-    public HashMap<String, TabulaRenderer> getSubParts()
+    public HashMap<String, IExtendedModelPart> getSubParts()
     {
         return this.childParts;
-    }
-
-    @Override
-    public String getType()
-    {
-        return "tbl";
     }
 
     private void postRender()
@@ -281,6 +189,37 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
+    public void renderOnly(final String... groupNames)
+    {
+        boolean rendered = false;
+        for (final String s1 : groupNames)
+            if (rendered = s1.equalsIgnoreCase(this.name))
+            {
+                this.render();
+                break;
+            }
+        if (!rendered)
+        {
+            this.preRender();
+            this.postRender();
+        }
+        for (final IExtendedModelPart o : this.childParts.values())
+        {
+            GL11.glPushMatrix();
+            GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+            GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+            o.renderOnly(groupNames);
+            GL11.glPopMatrix();
+        }
+    }
+
+    @Override
+    public void renderPart(final String partName)
+    {
+        this.renderOnly(partName);
+    }
+
+    @Override
     public void resetToInit()
     {
         this.preRot.set(0, 1, 0, 0);
@@ -292,9 +231,9 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
 
     private void rotateToParent()
     {
-        if (this.parent != null) if (this.parent instanceof TabulaRenderer)
+        if (this.parent != null) if (this.parent instanceof Part)
         {
-            final TabulaRenderer parent = (TabulaRenderer) this.parent;
+            final Part parent = (Part) this.parent;
             parent.postRot.glRotate();
             parent.postRot1.glRotate();
         }
@@ -304,20 +243,20 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     public void setAnimationChanger(final IAnimationChanger changer)
     {
         this.changer = changer;
-        for (final TabulaRenderer part : this.childParts.values())
-            part.setAnimationChanger(changer);
+        for (final IExtendedModelPart part : this.childParts.values())
+            if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setAnimationChanger(changer);
     }
 
-    /** Set the initialization pose to the current pose */
-    public void setInitValuesToCurrentPose()
-    {
-    }
-
-    /** Sets the parent of this RendererModel */
     @Override
-    public void setParent(final IExtendedModelPart modelRenderer)
+    public void setHidden(final boolean hidden)
     {
-        this.parent = modelRenderer;
+        this.hidden = hidden;
+    }
+
+    @Override
+    public void setParent(final IExtendedModelPart parent)
+    {
+        this.parent = parent;
     }
 
     @Override
@@ -372,7 +311,7 @@ public class TabulaRenderer implements IExtendedModelPart, IRetexturableModel
     public void setTexturer(final IPartTexturer texturer)
     {
         this.texturer = texturer;
-        for (final TabulaRenderer part : this.childParts.values())
-            part.setTexturer(texturer);
+        for (final IExtendedModelPart part : this.childParts.values())
+            if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(texturer);
     }
 }
