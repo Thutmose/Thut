@@ -19,6 +19,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import thut.api.entity.blockentity.world.client.IBlockEntityWorld;
 import thut.tech.common.blocks.lift.ControllerTile;
+import thut.tech.common.entity.EntityLift;
 
 public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer<T>
 {
@@ -312,8 +313,10 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
                 if (monitor.liftID == null) this.drawFloorNumbers(monitor.getSidePage(dir));
                 else
                 {
+                    if (monitor.lift == null) monitor.lift = EntityLift.getLiftFromUUID(monitor.liftID, this
+                            .getWorld());
                     final int page = monitor.getSidePage(dir);
-                    for (int floor = 0; floor < 16; floor++)
+                    if (monitor.lift != null) for (int floor = 0; floor < 16; floor++)
                         if (monitor.lift.hasFloors[floor + page * 16]) this.drawNumber(floor + page * 16, floor);
                 }
 
