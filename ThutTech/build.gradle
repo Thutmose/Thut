@@ -104,7 +104,7 @@ dependencies {
     //Use our guys in libs
     compile fileTree(dir: 'libs', include: '*.jar')
     //Dependancy for thutcore from curseforge
-    compile "thutcore:thutcore:latest:deobf"
+    //compile "thutcore:thutcore:${version_minecraft}-${version_thutcore}-deobf"
 
     // For more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
