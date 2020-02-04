@@ -61,7 +61,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             }
             return true;
         }
-        if (player.isSneaking() && stack != null && stack.getItem() instanceof ItemLinker && (this.lift.owner != null
+        if (player.isCrouching() && stack != null && stack.getItem() instanceof ItemLinker && (this.lift.owner != null
                 && player.getUniqueID().equals(this.lift.owner) || player.abilities.isCreativeMode))
         {
             if (stack.getTag() == null) stack.setTag(new CompoundNBT());
@@ -84,7 +84,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             }
             return true;
         }
-        if (player.isSneaking() && stack != null && player.getHeldItem(hand).getItem() == Items.STICK
+        if (player.isCrouching() && stack != null && player.getHeldItem(hand).getItem() == Items.STICK
                 && this.lift.owner != null && (player.getUniqueID().equals(this.lift.owner)
                         || player.abilities.isCreativeMode))
         {

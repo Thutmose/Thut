@@ -12,6 +12,7 @@ import net.minecraft.item.Items;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -24,21 +25,19 @@ import thut.tech.common.TechCore;
 
 public class ControllerBlock extends Block
 {
-    public static final BooleanProperty CALLED = BooleanProperty.create("called");
+    public static final BooleanProperty CALLED  = BooleanProperty.create("called");
 
     public static final BooleanProperty CURRENT = BooleanProperty.create("current");
 
     public ControllerBlock(final Block.Properties props)
     {
         super(props);
-        this.setDefaultState(this.stateContainer.getBaseState().with(ControllerBlock.CALLED, false).with(ControllerBlock.CURRENT,
-                false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(ControllerBlock.CALLED, false)
+                .with(ControllerBlock.CURRENT, false));
     }
 
-    /**
-     * Can this block provide power. Only wire currently seems to have this
-     * change based on its state.
-     */
+    /** Can this block provide power. Only wire currently seems to have this
+     * change based on its state. */
     @Override
     public boolean canProvidePower(final BlockState state)
     {
@@ -89,15 +88,15 @@ public class ControllerBlock extends Block
     }
 
     @Override
-    public boolean onBlockActivated(final BlockState state, final World worldIn, final BlockPos pos,
+    public ActionResultType onBlockActivated(final BlockState state, final World worldIn, final BlockPos pos,
             final PlayerEntity playerIn, final Hand handIn, final BlockRayTraceResult hit)
     {
         final ItemStack heldItem = playerIn.getHeldItem(handIn);
         final Direction side = hit.getFace();
         final boolean linkerOrStick = heldItem.getItem() == Items.STICK || heldItem.getItem() == TechCore.LINKER;
-        if (linkerOrStick && playerIn.isSneaking()) return false;
+        if (linkerOrStick && playerIn.isCrouching()) return ActionResultType.PASS;
         final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
-        if (te == null) return false;
+        if (te == null) return ActionResultType.PASS;
 
         if (!linkerOrStick && side == Direction.DOWN)
         {
@@ -106,9 +105,9 @@ public class ControllerBlock extends Block
                 final BlockItemUseContext context = new BlockItemUseContext(new ItemUseContext(playerIn, handIn, hit));
                 te.copiedState = ((BlockItem) heldItem.getItem()).getBlock().getStateForPlacement(context);
                 if (!te.getWorld().isRemote) TileUpdate.sendUpdate(te);
-                return true;
+                return ActionResultType.SUCCESS;
             }
-            return false;
+            return ActionResultType.PASS;
         }
         if (!te.isSideOn(side) || heldItem.getItem() == Items.STICK)
         {
@@ -119,7 +118,7 @@ public class ControllerBlock extends Block
                     te.setSide(side, !te.isSideOn(side));
                     if (worldIn instanceof ServerWorld) te.sendUpdate((ServerPlayerEntity) playerIn);
                 }
-                return true;
+                return ActionResultType.SUCCESS;
             }
         }
         else if (te.isSideOn(side)) if (heldItem.getItem() == TechCore.LINKER)
@@ -130,15 +129,16 @@ public class ControllerBlock extends Block
                 if (playerIn instanceof ServerPlayerEntity) te.sendUpdate((ServerPlayerEntity) playerIn);
                 TileUpdate.sendUpdate(te);
             }
-            return true;
+            return ActionResultType.SUCCESS;
         }
         else
         {
             final float hitX = (float) hit.getHitVec().x;
             final float hitY = (float) hit.getHitVec().y;
             final float hitZ = (float) hit.getHitVec().z;
-            return te.doButtonClick(playerIn, side, hitX, hitY, hitZ);
+            return te.doButtonClick(playerIn, side, hitX, hitY, hitZ) ? ActionResultType.SUCCESS
+                    : ActionResultType.PASS;
         }
-        return false;
+        return ActionResultType.PASS;
     }
 }

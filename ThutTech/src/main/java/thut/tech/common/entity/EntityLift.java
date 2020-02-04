@@ -3,8 +3,6 @@ package thut.tech.common.entity;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.vecmath.Vector3f;
-
 import com.google.common.collect.Maps;
 
 import net.minecraft.entity.Entity;
@@ -28,6 +26,7 @@ import net.minecraftforge.energy.IEnergyStorage;
 import thut.api.entity.blockentity.BlockEntityBase;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.api.maths.Vector3;
+import thut.api.maths.vecmath.Vector3f;
 import thut.core.common.network.EntityUpdate;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.ControllerTile;

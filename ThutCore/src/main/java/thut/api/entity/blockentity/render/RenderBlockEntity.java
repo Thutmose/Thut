@@ -2,8 +2,6 @@ package thut.api.entity.blockentity.render;
 
 import java.util.Random;
 
-import org.lwjgl.opengl.GL11;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.block.BlockRenderType;

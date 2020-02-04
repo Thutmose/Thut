@@ -15,7 +15,6 @@ import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 
 public abstract class BlockEntityInteractHandler
@@ -44,6 +43,7 @@ public abstract class BlockEntityInteractHandler
         if (trace == null) pos = this.theEntity.getPosition();
         else pos = trace.getPos();
         BlockState state = this.blockEntity.getFakeWorld().getBlock(pos);
+        //TODO see if this actually works
         boolean activate = state != null && state.onBlockActivated(player.getEntityWorld(), player,
                 hand, trace).isSuccessOrConsume();
         if (activate) return ActionResultType.SUCCESS;

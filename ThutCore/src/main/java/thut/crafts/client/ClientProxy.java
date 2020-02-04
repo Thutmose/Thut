@@ -108,8 +108,6 @@ public class ClientProxy extends CommonProxy
                 
                 box = new AxisAlignedBB(min).grow(1);
                 
-//                System.out.println(box);
-                
                 final MatrixStack mat = event.getMatrixStack();
 
                 final List<Pair<Vector3f, Vector3f>> lines = Lists.newArrayList();
