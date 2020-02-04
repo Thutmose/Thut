@@ -94,7 +94,18 @@ public class ControllerBlock extends Block
         final ItemStack heldItem = playerIn.getHeldItem(handIn);
         final Direction side = hit.getFace();
         final boolean linkerOrStick = heldItem.getItem() == Items.STICK || heldItem.getItem() == TechCore.LINKER;
-        if (linkerOrStick && playerIn.isCrouching()) return ActionResultType.PASS;
+        if (linkerOrStick && playerIn.isCrouching())
+        {
+            final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
+            if (te == null) return ActionResultType.PASS;
+            if (te.isSideOn(side))
+            {
+                te.setSide(side, false);
+                if (!te.getWorld().isRemote) TileUpdate.sendUpdate(te);
+                return ActionResultType.SUCCESS;
+            }
+            return ActionResultType.PASS;
+        }
         final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
         if (te == null) return ActionResultType.PASS;
 
