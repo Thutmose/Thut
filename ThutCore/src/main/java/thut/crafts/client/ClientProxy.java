@@ -21,6 +21,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -54,28 +56,28 @@ public class ClientProxy extends CommonProxy
     {
         if (event.phase == Phase.START || event.player != Minecraft.getInstance().player) return;
         control:
-            if (event.player.isPassenger() && Minecraft.getInstance().currentScreen == null)
+        if (event.player.isPassenger() && Minecraft.getInstance().currentScreen == null)
+        {
+            final Entity e = event.player.getRidingEntity();
+            if (e instanceof EntityCraft)
             {
-                final Entity e = event.player.getRidingEntity();
-                if (e instanceof EntityCraft)
+                final ClientPlayerEntity player = (ClientPlayerEntity) event.player;
+                final CraftController controller = ((EntityCraft) e).controller;
+                if (controller == null) break control;
+                controller.backInputDown = player.movementInput.backKeyDown;
+                controller.forwardInputDown = player.movementInput.forwardKeyDown;
+                controller.leftInputDown = player.movementInput.leftKeyDown;
+                controller.rightInputDown = player.movementInput.rightKeyDown;
+                controller.upInputDown = this.UP.isKeyDown();
+                controller.downInputDown = this.DOWN.isKeyDown();
+                if (ThutCrafts.conf.canRotate)
                 {
-                    final ClientPlayerEntity player = (ClientPlayerEntity) event.player;
-                    final CraftController controller = ((EntityCraft) e).controller;
-                    if (controller == null) break control;
-                    controller.backInputDown = player.movementInput.backKeyDown;
-                    controller.forwardInputDown = player.movementInput.forwardKeyDown;
-                    controller.leftInputDown = player.movementInput.leftKeyDown;
-                    controller.rightInputDown = player.movementInput.rightKeyDown;
-                    controller.upInputDown = this.UP.isKeyDown();
-                    controller.downInputDown = this.DOWN.isKeyDown();
-                    if (ThutCrafts.conf.canRotate)
-                    {
-                        controller.rightRotateDown = this.ROTATERIGHT.isKeyDown();
-                        controller.leftRotateDown = this.ROTATELEFT.isKeyDown();
-                    }
-                    PacketCraftControl.sendControlPacket(e, controller);
+                    controller.rightRotateDown = this.ROTATERIGHT.isKeyDown();
+                    controller.leftRotateDown = this.ROTATELEFT.isKeyDown();
                 }
+                PacketCraftControl.sendControlPacket(e, controller);
             }
+        }
     }
 
     @Override
@@ -93,57 +95,63 @@ public class ClientProxy extends CommonProxy
         if (!(held = player.getHeldItemMainhand()).isEmpty() || !(held = player.getHeldItemOffhand()).isEmpty())
         {
             if (held.getItem() != ThutCrafts.CRAFTMAKER) return;
-            final Vec3d lookedAt = player.getEyePosition(event.getPartialTicks())
-                    .add(player.getLook(event.getPartialTicks()));
-            // TODO default this to the block the player is looking at instead!
-            final BlockPos pos = new BlockPos(lookedAt);
             if (held.getTag() != null && held.getTag().contains("min"))
             {
-                BlockPos min = Vector3.readFromNBT(held.getTag().getCompound("min"), "").getPos();
-                BlockPos max = pos;
-                AxisAlignedBB box = new AxisAlignedBB(min, max);
-                min = new BlockPos(box.minX, box.minY, box.minZ);
-                max = new BlockPos(box.maxX, box.maxY, box.maxZ).add(1, 1, 1);
-                box = new AxisAlignedBB(min, max);
-                
-                box = new AxisAlignedBB(min).grow(1);
-                
+                Minecraft mc = Minecraft.getInstance();
+                Vec3d projectedView = mc.gameRenderer.getActiveRenderInfo().getProjectedView();
+                Vec3d pointed = new Vec3d(projectedView.x, projectedView.y, projectedView.z)
+                        .add(mc.player.getLook(event.getPartialTicks()));
+                if (mc.objectMouseOver != null && mc.objectMouseOver.getType() == Type.BLOCK)
+                {
+                    BlockRayTraceResult result = (BlockRayTraceResult) mc.objectMouseOver;
+                    pointed = new Vec3d(result.getPos());
+                    //
+                }
+                Vector3 v = Vector3.readFromNBT(held.getTag().getCompound("min"), "");
+
+                AxisAlignedBB one = new AxisAlignedBB(v.getPos());
+                AxisAlignedBB two = new AxisAlignedBB(new BlockPos(pointed));
+
+                double minX = Math.min(one.minX, two.minX);
+                double minY = Math.min(one.minY, two.minY);
+                double minZ = Math.min(one.minZ, two.minZ);
+                double maxX = Math.max(one.maxX, two.maxX);
+                double maxY = Math.max(one.maxY, two.maxY);
+                double maxZ = Math.max(one.maxZ, two.maxZ);
+
                 final MatrixStack mat = event.getMatrixStack();
+                mat.translate(-projectedView.x, -projectedView.y, -projectedView.z);
 
                 final List<Pair<Vector3f, Vector3f>> lines = Lists.newArrayList();
 
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.minY, (float) box.minZ),
-                        new Vector3f((float) box.maxX, (float) box.minY, (float) box.minZ)));
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.maxY, (float) box.minZ),
-                        new Vector3f((float) box.maxX, (float) box.maxY, (float) box.minZ)));
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.minY, (float) box.maxZ),
-                        new Vector3f((float) box.maxX, (float) box.minY, (float) box.maxZ)));
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.maxY, (float) box.maxZ),
-                        new Vector3f((float) box.maxX, (float) box.maxY, (float) box.maxZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) minY, (float) minZ),
+                        new Vector3f((float) maxX, (float) minY, (float) minZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) maxY, (float) minZ),
+                        new Vector3f((float) maxX, (float) maxY, (float) minZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) minY, (float) maxZ),
+                        new Vector3f((float) maxX, (float) minY, (float) maxZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) maxY, (float) maxZ),
+                        new Vector3f((float) maxX, (float) maxY, (float) maxZ)));
 
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.minY, (float) box.minZ),
-                        new Vector3f((float) box.minX, (float) box.minY, (float) box.maxZ)));
-                lines.add(Pair.of(new Vector3f((float) box.maxX, (float) box.minY, (float) box.minZ),
-                        new Vector3f((float) box.maxX, (float) box.minY, (float) box.maxZ)));
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.maxY, (float) box.minZ),
-                        new Vector3f((float) box.minX, (float) box.maxY, (float) box.maxZ)));
-                lines.add(Pair.of(new Vector3f((float) box.maxX, (float) box.maxY, (float) box.minZ),
-                        new Vector3f((float) box.maxX, (float) box.maxY, (float) box.maxZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) minY, (float) minZ),
+                        new Vector3f((float) minX, (float) minY, (float) maxZ)));
+                lines.add(Pair.of(new Vector3f((float) maxX, (float) minY, (float) minZ),
+                        new Vector3f((float) maxX, (float) minY, (float) maxZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) maxY, (float) minZ),
+                        new Vector3f((float) minX, (float) maxY, (float) maxZ)));
+                lines.add(Pair.of(new Vector3f((float) maxX, (float) maxY, (float) minZ),
+                        new Vector3f((float) maxX, (float) maxY, (float) maxZ)));
 
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.minY, (float) box.minZ),
-                        new Vector3f((float) box.minX, (float) box.maxY, (float) box.minZ)));
-                lines.add(Pair.of(new Vector3f((float) box.maxX, (float) box.minY, (float) box.minZ),
-                        new Vector3f((float) box.maxX, (float) box.maxY, (float) box.minZ)));
-                lines.add(Pair.of(new Vector3f((float) box.minX, (float) box.minY, (float) box.maxZ),
-                        new Vector3f((float) box.minX, (float) box.maxY, (float) box.maxZ)));
-                lines.add(Pair.of(new Vector3f((float) box.maxX, (float) box.minY, (float) box.maxZ),
-                        new Vector3f((float) box.maxX, (float) box.maxY, (float) box.maxZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) minY, (float) minZ),
+                        new Vector3f((float) minX, (float) maxY, (float) minZ)));
+                lines.add(Pair.of(new Vector3f((float) maxX, (float) minY, (float) minZ),
+                        new Vector3f((float) maxX, (float) maxY, (float) minZ)));
+                lines.add(Pair.of(new Vector3f((float) minX, (float) minY, (float) maxZ),
+                        new Vector3f((float) minX, (float) maxY, (float) maxZ)));
+                lines.add(Pair.of(new Vector3f((float) maxX, (float) minY, (float) maxZ),
+                        new Vector3f((float) maxX, (float) maxY, (float) maxZ)));
 
                 mat.push();
-
-                final Vec3d projectedView = Minecraft.getInstance().gameRenderer.getActiveRenderInfo()
-                        .getProjectedView();
-                mat.translate(-projectedView.x, -projectedView.y, -projectedView.z);
 
                 final Matrix4f positionMatrix = mat.getLast().getPositionMatrix();
 
@@ -184,7 +192,6 @@ public class ClientProxy extends CommonProxy
         ClientRegistry.registerKeyBinding(this.ROTATERIGHT);
 
         RenderingRegistry.registerEntityRenderingHandler(EntityCraft.CRAFTTYPE,
-                (manager) -> new RenderBlockEntity<>(
-                        manager));
+                (manager) -> new RenderBlockEntity<>(manager));
     }
 }

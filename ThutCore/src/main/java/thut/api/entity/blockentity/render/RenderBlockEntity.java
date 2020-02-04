@@ -1,7 +1,5 @@
 package thut.api.entity.blockentity.render;
 
-import java.util.Random;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.block.BlockRenderType;
@@ -20,7 +18,6 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.tileentity.TileEntity;
@@ -28,6 +25,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.model.data.EmptyModelData;
@@ -116,6 +114,7 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
         final BlockPos mobPos = entity.getMin();
         pos = pos.add(mobPos);
         if (BlockState == null) BlockState = Blocks.AIR.getDefaultState();
+        World world = ((Entity) entity).getEntityWorld();
         if (BlockState.getMaterial() != Material.AIR)
         {
             final BlockRendererDispatcher blockrendererdispatcher = Minecraft.getInstance()
@@ -127,8 +126,8 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
                 mat.push();
                 mat.translate(0.5, 0, 0.5);
                 final IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
-                this.renderBakedBlockModel(entity, model, actualstate, ((Entity) entity).getEntityWorld(), pos, mat,
-                        bufferIn, packedLightIn);
+
+                this.renderBakedBlockModel(entity, model, actualstate, world, pos, mat, bufferIn, packedLightIn);
                 mat.pop();
             }
         }
@@ -141,20 +140,10 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
         mat.rotate(new Quaternion(-180, 90, 0, true));
         mat.translate(0.5F, 0.5F, 0.5F);
         RenderHelper.disableStandardItemLighting();
-        // final boolean blend = GL11.glGetBoolean(GL11.GL_BLEND);
-        // GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
-        // GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        // GlStateManager.enableBlend();
-        //
-        // GlStateManager.disableCull();
-        // TODO Ambuent occlusion was here?
         final float f7 = 1.0F;
         mat.scale(-f7, -f7, f7);
         this.getRenderManager().textureManager.bindTexture(PlayerContainer.LOCATION_BLOCKS_TEXTURE);
         this.getCrateModel();
-        // renderBakedBlockModel(blockEntity, model,
-        // Blocks.STONE.getDefaultState(), blockEntity.getFakeWorld(), pos);
-        // if (!blend) GL11.glDisable(GL11.GL_BLEND);
         RenderHelper.enableStandardItemLighting();
         mat.pop();
     }
@@ -213,11 +202,11 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
             final IBlockReader world, BlockPos pos, final MatrixStack mat, final IRenderTypeBuffer bufferIn,
             final int packedLightIn)
     {
-        mat.translate(pos.getX()-1, pos.getY(), pos.getZ()-1);
+        mat.translate(pos.getX() - 1, pos.getY(), pos.getZ() - 1);
         mat.rotate(Vector3f.YN.rotationDegrees(180.0F));
         mat.rotate(Vector3f.ZP.rotationDegrees(180.0F));
         mat.rotate(Vector3f.XP.rotationDegrees(180.0F));
-        
+
         Minecraft.getInstance().getBlockRendererDispatcher().renderBlock(state, mat, bufferIn, packedLightIn,
                 OverlayTexture.DEFAULT_LIGHT, EmptyModelData.INSTANCE);
         mat.translate(pos.getX(), pos.getY(), pos.getZ());
