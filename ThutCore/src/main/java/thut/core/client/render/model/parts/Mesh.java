@@ -2,7 +2,9 @@ package thut.core.client.render.model.parts;
 
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import thut.api.maths.vecmath.Vector3f;
 import thut.core.client.render.model.Vertex;
@@ -33,7 +35,7 @@ public abstract class Mesh
         this.GL_FORMAT = GL_FORMAT;
     }
 
-    protected void doRender(final IPartTexturer texturer)
+    protected void doRender(final MatrixStack mat, final IVertexBuilder buffer, final IPartTexturer texturer)
     {
         Vertex vertex;
         Vertex normal;
@@ -100,7 +102,7 @@ public abstract class Mesh
         if (!this.hasTextures) GlStateManager.enableTexture();
     }
 
-    private void compileList(final IPartTexturer texturer)
+    private void compileList(final MatrixStack mat, final IVertexBuilder buffer, final IPartTexturer texturer)
     {
         if (!GL11.glIsList(this.meshId))
         {
@@ -108,15 +110,15 @@ public abstract class Mesh
                     && this.material.texture != null) texturer.addMapping(this.material.name, this.material.texture);
             this.meshId = GL11.glGenLists(1);
             GL11.glNewList(this.meshId, GL11.GL_COMPILE);
-            this.doRender(texturer);
+            this.doRender(mat, buffer, texturer);
             GL11.glEndList();
         }
     }
 
-    public void renderShape(final IPartTexturer texturer)
+    public void renderShape(final MatrixStack mat, final IVertexBuilder buffer, final IPartTexturer texturer)
     {
         // Compiles the list if the meshId is invalid.
-        this.compileList(texturer);
+        this.compileList(mat, buffer, texturer);
         boolean textureShift = false;
         // Apply Texturing.
         if (texturer != null)
@@ -129,11 +131,11 @@ public abstract class Mesh
                 GL11.glMatrixMode(GL11.GL_MODELVIEW);
             }
         }
-        if (this.material != null) this.material.preRender();
+        if (this.material != null) this.material.preRender(mat, buffer);
         // Call the list
         GL11.glCallList(this.meshId);
         GL11.glFlush();
-        if (this.material != null) this.material.postRender();
+        if (this.material != null) this.material.postRender(mat, buffer);
 
         // Reset Texture Matrix if changed.
         if (textureShift)

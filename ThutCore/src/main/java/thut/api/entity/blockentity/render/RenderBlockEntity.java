@@ -4,7 +4,7 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -13,15 +13,18 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.Quaternion;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.texture.AtlasTexture;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -39,15 +42,15 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
 {
     private static IBakedModel crate_model;
 
-    static final Tessellator t = new Tessellator(2097152);
+    static final Tessellator   t     = new Tessellator(2097152);
 
-    float         pitch = 0.0f;
-    float         yaw   = 0.0f;
-    long          time  = 0;
-    boolean       up    = true;
-    BufferBuilder b     = RenderBlockEntity.t.getBuffer();
+    float                      pitch = 0.0f;
+    float                      yaw   = 0.0f;
+    long                       time  = 0;
+    boolean                    up    = true;
+    BufferBuilder              b     = RenderBlockEntity.t.getBuffer();
 
-    ResourceLocation texture;
+    ResourceLocation           texture;
 
     public RenderBlockEntity(final EntityRendererManager manager)
     {
@@ -55,25 +58,23 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
     }
 
     @Override
-    public void doRender(final T entity, final double x, final double y, final double z, final float entityYaw,
-            final float partialTicks)
+    public void render(final T entity, final float entityYaw, final float partialTicks, final MatrixStack mat,
+            final IRenderTypeBuffer bufferIn, final int packedLightIn)
     {
         // Incase some other mod tries to render as us.
         if (!(entity instanceof IBlockEntity)) return;
         try
         {
+            mat.push();
             final IBlockEntity blockEntity = entity;
-            GL11.glPushMatrix();
-            GL11.glTranslated(x, y + 0.5, z);
             if (entity instanceof IMultiplePassengerEntity)
             {
                 final IMultiplePassengerEntity multi = (IMultiplePassengerEntity) entity;
                 final float yaw = -(multi.getPrevYaw() + (multi.getYaw() - multi.getPrevYaw()) * partialTicks);
                 final float pitch = -(multi.getPrevPitch() + (multi.getPitch() - multi.getPrevPitch()) * partialTicks);
-                GL11.glRotatef(yaw, 0, 1, 0);
-                GL11.glRotatef(pitch, 0, 0, 1);
+                mat.rotate(new Quaternion(0, yaw, pitch, true));
             }
-            final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+            final BlockPos.Mutable pos = new BlockPos.Mutable();
 
             final int xMin = MathHelper.floor(blockEntity.getMin().getX());
             final int xMax = MathHelper.floor(blockEntity.getMax().getX());
@@ -87,8 +88,9 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
                     for (int k = zMin; k <= zMax; k++)
                     {
                         pos.setPos(i - xMin, j - yMin, k - zMin);
-                        if (!blockEntity.shouldHide(pos)) this.drawBlockAt(pos, blockEntity);
-                        else this.drawCrateAt(pos, blockEntity);
+                        if (!blockEntity.shouldHide(pos))
+                            this.drawBlockAt(pos, blockEntity, mat, bufferIn, packedLightIn);
+                        else this.drawCrateAt(pos, blockEntity, mat, bufferIn, packedLightIn);
                     }
 
             for (int i = xMin; i <= xMax; i++)
@@ -96,9 +98,10 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
                     for (int k = zMin; k <= zMax; k++)
                     {
                         pos.setPos(i, j, k);
-                        if (!blockEntity.shouldHide(pos)) this.drawTileAt(pos, blockEntity, partialTicks);
+                        if (!blockEntity.shouldHide(pos))
+                            this.drawTileAt(pos, blockEntity, partialTicks, mat, bufferIn, packedLightIn);
                     }
-            GL11.glPopMatrix();
+            mat.pop();
 
         }
         catch (final Exception e)
@@ -107,7 +110,8 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
         }
     }
 
-    private void drawBlockAt(BlockPos pos, final IBlockEntity entity)
+    private void drawBlockAt(BlockPos pos, final IBlockEntity entity, final MatrixStack mat,
+            final IRenderTypeBuffer bufferIn, final int packedLightIn)
     {
         if (entity.getBlocks() == null) return;
         BlockState BlockState = entity.getBlocks()[pos.getX()][pos.getY()][pos.getZ()];
@@ -118,77 +122,72 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
         {
             final BlockRendererDispatcher blockrendererdispatcher = Minecraft.getInstance()
                     .getBlockRendererDispatcher();
-            BlockState actualstate = BlockState.getExtendedState(entity.getFakeWorld(), pos);
-            actualstate = actualstate.getBlock().getExtendedState(actualstate, entity.getFakeWorld(), pos);
+            final BlockState actualstate = BlockState.getBlock().getExtendedState(BlockState, entity.getFakeWorld(),
+                    pos);
             if (actualstate.getRenderType() == BlockRenderType.MODEL)
             {
-                GlStateManager.pushMatrix();
-                GlStateManager.rotatef(90.0F, 0.0F, 1.0F, 0.0F);
-                GlStateManager.rotatef(-180.0F, 1.0F, 0.0F, 0.0F);
-                GlStateManager.translatef(0.5F, 0.5F, 0.5F);
-                GlStateManager.disableLighting();
-                final float f7 = 1.0F;
-                GlStateManager.scalef(-f7, -f7, f7);
-                GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+                mat.push();
+                mat.translate(0.5, 0, 0.5);
                 final IBakedModel model = blockrendererdispatcher.getModelForState(actualstate);
-                this.renderBakedBlockModel(entity, model, actualstate, ((Entity) entity).getEntityWorld(), pos);
-                GlStateManager.enableLighting();
-                GlStateManager.popMatrix();
+                this.renderBakedBlockModel(entity, model, actualstate, ((Entity) entity).getEntityWorld(), pos, mat,
+                        bufferIn, packedLightIn);
+                mat.pop();
             }
         }
     }
 
-    private void drawCrateAt(final BlockPos.MutableBlockPos pos, final IBlockEntity blockEntity)
+    private void drawCrateAt(final BlockPos.Mutable pos, final IBlockEntity blockEntity, final MatrixStack mat,
+            final IRenderTypeBuffer bufferIn, final int packedLightIn)
     {
-        GlStateManager.pushMatrix();
-        GlStateManager.rotatef(90.0F, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotatef(-180.0F, 1.0F, 0.0F, 0.0F);
-        GlStateManager.translatef(0.5F, 0.5F, 0.5F);
+        mat.push();
+        mat.rotate(new Quaternion(-180, 90, 0, true));
+        mat.translate(0.5F, 0.5F, 0.5F);
         RenderHelper.disableStandardItemLighting();
-        final boolean blend = GL11.glGetBoolean(GL11.GL_BLEND);
-        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        GlStateManager.enableBlend();
-
-        GlStateManager.disableCull();
-
-        if (Minecraft.isAmbientOcclusionEnabled()) GlStateManager.shadeModel(7425);
-        else GlStateManager.shadeModel(7424);
+        // final boolean blend = GL11.glGetBoolean(GL11.GL_BLEND);
+        // GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+        // GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        // GlStateManager.enableBlend();
+        //
+        // GlStateManager.disableCull();
+        // TODO Ambuent occlusion was here?
         final float f7 = 1.0F;
-        GlStateManager.scalef(-f7, -f7, f7);
-        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+        mat.scale(-f7, -f7, f7);
+        this.getRenderManager().textureManager.bindTexture(PlayerContainer.LOCATION_BLOCKS_TEXTURE);
         this.getCrateModel();
         // renderBakedBlockModel(blockEntity, model,
         // Blocks.STONE.getDefaultState(), blockEntity.getFakeWorld(), pos);
-        if (!blend) GL11.glDisable(GL11.GL_BLEND);
+        // if (!blend) GL11.glDisable(GL11.GL_BLEND);
         RenderHelper.enableStandardItemLighting();
-        GlStateManager.popMatrix();
+        mat.pop();
     }
 
-    private void drawTileAt(final BlockPos pos, final IBlockEntity entity, final float partialTicks)
+    private void drawTileAt(final BlockPos pos, final IBlockEntity entity, final float partialTicks,
+            final MatrixStack mat, final IRenderTypeBuffer bufferIn, final int packedLightIn)
     {
         final TileEntity tile = entity.getFakeWorld().getTile(pos);
         if (tile != null)
         {
-            GL11.glPushMatrix();
-            GlStateManager.rotatef(90.0F, 0.0F, 1.0F, 0.0F);
-            GlStateManager.pushMatrix();
-            GlStateManager.rotatef(-180.0F, 1.0F, 0.0F, 0.0F);
-            GlStateManager.translatef(0.5F, 0.5F, 0.5F);
-            GlStateManager.rotatef(-90.0F, 0.0F, 1.0F, 0.0F);
+            mat.push();
+            mat.rotate(new Quaternion(0, 90.0F, 0.0F, true));
+            mat.push();
+            mat.rotate(new Quaternion(-180, 0.0F, 0.0F, true));
+            mat.translate(0.5F, 0.5F, 0.5F);
+            mat.rotate(new Quaternion(0, -90.0F, 0.0F, true));
             final float f7 = 1.0F;
-            GlStateManager.scalef(-f7, -f7, f7);
-            GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            mat.scale(-f7, -f7, f7);
             final boolean fast = tile.hasFastRenderer();
             if (fast)
             {
-                TileEntityRendererDispatcher.instance.preDrawBatch();
-                TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
-                TileEntityRendererDispatcher.instance.drawBatch();
+                // TODO how this works now?
+                // TileEntityRendererDispatcher.instance.preDrawBatch();
+                // TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0,
+                // partialTicks);
+                // TileEntityRendererDispatcher.instance.drawBatch();
             }
-            else TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0, partialTicks);
-            GlStateManager.popMatrix();
-            GL11.glPopMatrix();
+            // else TileEntityRendererDispatcher.instance.render(tile, 0, 0, 0,
+            // partialTicks);
+            mat.pop();
+            mat.pop();
         }
     }
 
@@ -209,30 +208,21 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
     @Override
     public ResourceLocation getEntityTexture(final T entity)
     {
-        return AtlasTexture.LOCATION_BLOCKS_TEXTURE;
+        return PlayerContainer.LOCATION_BLOCKS_TEXTURE;
     }
 
     private void renderBakedBlockModel(final IBlockEntity entity, final IBakedModel model, final BlockState state,
-            final IBlockReader world, BlockPos pos)
+            final IBlockReader world, BlockPos pos, final MatrixStack mat, final IRenderTypeBuffer bufferIn,
+            final int packedLightIn)
     {
-        GlStateManager.rotatef(90.0F, 0.0F, 1.0F, 0.0F);
-
-        final BlockPos origin = ((Entity) entity).getPosition();
-        pos = origin.subtract(pos);
-
-        GlStateManager.translatef(-pos.getX(), -pos.getY(), -pos.getZ());
-
-        final Tessellator tessellator = Tessellator.getInstance();
-        final BufferBuilder buffer = tessellator.getBuffer();
-        this.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-
-        Minecraft.getInstance().getBlockRendererDispatcher().getBlockModelRenderer().renderModelSmooth(entity
-                .getFakeWorld().getWorld(), model, state, origin, buffer, false, new Random(), 0,
-                EmptyModelData.INSTANCE);
-        tessellator.draw();
-
-        GlStateManager.translatef(pos.getX(), pos.getY(), pos.getZ());
+        mat.translate(pos.getX()-1, pos.getY(), pos.getZ()-1);
+        mat.rotate(Vector3f.YN.rotationDegrees(180.0F));
+        mat.rotate(Vector3f.ZP.rotationDegrees(180.0F));
+        mat.rotate(Vector3f.XP.rotationDegrees(180.0F));
+        
+        Minecraft.getInstance().getBlockRendererDispatcher().renderBlock(state, mat, bufferIn, packedLightIn,
+                OverlayTexture.DEFAULT_LIGHT, EmptyModelData.INSTANCE);
+        mat.translate(pos.getX(), pos.getY(), pos.getZ());
         return;
     }
 }

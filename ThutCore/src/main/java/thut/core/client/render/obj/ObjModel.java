@@ -16,6 +16,8 @@ import java.util.regex.Pattern;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -206,7 +208,7 @@ public class ObjModel implements IModelCustom, IModel, IRetexturableModel
     }
 
     private float[] parseFloats(final String[] data) // Helper converting
-                                                     // strings to floats
+    // strings to floats
     {
         final float[] ret = new float[data.length];
         for (int i = 0; i < data.length; i++)
@@ -235,31 +237,31 @@ public class ObjModel implements IModelCustom, IModel, IRetexturableModel
     }
 
     @Override
-    public void renderAll()
+    public void renderAll(final MatrixStack mat, final IVertexBuilder buffer)
     {
         for (final IExtendedModelPart o : this.parts.values())
-            if (o.getParent() == null) o.renderAll();
+            if (o.getParent() == null) o.renderAll(mat, buffer);
     }
 
     @Override
-    public void renderAllExcept(final String... excludedGroupNames)
+    public void renderAllExcept(final MatrixStack mat, final IVertexBuilder buffer, final String... excludedGroupNames)
     {
         for (final IExtendedModelPart o : this.parts.values())
-            if (o.getParent() == null) o.renderAllExcept(excludedGroupNames);
+            if (o.getParent() == null) o.renderAllExcept(mat, buffer, excludedGroupNames);
     }
 
     @Override
-    public void renderOnly(final String... groupNames)
+    public void renderOnly(final MatrixStack mat, final IVertexBuilder buffer, final String... groupNames)
     {
         for (final IExtendedModelPart o : this.parts.values())
-            if (o.getParent() == null) o.renderOnly(groupNames);
+            if (o.getParent() == null) o.renderOnly(mat, buffer, groupNames);
     }
 
     @Override
-    public void renderPart(final String partName)
+    public void renderPart(final MatrixStack mat, final IVertexBuilder buffer, final String partName)
     {
         for (final IExtendedModelPart o : this.parts.values())
-            if (o.getParent() == null) o.renderPart(partName);
+            if (o.getParent() == null) o.renderPart(mat, buffer, partName);
     }
 
     @Override
@@ -277,18 +279,20 @@ public class ObjModel implements IModelCustom, IModel, IRetexturableModel
     }
 
     protected void updateAnimation(final Entity entity, final IModelRenderer<?> renderer, final String currentPhase,
-            final float partialTicks, final float headYaw, final float headPitch, final float limbSwing)
+            final float partialTicks, final float headYaw, final float headPitch, final float limbSwing,
+            final int brightness)
     {
         for (final String partName : this.getParts().keySet())
         {
             final IExtendedModelPart part = this.getParts().get(partName);
-            this.updateSubParts(entity, renderer, currentPhase, partialTicks, part, headYaw, headPitch, limbSwing);
+            this.updateSubParts(entity, renderer, currentPhase, partialTicks, part, headYaw, headPitch, limbSwing,
+                    brightness);
         }
     }
 
     private void updateSubParts(final Entity entity, final IModelRenderer<?> renderer, final String currentPhase,
             final float partialTick, final IExtendedModelPart parent, final float headYaw, final float headPitch,
-            final float limbSwing)
+            final float limbSwing, final int brightnessIn)
     {
         if (parent == null) return;
         final HeadInfo info = this.getHeadInfo();
@@ -327,7 +331,6 @@ public class ObjModel implements IModelCustom, IModel, IRetexturableModel
         }
 
         final int red = 255, green = 255, blue = 255;
-        final int brightness = entity.getBrightnessForRender();
         final int alpha = 255;
         final int[] rgbab = parent.getRGBAB();
         if (entity instanceof IMobColourable)
@@ -344,9 +347,9 @@ public class ObjModel implements IModelCustom, IModel, IRetexturableModel
             rgbab[1] = green;
             rgbab[2] = blue;
             rgbab[3] = alpha;
-            rgbab[4] = brightness;
+            rgbab[4] = brightnessIn;
         }
-        rgbab[4] = brightness;
+        rgbab[4] = brightnessIn;
         final IAnimationChanger animChanger = renderer.getAnimationChanger();
         if (animChanger != null)
         {
@@ -364,7 +367,8 @@ public class ObjModel implements IModelCustom, IModel, IRetexturableModel
         for (final String partName : parent.getSubParts().keySet())
         {
             final IExtendedModelPart part = (IExtendedModelPart) parent.getSubParts().get(partName);
-            this.updateSubParts(entity, renderer, currentPhase, partialTick, part, headYaw, headPitch, limbSwing);
+            this.updateSubParts(entity, renderer, currentPhase, partialTick, part, headYaw, headPitch, limbSwing,
+                    brightnessIn);
         }
     }
 }

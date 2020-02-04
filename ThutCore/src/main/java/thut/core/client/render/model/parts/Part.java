@@ -6,6 +6,8 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
@@ -56,13 +58,13 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         subPart.setParent(this);
     }
 
-    public void addForRender()
+    public void addForRender(final MatrixStack mat, final IVertexBuilder buffer)
     {
         // Set colours.
         GL11.glColor4f(this.red / 255f, this.green / 255f, this.blue / 255f, this.alpha / 255f);
         // Render each Shape
         for (final Mesh s : this.shapes)
-            s.renderShape(this.texturer);
+            s.renderShape(mat, buffer, this.texturer);
     }
 
     @Override
@@ -107,15 +109,15 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         return this.childParts;
     }
 
-    private void postRender()
+    private void postRender(final MatrixStack mat, final IVertexBuilder buffer)
     {
-        GL11.glPopMatrix();
+        mat.pop();
     }
 
-    private void preRender()
+    private void preRender(final MatrixStack mat, final IVertexBuilder buffer)
     {
         // Rotate to the offset of the parent.
-        this.rotateToParent();
+        this.rotateToParent(mat, buffer);
         // Translate of offset for rotation.
         GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
         // Rotate by this to account for a coordinate difference.
@@ -135,7 +137,7 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         GL11.glRotatef(-90, 1, 0, 0);
         // Undo pre-translate offset.
         GL11.glTranslated(-this.offset.x, -this.offset.y, -this.offset.z);
-        GL11.glPushMatrix();
+        mat.push();
         // Translate to Offset.
         GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
 
@@ -147,76 +149,76 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
     }
 
-    public void render()
+    public void render(final MatrixStack mat, final IVertexBuilder buffer)
     {
         if (this.hidden) return;
-        this.preRender();
+        this.preRender(mat, buffer);
         // Renders the model.
-        this.addForRender();
-        this.postRender();
+        this.addForRender(mat, buffer);
+        this.postRender(mat, buffer);
     }
 
     @Override
-    public void renderAll()
+    public void renderAll(final MatrixStack mat, final IVertexBuilder buffer)
     {
         GL11.glScalef(this.preScale.x, this.preScale.y, this.preScale.z);
-        this.render();
+        this.render(mat, buffer);
         for (final IExtendedModelPart o : this.childParts.values())
         {
-            GL11.glPushMatrix();
+            mat.push();
             GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
             GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
-            o.renderAll();
-            GL11.glPopMatrix();
+            o.renderAll(mat, buffer);
+            mat.pop();
         }
     }
 
     @Override
-    public void renderAllExcept(final String... excludedGroupNames)
+    public void renderAllExcept(final MatrixStack mat, final IVertexBuilder buffer, final String... excludedGroupNames)
     {
         boolean skip = false;
         for (final String s1 : excludedGroupNames)
             if (skip = s1.equalsIgnoreCase(this.name)) break;
-        if (!skip) this.render();
+        if (!skip) this.render(mat, buffer);
         for (final IExtendedModelPart o : this.childParts.values())
         {
-            GL11.glPushMatrix();
+            mat.push();
             GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
             GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
-            o.renderAllExcept(excludedGroupNames);
-            GL11.glPopMatrix();
+            o.renderAllExcept(mat, buffer, excludedGroupNames);
+            mat.pop();
         }
     }
 
     @Override
-    public void renderOnly(final String... groupNames)
+    public void renderOnly(final MatrixStack mat, final IVertexBuilder buffer, final String... groupNames)
     {
         boolean rendered = false;
         for (final String s1 : groupNames)
             if (rendered = s1.equalsIgnoreCase(this.name))
             {
-                this.render();
+                this.render(mat, buffer);
                 break;
             }
         if (!rendered)
         {
-            this.preRender();
-            this.postRender();
+            this.preRender(mat, buffer);
+            this.postRender(mat, buffer);
         }
         for (final IExtendedModelPart o : this.childParts.values())
         {
-            GL11.glPushMatrix();
+            mat.push();
             GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
             GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
-            o.renderOnly(groupNames);
-            GL11.glPopMatrix();
+            o.renderOnly(mat, buffer, groupNames);
+            mat.pop();
         }
     }
 
     @Override
-    public void renderPart(final String partName)
+    public void renderPart(final MatrixStack mat, final IVertexBuilder buffer, final String partName)
     {
-        this.renderOnly(partName);
+        this.renderOnly(mat, buffer, partName);
     }
 
     @Override
@@ -229,7 +231,7 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         this.postTrans.clear();
     }
 
-    private void rotateToParent()
+    private void rotateToParent(final MatrixStack mat, final IVertexBuilder buffer)
     {
         if (this.parent != null) if (this.parent instanceof Part)
         {
