@@ -1,6 +1,6 @@
 package thut.api.maths;
 
-import org.lwjgl.opengl.GL11;
+import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.renderer.Quaternion;
 import net.minecraft.entity.Entity;
@@ -125,14 +125,10 @@ public class Vector4
         return super.equals(o);
     }
 
-    public void glRotate()
+    @OnlyIn(value = Dist.CLIENT)
+    public void glRotate(final MatrixStack mat)
     {
-        GL11.glRotatef(this.w, this.x, this.y, this.z);
-    }
-
-    public void glRotateMinus()
-    {
-        GL11.glRotatef(-this.w, this.x, this.y, this.z);
+        mat.rotate(this.toMCQ());
     }
 
     public boolean isEmpty()

@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
+import thut.api.entity.IMobColourable;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.Animation;
@@ -29,6 +30,7 @@ import thut.core.client.render.model.IModelRenderer;
 import thut.core.client.render.model.IModelRenderer.Vector5;
 import thut.core.client.render.model.ModelFactory;
 import thut.core.client.render.texturing.IRetexturableModel;
+import thut.core.common.mobs.DefaultColourable;
 
 public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IModel
 {
@@ -39,7 +41,7 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
     protected float                rotationPointX = 0, rotationPointY = 0, rotationPointZ = 0;
     protected float                rotateAngleX   = 0, rotateAngleY = 0, rotateAngleZ = 0, rotateAngle = 0;
 
-    private final Vector5 rots = new Vector5();
+    private final Vector5          rots           = new Vector5();
 
     public ModelWrapper(final ModelHolder model, final IModelRenderer<?> renderer)
     {
@@ -48,8 +50,8 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
     }
 
     @Override
-    public void applyAnimation(final Entity entity, final IAnimationHolder animate, final IModelRenderer<?> renderer, final float partialTicks,
-            final float limbSwing)
+    public void applyAnimation(final Entity entity, final IAnimationHolder animate, final IModelRenderer<?> renderer,
+            final float partialTicks, final float limbSwing)
     {
         this.imodel.applyAnimation(entity, animate, renderer, partialTicks, limbSwing);
     }
@@ -84,6 +86,40 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
         this.imodel.preProcessAnimations(collection);
     }
 
+    private void initColours(final IExtendedModelPart parent, final T entity, final int brightness, final int overlay)
+    {
+        int red = 255, green = 255, blue = 255;
+        int alpha = 255;
+        final IMobColourable poke = entity.getCapability(DefaultColourable.CAPABILITY).orElse(null);
+
+        if (poke != null)
+        {
+            red = poke.getRGBA()[0];
+            green = poke.getRGBA()[1];
+            blue = poke.getRGBA()[2];
+            alpha = poke.getRGBA()[3];
+        }
+        final IAnimationChanger animChanger = this.renderer.getAnimationChanger();
+        if (animChanger != null)
+        {
+            final int default_ = new Color(red, green, blue, alpha).getRGB();
+            final int rgb = animChanger.getColourForPart(parent.getName(), entity, default_);
+            if (rgb != default_)
+            {
+                final Color col = new Color(rgb);
+                red = col.getRed();
+                green = col.getGreen();
+                blue = col.getBlue();
+            }
+        }
+        parent.setRGBABrO(red, green, blue, alpha, brightness, overlay);
+        for (final String partName : parent.getSubParts().keySet())
+        {
+            final IExtendedModelPart part = (IExtendedModelPart) parent.getSubParts().get(partName);
+            this.initColours(part, entity, brightness, overlay);
+        }
+    }
+
     @Override
     public void render(final T entityIn, final float limbSwing, final float limbSwingAmount, final float ageInTicks,
             final float netHeadYaw, final float headPitch)
@@ -114,7 +150,6 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
 
         if (this.imodel == null) this.imodel = ModelFactory.create(this.model);
         mat.push();
-
         this.transformGlobal(mat, buffer, this.renderer.getAnimation(this.entityIn), this.entityIn,
                 Minecraft.getInstance().getRenderPartialTicks());
 
@@ -130,28 +165,15 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
         {
             final IExtendedModelPart part = this.imodel.getParts().get(partName);
             if (part == null) continue;
-            final int[] rgbab = part.getRGBAB();
-            if (animChanger != null)
-            {
-                final int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
-                final int rgb = animChanger.getColourForPart(partName, this.entityIn, default_);
-                if (rgb != default_)
-                {
-                    final Color col = new Color(rgb);
-                    rgbab[0] = col.getRed();
-                    rgbab[1] = col.getGreen();
-                    rgbab[2] = col.getBlue();
-                }
-            }
-            part.setRGBAB(rgbab);
             try
             {
-                if (part instanceof IRetexturableModel) ((IRetexturableModel) part).setTexturer(this.renderer
-                        .getTexturer());
+                if (part instanceof IRetexturableModel)
+                    ((IRetexturableModel) part).setTexturer(this.renderer.getTexturer());
 
                 if (part.getParent() == null)
                 {
                     mat.push();
+                    this.initColours(part, this.entityIn, packedLightIn, packedOverlayIn);
                     part.renderAllExcept(mat, buffer, this.renderer, excluded.toArray(new String[excluded.size()]));
                     mat.pop();
                 }
@@ -170,20 +192,19 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
         mat.rotate(new Quaternion(axis, this.rotateAngle, true));
     }
 
-    /**
-     * setLivingAnimations <br>
+    /** setLivingAnimations <br>
      * <br>
      * Used for easily adding entity-dependent animations. The second and third
      * float params here are the same second and third as in the
-     * setRotationAngles method.
-     */
+     * setRotationAngles method. */
     @Override
-    public void setLivingAnimations(final T entityIn, final float limbSwing, final float limbSwingAmount, final float partialTickTime)
+    public void setLivingAnimations(final T entityIn, final float limbSwing, final float limbSwingAmount,
+            final float partialTickTime)
     {
         if (this.imodel == null) this.imodel = ModelFactory.create(this.model);
-        if (this.renderer.getAnimationChanger() != null) this.renderer.setAnimation(this.renderer.getAnimationChanger()
-                .modifyAnimation((MobEntity) entityIn, partialTickTime, this.renderer.getAnimation(entityIn)),
-                entityIn);
+        if (this.renderer.getAnimationChanger() != null)
+            this.renderer.setAnimation(this.renderer.getAnimationChanger().modifyAnimation((MobEntity) entityIn,
+                    partialTickTime, this.renderer.getAnimation(entityIn)), entityIn);
         this.applyAnimation(entityIn, AnimationHelper.getHolder(entityIn), this.renderer, partialTickTime, limbSwing);
     }
 

@@ -10,29 +10,19 @@ loaderVersion="[25,)" #mandatory (24 is current forge version)
 # A URL to refer people to when problems occur with this mod
 issueTrackerURL="https://github.com/Thutmose/Thut/issues" #optional
 # A list of mods - how many allowed here is determined by the individual mod loader
-[[mods]] #mandatory
-# The modid of the mod
-modId="thutcore" #mandatory
-# The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="${file.jarVersion}" #mandatory
- # A display name for the mod
-displayName="Thut Core" #mandatory
-# A text field displayed in the mod UI
-authors="Thutmose" #optional
-# The description text for the mod (multi line!) (#mandatory)
+[[mods]]
+modId="thutcore"
+version="${file.jarVersion}"
+displayName="Thut Core"
+authors="Thutmose"
 description='''
 This is a library of shared functionality for my mods.
 '''
-[[mods]] #mandatory
-# The modid of the mod
-modId="thutcrafts" #mandatory
-# The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="${file.jarVersion}" #mandatory
- # A display name for the mod
-displayName="Thut Crafts" #mandatory
-# A text field displayed in the mod UI
-authors="Thutmose" #optional
-# The description text for the mod (multi line!) (#mandatory)
+[[mods]]
+modId="thutcrafts"
+version="${file.jarVersion}"
+displayName="Thut Crafts"
+authors="Thutmose"
 description='''
 Tech Demo mod for testing the elevator mod updates.
 '''

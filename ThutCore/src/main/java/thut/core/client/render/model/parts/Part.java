@@ -3,12 +3,11 @@ package thut.core.client.render.model.parts;
 import java.util.HashMap;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
+import net.minecraft.client.renderer.Vector3f;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.IAnimationChanger;
@@ -19,32 +18,32 @@ import thut.core.client.render.texturing.IRetexturableModel;
 
 public abstract class Part implements IExtendedModelPart, IRetexturableModel
 {
-    public List<Mesh> shapes = Lists.newArrayList();
-
     private final HashMap<String, IExtendedModelPart> childParts = new HashMap<>();
+    public List<Mesh>                                 shapes     = Lists.newArrayList();
+
     private final String                              name;
     private IExtendedModelPart                        parent     = null;
     IPartTexturer                                     texturer;
     IAnimationChanger                                 changer;
 
-    public Vector4 preRot    = new Vector4();
-    public Vector4 postRot   = new Vector4();
-    public Vector4 postRot1  = new Vector4();
-    public Vector3 preTrans  = Vector3.getNewVector();
-    public Vector3 postTrans = Vector3.getNewVector();
-    public Vertex  preScale  = new Vertex(1, 1, 1);
+    public Vector4                                    preRot     = new Vector4();
+    public Vector4                                    postRot    = new Vector4();
+    public Vector4                                    postRot1   = new Vector4();
+    public Vector3                                    preTrans   = Vector3.getNewVector();
+    public Vector3                                    postTrans  = Vector3.getNewVector();
+    public Vertex                                     preScale   = new Vertex(1, 1, 1);
 
-    public Vector3 offset    = Vector3.getNewVector();
-    public Vector4 rotations = new Vector4();
-    public Vertex  scale     = new Vertex(1, 1, 1);
+    public Vector3                                    offset     = Vector3.getNewVector();
+    public Vector4                                    rotations  = new Vector4();
+    public Vertex                                     scale      = new Vertex(1, 1, 1);
 
-    public int red = 255, green = 255, blue = 255, alpha = 255;
+    public int                                        red        = 255, green = 255, blue = 255, alpha = 255;
+    public int                                        brightness = 15728640;
+    public int                                        overlay    = 0;
 
-    public int brightness = 15728640;
+    private final int[]                               rgbabro    = new int[6];
 
-    private final int[] rgbab = new int[5];
-
-    private boolean hidden = false;
+    private boolean                                   hidden     = false;
 
     public Part(final String name)
     {
@@ -60,11 +59,14 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
 
     public void addForRender(final MatrixStack mat, final IVertexBuilder buffer)
     {
-        // Set colours.
-        GL11.glColor4f(this.red / 255f, this.green / 255f, this.blue / 255f, this.alpha / 255f);
-        // Render each Shape
+        // Fill the int array
+        this.getRGBABrO();
         for (final Mesh s : this.shapes)
+        {
+            s.rgbabro = this.rgbabro;
+            // Render each Shape
             s.renderShape(mat, buffer, this.texturer);
+        }
     }
 
     @Override
@@ -92,14 +94,15 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public int[] getRGBAB()
+    public int[] getRGBABrO()
     {
-        this.rgbab[0] = this.red;
-        this.rgbab[1] = this.green;
-        this.rgbab[2] = this.blue;
-        this.rgbab[3] = this.alpha;
-        this.rgbab[4] = this.brightness;
-        return this.rgbab;
+        this.rgbabro[0] = this.red;
+        this.rgbabro[1] = this.green;
+        this.rgbabro[2] = this.blue;
+        this.rgbabro[3] = this.alpha;
+        this.rgbabro[4] = this.brightness;
+        this.rgbabro[5] = this.overlay;
+        return this.rgbabro;
     }
 
     @SuppressWarnings("unchecked")
@@ -121,20 +124,20 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         // Translate of offset for rotation.
         mat.translate(this.offset.x, this.offset.y, this.offset.z);
         // Rotate by this to account for a coordinate difference.
-        GL11.glRotatef(90, 1, 0, 0);
+        mat.rotate(Vector3f.XP.rotationDegrees(90));
         mat.translate(this.preTrans.x, this.preTrans.y, this.preTrans.z);
         // UnRotate coordinate difference.
-        GL11.glRotatef(-90, 1, 0, 0);
+        mat.rotate(Vector3f.XN.rotationDegrees(90));
         // Apply initial part rotation
-        this.rotations.glRotate();
+        this.rotations.glRotate(mat);
         // Rotate by this to account for a coordinate difference.
-        GL11.glRotatef(90, 1, 0, 0);
+        mat.rotate(Vector3f.XP.rotationDegrees(90));
         // Apply PreOffset-Rotations.
-        this.preRot.glRotate();
+        this.preRot.glRotate(mat);
         // Translate by post-PreOffset amount.
         mat.translate(this.postTrans.x, this.postTrans.y, this.postTrans.z);
         // UnRotate coordinate difference.
-        GL11.glRotatef(-90, 1, 0, 0);
+        mat.rotate(Vector3f.XN.rotationDegrees(90));
         // Undo pre-translate offset.
         mat.translate(-this.offset.x, -this.offset.y, -this.offset.z);
         mat.push();
@@ -142,9 +145,9 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         mat.translate(this.offset.x, this.offset.y, this.offset.z);
 
         // Apply first postRotation
-        this.postRot.glRotate();
+        this.postRot.glRotate(mat);
         // Apply second post rotation.
-        this.postRot1.glRotate();
+        this.postRot1.glRotate(mat);
         // Scale
         mat.scale(this.scale.x, this.scale.y, this.scale.z);
     }
@@ -236,8 +239,8 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         if (this.parent != null) if (this.parent instanceof Part)
         {
             final Part parent = (Part) this.parent;
-            parent.postRot.glRotate();
-            parent.postRot1.glRotate();
+            parent.postRot.glRotate(mat);
+            parent.postRot1.glRotate(mat);
         }
     }
 
@@ -300,13 +303,13 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
     }
 
     @Override
-    public void setRGBAB(final int[] array)
+    public void setRGBABrO(final int r, final int g, final int b, final int a, final int br, final int o)
     {
-        this.red = array[0];
-        this.green = array[1];
-        this.blue = array[2];
-        this.alpha = array[3];
-        this.brightness = array[4];
+        this.red = r;
+        this.green = g;
+        this.blue = b;
+        this.alpha = br;
+        this.brightness = o;
     }
 
     @Override
