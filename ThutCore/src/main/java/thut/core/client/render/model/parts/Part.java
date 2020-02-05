@@ -119,10 +119,10 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         // Rotate to the offset of the parent.
         this.rotateToParent(mat, buffer);
         // Translate of offset for rotation.
-        GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+        mat.translate(this.offset.x, this.offset.y, this.offset.z);
         // Rotate by this to account for a coordinate difference.
         GL11.glRotatef(90, 1, 0, 0);
-        GL11.glTranslated(this.preTrans.x, this.preTrans.y, this.preTrans.z);
+        mat.translate(this.preTrans.x, this.preTrans.y, this.preTrans.z);
         // UnRotate coordinate difference.
         GL11.glRotatef(-90, 1, 0, 0);
         // Apply initial part rotation
@@ -132,21 +132,21 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         // Apply PreOffset-Rotations.
         this.preRot.glRotate();
         // Translate by post-PreOffset amount.
-        GL11.glTranslated(this.postTrans.x, this.postTrans.y, this.postTrans.z);
+        mat.translate(this.postTrans.x, this.postTrans.y, this.postTrans.z);
         // UnRotate coordinate difference.
         GL11.glRotatef(-90, 1, 0, 0);
         // Undo pre-translate offset.
-        GL11.glTranslated(-this.offset.x, -this.offset.y, -this.offset.z);
+        mat.translate(-this.offset.x, -this.offset.y, -this.offset.z);
         mat.push();
         // Translate to Offset.
-        GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
+        mat.translate(this.offset.x, this.offset.y, this.offset.z);
 
         // Apply first postRotation
         this.postRot.glRotate();
         // Apply second post rotation.
         this.postRot1.glRotate();
         // Scale
-        GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+        mat.scale(this.scale.x, this.scale.y, this.scale.z);
     }
 
     public void render(final MatrixStack mat, final IVertexBuilder buffer)
@@ -161,13 +161,13 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
     @Override
     public void renderAll(final MatrixStack mat, final IVertexBuilder buffer)
     {
-        GL11.glScalef(this.preScale.x, this.preScale.y, this.preScale.z);
+        mat.scale(this.preScale.x, this.preScale.y, this.preScale.z);
         this.render(mat, buffer);
         for (final IExtendedModelPart o : this.childParts.values())
         {
             mat.push();
-            GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
-            GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+            mat.translate(this.offset.x, this.offset.y, this.offset.z);
+            mat.scale(this.scale.x, this.scale.y, this.scale.z);
             o.renderAll(mat, buffer);
             mat.pop();
         }
@@ -183,8 +183,8 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         for (final IExtendedModelPart o : this.childParts.values())
         {
             mat.push();
-            GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
-            GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+            mat.translate(this.offset.x, this.offset.y, this.offset.z);
+            mat.scale(this.scale.x, this.scale.y, this.scale.z);
             o.renderAllExcept(mat, buffer, excludedGroupNames);
             mat.pop();
         }
@@ -208,8 +208,8 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         for (final IExtendedModelPart o : this.childParts.values())
         {
             mat.push();
-            GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
-            GL11.glScalef(this.scale.x, this.scale.y, this.scale.z);
+            mat.translate(this.offset.x, this.offset.y, this.offset.z);
+            mat.scale(this.scale.x, this.scale.y, this.scale.z);
             o.renderOnly(mat, buffer, groupNames);
             mat.pop();
         }

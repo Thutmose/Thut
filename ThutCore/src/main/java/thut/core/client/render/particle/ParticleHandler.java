@@ -80,12 +80,12 @@ public class ParticleHandler
                             player.lastTickPosZ);
                     mat.push();
                     source.set(target.subtract(source));
-                    GL11.glTranslated(source.x, source.y, source.z);
+                    mat.translate(source.x, source.y, source.z);
                     final double d0 = (-player.posX + player.lastTickPosX) * event.getPartialTicks();
                     final double d1 = (-player.posY + player.lastTickPosY) * event.getPartialTicks();
                     final double d2 = (-player.posZ + player.lastTickPosZ) * event.getPartialTicks();
                     source.set(d0, d1, d2);
-                    GL11.glTranslated(source.x, source.y, source.z);
+                    mat.translate(source.x, source.y, source.z);
                     // particle.render(event.getRenderPartialTicks());
                     mat.pop();
                     if (particle.lastTick() != player.getEntityWorld().getGameTime())

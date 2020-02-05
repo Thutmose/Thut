@@ -127,7 +127,7 @@ public abstract class Mesh
             if (textureShift = texturer.shiftUVs(this.name, this.uvShift))
             {
                 GL11.glMatrixMode(GL11.GL_TEXTURE);
-                GL11.glTranslated(this.uvShift[0], this.uvShift[1], 0.0F);
+                mat.translate(this.uvShift[0], this.uvShift[1], 0.0F);
                 GL11.glMatrixMode(GL11.GL_MODELVIEW);
             }
         }
