@@ -123,21 +123,13 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         this.rotateToParent(mat, buffer);
         // Translate of offset for rotation.
         mat.translate(this.offset.x, this.offset.y, this.offset.z);
-        // Rotate by this to account for a coordinate difference.
-        mat.rotate(Vector3f.XP.rotationDegrees(90));
         mat.translate(this.preTrans.x, this.preTrans.y, this.preTrans.z);
-        // UnRotate coordinate difference.
-        mat.rotate(Vector3f.XN.rotationDegrees(90));
         // Apply initial part rotation
         this.rotations.glRotate(mat);
-        // Rotate by this to account for a coordinate difference.
-        mat.rotate(Vector3f.XP.rotationDegrees(90));
         // Apply PreOffset-Rotations.
         this.preRot.glRotate(mat);
         // Translate by post-PreOffset amount.
         mat.translate(this.postTrans.x, this.postTrans.y, this.postTrans.z);
-        // UnRotate coordinate difference.
-        mat.rotate(Vector3f.XN.rotationDegrees(90));
         // Undo pre-translate offset.
         mat.translate(-this.offset.x, -this.offset.y, -this.offset.z);
         mat.push();
@@ -179,6 +171,10 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
     @Override
     public void renderAllExcept(final MatrixStack mat, final IVertexBuilder buffer, final String... excludedGroupNames)
     {
+        float s = 1.f;
+        this.preScale.set(s, s, s);
+        mat.scale(this.preScale.x, this.preScale.y, this.preScale.z);
+        // System.out.println(mat.getLast().getPositionMatrix());
         boolean skip = false;
         for (final String s1 : excludedGroupNames)
             if (skip = s1.equalsIgnoreCase(this.name)) break;
@@ -308,8 +304,9 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         this.red = r;
         this.green = g;
         this.blue = b;
-        this.alpha = br;
-        this.brightness = o;
+        this.alpha = a;
+        this.brightness = br;
+        this.overlay = o;
     }
 
     @Override
