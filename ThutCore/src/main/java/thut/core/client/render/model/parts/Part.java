@@ -2,12 +2,15 @@ package thut.core.client.render.model.parts;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
-import net.minecraft.client.renderer.Vector3f;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.util.ResourceLocation;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.IAnimationChanger;
@@ -19,7 +22,7 @@ import thut.core.client.render.texturing.IRetexturableModel;
 public abstract class Part implements IExtendedModelPart, IRetexturableModel
 {
     private final HashMap<String, IExtendedModelPart> childParts = new HashMap<>();
-    public List<Mesh>                                 shapes     = Lists.newArrayList();
+    private List<Mesh>                                shapes     = Lists.newArrayList();
 
     private final String                              name;
     private IExtendedModelPart                        parent     = null;
@@ -39,15 +42,49 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
 
     public int                                        red        = 255, green = 255, blue = 255, alpha = 255;
     public int                                        brightness = 15728640;
-    public int                                        overlay    = 0;
+    public int                                        overlay    = 655360;
 
     private final int[]                               rgbabro    = new int[6];
 
     private boolean                                   hidden     = false;
+    private List<Material>                            materials  = Lists.newArrayList();
+    private Set<Material>                             matcache   = Sets.newHashSet();
 
     public Part(final String name)
     {
         this.name = name;
+    }
+
+    public void addShape(Mesh shape)
+    {
+        this.shapes.add(shape);
+        if (shape.material == null) return;
+        if (matcache.add(shape.material)) this.materials.add(shape.material);
+    }
+
+    public void setShapes(List<Mesh> shapes)
+    {
+        this.shapes.clear();
+        this.shapes.addAll(shapes);
+        for (Mesh shape : shapes)
+        {
+            if (shape.material == null) continue;
+            if (matcache.add(shape.material))
+            {
+                this.materials.add(shape.material);
+            }
+        }
+    }
+
+    @Override
+    public void applyTexture(IRenderTypeBuffer bufferIn, ResourceLocation tex, IPartTexturer texer)
+    {
+        for (Mesh shape : shapes)
+        {
+            ResourceLocation tex_1 = texer.getTexture(shape.name, tex);
+            tex_1 = texer.getTexture(shape.material.name, tex_1);
+            shape.material.makeVertexBuilder(tex_1, bufferIn);
+        }
     }
 
     @Override
@@ -55,6 +92,12 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
     {
         this.childParts.put(subPart.getName(), subPart);
         subPart.setParent(this);
+    }
+
+    @Override
+    public List<Material> getMaterials()
+    {
+        return materials;
     }
 
     public void addForRender(final MatrixStack mat, final IVertexBuilder buffer)
@@ -124,9 +167,9 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         // Translate of offset for rotation.
         mat.translate(this.offset.x, this.offset.y, this.offset.z);
         mat.translate(this.preTrans.x, this.preTrans.y, this.preTrans.z);
-        // Apply initial part rotation
+        // // Apply initial part rotation
         this.rotations.glRotate(mat);
-        // Apply PreOffset-Rotations.
+        // // Apply PreOffset-Rotations.
         this.preRot.glRotate(mat);
         // Translate by post-PreOffset amount.
         mat.translate(this.postTrans.x, this.postTrans.y, this.postTrans.z);
@@ -174,7 +217,6 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         float s = 1.f;
         this.preScale.set(s, s, s);
         mat.scale(this.preScale.x, this.preScale.y, this.preScale.z);
-        // System.out.println(mat.getLast().getPositionMatrix());
         boolean skip = false;
         for (final String s1 : excludedGroupNames)
             if (skip = s1.equalsIgnoreCase(this.name)) break;
@@ -223,9 +265,9 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
     @Override
     public void resetToInit()
     {
-        this.preRot.set(0, 1, 0, 0);
-        this.postRot.set(0, 1, 0, 0);
-        this.postRot1.set(0, 1, 0, 0);
+        this.preRot.set(0, 0, 0, 1);
+        this.postRot.set(0, 0, 0, 1);
+        this.postRot1.set(0, 0, 0, 1);
         this.preTrans.clear();
         this.postTrans.clear();
     }

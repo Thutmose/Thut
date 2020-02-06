@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.renderer.Matrix3f;
 import net.minecraft.client.renderer.Matrix4f;
-import net.minecraft.client.renderer.Vector4f;
 import thut.api.maths.vecmath.Vector3f;
 import thut.core.client.render.model.Vertex;
 import thut.core.client.render.texturing.IPartTexturer;
@@ -13,14 +12,13 @@ import thut.core.client.render.texturing.TextureCoordinate;
 
 public abstract class Mesh
 {
-    private int                meshId  = 0;
     protected final boolean    hasTextures;
     public Vertex[]            vertices;
     public Vertex[]            normals;
     public TextureCoordinate[] textureCoordinates;
     public Integer[]           order;
     public int[]               rgbabro;
-    private Material           material;
+    Material                   material;
     public String              name;
     private final double[]     uvShift = { 0, 0 };
     final int                  GL_FORMAT;
@@ -67,6 +65,9 @@ public abstract class Mesh
             this.normalList[i + 1] = normal;
             this.normalList[i + 2] = normal;
         }
+
+        // Initialize a "default" material for us
+        this.material = new Material("auto:" + name);
     }
 
     protected void doRender(final MatrixStack mat, final IVertexBuilder buffer, final IPartTexturer texturer)
@@ -84,11 +85,11 @@ public abstract class Mesh
         final int lightmapUV = this.rgbabro[4];
         final int overlayUV = this.rgbabro[5];
         int n = 0;
-//        flat = false;
+
         MatrixStack.Entry matrixstack$entry = mat.getLast();
         Matrix4f pos = matrixstack$entry.getPositionMatrix();
         Matrix3f norm = matrixstack$entry.getNormalMatrix();
-        // System.out.println(o);
+
         for (final Integer i : this.order)
         {
             if (this.hasTextures) textureCoordinate = this.textureCoordinates[i];
@@ -96,9 +97,9 @@ public abstract class Mesh
             normal = this.normals[i];
             if (flat) normal = this.normalList[n];
 
-            float x = vertex.x;// / 16f;
-            float y = vertex.y;// / 16f;
-            float z = vertex.z;// / 16f;
+            float x = vertex.x;
+            float y = vertex.y;
+            float z = vertex.z;
 
             float nx = normal.x;
             float ny = normal.y;
@@ -122,15 +123,14 @@ public abstract class Mesh
         }
     }
 
-    public void renderShape(final MatrixStack mat, final IVertexBuilder buffer, final IPartTexturer texturer)
+    public void renderShape(final MatrixStack mat, IVertexBuilder buffer, final IPartTexturer texturer)
     {
         // Apply Texturing.
         if (texturer != null)
         {
-            texturer.applyTexture(this.name);
             texturer.shiftUVs(this.name, this.uvShift);
         }
-        if (this.material != null) this.material.preRender(mat, buffer);
+        if (this.material != null) buffer = this.material.preRender(mat, buffer);
         this.doRender(mat, buffer, texturer);
     }
 
