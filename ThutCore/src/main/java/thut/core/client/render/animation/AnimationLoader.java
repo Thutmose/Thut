@@ -36,14 +36,14 @@ public class AnimationLoader
 
     public static HashMap<String, ModelHolder> models = new HashMap<>();
 
-    public static void addStrings(String key, Node node, Set<String> toAddTo)
+    public static void addStrings(final String key, final Node node, final Set<String> toAddTo)
     {
         if (node.getAttributes() == null) return;
         if (node.getAttributes().getNamedItem(key) != null)
         {
             final String[] names = node.getAttributes().getNamedItem(key).getNodeValue().split(":");
             for (final String s : names)
-                toAddTo.add(s);
+                toAddTo.add(ThutCore.trim(s));
         }
     }
 
@@ -52,7 +52,7 @@ public class AnimationLoader
         AnimationLoader.models.clear();
     }
 
-    public static Vector3 getAngles(Node node, Vector3 default_)
+    public static Vector3 getAngles(final Node node, final Vector3 default_)
     {
         if (node.getAttributes() == null) return default_;
         Vector3 vect = null;
@@ -69,7 +69,7 @@ public class AnimationLoader
         return default_;
     }
 
-    public static int getIntValue(Node node, String key, int default_)
+    public static int getIntValue(final Node node, final String key, final int default_)
     {
         int ret = default_;
         if (node.getAttributes() == null) return ret;
@@ -78,7 +78,7 @@ public class AnimationLoader
         return ret;
     }
 
-    public static Vector3 getOffset(Node node, Vector3 default_)
+    public static Vector3 getOffset(final Node node, final Vector3 default_)
     {
         if (node.getAttributes() == null) return default_;
         Vector3 vect = null;
@@ -95,7 +95,7 @@ public class AnimationLoader
         return default_;
     }
 
-    public static Vector5 getRotation(Node node, Vector5 default_)
+    public static Vector5 getRotation(final Node node, final Vector5 default_)
     {
         if (node.getAttributes() == null) return default_;
         if (node.getAttributes().getNamedItem("rotation") != null)
@@ -124,7 +124,7 @@ public class AnimationLoader
         return default_;
     }
 
-    public static Vector3 getScale(Node node, Vector3 default_)
+    public static Vector3 getScale(final Node node, final Vector3 default_)
     {
         if (node.getAttributes() == null) return default_;
         if (node.getAttributes().getNamedItem("scale") != null)
@@ -144,7 +144,8 @@ public class AnimationLoader
         return default_;
     }
 
-    public static void parse(InputStream stream, ModelHolder holder, IModel model, IModelRenderer<?> renderer)
+    public static void parse(final InputStream stream, final ModelHolder holder, final IModel model,
+            final IModelRenderer<?> renderer)
     {
         try
         {
@@ -163,9 +164,9 @@ public class AnimationLoader
             final float[] headCaps1 = { -30, 70 };
 
             // Global model transforms
-            Vector3 offset = null;
-            Vector5 rotation = null;
-            Vector3 scale = null;
+            Vector3 offset = Vector3.getNewVector();
+            Vector5 rotation = new Vector5();
+            Vector3 scale = Vector3.getNewVector();
 
             // Objects for modifying textures/animations
             IPartTexturer texturer = renderer.getTexturer();
@@ -192,7 +193,8 @@ public class AnimationLoader
                 for (int j = 0; j < partsList.getLength(); j++)
                 {
                     final Node part = partsList.item(j);
-                    if (part.getNodeName().equals("metadata")) try
+                    final String name = ThutCore.trim(part.getNodeName());
+                    if (name.equals("metadata")) try
                     {
                         offset = AnimationLoader.getOffset(part, offset);
                         scale = AnimationLoader.getScale(part, scale);
@@ -210,7 +212,7 @@ public class AnimationLoader
                     {
                         e.printStackTrace();
                     }
-                    else if (part.getNodeName().equals("worn"))
+                    else if (name.equals("worn"))
                     {
                         final Vector3 w_offset = AnimationLoader.getOffset(part, null);
                         final Vector3 w_angles = AnimationLoader.getAngles(part, null);
@@ -219,11 +221,11 @@ public class AnimationLoader
                         final String w_ident = part.getAttributes().getNamedItem("id").getNodeValue();
                         wornOffsets.put(w_ident, new WornOffsets(w_parent, w_offset, w_scale, w_angles));
                     }
-                    else if (part.getNodeName().equals("phase"))
+                    else if (name.equals("phase"))
                     {
                         final Node phase = part.getAttributes().getNamedItem("name") == null ? part.getAttributes()
                                 .getNamedItem("type") : part.getAttributes().getNamedItem("name");
-                        final String phaseName = phase.getNodeValue();
+                        final String phaseName = ThutCore.trim(phase.getNodeValue());
                         for (final String s : AnimationRegistry.animations.keySet())
                             if (phaseName.equals(s))
                             {
@@ -264,28 +266,28 @@ public class AnimationLoader
                             if (anim != null) tblAnims.add(anim);
                         }
                     }
-                    else if (part.getNodeName().equals("merges"))
+                    else if (name.equals("merges"))
                     {
                         final String[] merges = part.getAttributes().getNamedItem("merge").getNodeValue().split("->");
-                        mergedAnimations.put(merges[0], merges[1]);
+                        mergedAnimations.put(ThutCore.trim(merges[0]), ThutCore.trim(merges[1]));
                     }
-                    else if (part.getNodeName().equals("customTex"))
+                    else if (name.equals("customtex"))
                     {
                         texturer = new TextureHelper(part);
                         if (part.getAttributes().getNamedItem("default") != null) holder.texture = new ResourceLocation(
                                 holder.texture.toString().replace(holder.name, part.getAttributes().getNamedItem(
                                         "default").getNodeValue()));
                     }
-                    else if (part.getNodeName().equals("customModel")) holder.model = new ResourceLocation(part
-                            .getAttributes().getNamedItem("default").getNodeValue());
-                    else if (part.getNodeName().equals("subAnims")) animator.addChild(new AnimationRandomizer(part));
+                    else if (name.equals("custommodel")) holder.model = new ResourceLocation(part.getAttributes()
+                            .getNamedItem("default").getNodeValue());
+                    else if (name.equals("subanims")) animator.addChild(new AnimationRandomizer(part));
                 }
 
                 final IModelRenderer<?> loaded = renderer;
                 loaded.updateModel(phaseList, holder);
-                
-                //Test for messing with tbl models
-                if(holder.extension.equals("tbl")) offset = offset.add(0, -0.5, 0);
+
+                // Test for messing with tbl models
+                if (holder.extension.equals("tbl")) offset = offset.add(0, -0.5, 0);
 
                 // Set the global transforms
                 loaded.setRotationOffset(offset);
@@ -374,7 +376,7 @@ public class AnimationLoader
         }
     }
 
-    public static void parse(ModelHolder holder, IModel model, IModelRenderer<?> renderer)
+    public static void parse(final ModelHolder holder, final IModel model, final IModelRenderer<?> renderer)
     {
         try
         {
@@ -390,7 +392,7 @@ public class AnimationLoader
         }
     }
 
-    public static void setHeadCaps(Node node, float[] toFill, float[] toFill1)
+    public static void setHeadCaps(final Node node, final float[] toFill, final float[] toFill1)
     {
         if (node.getAttributes() == null) return;
         if (node.getAttributes().getNamedItem("headCap") != null)
