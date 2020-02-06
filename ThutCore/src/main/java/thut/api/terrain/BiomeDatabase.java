@@ -49,5 +49,4 @@ public class BiomeDatabase
     {
         return BiomeType.getType(type).readableName;
     }
-
 }
