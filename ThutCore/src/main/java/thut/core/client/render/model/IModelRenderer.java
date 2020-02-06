@@ -46,7 +46,8 @@ public interface IModelRenderer<T extends MobEntity>
             Vector4 rotDiff = this.rotations.copy();
 
             if (this.rotations.x == this.rotations.z && this.rotations.z == this.rotations.y
-                    && this.rotations.y == this.rotations.w && this.rotations.w == 0) this.rotations.x = 1;
+                    && this.rotations.y == this.rotations.w && this.rotations.w == 0)
+                this.rotations.x = 1;
 
             if (!v.rotations.equals(this.rotations))
             {
@@ -68,15 +69,15 @@ public interface IModelRenderer<T extends MobEntity>
 
     public static final String DEFAULTPHASE = "idle";
 
-    static final Vector3 DEFAULTSCALE = Vector3.getNewVector().set(1);
+    static final Vector3       DEFAULTSCALE = Vector3.getNewVector().set(1);
 
     void doRender(T entity, double d, double d1, double d2, float f, float partialTick);
 
     default String getAnimation(final Entity entityIn)
     {
         final IAnimationHolder holder = AnimationHelper.getHolder(entityIn);
-        if (holder != null) return holder.getCurrentAnimation();
-        return "idle";
+        if (holder != null) return holder.getAnimation(entityIn);
+        return DEFAULTPHASE;
     }
 
     IAnimationChanger getAnimationChanger();
@@ -105,10 +106,11 @@ public interface IModelRenderer<T extends MobEntity>
 
     void scaleEntity(MatrixStack mat, Entity entity, IModel model, float partialTick);
 
-    default void setAnimation(final String phase, final Entity entity)
+    default void setAnimation(final String phase, final Entity entity, float partialTick)
     {
         final IAnimationHolder holder = AnimationHelper.getHolder(entity);
-        if (holder != null) if (!holder.getCurrentAnimation().equals(phase)) holder.setPendingAnimation(phase);
+        final List<Animation> anim = this.getAnimations().get(phase);
+        if (holder != null && anim != null) holder.setPendingAnimations(anim, entity.ticksExisted + partialTick);
     }
 
     void setAnimationChanger(IAnimationChanger changer);

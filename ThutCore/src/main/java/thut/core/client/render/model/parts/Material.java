@@ -6,7 +6,9 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.IRenderTypeBuffer.Impl;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -15,18 +17,21 @@ import thut.api.maths.vecmath.Vector3f;
 
 public class Material
 {
-    public final String  name;
-    private final String render_name;
-    public String        texture;
-    public Vector3f      diffuseColor;
-    public Vector3f      specularColor;
-    public Vector3f      emissiveColor;
-    public float         emissiveMagnitude;
-    public float         ambientIntensity;
-    public float         shininess;
-    public float         transparency;
+    public final String     name;
+    private final String    render_name;
+    public String           texture;
+    public Vector3f         diffuseColor;
+    public Vector3f         specularColor;
+    public Vector3f         emissiveColor;
+    public ResourceLocation tex;
+    public float            emissiveMagnitude;
+    public float            ambientIntensity;
+    public float            shininess;
+    public float            transparency;
 
-    IVertexBuilder       override_buff = null;
+    IVertexBuilder          override_buff = null;
+    IRenderTypeBuffer       typeBuff      = null;
+    RenderType              type          = null;
 
     public Material(final String name)
     {
@@ -48,15 +53,34 @@ public class Material
         this.emissiveMagnitude = Math.min(1, (float) (this.emissiveColor.length() / Math.sqrt(3)) / 0.8f);
     }
 
-    public void makeVertexBuilder(ResourceLocation texture, IRenderTypeBuffer buffer)
+    public void makeVertexBuilder(final ResourceLocation texture, final IRenderTypeBuffer buffer)
     {
-        override_buff = buffer.getBuffer(makeRenderType(texture));
+        this.type = this.makeRenderType(texture);
+        if (buffer instanceof Impl)
+        {
+            final Impl impl = (Impl) buffer;
+            IVertexBuilder buff = impl.getBuffer(this.type);
+            // This means we didn't actually make one for this texture!
+            if (buff == impl.defaultBuffer)
+            {
+                final BufferBuilder builder = new BufferBuilder(256);
+                // Add a new bufferbuilder to the maps.
+                impl.buffersByType.put(this.type, builder);
+                // This starts the buffer, and registers it to the Impl.
+                builder.begin(this.type.getGlMode(), this.type.getVertexFormat());
+                impl.startedBuffers.add(builder);
+                buff = builder;
+            }
+            this.override_buff = buff;
+            this.typeBuff = buffer;
+        }
     }
 
-    private RenderType makeRenderType(ResourceLocation tex)
+    private RenderType makeRenderType(final ResourceLocation tex)
     {
-        RenderType.State rendertype$state = RenderType.State.builder()
-                .texture(new RenderState.TextureState(tex, true, false))
+        this.tex = tex;
+        final RenderType.State rendertype$state = RenderType.State.builder()
+                .texture(new RenderState.TextureState(tex, false, false))
                 .transparency(new RenderState.TransparencyState("translucent_transparency", () ->
                 {
                     RenderSystem.enableBlend();
@@ -68,12 +92,21 @@ public class Material
                 .alpha(new RenderState.AlphaState(0.003921569F)).cull(new RenderState.CullState(false))
                 .lightmap(new RenderState.LightmapState(true)).overlay(new RenderState.OverlayState(true)).build(false);
         // TODO see where we need to properly apply the material texture.
-        return RenderType.get(render_name, DefaultVertexFormats.ITEM, GL11.GL_TRIANGLES, 256, true, false,
+
+        final String id = this.render_name + tex;
+        final RenderType type = RenderType.get(id, DefaultVertexFormats.ITEM, GL11.GL_TRIANGLES, 256, true, false,
                 rendertype$state);
+        return type;
     }
 
     public IVertexBuilder preRender(final MatrixStack mat, final IVertexBuilder buffer)
     {
-        return override_buff == null ? buffer : override_buff;
+        return this.override_buff == null ? buffer : this.override_buff;
+    }
+
+    public void postRender(final MatrixStack mat)
+    {
+        this.override_buff = null;
+        this.typeBuff = null;
     }
 }

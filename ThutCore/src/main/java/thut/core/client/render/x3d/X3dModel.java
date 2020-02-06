@@ -15,6 +15,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Quaternion;
+import net.minecraft.client.renderer.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.resources.IResource;
 import net.minecraft.util.ResourceLocation;
@@ -97,6 +99,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
         final boolean isDef = matName != null;
         if (matName == null) matName = mat.USE.substring(3);
         else matName = matName.substring(3);
+        matName = ThutCore.trim(matName);
         Material material = this.mats.get(matName);
         if (material == null || isDef)
         {
@@ -105,6 +108,7 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             {
                 texName = appearance.tex.DEF.substring(3);
                 if (texName.contains("_png")) texName = texName.substring(0, texName.lastIndexOf("_png"));
+                texName = ThutCore.trim(texName);
             }
             else texName = null;
             if (material == null) material = new Material(matName, texName, mat.getDiffuse(), mat.getSpecular(),
@@ -182,15 +186,17 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             final Vertex scale = new Vertex(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
                     Float.parseFloat(offset[2]));
             offset = t.rotation.split(" ");
-            Vector4 rotations = new Vector4(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
-                    Float.parseFloat(offset[2]), (float) Math.toDegrees(Float.parseFloat(offset[3])));
-            rotations = rotations.toQuaternion();
+            Vector3f axis = new Vector3f(Float.parseFloat(offset[0]), Float.parseFloat(offset[1]),
+                    Float.parseFloat(offset[2]));
+            Quaternion quat = new Quaternion(axis, Float.parseFloat(offset[3]), false);
+            Vector4 rotations = new Vector4(quat);
+            
             final Set<String> children = t.getChildNames();
             t = t.getIfsTransform();
             // Probably a lamp or camera in this case?
             if (t == null) continue;
             final X3dXML.Group group = t.group;
-            final String name = t.getGroupName();
+            final String name = ThutCore.trim(t.getGroupName());
             final List<Mesh> shapes = Lists.newArrayList();
             for (final X3dXML.Shape shape : group.shapes)
             {
@@ -305,10 +311,8 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
 
         parent.resetToInit();
         final boolean anim = renderer.getAnimations().containsKey(currentPhase);
-        if (anim) if (AnimationHelper.doAnimation(renderer.getAnimations().get(currentPhase), entity, parent.getName(),
-                parent, partialTick, limbSwing))
-        {
-        }
+        if (anim) AnimationHelper.doAnimation(renderer.getAnimations().get(currentPhase), entity, parent.getName(),
+                parent, partialTick, limbSwing);
         if (info != null && this.isHead(parent.getName()))
         {
             float ang;
@@ -332,8 +336,9 @@ public class X3dModel implements IModelCustom, IModel, IRetexturableModel
             if (info.pitchAxis == 2) dir2 = new Vector4(0, 0, info.yawDirection, ang2);
             else if (info.pitchAxis == 1) dir2 = new Vector4(0, info.yawDirection, 0, ang2);
             else dir2 = new Vector4(info.yawDirection, 0, 0, ang2);
-            parent.setPostRotations(dir.toQuaternion());
-            parent.setPostRotations2(dir2.toQuaternion());
+            final Vector4 combined = new Vector4();
+            combined.mul(dir.toQuaternion(), dir2.toQuaternion());
+            parent.setPostRotations(combined);
         }
         for (final String partName : parent.getSubParts().keySet())
         {
