@@ -39,7 +39,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public int                    power        = 0;
     public int                    prevPower    = 1;
-    public EntityLift             lift;
+    private EntityLift            lift;
     public BlockState             copiedState  = null;
     boolean                       listNull     = false;
     List<Entity>                  list         = new ArrayList<>();
@@ -82,15 +82,15 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public void buttonPress(final int button, final boolean callPanel)
     {
-        if (callPanel && this.lift != null) this.lift.call(this.floor);
-        else if (button != 0 && button <= this.lift.floors.length && this.lift != null && this.lift.hasFloors[button
-                - 1])
+        if (callPanel && this.getLift() != null) this.getLift().call(this.floor);
+        else if (button != 0 && button <= this.getLift().floors.length && this.getLift() != null && this
+                .getLift().hasFloors[button - 1])
         {
             if (button == this.floor)
             {
             }
-            else if (this.lift.getCurrentFloor() == this.floor) this.lift.setCurrentFloor(-1);
-            this.lift.call(button);
+            else if (this.getLift().getCurrentFloor() == this.floor) this.getLift().setCurrentFloor(-1);
+            this.getLift().call(button);
         }
     }
 
@@ -101,8 +101,8 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
                         + 0.5 + 1, this.getPos().getY() + 1, this.getPos().getZ() + 0.5 + 1));
         if (check != null && check.size() > 0)
         {
-            this.lift = check.get(0);
-            this.liftID = this.lift.getUniqueID();
+            this.setLift(check.get(0));
+            this.liftID = this.getLift().getUniqueID();
         }
         return !(check == null || check.isEmpty());
     }
@@ -116,12 +116,12 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public boolean doButtonClick(final LivingEntity clicker, final Direction side, final float hitX, final float hitY,
             final float hitZ)
     {
-        if (this.liftID != null && !this.liftID.equals(this.empty) && this.lift != EntityLift.getLiftFromUUID(
-                this.liftID, this.world)) this.lift = EntityLift.getLiftFromUUID(this.liftID, this.world);
+        if (this.liftID != null && !this.liftID.equals(this.empty) && this.getLift() != EntityLift.getLiftFromUUID(
+                this.liftID, this.world)) this.setLift(EntityLift.getLiftFromUUID(this.liftID, this.world));
         final int button = this.getButtonFromClick(side, hitX, hitY, hitZ);
 
-        final boolean valid = this.lift != null && this.lift.hasFloors[button - 1];
-        if (this.lift != null && this.isSideOn(side)) if (this.editFace[side.ordinal()])
+        final boolean valid = this.getLift() != null && this.getLift().hasFloors[button - 1];
+        if (this.getLift() != null && this.isSideOn(side)) if (this.editFace[side.ordinal()])
         {
             if (!this.getWorld().isRemote)
             {
@@ -155,7 +155,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
             if (this.getWorld() instanceof IBlockEntityWorld)
             {
                 this.buttonPress(button, this.callFaces[side.ordinal()]);
-                this.calledFloor = this.lift.getDestinationFloor();
+                this.calledFloor = this.getLift().getDestinationFloor();
             }
             else if (this.getWorld().isRemote)
             {
@@ -285,9 +285,9 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public void setFloor(final int floor)
     {
-        if (this.lift != null && floor <= this.lift.floors.length && floor > 0)
+        if (this.getLift() != null && floor <= this.getLift().floors.length && floor > 0)
         {
-            this.lift.setFoor(this, floor);
+            this.getLift().setFoor(this, floor);
             this.floor = floor;
             this.markDirty();
         }
@@ -296,7 +296,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public void setLift(final EntityLift lift)
     {
         this.lift = lift;
-        this.liftID = lift.getUniqueID();
+        if (lift != null) this.liftID = lift.getUniqueID();
         if (this.world != null && !this.world.isRemote) TileUpdate.sendUpdate(this);
     }
 
@@ -335,32 +335,33 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         if (this.here == null) this.here = Vector3.getNewVector();
         this.here.set(this);
 
-        if (this.lift != null && this.floor > 0) this.lift.hasFloors[this.floor - 1] = true;
+        if (this.getLift() != null && this.floor > 0) this.getLift().hasFloors[this.floor - 1] = true;
         if (this.getWorld().isRemote) return;
         if (this.world instanceof IBlockEntityWorld) return;
 
-        if (this.lift == null || !this.lift.isAlive())
+        if (this.getLift() == null || !this.getLift().isAlive())
         {
             this.calledYValue = -1;
             this.calledFloor = 0;
             this.currentFloor = 0;
         }
 
-        if (this.lift != null && !this.world.isRemote)
+        if (this.getLift() != null && !this.world.isRemote)
         {
             // This is whether the lift is currently at this floor, so redstone
             // should be emitted.
-            boolean check = this.lift.getCurrentFloor() == this.floor && (int) (this.lift.getMotion().y * 16) == 0;
+            boolean check = this.getLift().getCurrentFloor() == this.floor && (int) (this.getLift().getMotion().y
+                    * 16) == 0;
 
             BlockState state = this.world.getBlockState(this.getPos());
             boolean old = state.get(ControllerBlock.CURRENT);
             boolean callPanel = false;
-            if (!old && !this.lift.getCalled()) for (final Direction face : Direction.Plane.HORIZONTAL)
+            if (!old && !this.getLift().getCalled()) for (final Direction face : Direction.Plane.HORIZONTAL)
                 callPanel |= this.callFaces[face.ordinal()];
             // Call panels should only respond to redstone signals if they are
             // not supposed to be emitting one themselves.
-            if (callPanel && !old && !this.lift.getCalled() && !check) if (this.world.isBlockPowered(this.getPos()))
-                this.lift.call(this.floor);
+            if (callPanel && !old && !this.getLift().getCalled() && !check) if (this.world.isBlockPowered(this
+                    .getPos())) this.getLift().call(this.floor);
 
             // If state has changed, change the blockstate as well. only do this
             // if it has changed to prevent too many changes to state.
@@ -371,10 +372,10 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
             }
 
             // Check to see if the called state needs to be changed.
-            if (this.lift.getMotion().y == 0 || this.lift.getDestinationFloor() == this.floor)
+            if (this.getLift().getMotion().y == 0 || this.getLift().getDestinationFloor() == this.floor)
             {
                 old = state.get(ControllerBlock.CALLED);
-                check = this.lift.getDestinationFloor() == this.floor;
+                check = this.getLift().getDestinationFloor() == this.floor;
                 if (check != old)
                 {
                     state = state.with(ControllerBlock.CALLED, check);
@@ -384,54 +385,39 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
             MinecraftForge.EVENT_BUS.post(new ControllerUpdate(this));
         }
 
-        if (this.lift != null && this.floor > 0)
+        if (this.getLift() != null && this.floor > 0)
         {
             // Set lifts current floor to this if it is in the area of the
             // floor.
-            if ((int) Math.round(this.lift.posY) == this.lift.floors[this.floor - 1]) this.lift.setCurrentFloor(
-                    this.floor);
-            else if (this.lift.getCurrentFloor() == this.floor) this.lift.setCurrentFloor(-1);
+            if ((int) Math.round(this.getLift().posY) == this.getLift().floors[this.floor - 1]) this.getLift()
+                    .setCurrentFloor(this.floor);
+            else if (this.getLift().getCurrentFloor() == this.floor) this.getLift().setCurrentFloor(-1);
 
             // Sets the values used for rendering colours over numbers on the
             // display.
-            this.calledFloor = this.lift.getDestinationFloor();
-            this.currentFloor = this.lift.getCurrentFloor();
+            this.calledFloor = this.getLift().getDestinationFloor();
+            this.currentFloor = this.getLift().getCurrentFloor();
         }
 
-        if (this.lift == null && this.liftID != null)
-        {
-            // Find lift if existing lift isn't found.
-            final EntityLift tempLift = EntityLift.getLiftFromUUID(this.liftID, this.world);
-            if (this.liftID != null && !this.liftID.equals(this.empty) && (this.lift == null || !this.lift.isAlive()
-                    || tempLift != this.lift))
-            {
-                this.lift = tempLift;
-                if (this.lift == null || !this.lift.isAlive()) return;
-
-                // Make sure that lift's floor is this one if it doesn't have
-                // one defined.
-                if (this.floor > 0 && !this.lift.hasFloors[this.floor - 1]) this.setFloor(this.floor);
-            }
-        }
         // Cleanup floor if the lift is gone.
-        if (this.floor > 0 && (this.lift == null || !this.lift.isAlive()))
+        if (this.floor > 0 && (this.getLift() == null || !this.getLift().isAlive()))
         {
-            this.lift = null;
+            this.setLift(null);
             this.floor = 0;
         }
 
         // Scan sides for a controller which actually has a lift attached, and
         // attach self to that floor.
-        if (this.lift == null && this.tick++ % 50 == 0) for (final Direction side : Direction.values())
+        if (this.getLift() == null && this.tick++ % 50 == 0) for (final Direction side : Direction.values())
         {
             final TileEntity t = this.here.getTileEntity(this.world, side);
             this.here.getBlock(this.world, side);
             if (t instanceof ControllerTile)
             {
                 final ControllerTile te = (ControllerTile) t;
-                if (te.lift != null)
+                if (te.getLift() != null)
                 {
-                    this.lift = te.lift;
+                    this.setLift(te.getLift());
                     this.floor = te.floor;
                     this.markDirty();
                     break;
@@ -467,186 +453,26 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         return par1;
     }
 
-    // Open Computers stuff here, possibly will move this to a compat class or
-    // something? TODO OC Stuff
-    //
-    //
-    // @Override
-    // public String getComponentName()
-    // {
-    // return "lift";
-    // }
-    //
-    //
-    // /*
-    // * Calls lift to specified Floor
-    // */
-    // @Callback(doc = "function(floor:number) -- Calls the Lift to the
-    // specified Floor")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] callFloor(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null)
-    // {
-    // lift.call(args.checkInteger(0));
-    // return new Object[] {};
-    // }
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Calls lift to specified Y value
-    // */
-    // @Callback(doc = "function(yValue:number) -- Calls the Lift to the
-    // specified Y level")
-    //
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] callYValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null)
-    // {
-    // lift.setDestY(args.checkInteger(0));
-    // return new Object[] {};
-    // }
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Calls lift to specified Y value
-    // */
-    // @Callback(doc = "function(xValue:number) -- Calls the Lift to
-    // thespecified X location")
-    //
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] callXValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null)
-    // {
-    // // +0.5f as the elevator is in centre of blocks.
-    // lift.setDestX(args.checkInteger(0) + 0.5f);
-    // return new Object[] {};
-    // }
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Calls lift to specified Y value
-    // */
-    // @Callback(doc = "function(zValue:number) -- Calls the Lift to
-    // thespecified Z location")
-    //
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] callZValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null)
-    // {
-    // // +0.5f as the elevator is in centre of blocks.
-    // lift.setDestZ(args.checkInteger(0) + 0.5f);
-    // return new Object[] {};
-    // }
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Sets floor associated with this block
-    // */
-    // @Callback(doc = "function(floor:number) -- Sets the floor assosiated
-    // tothe Controller")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] setFloor(Context context, Arguments args)
-    // {
-    // floor = args.checkInteger(0);
-    // return new Object[] { floor };
-    // }
-    //
-    // /*
-    // * Returns the Yvalue of the lift.
-    // */
-    // @Callback(doc = "returns the current Y value of the lift.")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] getYValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null) return new Object[] { (float) lift.posY };
-    //
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Returns the Yvalue of the lift.
-    // */
-    // @Callback(doc = "returns the current X value of the lift.")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] getXValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null) return new Object[] { (float) lift.posX };
-    //
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Returns the Yvalue of the lift.
-    // */
-    // @Callback(doc = "returns the current Z value of the lift.")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] getZValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null) return new Object[] { (float) lift.posZ };
-    //
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Returns floor associated with this block
-    // */
-    // @Callback(doc = "returns the Floor assigned to the Controller")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] getFloor(Context context, Arguments args)
-    // {
-    // return new Object[] { floor };
-    // }
-    //
-    // /*
-    // * Returns the Y value of the controller for the specified floor
-    // */
-    // @Callback(doc = "function(floor:number) -- returns the y value of the
-    // specified floor")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] getFloorYValue(Context context, Arguments args) throws
-    // Exception
-    // {
-    // if (lift != null)
-    // {
-    // int floor = args.checkInteger(0);
-    //
-    // if (floor > 0 && floor <= lift.floors.length)
-    // {
-    // int value = lift.floors[floor - 1];
-    // if (!lift.hasFloors[floor - 1]) throw new Exception("floor " + floor + "
-    // is not assigned");
-    // return new Object[] { value };
-    // }
-    // throw new Exception("floor out of bounds");
-    // }
-    // throw new Exception("no connected lift");
-    // }
-    //
-    // /*
-    // * Returns floor associated with this block
-    // */
-    // @Callback(doc = "returns if the elevator is not currently called to
-    // afloor")
-    // @Optional.Method(modid = "opencomputers")
-    // public Object[] isReady(Context context, Arguments args) throws Exception
-    // {
-    // if (lift != null) { return new Object[] { !lift.getCalled() }; }
-    // throw new Exception("no connected lift");
-    // }
+    /**
+     * @return the lift
+     */
+    public EntityLift getLift()
+    {
+        if (this.liftID == null) return null;
+        else if (this.lift == null)
+        {
+            this.lift = EntityLift.getLiftFromUUID(this.liftID, this.getWorld());
+
+            if (this.lift == null) this.setLift(null);
+            else
+            {
+                this.setLift(this.lift);
+                // Make sure that lift's floor is this one if it doesn't have
+                // one defined.
+                if (this.floor > 0 && !this.getLift().hasFloors[this.floor - 1]) this.setFloor(this.floor);
+            }
+        }
+        return this.lift;
+    }
 
 }

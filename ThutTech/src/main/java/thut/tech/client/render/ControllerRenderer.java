@@ -19,7 +19,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import thut.api.entity.blockentity.world.IBlockEntityWorld;
 import thut.tech.common.blocks.lift.ControllerTile;
-import thut.tech.common.entity.EntityLift;
 
 public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer<T>
 {
@@ -311,27 +310,25 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             else
             {
                 // Draw numbers on top
-                if (monitor.liftID == null) this.drawFloorNumbers(monitor.getSidePage(dir));
+                if (monitor.getLift() == null) this.drawFloorNumbers(monitor.getSidePage(dir));
                 else
                 {
-                    if (monitor.lift == null) monitor.lift = EntityLift.getLiftFromUUID(monitor.liftID, this
-                            .getWorld());
                     final int page = monitor.getSidePage(dir);
-                    if (monitor.lift != null) for (int floor = 0; floor < 16; floor++)
-                        if (monitor.lift.hasFloors[floor + page * 16]) this.drawNumber(floor + page * 16, floor);
+                    if (monitor.getLift() != null) for (int floor = 0; floor < 16; floor++)
+                        if (monitor.getLift().hasFloors[floor + page * 16]) this.drawNumber(floor + page * 16, floor);
                 }
 
-                if (monitor.lift != null)
+                if (monitor.getLift() != null)
                 {
                     final Color mapped = new Color(255, 255, 255, a);
                     Color colour = new Color(0, 255, 0, a);
                     this.drawOverLay(monitor, monitor.floor, colour, dir, false, 0);
                     colour = new Color(255, 255, 0, a);
-                    this.drawOverLay(monitor, monitor.lift.getDestinationFloor(), colour, dir, false, 1);
+                    this.drawOverLay(monitor, monitor.getLift().getDestinationFloor(), colour, dir, false, 1);
                     colour = new Color(0, 128, 255, a);
-                    this.drawOverLay(monitor, monitor.lift.getCurrentFloor(), colour, dir, false, 2);
+                    this.drawOverLay(monitor, monitor.getLift().getCurrentFloor(), colour, dir, false, 2);
                     for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
-                        if (monitor.lift.hasFloors[j]) this.drawOverLay(monitor, j + 1, mapped, dir, false, 3);
+                        if (monitor.getLift().hasFloors[j]) this.drawOverLay(monitor, j + 1, mapped, dir, false, 3);
                 }
                 else
                 {

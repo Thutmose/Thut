@@ -93,6 +93,7 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+    maven { url 'https://squiddev.cc/maven/' }
 }
 
 dependencies {
@@ -105,10 +106,8 @@ dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     //Dependancy for thutcore from curseforge
     //compile "thutcore:thutcore:${version_minecraft}-${version_thutcore}-deobf"
-
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    
+    compile "org.squiddev:cc-tweaked-${version_minecraft}:${version_cct}"
 
 }
 
