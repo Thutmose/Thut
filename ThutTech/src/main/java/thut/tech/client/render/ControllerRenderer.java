@@ -19,7 +19,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import thut.tech.common.blocks.lift.ControllerTile;
-import thut.tech.common.entity.EntityLift;
 
 public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer<T>
 {
@@ -259,26 +258,34 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             }
             else
             {
-                if (monitor.lift == null && monitor.liftID != null)
-                    monitor.lift = EntityLift.getLiftFromUUID(monitor.liftID, tileentity.getWorld());
-                if (monitor.lift != null)
+                // Draw numbers on top
+                if (monitor.getLift() == null) this.drawFloorNumbers(monitor.getSidePage(dir));
+                else
+                {
+                    final int page = monitor.getSidePage(dir);
+                    if (monitor.getLift() != null) for (int floor = 0; floor < 16; floor++)
+                        if (monitor.getLift().hasFloors[floor + page * 16]) this.drawNumber(floor + page * 16, floor);
+                }
+
+                if (monitor.getLift() != null)
                 {
                     a = 64;
                     final Color mapped = new Color(255, 255, 255, 220);
                     Color colour = new Color(0, 255, 0, a);
                     drawOverLay(mat, buff, monitor, monitor.floor, colour, dir, false, 3);
-                    colour = new Color(255, 255, 0, a);
-                    drawOverLay(mat, buff, monitor, monitor.lift.getDestinationFloor(), colour, dir, false, 2);
+                    colour = new Color(255, 255, 0, a);            
+                    this.drawOverLay(mat, buff, monitor, monitor.getLift().getDestinationFloor(), colour, dir, false, 1);
                     colour = new Color(0, 128, 255, a);
-                    drawOverLay(mat, buff, monitor, monitor.lift.getCurrentFloor(), colour, dir, false, 1);
+                    this.drawOverLay(monitor, monitor.getLift().getCurrentFloor(), colour, dir, false, 2);
                     for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
-                        if (monitor.lift.hasFloors[j]) drawOverLay(mat, buff, monitor, j + 1, mapped, dir, false, 0);
+                        if (monitor.getLift().hasFloors[j]) this.drawOverLay(mat, buff, monitor, j + 1, mapped, dir, false, 3);
 
                     // Draw numbers on top
                     final int page = monitor.getSidePage(dir);
                     for (int floor = 0; floor < 16; floor++)
                         if (monitor.lift.hasFloors[floor + page * 16])
                             this.drawNumber(mat, buff, floor + page * 16, floor);
+                        
                 }
                 else
                 {

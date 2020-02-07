@@ -34,9 +34,9 @@ public class PacketLift extends Packet
         if (tile instanceof ControllerTile)
         {
             final ControllerTile te = (ControllerTile) tile;
-            if (te.lift == null) return;
+            if (te.getLift() == null) return;
             te.buttonPress(this.button, this.call);
-            te.calledFloor = te.lift.getDestinationFloor();
+            te.calledFloor = te.getLift().getDestinationFloor();
         }
     }
 

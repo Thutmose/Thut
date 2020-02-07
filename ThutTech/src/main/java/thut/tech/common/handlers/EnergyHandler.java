@@ -126,8 +126,8 @@ public class EnergyHandler
 
         private void updateLift()
         {
-            if (this.tile.lift == null) this.lift = null;
-            else this.lift = this.tile.lift.getCapability(CapabilityEnergy.ENERGY, null).orElse(null);
+            if (this.tile.getLift() == null) this.lift = null;
+            else this.lift = this.tile.getLift().getCapability(CapabilityEnergy.ENERGY, null).orElse(null);
         }
     }
 
