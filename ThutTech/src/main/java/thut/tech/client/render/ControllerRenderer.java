@@ -269,7 +269,7 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
 
                 if (monitor.getLift() != null)
                 {
-                    a = 64;
+                    a = 255;
                     final Color mapped = new Color(255, 255, 255, 220);
                     Color colour = new Color(0, 255, 0, a);
                     drawOverLay(mat, buff, monitor, monitor.floor, colour, dir, false, 3);

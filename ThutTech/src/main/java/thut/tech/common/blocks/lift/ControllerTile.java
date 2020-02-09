@@ -208,12 +208,12 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         }
         case 4:
         {
-            ret = 1 + 4 * (int) ((1 - y) * 4 % 4) + (int) ((1 - z) * 4 % 4);
+            ret = 1 + 4 * (int) ((1 - y) * 4 % 4) + (int) (z * 4 % 4);
             return ret + 16 * page;
         }
         case 5:
         {
-            ret = 1 + 4 * (int) ((1 - y) * 4 % 4) + (int) (z * 4 % 4);
+            ret = 1 + 4 * (int) ((1 - y) * 4 % 4) + (int) ((1 - z) * 4 % 4);
             return ret + 16 * page;
         }
         default:
