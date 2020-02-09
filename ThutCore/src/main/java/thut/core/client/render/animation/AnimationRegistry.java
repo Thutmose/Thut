@@ -4,8 +4,6 @@ import java.util.HashMap;
 
 import javax.annotation.Nullable;
 
-import org.w3c.dom.NamedNodeMap;
-
 import com.google.common.collect.Maps;
 
 import thut.core.client.render.animation.prefab.AdvancedFlapAnimation;
@@ -13,6 +11,8 @@ import thut.core.client.render.animation.prefab.BasicFlapAnimation;
 import thut.core.client.render.animation.prefab.BiWalkAnimation;
 import thut.core.client.render.animation.prefab.QuadWalkAnimation;
 import thut.core.client.render.animation.prefab.SnakeMovement;
+import thut.core.common.ThutCore;
+import thut.core.common.xml.AnimationXML.Phase;
 
 /**
  * Used for determining what animation to make when reading from XMLs
@@ -68,8 +68,11 @@ public class AnimationRegistry
      * @param renamer
      * @return
      */
-    public static Animation make(final String name, final NamedNodeMap map, @Nullable final IPartRenamer renamer)
+    public static Animation make(final Phase map, @Nullable final IPartRenamer renamer)
     {
+        String name = map.name;
+        if (name == null) return null;
+        name = ThutCore.trim(name);
         Animation ret = null;
         final Class<? extends Animation> toMake = AnimationRegistry.animations.get(name);
         if (toMake != null) try
