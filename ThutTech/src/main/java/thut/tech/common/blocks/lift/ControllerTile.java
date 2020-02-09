@@ -178,8 +178,6 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         y -= this.getPos().getY();
         z -= this.getPos().getZ();
 
-        System.out.println(side + " " + side.getIndex() + " " + x + " " + y + " " + z);
-
         x = x % 1f;
         y = y % 1f;
         z = z % 1f;
