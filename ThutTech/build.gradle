@@ -107,7 +107,7 @@ dependencies {
     //Dependancy for thutcore from curseforge
     //compile "thutcore:thutcore:${version_minecraft}-${version_thutcore}-deobf"
     
-    compile "org.squiddev:cc-tweaked-${version_minecraft}:${version_cct}"
+    implementation fg.deobf("org.squiddev:cc-tweaked-${version_minecraft}:${version_cct}")
 
 }
 
