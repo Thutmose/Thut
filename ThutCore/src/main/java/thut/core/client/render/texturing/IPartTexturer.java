@@ -37,6 +37,13 @@ public interface IPartTexturer
         // Do nothing by default
     }
 
+    void init(CustomTex tex);
+
+    default void applyTexturePhase(final Phase phase)
+    {
+        // Do nothing by default
+    }
+
     /**
      * Applies the texture for the part.<br>
      * This method will bind the texture to render engine for the part.
