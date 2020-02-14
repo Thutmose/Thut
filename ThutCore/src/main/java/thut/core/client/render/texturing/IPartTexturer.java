@@ -1,5 +1,8 @@
 package thut.core.client.render.texturing;
 
+import thut.core.client.render.animation.AnimationXML.CustomTex;
+import thut.core.client.render.animation.AnimationXML.Phase;
+
 public interface IPartTexturer
 {
     /**
@@ -23,6 +26,13 @@ public interface IPartTexturer
      *            - The name of the texture.
      */
     void addMapping(String part, String tex);
+
+    void init(CustomTex tex);
+
+    default void applyTexturePhase(final Phase phase)
+    {
+        // Do nothing by default
+    }
 
     /**
      * Applies the texture for the part.<br>
