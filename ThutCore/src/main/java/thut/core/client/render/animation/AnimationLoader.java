@@ -20,6 +20,12 @@ import net.minecraft.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
+import thut.core.client.render.animation.AnimationXML.Mat;
+import thut.core.client.render.animation.AnimationXML.Merge;
+import thut.core.client.render.animation.AnimationXML.Metadata;
+import thut.core.client.render.animation.AnimationXML.Phase;
+import thut.core.client.render.animation.AnimationXML.Worn;
+import thut.core.client.render.animation.AnimationXML.XMLFile;
 import thut.core.client.render.animation.IAnimationChanger.WornOffsets;
 import thut.core.client.render.model.IModel;
 import thut.core.client.render.model.IModelRenderer;
@@ -27,13 +33,6 @@ import thut.core.client.render.model.IModelRenderer.Vector5;
 import thut.core.client.render.texturing.IPartTexturer;
 import thut.core.client.render.texturing.TextureHelper;
 import thut.core.common.ThutCore;
-import thut.core.common.xml.AnimationXML;
-import thut.core.common.xml.AnimationXML.CustomTex;
-import thut.core.common.xml.AnimationXML.Merge;
-import thut.core.common.xml.AnimationXML.Metadata;
-import thut.core.common.xml.AnimationXML.Phase;
-import thut.core.common.xml.AnimationXML.Worn;
-import thut.core.common.xml.AnimationXML.XMLFile;
 
 public class AnimationLoader
 {
@@ -105,7 +104,7 @@ public class AnimationLoader
             IPartTexturer texturer = renderer.getTexturer();
             IAnimationChanger animator = renderer.getAnimationChanger();
 
-            if (texturer == null) renderer.setTexturer(texturer = new TextureHelper((CustomTex) null));
+            if (texturer == null) renderer.setTexturer(texturer = new TextureHelper());
             if (animator == null) renderer.setAnimationChanger(animator = new AnimationChanger());
 
             // Custom tagged parts.
@@ -145,6 +144,7 @@ public class AnimationLoader
                         scale = AnimationLoader.getVector3(phase.values.get(new QName("scale")), scale);
                         rotation = AnimationLoader.getRotation(phase.values.get(new QName("rotation")), null, rotation);
                     }
+                    else if (name.equals("textures")) texturer.applyTexturePhase(phase);
                     else if (AnimationRegistry.animations.containsKey(name))
                     {
                         ThutCore.LOGGER.debug("Loading " + name + " for " + holder.name);
@@ -164,7 +164,7 @@ public class AnimationLoader
                 else if (phase.type != null)
                 {
                     ThutCore.LOGGER.debug("Building Animation " + phase.type + " for " + holder.name);
-                    final Animation anim = AnimationBuilder.build(phase, null);
+                    final Animation anim = AnimationBuilder.build(phase, model.getParts().keySet(), null);
                     if (anim != null) tblAnims.add(anim);
                 }
 
@@ -189,10 +189,14 @@ public class AnimationLoader
             // Handle customTextures
             if (file.model.customTex != null)
             {
-                texturer = new TextureHelper(file.model.customTex);
-                if (file.model.customTex.defaults != null) holder.texture = new ResourceLocation(
-                        holder.texture.toString().replace(holder.name, ThutCore.trim(file.model.customTex.defaults)));
+                texturer.init(file.model.customTex);
+                if (file.model.customTex.defaults != null) holder.texture = new ResourceLocation(holder.texture
+                        .toString().replace(holder.name, ThutCore.trim(file.model.customTex.defaults)));
             }
+
+            // Handle materials
+            for (final Mat mat : file.model.materials)
+                model.updateMaterial(mat);
 
             final IModelRenderer<?> loaded = renderer;
             loaded.updateModel(phaseList, holder);
@@ -245,7 +249,7 @@ public class AnimationLoader
 
             // Finalize animation initialization
             final Set<Animation> anims = Sets.newHashSet();
-            // TODO actually initialize animations if needed.
+
             animator.init(anims);
 
             // Add the worn offsets

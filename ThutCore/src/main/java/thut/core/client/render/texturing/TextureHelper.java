@@ -13,12 +13,13 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import thut.api.entity.IMobTexturable;
+import thut.core.client.render.animation.AnimationXML.CustomTex;
+import thut.core.client.render.animation.AnimationXML.Phase;
+import thut.core.client.render.animation.AnimationXML.TexAnim;
+import thut.core.client.render.animation.AnimationXML.TexCustom;
+import thut.core.client.render.animation.AnimationXML.TexForm;
+import thut.core.client.render.animation.AnimationXML.TexPart;
 import thut.core.common.ThutCore;
-import thut.core.common.xml.AnimationXML.CustomTex;
-import thut.core.common.xml.AnimationXML.TexAnim;
-import thut.core.common.xml.AnimationXML.TexCustom;
-import thut.core.common.xml.AnimationXML.TexForm;
-import thut.core.common.xml.AnimationXML.TexPart;
 
 public class TextureHelper implements IPartTexturer
 {
@@ -32,8 +33,8 @@ public class TextureHelper implements IPartTexturer
         {
             this.arr = arr;
             final String[] args = trigger.split(":");
-            this.chance = Double.parseDouble(args[1]);
-            this.duration = Integer.parseInt(args[2]);
+            if (args.length > 1) this.chance = Double.parseDouble(args[1]);
+            if (args.length > 2) this.duration = Integer.parseInt(args[2]);
         }
     }
 
@@ -176,10 +177,14 @@ public class TextureHelper implements IPartTexturer
 
     Map<String, String>                            formeMap     = Maps.newHashMap();
 
-    public TextureHelper(final CustomTex customTex)
+    public TextureHelper()
+    {
+    }
+
+    public void init(final CustomTex customTex)
     {
         if (customTex == null) return;
-        if (customTex.defaults != null) this.default_path = customTex.defaults;
+        if (customTex.defaults != null) this.default_path = ThutCore.trim(customTex.defaults);
         if (customTex.smoothing != null)
         {
             final boolean flat = !customTex.smoothing.equalsIgnoreCase("smooth");
@@ -197,7 +202,7 @@ public class TextureHelper implements IPartTexturer
         for (final TexPart anim : customTex.parts)
         {
             final String name = ThutCore.trim(anim.name);
-            final String partTex = anim.tex;
+            final String partTex = ThutCore.trim(anim.tex);
             this.addMapping(name, partTex);
             if (anim.smoothing != null)
             {
@@ -209,13 +214,13 @@ public class TextureHelper implements IPartTexturer
         {
             final String name = ThutCore.trim(anim.part);
             final String state = ThutCore.trim(anim.state);
-            final String partTex = anim.tex;
+            final String partTex = ThutCore.trim(anim.tex);
             this.addCustomMapping(name, state, partTex);
         }
         for (final TexForm anim : customTex.forme)
         {
             final String name = ThutCore.trim(anim.name);
-            final String tex = anim.tex;
+            final String tex = ThutCore.trim(anim.tex);
             this.formeMap.put(name, tex);
         }
     }
@@ -244,7 +249,8 @@ public class TextureHelper implements IPartTexturer
         if (this.mob == null) return default_;
         ResourceLocation tex = this.bindPerState(part);
         if (tex != null) return tex;
-        final String texName = this.texNames.containsKey(part) ? this.texNames.get(part) : this.default_path;
+        final String texName = ThutCore.trim(this.texNames.containsKey(part) ? this.texNames.get(part)
+                : this.default_path);
         if (texName == null || texName.trim().isEmpty()) this.texNames.put(part, this.default_path);
         tex = this.getResource(texName);
         TexState state;
@@ -316,6 +322,12 @@ public class TextureHelper implements IPartTexturer
         TexState state;
         if ((state = this.texStates.get(part)) != null) return state.applyState(toFill, this.mob);
         return false;
+    }
+
+    @Override
+    public void applyTexturePhase(final Phase phase)
+    {
+        if (this.mob != null) this.mob.applyTexturePhase(phase);
     }
 
 }
