@@ -222,6 +222,11 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
         GlStateManager.disableLighting();
         GLX.glMultiTexCoord2f(GLX.GL_TEXTURE1, 200, 200);
 
+        if (monitor.getLift() != null)
+        {
+            monitor.calledFloor = monitor.getLift().getCalled() ? monitor.getLift().getDestinationFloor() : -1;
+            monitor.currentFloor = monitor.getLift().getCurrentFloor();
+        }
         for (int i = 0; i < 6; i++)
         {
             final Direction dir = Direction.byIndex(i);
@@ -251,60 +256,49 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             if (monitor.editFace[dir.ordinal()]) this.drawEditOverlay(monitor, dir);
             else if (monitor.floorDisplay[dir.ordinal()])
             {
-                // Draw the white background
-                GL11.glPushMatrix();
-                GL11.glTranslated(-0.5, -0.095, 0);
-                Color colour = new Color(255, 255, 255, 255);
-                this.drawOverLay(monitor, 1, colour, dir, true, 0);
-                GL11.glPopMatrix();
-
                 GL11.glPushMatrix();
                 GL11.glTranslated(-0.11, -0.1, 0);
                 this.drawNumber(monitor.currentFloor - 1, 1);
                 GL11.glPopMatrix();
+
+                // Draw the white background
                 GL11.glPushMatrix();
                 GL11.glTranslated(-0.5, -0.095, 0);
-
-                // Draw highlight over the background.
-                if (monitor.calledFloor == monitor.floor)
-                {
-                    colour = new Color(255, 255, 0, a);
-                    this.drawOverLay(monitor, 1, colour, dir, true, 1);
-                }
-                else if (monitor.currentFloor == monitor.floor)
-                {
-                    colour = new Color(0, 128, 255, a);
-                    this.drawOverLay(monitor, 1, colour, dir, true, 2);
-                }
+                final Color colour = new Color(255, 255, 255, 255);
+                this.drawOverLay(monitor, 1, colour, dir, true, 0);
                 GL11.glPopMatrix();
             }
             else if (monitor.callFaces[dir.ordinal()])
             {
-                // Draw the white background
-                GL11.glPushMatrix();
                 GL11.glTranslated(-0.5, -0.095, 0);
-                Color colour = new Color(255, 255, 255, 255);
-                this.drawOverLay(monitor, 1, colour, dir, true, 0);
-                GL11.glPopMatrix();
+
+                Color colour = new Color(255, 255, 255, a);
+                // Draw highlight over the background.
+                if (monitor.calledFloor == monitor.floor)
+                {
+                    colour = new Color(255, 255, 0, a);
+                    this.drawOverLay(monitor, 1, colour, dir, true, 0);
+                }
+                else if (monitor.currentFloor == monitor.floor)
+                {
+                    colour = new Color(0, 128, 255, a);
+                    this.drawOverLay(monitor, 1, colour, dir, true, 1);
+                }
+                GL11.glTranslated(0.5, 0.095, 0);
 
                 GL11.glPushMatrix();
                 GL11.glTranslated(-0.11, -0.1, 0);
                 this.drawNumber(monitor.floor - 1, 1);
                 GL11.glPopMatrix();
                 GL11.glPushMatrix();
-                GL11.glTranslated(-0.5, -0.095, 0);
 
-                // Draw highlight over the background.
-                if (monitor.calledFloor == monitor.floor)
-                {
-                    colour = new Color(255, 255, 0, a);
-                    this.drawOverLay(monitor, 1, colour, dir, true, 1);
-                }
-                else if (monitor.currentFloor == monitor.floor)
-                {
-                    colour = new Color(0, 128, 255, a);
-                    this.drawOverLay(monitor, 1, colour, dir, true, 2);
-                }
+                // Draw the white background
+                GL11.glPushMatrix();
+                GL11.glTranslated(-0.5, -0.095, 0);
+                colour = new Color(255, 255, 255, a);
+                this.drawOverLay(monitor, 1, colour, dir, true, 2);
+                GL11.glPopMatrix();
+
                 GL11.glPopMatrix();
             }
             else

@@ -32,12 +32,20 @@ public class ItemLinker extends Item
         final PlayerEntity playerIn = context.getPlayer();
         final BlockPos pos = context.getPos();
         final World worldIn = context.getWorld();
+        final BlockState state = worldIn.getBlockState(pos);
+        final Direction face = context.getFace();
+
+        final boolean linked = stack.hasTag() && stack.getTag().contains("lift");
+        if (!linked && state.getBlock() == TechCore.LIFTCONTROLLER)
+        {
+            final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
+            te.editFace[face.ordinal()] = !te.editFace[face.ordinal()];
+            return ActionResultType.SUCCESS;
+        }
+
         if (!stack.hasTag()) return ActionResultType.PASS;
         else
         {
-            final BlockState state = worldIn.getBlockState(pos);
-            final Direction face = context.getFace();
-
             if (state.getBlock() == TechCore.LIFTCONTROLLER && !playerIn.isSneaking())
             {
                 final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);

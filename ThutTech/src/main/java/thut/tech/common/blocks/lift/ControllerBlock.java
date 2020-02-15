@@ -31,8 +31,8 @@ public class ControllerBlock extends Block
     public ControllerBlock(final Block.Properties props)
     {
         super(props);
-        this.setDefaultState(this.stateContainer.getBaseState().with(ControllerBlock.CALLED, false).with(ControllerBlock.CURRENT,
-                false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(ControllerBlock.CALLED, false).with(
+                ControllerBlock.CURRENT, false));
     }
 
     /**

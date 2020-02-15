@@ -119,13 +119,12 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         if (this.liftID != null && !this.liftID.equals(this.empty) && this.getLift() != EntityLift.getLiftFromUUID(
                 this.liftID, this.world)) this.setLift(EntityLift.getLiftFromUUID(this.liftID, this.world));
         final int button = this.getButtonFromClick(side, hitX, hitY, hitZ);
-
         final boolean valid = this.getLift() != null && this.getLift().hasFloors[button - 1];
         if (this.getLift() != null && this.isSideOn(side)) if (this.editFace[side.ordinal()])
         {
             if (!this.getWorld().isRemote)
             {
-                String message = "msg.callPanel.name";
+                String message = "msg.callPanel";
                 switch (button)
                 {
                 case 1:
@@ -136,12 +135,12 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
                 case 2:
                     this.floorDisplay[side.ordinal()] = !this.floorDisplay[side.ordinal()];
                     this.callFaces[side.ordinal()] = false;
-                    message = "msg.floorDisplay.name";
+                    message = "msg.floorDisplay";
                     clicker.sendMessage(new TranslationTextComponent(message, this.floorDisplay[side.ordinal()]));
                     break;
                 case 16:
                     this.editFace[side.ordinal()] = false;
-                    message = "msg.editMode.name";
+                    message = "msg.editMode";
                     clicker.sendMessage(new TranslationTextComponent(message, false));
                     break;
                 }

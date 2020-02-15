@@ -112,7 +112,12 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
 
     private void postRender()
     {
-        GL11.glPopMatrix();
+        // unApply second post rotation.
+        this.postRot1.glRotateMinus();
+        // unApply first postRotation
+        this.postRot.glRotateMinus();
+        // unapply the of offset for translation.
+        GL11.glTranslated(-this.offset.x, -this.offset.y, -this.offset.z);
     }
 
     private void preRender()
@@ -136,11 +141,6 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         GL11.glTranslated(this.postTrans.x, this.postTrans.y, this.postTrans.z);
         // UnRotate coordinate difference.
         GL11.glRotatef(-90, 1, 0, 0);
-        // Undo pre-translate offset.
-        GL11.glTranslated(-this.offset.x, -this.offset.y, -this.offset.z);
-        GL11.glPushMatrix();
-        // Translate to Offset.
-        GL11.glTranslated(this.offset.x, this.offset.y, this.offset.z);
 
         // Apply first postRotation
         this.postRot.glRotate();
