@@ -104,6 +104,7 @@ public class EntityLift extends BlockEntityBase
             this.toMoveY = this.getDestY() != this.posY;
             this.toMoveZ = this.getDestZ() != this.posZ;
         }
+        if (!(this.toMoveX || this.toMoveY || this.toMoveZ)) this.setCalled(false);
 
         // Apply damping to velocities if no destination.
         if (!this.toMoveX) this.velocity.x *= 0.5;

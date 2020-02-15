@@ -92,19 +92,14 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
 
     public void drawEditOverlay(MatrixStack mat, IRenderTypeBuffer buff, ControllerTile monitor, final Direction side)
     {
+        Color colour;
         // Call button toggle
-        // Draw the white background
-        Color colour = new Color(255, 255, 255, 255);
-        drawOverLay(mat, buff, monitor, 1, colour, side, false, 0);
         colour = monitor.callFaces[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
-        drawOverLay(mat, buff, monitor, 1, colour, side, false, 1);
+        drawOverLay(mat, buff, monitor, 1, colour, side, false, 0);
 
         // Floor Display toggle
-        // Draw the white background
-        colour = new Color(255, 255, 255, 255);
-        drawOverLay(mat, buff, monitor, 2, colour, side, false, 0);
         colour = monitor.floorDisplay[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
-        drawOverLay(mat, buff, monitor, 2, colour, side, false, 1);
+        drawOverLay(mat, buff, monitor, 2, colour, side, false, 0);
     }
 
     public void drawFloorNumbers(MatrixStack mat, IRenderTypeBuffer buffer, final int page)
@@ -203,6 +198,12 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
     {
         final ControllerTile monitor = (ControllerTile) tileentity;
 
+        if (monitor.getLift() != null)
+        {
+            monitor.calledFloor = monitor.getLift().getCalled() ? monitor.getLift().getDestinationFloor() : -1;
+            monitor.currentFloor = monitor.getLift().getCurrentFloor();
+        }
+        
         for (int i = 0; i < 6; i++)
         {
             final Direction dir = Direction.byIndex(i);
@@ -220,29 +221,21 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             {
                 // Draw the white background
                 Color colour = new Color(255, 255, 255, 255);
+                mat.translate(-0.5, -0.095, 0);
                 drawOverLay(mat, buff, monitor, 1, colour, dir, true, 0);
 
+                mat.push();
+                mat.translate(0.4, 0.0, 0);
                 this.drawNumber(mat, buff, monitor.currentFloor - 1, 1);
-
-                // Draw highlight over the background.
-                if (monitor.calledFloor == monitor.floor)
-                {
-                    colour = new Color(255, 255, 0, a);
-                    drawOverLay(mat, buff, monitor, 1, colour, dir, true, 1);
-                }
-                else if (monitor.currentFloor == monitor.floor)
-                {
-                    colour = new Color(0, 128, 255, a);
-                    drawOverLay(mat, buff, monitor, 1, colour, dir, true, 2);
-                }
+                mat.pop();
             }
             else if (monitor.callFaces[dir.ordinal()])
             {
                 // Draw the white background
                 Color colour = new Color(255, 255, 255, 255);
 
+                mat.translate(-0.5, -0.095, 0);
                 drawOverLay(mat, buff, monitor, 1, colour, dir, true, 0);
-                this.drawNumber(mat, buff, monitor.floor - 1, 1);
 
                 // Draw highlight over the background.
                 if (monitor.calledFloor == monitor.floor)
@@ -255,6 +248,11 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
                     colour = new Color(0, 128, 255, a);
                     drawOverLay(mat, buff, monitor, 1, colour, dir, true, 2);
                 }
+
+                mat.push();
+                mat.translate(0.4, 0.0, 0);
+                this.drawNumber(mat, buff, monitor.floor - 1, 1);
+                mat.pop();
             }
             else
             {
