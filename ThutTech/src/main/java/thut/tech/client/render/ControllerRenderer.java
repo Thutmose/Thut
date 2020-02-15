@@ -62,22 +62,17 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
 
     public void drawEditOverlay(final ControllerTile monitor, final Direction side)
     {
+        Color colour;
         // Call button toggle
-        // Draw the white background
         GL11.glPushMatrix();
-        Color colour = new Color(255, 255, 255, 255);
-        this.drawOverLay(monitor, 1, colour, side, false, 0);
         colour = monitor.callFaces[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
-        this.drawOverLay(monitor, 1, colour, side, false, 1);
+        this.drawOverLay(monitor, 1, colour, side, false, 0);
         GL11.glPopMatrix();
 
         // Floor Display toggle
-        // Draw the white background
         GL11.glPushMatrix();
-        colour = new Color(255, 255, 255, 255);
-        this.drawOverLay(monitor, 2, colour, side, false, 0);
         colour = monitor.floorDisplay[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
-        this.drawOverLay(monitor, 2, colour, side, false, 1);
+        this.drawOverLay(monitor, 2, colour, side, false, 0);
         GL11.glPopMatrix();
     }
 
