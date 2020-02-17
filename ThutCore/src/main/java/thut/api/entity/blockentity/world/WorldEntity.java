@@ -17,6 +17,7 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ITickList;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
@@ -44,10 +45,15 @@ public class WorldEntity extends World implements IBlockEntityWorld
     }
 
     @Override
+    public int getLightFor(final LightType type, final BlockPos pos)
+    {
+        return this.world.getLightFor(type, pos);
+    }
+
+    @Override
     public boolean setBlockState(final BlockPos pos, final BlockState newState, final int flags)
     {
         return super.setBlockState(pos, newState, flags);
-        // return this.setBlock(pos, newState);
     }
 
     @Override
