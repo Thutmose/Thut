@@ -396,7 +396,7 @@ public class BlockEntityUpdater
         final int sizeY = this.blockEntity.getTiles()[0].length;
         final int sizeZ = this.blockEntity.getTiles()[0][0].length;
 
-        final World toSet = this.blockEntity.getFakeWorld() instanceof World ? (World) this.blockEntity.getFakeWorld()
+        final World world = this.blockEntity.getFakeWorld() instanceof World ? (World) this.blockEntity.getFakeWorld()
                 : this.theEntity.getEntityWorld();
 
         for (int i = 0; i < sizeX; i++)
@@ -411,7 +411,7 @@ public class BlockEntityUpdater
                     if (tile != null)
                     {
                         tile.setPos(pos.toImmutable());
-                        tile.setWorld(toSet);
+                        tile.setWorld(world);
                     }
                     if (tile instanceof ITickable)
                     {
