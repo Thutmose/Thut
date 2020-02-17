@@ -47,7 +47,7 @@ public abstract class BlockEntityInteractHandler
         final World world = this.blockEntity.getFakeWorld() instanceof World ? (World) this.blockEntity.getFakeWorld()
                 : this.theEntity.getEntityWorld();
         // FIXME interacting with blocks on the block entity?
-        boolean activate = state != null && state.onBlockActivated(world, player, hand, trace);
+        boolean activate = state != null && state.onBlockActivated(world, player, hand, trace) == ActionResultType.SUCCESS;
         if (activate) return ActionResultType.SUCCESS;
         else if (trace == null || trace.getType() == Type.MISS || state != null && !state.getMaterial().isSolid())
         {
@@ -69,7 +69,7 @@ public abstract class BlockEntityInteractHandler
                     final ActionResultType itemUse = ForgeHooks.onPlaceItemIntoWorld(context2);
                     if (itemUse != ActionResultType.PASS) return itemUse;
                 }
-                activate = state.onBlockActivated(world, player, hand, trace);
+                activate = state.onBlockActivated(world, player, hand, trace) == ActionResultType.SUCCESS;
                 if (activate) return ActionResultType.SUCCESS;
                 else if (!player.isCrouching() && !stack.isEmpty())
                 {

@@ -8,10 +8,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.UpgradeData;
 import thut.api.entity.blockentity.IBlockEntity;
 
 public class EntityChunk extends Chunk
@@ -71,10 +71,9 @@ public class EntityChunk extends Chunk
         mob.getTiles()[i][j][k] = tile;
         if (tile != null)
         {
-            tile.setWorld((World) this.worldE);
+            tile.setWorldAndPos((World) this.worldE, pos.toImmutable());
             final boolean invalid = tile.isRemoved();
             if (!invalid) tile.remove();
-            tile.setPos(pos.toImmutable());
             tile.validate();
         }
         return;

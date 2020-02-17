@@ -410,8 +410,7 @@ public class BlockEntityUpdater
                     final TileEntity tile = this.blockEntity.getTiles()[i][j][k];
                     if (tile != null)
                     {
-                        tile.setPos(pos.toImmutable());
-                        tile.setWorld(world);
+                        tile.setWorldAndPos(world, pos.toImmutable());
                     }
                     if (tile instanceof ITickable)
                     {
