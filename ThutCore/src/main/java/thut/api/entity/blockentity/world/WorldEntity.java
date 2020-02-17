@@ -15,8 +15,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.storage.MapData;
 import thut.api.entity.blockentity.IBlockEntity;
 
@@ -43,7 +46,8 @@ public class WorldEntity extends World implements IBlockEntityWorld
     @Override
     public boolean setBlockState(final BlockPos pos, final BlockState newState, final int flags)
     {
-        return this.setBlock(pos, newState);
+        return super.setBlockState(pos, newState, flags);
+        // return this.setBlock(pos, newState);
     }
 
     @Override
@@ -103,7 +107,19 @@ public class WorldEntity extends World implements IBlockEntityWorld
     public void notifyBlockUpdate(final BlockPos pos, final BlockState oldState, final BlockState newState,
             final int flags)
     {
+        pos.toString();
+    }
 
+    @Override
+    public void neighborChanged(final BlockPos pos, final Block blockIn, final BlockPos fromPos)
+    {
+        super.neighborChanged(pos, blockIn, fromPos);
+    }
+
+    @Override
+    public void notifyNeighbors(final BlockPos pos, final Block blockIn)
+    {
+        super.notifyNeighbors(pos, blockIn);
     }
 
     @Override
@@ -118,6 +134,12 @@ public class WorldEntity extends World implements IBlockEntityWorld
             final SoundCategory p_217384_4_, final float p_217384_5_, final float p_217384_6_)
     {
 
+    }
+
+    @Override
+    public IChunk getChunk(final int x, final int z, final ChunkStatus requiredStatus, final boolean nonnull)
+    {
+        return new EntityChunk(this, new ChunkPos(x, z));
     }
 
     @Override
