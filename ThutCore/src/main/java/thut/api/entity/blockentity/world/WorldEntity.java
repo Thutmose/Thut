@@ -100,7 +100,7 @@ public class WorldEntity extends World implements IBlockEntityWorld
     @Override
     public void playEvent(final PlayerEntity player, final int type, final BlockPos pos, final int data)
     {
-
+        this.world.playEvent(player, type, pos, data);
     }
 
     @Override
@@ -113,33 +113,21 @@ public class WorldEntity extends World implements IBlockEntityWorld
     public void notifyBlockUpdate(final BlockPos pos, final BlockState oldState, final BlockState newState,
             final int flags)
     {
-        pos.toString();
-    }
-
-    @Override
-    public void neighborChanged(final BlockPos pos, final Block blockIn, final BlockPos fromPos)
-    {
-        super.neighborChanged(pos, blockIn, fromPos);
-    }
-
-    @Override
-    public void notifyNeighbors(final BlockPos pos, final Block blockIn)
-    {
-        super.notifyNeighbors(pos, blockIn);
+        this.world.notifyBlockUpdate(pos, oldState, newState, flags);
     }
 
     @Override
     public void playSound(final PlayerEntity player, final double x, final double y, final double z,
             final SoundEvent soundIn, final SoundCategory category, final float volume, final float pitch)
     {
-
+        this.world.playSound(player, x, y, z, soundIn, category, volume, pitch);
     }
 
     @Override
     public void playMovingSound(final PlayerEntity p_217384_1_, final Entity p_217384_2_, final SoundEvent p_217384_3_,
             final SoundCategory p_217384_4_, final float p_217384_5_, final float p_217384_6_)
     {
-
+        this.world.playMovingSound(p_217384_1_, p_217384_2_, p_217384_3_, p_217384_4_, p_217384_5_, p_217384_6_);
     }
 
     @Override
