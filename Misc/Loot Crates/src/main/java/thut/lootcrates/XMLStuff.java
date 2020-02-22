@@ -20,23 +20,23 @@ import javax.xml.namespace.QName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTException;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.Tag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class XMLStuff
 {
@@ -56,31 +56,31 @@ public class XMLStuff
     public static class XMLCrates
     {
         @XmlElement(name = "Crate")
-        private List<XMLCrate> items = Lists.newArrayList();
+        private final List<XMLCrate> items = Lists.newArrayList();
     }
 
     @XmlRootElement(name = "Crate")
     public static class XMLCrate
     {
         @XmlElement(name = "Reward")
-        private List<XMLReward> items = Lists.newArrayList();
+        private final List<XMLReward> items = Lists.newArrayList();
         @XmlElement(name = "Key")
-        public XMLItem          key;
+        public XMLItem                key;
         @XmlAttribute
-        public String           name;
+        public String                 name;
     }
 
     @XmlRootElement(name = "Reward")
     public static class XMLReward
     {
         @XmlElement(name = "Item")
-        private List<XMLItem> items    = Lists.newArrayList();
+        private final List<XMLItem> items    = Lists.newArrayList();
         @XmlElement(name = "Command")
-        private List<String>  commands = Lists.newArrayList();
+        private final List<String>  commands = Lists.newArrayList();
         @XmlAttribute
-        public int            r;
+        public int                  r;
         @XmlAttribute
-        public float          p        = 0;
+        public float                p        = 0;
     }
 
     public static class Crate
@@ -89,71 +89,64 @@ public class XMLStuff
         List<Reward>     p_rewards = Lists.newArrayList();
         public ItemStack key;
 
-        public Crate(XMLCrate crate)
+        public Crate(final XMLCrate crate)
         {
-            for (XMLReward reward : crate.items)
+            for (final XMLReward reward : crate.items)
             {
                 for (int i = 0; i < reward.r; i++)
-                {
-                    r_rewards.add(new Reward(reward));
-                }
-                if (reward.p > 0) p_rewards.add(new Reward(reward));
+                    this.r_rewards.add(new Reward(reward));
+                if (reward.p > 0) this.p_rewards.add(new Reward(reward));
             }
-            key = getStackFromXMLItem(crate.key);
-            if ((r_rewards.isEmpty() && p_rewards.isEmpty()) || key == null)
+            this.key = XMLStuff.getStackFromDrop(crate.key);
+            if (this.r_rewards.isEmpty() && this.p_rewards.isEmpty() || this.key == null)
                 throw new NullPointerException("Error with crate " + crate.name);
 
             TextFormatting colour = TextFormatting.RESET;
-            if (crate.key.values.containsKey(COLOUR))
-                colour = TextFormatting.getValueByName(crate.key.values.get(COLOUR));
+            if (crate.key.values.containsKey(XMLStuff.COLOUR)) colour = TextFormatting.getValueByName(crate.key.values
+                    .get(XMLStuff.COLOUR));
             String name = crate.name;
-            if (crate.key.values.containsKey(NAME)) name = crate.key.values.get(NAME);
+            if (crate.key.values.containsKey(XMLStuff.NAME)) name = crate.key.values.get(XMLStuff.NAME);
             name = colour + name;
-            key.setStackDisplayName(name);
-            if (!key.hasTagCompound()) key.setTagCompound(new NBTTagCompound());
-            key.getTagCompound().setString("key", crate.name);
+            this.key.setDisplayName(new StringTextComponent(name));
+            if (!this.key.hasTag()) this.key.setTag(new CompoundNBT());
+            this.key.getTag().putString("key", crate.name);
         }
 
-        public ITextComponent getReward(EntityPlayer entityPlayer)
+        public ITextComponent getReward(final ServerPlayerEntity entityPlayer)
         {
-            Reward single = getSingleReward();
+            final Reward single = this.getSingleReward();
             if (single != null) return single.giveRewards(entityPlayer);
-            ITextComponent message = new TextComponentString("");
-            List<Reward> rewards = getRewards(new Random());
+            ITextComponent message = new StringTextComponent("");
+            final List<Reward> rewards = this.getRewards(new Random());
             int n = 0;
-            for (Reward r : rewards)
+            for (final Reward r : rewards)
             {
-                ITextComponent part = r.giveRewards(entityPlayer);
-                if (!part.getUnformattedText().isEmpty())
+                final ITextComponent part = r.giveRewards(entityPlayer);
+                if (!part.getUnformattedComponentText().isEmpty())
                 {
-                    if (n > 0) message.appendSibling(new TextComponentString(", "));
+                    if (n > 0) message.appendSibling(new StringTextComponent(", "));
                     message.appendSibling(part);
                 }
                 else n--;
                 n++;
             }
-            if (rewards.isEmpty()) message = new TextComponentString("Nothing!");
+            if (rewards.isEmpty()) message = new StringTextComponent("Nothing!");
             return message;
         }
 
-        public List<Reward> getRewards(Random rand)
+        public List<Reward> getRewards(final Random rand)
         {
-            List<Reward> ret = Lists.newArrayList();
-            for (Reward r : p_rewards)
-            {
-                if (r.p > rand.nextFloat())
-                {
-                    ret.add(r);
-                }
-            }
+            final List<Reward> ret = Lists.newArrayList();
+            for (final Reward r : this.p_rewards)
+                if (r.p > rand.nextFloat()) ret.add(r);
             return ret;
         }
 
         public Reward getSingleReward()
         {
-            if (r_rewards.isEmpty()) return null;
-            Collections.shuffle(r_rewards);
-            return r_rewards.get(0);
+            if (this.r_rewards.isEmpty()) return null;
+            Collections.shuffle(this.r_rewards);
+            return this.r_rewards.get(0);
         }
     }
 
@@ -163,109 +156,103 @@ public class XMLStuff
         List<String>    commands = Lists.newArrayList();
         float           p        = 0;
 
-        public Reward(XMLReward reward)
+        public Reward(final XMLReward reward)
         {
             this.p = reward.p;
-            for (XMLItem item : reward.items)
+            for (final XMLItem item : reward.items)
             {
-                ItemStack stack = getStackFromXMLItem(item);
-                if (stack != null) rewards.add(stack);
+                final ItemStack stack = XMLStuff.getStackFromDrop(item);
+                if (stack != null) this.rewards.add(stack);
                 else throw new NullPointerException("Error with item for reward");
             }
-            commands.addAll(reward.commands);
+            this.commands.addAll(reward.commands);
         }
 
-        public ITextComponent giveRewards(EntityPlayer entityPlayer)
+        public ITextComponent giveRewards(final ServerPlayerEntity entityPlayer)
         {
             String message = "";
-            for (int i = 0; i < rewards.size(); i++)
+            for (int i = 0; i < this.rewards.size(); i++)
             {
-                ItemStack reward = rewards.get(i);
-                giveItem(entityPlayer, reward.copy());
-                message = message + reward.getDisplayName() + " x" + CompatWrapper.getStackSize(reward);
-                if (i < rewards.size() - 1) message = message + ", ";
+                final ItemStack reward = this.rewards.get(i);
+                XMLStuff.giveItem(entityPlayer, reward.copy());
+                message = message + reward.getDisplayName().getFormattedText() + " x" + reward.getCount();
+                if (i < this.rewards.size() - 1) message = message + ", ";
             }
-            for (String s : commands)
+            for (String s : this.commands)
             {
                 s = s.replace("@p", entityPlayer.getGameProfile().getName());
                 s = s.replace("'x'", entityPlayer.posX + "");
-                s = s.replace("'y'", (entityPlayer.posY + 1) + "");
+                s = s.replace("'y'", entityPlayer.posY + 1 + "");
                 s = s.replace("'z'", entityPlayer.posZ + "");
-                entityPlayer.getServer().getCommandManager().executeCommand(entityPlayer.getServer(), s);
+                // Send the commands as the server.
+                entityPlayer.getServer().getCommandManager().handleCommand(entityPlayer.getServer().getCommandSource(),
+                        s);
             }
-            return new TextComponentString(message);
+            return new StringTextComponent(message);
         }
     }
 
-    public static void giveItem(EntityPlayer entityplayer, ItemStack itemstack)
+    public static void giveItem(final ServerPlayerEntity entityplayer, final ItemStack itemstack)
     {
-        boolean flag = entityplayer.inventory.addItemStackToInventory(itemstack);
+        final boolean flag = entityplayer.inventory.addItemStackToInventory(itemstack);
         if (flag)
         {
-            entityplayer.getEntityWorld().playSound((EntityPlayer) null, entityplayer.posX, entityplayer.posY,
-                    entityplayer.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F,
-                    ((entityplayer.getRNG().nextFloat() - entityplayer.getRNG().nextFloat()) * 0.7F + 1.0F) * 2.0F);
-            entityplayer.inventoryContainer.detectAndSendChanges();
+            entityplayer.getEntityWorld().playSound((ServerPlayerEntity) null, entityplayer.posX, entityplayer.posY,
+                    entityplayer.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, ((entityplayer
+                            .getRNG().nextFloat() - entityplayer.getRNG().nextFloat()) * 0.7F + 1.0F) * 2.0F);
+            entityplayer.container.detectAndSendChanges();
         }
         else
         {
-            EntityItem entityitem = entityplayer.dropItem(itemstack, false);
+            final ItemEntity entityitem = entityplayer.dropItem(itemstack, false);
             if (entityitem != null)
             {
                 entityitem.setNoPickupDelay();
-                entityitem.setOwner(entityplayer.getName());
+                entityitem.setOwnerId(entityplayer.getUniqueID());
             }
         }
     }
 
-    public static XMLStuff    instance;
+    public static XMLStuff instance;
 
     public Map<String, Crate> map = Maps.newHashMap();
-    final File                dir;
-
-    public XMLStuff(FMLPreInitializationEvent event)
-    {
-        dir = event.getModConfigurationDirectory();
-    }
 
     public void init()
     {
-        File temp1 = new File(dir, "lootcrates.xml");
+        final File temp1 = new File(LootCrates.dir, "lootcrates.xml");
         try
         {
-            JAXBContext jaxbContext = JAXBContext.newInstance(XMLCrates.class);
-            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            FileReader reader = new FileReader(temp1);
-            XMLCrates database = (XMLCrates) unmarshaller.unmarshal(reader);
+            final JAXBContext jaxbContext = JAXBContext.newInstance(XMLCrates.class);
+            final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+            final FileReader reader = new FileReader(temp1);
+            final XMLCrates database = (XMLCrates) unmarshaller.unmarshal(reader);
             reader.close();
-            map.clear();
-            for (XMLCrate crate : database.items)
-            {
-                map.put(crate.name, new Crate(crate));
-            }
+            this.map.clear();
+            for (final XMLCrate crate : database.items)
+                this.map.put(crate.name, new Crate(crate));
         }
-        catch (FileNotFoundException e)
+        catch (final FileNotFoundException e)
         {
             try
             {
-                writeDefault(temp1);
-                init();
+                this.writeDefault(temp1);
+                this.init();
             }
-            catch (Exception e1)
+            catch (final Exception e1)
             {
                 e1.printStackTrace();
             }
         }
-        catch (Exception e)
+        catch (final Exception e)
         {
             e.printStackTrace();
         }
     }
 
-    private void writeDefault(File file) throws Exception
+    private void writeDefault(final File file) throws Exception
     {
-        FileWriter fwriter = new FileWriter(file);
-        PrintWriter out = new PrintWriter(fwriter);
+        final FileWriter fwriter = new FileWriter(file);
+        final PrintWriter out = new PrintWriter(fwriter);
         out.println("<?xml version=\"1.0\"?>");
         out.println("<Crates>");
         out.println("    <Crate name=\"TestCrate1\">");
@@ -303,109 +290,61 @@ public class XMLStuff
         fwriter.close();
     }
 
-    public static ItemStack getStackFromXMLItem(XMLItem d)
+    public static ItemStack getStackFromDrop(final XMLItem d)
     {
-        Map<QName, String> values = d.values;
+        final Map<QName, String> values = d.values;
         if (d.tag != null)
         {
-            QName name = new QName("tag");
+            final QName name = new QName("tag");
             values.put(name, d.tag);
         }
-        return getStack(d.values);
+        return XMLStuff.getStack(d.values);
     }
 
-    public static boolean isSameStack(ItemStack a, ItemStack b)
+    public static boolean isSameStack(final ItemStack a, final ItemStack b)
     {
-        if ((a == null || a.getItem() == null) || (b == null || b.getItem() == null)) return false;
-        int[] aID = OreDictionary.getOreIDs(a);
-        int[] bID = OreDictionary.getOreIDs(b);
-        boolean check = a.getItem() == b.getItem();
-        if (!check)
-        {
-            outer:
-            for (int i : aID)
-            {
-                for (int i1 : bID)
-                {
-                    if (i == i1)
-                    {
-                        check = true;
-                        break outer;
-                    }
-                }
-            }
-        }
-        if (!check) { return false; }
-        check = (!a.isItemStackDamageable() && a.getItemDamage() != b.getItemDamage());
-        if (!a.isItemStackDamageable() && (a.getItemDamage() == OreDictionary.WILDCARD_VALUE
-                || b.getItemDamage() == OreDictionary.WILDCARD_VALUE))
-            check = false;
-        if (check) return false;
-        NBTBase tag;
-        if (a.hasTagCompound() && ((tag = a.getTagCompound().getTag("ForgeCaps")) != null) && tag.hasNoTags())
-        {
-            a.getTagCompound().removeTag("ForgeCaps");
-        }
-        if (b.hasTagCompound() && ((tag = b.getTagCompound().getTag("ForgeCaps")) != null) && tag.hasNoTags())
-        {
-            b.getTagCompound().removeTag("ForgeCaps");
-        }
-        return ItemStack.areItemStackTagsEqual(a, b);
+        return XMLStuff.isSameStack(a, b, false);
     }
 
-    public static ItemStack getStack(Map<QName, String> values)
+    public static boolean isSameStack(final ItemStack a, final ItemStack b, final boolean strict)
     {
-        int meta = -1;
+        // TODO determine if to use the tags?
+        return ItemStack.areItemsEqualIgnoreDurability(a, b);
+    }
+
+    public static ItemStack getStack(final Map<QName, String> values)
+    {
         String id = "";
         int size = 1;
-        boolean resource = false;
         String tag = "";
 
-        for (QName key : values.keySet())
+        for (final QName key : values.keySet())
+            if (key.toString().equals("id")) id = values.get(key);
+            else if (key.toString().equals("n")) size = Integer.parseInt(values.get(key));
+            else if (key.toString().equals("tag")) tag = values.get(key).trim();
+        if (id.isEmpty()) return ItemStack.EMPTY;
+        final ResourceLocation loc = new ResourceLocation(id);
+        ItemStack stack = ItemStack.EMPTY;
+        Item item = ForgeRegistries.ITEMS.getValue(loc);
+        if (item == null)
         {
-            if (key.toString().equals("id"))
+            final Tag<Item> tags = ItemTags.getCollection().get(loc);
+            if (tags != null)
             {
-                id = values.get(key);
-            }
-            else if (key.toString().equals("d"))
-            {
-                meta = Integer.parseInt(values.get(key));
-            }
-            else if (key.toString().equals("n"))
-            {
-                size = Integer.parseInt(values.get(key));
-            }
-            else if (key.toString().equals("tag"))
-            {
-                tag = values.get(key);
+                item = tags.getRandomElement(new Random(2));
+                if (item != null) return new ItemStack(item);
             }
         }
-        if (id.isEmpty()) return CompatWrapper.nullStack;
-        resource = id.contains(":");
-        ItemStack stack = CompatWrapper.nullStack;
-        Item item = null;
-        if (resource)
+        if (item == null) return ItemStack.EMPTY;
+        if (stack.isEmpty()) stack = new ItemStack(item, 1);
+        stack.setCount(size);
+        if (!tag.isEmpty()) try
         {
-            item = Item.REGISTRY.getObject(new ResourceLocation(id));
+            stack.setTag(JsonToNBT.getTagFromJson(tag));
         }
-        else
+        catch (final CommandSyntaxException e)
         {
-            item = Item.REGISTRY.getObject(new ResourceLocation("minecraft:" + id));
-        }
-        if (item == null) return CompatWrapper.nullStack;
-        if (meta == -1) meta = 0;
-        if (!CompatWrapper.isValid(stack)) stack = new ItemStack(item, 1, meta);
-        CompatWrapper.setStackSize(stack, size);
-        if (!tag.isEmpty())
-        {
-            try
-            {
-                stack.setTagCompound(JsonToNBT.getTagFromJson(tag));
-            }
-            catch (NBTException e)
-            {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
         return stack;
     }
