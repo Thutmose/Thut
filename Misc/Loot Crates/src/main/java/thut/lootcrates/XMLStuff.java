@@ -181,9 +181,9 @@ public class XMLStuff
             for (String s : this.commands)
             {
                 s = s.replace("@p", entityPlayer.getGameProfile().getName());
-                s = s.replace("'x'", entityPlayer.posX + "");
-                s = s.replace("'y'", entityPlayer.posY + 1 + "");
-                s = s.replace("'z'", entityPlayer.posZ + "");
+                s = s.replace("'x'", entityPlayer.getPosX() + "");
+                s = s.replace("'y'", entityPlayer.getPosY() + 1 + "");
+                s = s.replace("'z'", entityPlayer.getPosZ() + "");
                 // Send the commands as the server.
                 entityPlayer.getServer().getCommandManager().handleCommand(entityPlayer.getServer().getCommandSource(),
                         s);
@@ -197,8 +197,8 @@ public class XMLStuff
         final boolean flag = entityplayer.inventory.addItemStackToInventory(itemstack);
         if (flag)
         {
-            entityplayer.getEntityWorld().playSound((ServerPlayerEntity) null, entityplayer.posX, entityplayer.posY,
-                    entityplayer.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, ((entityplayer
+            entityplayer.getEntityWorld().playSound((ServerPlayerEntity) null, entityplayer.getPosX(), entityplayer.getPosY(),
+                    entityplayer.getPosZ(), SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, ((entityplayer
                             .getRNG().nextFloat() - entityplayer.getRNG().nextFloat()) * 0.7F + 1.0F) * 2.0F);
             entityplayer.container.detectAndSendChanges();
         }

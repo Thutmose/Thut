@@ -20,6 +20,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.config.ModConfig.Reloading;
 import net.minecraftforge.fml.config.ModConfig.Type;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -69,7 +70,7 @@ public class Config
         }
 
         @SubscribeEvent
-        public void onFileChange(final ModConfig.ConfigReloading configEvent)
+        public void onFileChange(final Reloading configEvent)
         {
             LootCrates.LOGGER.debug("{} config belongs to us!", configEvent.getConfig().getFileName());
             if (configEvent.getConfig().getConfigData() instanceof CommentedFileConfig)
