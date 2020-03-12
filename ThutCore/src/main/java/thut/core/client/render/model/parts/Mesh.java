@@ -41,8 +41,10 @@ public abstract class Mesh
         for (final Integer element : order)
             maxN = Math.max(maxN, element);
 
+        final int iter = GL_FORMAT == GL11.GL_TRIANGLES ? 3 : 4;
+
         // Calculate the normals for each triangle.
-        if (this.vertices.length > maxN) for (int i = 0; i < this.order.length; i += 3)
+        if (this.vertices.length > maxN) for (int i = 0; i < this.order.length; i += iter)
         {
             if (i + 2 >= order.length)
             {
@@ -68,6 +70,7 @@ public abstract class Mesh
             this.normalList[i] = c;
             this.normalList[i + 1] = c;
             this.normalList[i + 2] = c;
+            if (iter == 4) this.normalList[i + 3] = c;
         }
         // broken, lets just fill with z+
         else
