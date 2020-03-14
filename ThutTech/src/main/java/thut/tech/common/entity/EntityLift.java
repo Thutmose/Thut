@@ -294,7 +294,7 @@ public class EntityLift extends BlockEntityBase
         this.setCalled(false);
         final BlockPos pos = this.getPosition();
         this.setPosition(pos.getX() + 0.5, Math.round(this.posY), pos.getZ() + 0.5);
-        EntityUpdate.sendEntityUpdate(this);
+        if (this.getEntityWorld() instanceof ServerWorld) EntityUpdate.sendEntityUpdate(this);
     }
 
     @Override
@@ -400,7 +400,7 @@ public class EntityLift extends BlockEntityBase
         if (changed)
         {
             if (prev != 0 && prev != floor) this.hasFloors[prev - 1] = false;
-            EntityUpdate.sendEntityUpdate(this);
+            if (te.getWorld() instanceof ServerWorld) EntityUpdate.sendEntityUpdate(this);
         }
     }
 

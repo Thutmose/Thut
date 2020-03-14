@@ -38,6 +38,8 @@ public interface IMultiplePassengerEntity
                 v = (Vector3f) v.clone();
                 transform.transform(v);
             }
+            // if (!(passenger.getEntityWorld() instanceof ServerWorld))
+            // System.out.println(v + " " + pitch);
             passenger.setPosition(entity.posX + v.x, entity.posY + passenger.getYOffset() + v.y, entity.posZ + v.z);
         }
     }
