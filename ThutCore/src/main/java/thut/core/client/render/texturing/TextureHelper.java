@@ -181,6 +181,7 @@ public class TextureHelper implements IPartTexturer
     {
     }
 
+    @Override
     public void init(final CustomTex customTex)
     {
         if (customTex == null) return;
@@ -190,6 +191,7 @@ public class TextureHelper implements IPartTexturer
             final boolean flat = !customTex.smoothing.equalsIgnoreCase("smooth");
             this.default_flat = flat;
         }
+        this.clear();
         for (final TexAnim anim : customTex.anims)
         {
             final String name = ThutCore.trim(anim.part);
@@ -225,6 +227,16 @@ public class TextureHelper implements IPartTexturer
         }
     }
 
+    private void clear()
+    {
+        this.texMap.clear();
+        this.texStates.clear();
+        this.formeMap.clear();
+        this.smoothing.clear();
+        this.texNames.clear();
+        this.texNames2.clear();
+    }
+
     @Override
     public void addCustomMapping(final String part, final String state, final String tex)
     {
@@ -249,9 +261,10 @@ public class TextureHelper implements IPartTexturer
         if (this.mob == null) return default_;
         ResourceLocation tex = this.bindPerState(part);
         if (tex != null) return tex;
-        final String texName = ThutCore.trim(this.texNames.containsKey(part) ? this.texNames.get(part)
-                : this.default_path);
-        if (texName == null || texName.trim().isEmpty()) this.texNames.put(part, this.default_path);
+        final String defaults = this.formeMap.getOrDefault(this.mob.getForm(), this.default_path);
+        final String texName = ThutCore
+                .trim(this.texNames.containsKey(part) ? this.texNames.get(part) : defaults);
+        if (texName == null || texName.trim().isEmpty()) this.texNames.put(part, defaults);
         tex = this.getResource(texName);
         TexState state;
         String texMod;
@@ -265,7 +278,11 @@ public class TextureHelper implements IPartTexturer
     public void bindObject(final Object thing)
     {
         this.mob = ((ICapabilityProvider) thing).getCapability(TextureHelper.CAPABILITY).orElse(null);
-        if (this.mob != null) this.default_tex = this.getResource(this.default_path);
+        if (this.mob != null)
+        {
+            final String defaults = this.formeMap.getOrDefault(this.mob.getForm(), this.default_path);
+            this.default_tex = this.getResource(defaults);
+        }
     }
 
     private ResourceLocation bindPerState(final String part)
@@ -305,7 +322,7 @@ public class TextureHelper implements IPartTexturer
     @Override
     public boolean hasMapping(final String part)
     {
-        return this.texNames.containsKey(part);
+        return this.texNames.containsKey(part) || this.default_tex != null;
     }
 
     @Override

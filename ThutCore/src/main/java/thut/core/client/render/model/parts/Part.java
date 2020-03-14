@@ -154,6 +154,7 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
 
     private void preRender(final MatrixStack mat)
     {
+        mat.scale(this.preScale.x, this.preScale.y, this.preScale.z);
         mat.push();
         // Translate of offset for rotation.
         mat.translate(this.offset.x, this.offset.y, this.offset.z);
@@ -221,14 +222,10 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
             }
         if (!rendered)
         {
+            this.preRender(mat);
             for (final IExtendedModelPart o : this.childParts.values())
-            {
-                mat.push();
-                mat.translate(this.offset.x, this.offset.y, this.offset.z);
-                mat.scale(this.scale.x, this.scale.y, this.scale.z);
                 o.renderOnly(mat, buffer, groupNames);
-                mat.pop();
-            }
+            this.postRender(mat);
         }
     }
 
@@ -340,7 +337,8 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         final String[] parts = mat.name.split(":");
         final Material material = new Material(mat_name);
         material.diffuseColor = new Vector3f(1, 1, 1);
-        material.emissiveColor = new Vector3f(1, 1, 1);
+        material.emissiveColor = new Vector3f(mat.light, mat.light, mat.light);
+        material.emissiveMagnitude = Math.min(1, (float) (material.emissiveColor.length() / Math.sqrt(3)) / 0.8f);
         material.specularColor = new Vector3f(1, 1, 1);
         material.transparency = mat.transluscent ? 1 : 0;
         for (final String s : parts)
