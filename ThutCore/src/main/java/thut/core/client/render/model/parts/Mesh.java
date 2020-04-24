@@ -84,19 +84,20 @@ public abstract class Mesh
         Vertex normal;
 
         TextureCoordinate textureCoordinate = new TextureCoordinate(0, 0);
-        boolean flat = this.material.flat;
+        final boolean flat = this.material.flat;
         final int red = this.rgbabro[0];
         final int green = this.rgbabro[1];
         final int blue = this.rgbabro[2];
-        final int alpha = this.rgbabro[3];
+        int alpha = this.rgbabro[3];
         final int lightmapUV = this.rgbabro[4];
         final int overlayUV = this.rgbabro[5];
+        alpha = (int) (this.material.alpha * alpha);
         int n = 0;
         final MatrixStack.Entry matrixstack$entry = mat.getLast();
         final Matrix4f pos = matrixstack$entry.getPositionMatrix();
         final Matrix3f norms = matrixstack$entry.getNormalMatrix();
-        Vector4f dp = dummy4;
-        net.minecraft.client.renderer.Vector3f dn = dummy3;
+        final Vector4f dp = this.dummy4;
+        final net.minecraft.client.renderer.Vector3f dn = this.dummy3;
 
         for (final Integer i : this.order)
         {
@@ -139,11 +140,19 @@ public abstract class Mesh
     public void renderShape(final MatrixStack mat, IVertexBuilder buffer, final IPartTexturer texturer)
     {
         // Apply Texturing.
-        if (texturer != null) texturer.shiftUVs(this.name, this.uvShift);
+        if (texturer != null)
+        {
+            final boolean sameName = this.name.equals(this.material.name);
+            texturer.shiftUVs(this.material.name, this.uvShift);
+            if (texturer.isHidden(this.material.name)) return;
+            if (!sameName && texturer.isHidden(this.name)) return;
+            texturer.modifiyRGBA(this.material.name, this.rgbabro);
+            if (!sameName) texturer.modifiyRGBA(this.name, this.rgbabro);
+        }
         buffer = this.material.preRender(mat, buffer);
         if (this.material.emissiveMagnitude > 0)
         {
-            int j = (int) (this.material.emissiveMagnitude * 15);
+            final int j = (int) (this.material.emissiveMagnitude * 15);
             this.rgbabro[4] = j << 20 | j << 4;
         }
         this.doRender(mat, buffer, texturer);
