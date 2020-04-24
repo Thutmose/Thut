@@ -16,6 +16,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -56,6 +57,15 @@ public class ControllerBlock extends Block
     {
         builder.add(ControllerBlock.CALLED);
         builder.add(ControllerBlock.CURRENT);
+    }
+
+    @Override
+    public BlockState getStateAtViewpoint(final BlockState state, final IBlockReader world, final BlockPos pos,
+            final Vec3d viewpoint)
+    {
+        final ControllerTile tile = (ControllerTile) world.getTileEntity(pos);
+        if (tile != null && tile.copiedState != null && tile.getWorld().isRemote) return tile.copiedState;
+        return super.getStateAtViewpoint(state, world, pos, viewpoint);
     }
 
     @Override

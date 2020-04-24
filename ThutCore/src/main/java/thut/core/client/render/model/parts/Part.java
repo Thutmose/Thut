@@ -61,11 +61,33 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
 
     public void addForRender()
     {
-        // Set colours.
-        GL11.glColor4f(this.red / 255f, this.green / 255f, this.blue / 255f, this.alpha / 255f);
         // Render each Shape
         for (final Mesh s : this.shapes)
+        {
+            if (s.name == null) s.name = this.name;
+
+            if (this.texturer != null)
+            {
+                this.texturer.modifiyRGBA(this.name, this.rgbab);
+                this.setRGBAB(this.rgbab);
+            }
+
+            // Set colours.
+            if (s.material != null)
+            {
+                if (this.texturer != null)
+                {
+                    this.texturer.modifiyRGBA(s.material.name, this.rgbab);
+                    this.setRGBAB(this.rgbab);
+                }
+                s.material.rgba[0] = this.red;
+                s.material.rgba[1] = this.green;
+                s.material.rgba[2] = this.blue;
+                s.material.rgba[3] = this.alpha;
+            }
+            else GL11.glColor4f(this.red / 255f, this.green / 255f, this.blue / 255f, this.alpha / 255f);
             s.renderShape(this.texturer);
+        }
     }
 
     @Override
@@ -331,7 +353,7 @@ public abstract class Part implements IExtendedModelPart, IRetexturableModel
         material.emissiveColor = new Vector3f(mat.light, mat.light, mat.light);
         material.emissiveMagnitude = Math.min(1, (float) (material.emissiveColor.length() / Math.sqrt(3)) / 0.8f);
         material.specularColor = new Vector3f(1, 1, 1);
-        material.transparency = mat.transluscent ? 1 : 0;
+        material.transparency = 1 - mat.alpha;
         for (final String s : parts)
             for (final Mesh mesh : this.shapes)
             {

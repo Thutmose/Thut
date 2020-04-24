@@ -5,6 +5,10 @@ import thut.core.client.render.animation.AnimationXML.Phase;
 
 public interface IPartTexturer
 {
+    default void reset()
+    {
+    }
+
     /**
      * Adds mapping for a custom state's texture
      *
@@ -32,6 +36,11 @@ public interface IPartTexturer
     default void applyTexturePhase(final Phase phase)
     {
         // Do nothing by default
+    }
+
+    default boolean isHidden(final String part)
+    {
+        return false;
     }
 
     /**
@@ -64,7 +73,19 @@ public interface IPartTexturer
      * @param part
      * @return
      */
-    boolean isFlat(String part);
+    default boolean isFlat(final String part)
+    {
+        return true;
+    }
+
+    /**
+     * @param part
+     * @return
+     */
+    default void modifiyRGBA(final String part, final int[] rgbaIn)
+    {
+
+    }
 
     /**
      * Shifts the UVs for the texture animation

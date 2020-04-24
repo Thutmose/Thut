@@ -19,7 +19,7 @@ public abstract class Mesh
     public TextureCoordinate[] textureCoordinates;
     public Integer[]           order;
     final Vector3f[]           normalList;
-    private Material           material;
+    public Material            material;
     public String              name;
     private final double[]     uvShift = { 0, 0 };
     final int                  GL_FORMAT;
@@ -145,6 +145,10 @@ public abstract class Mesh
         if (texturer != null)
         {
             texturer.applyTexture(this.name);
+
+            if (this.material != null && texturer.isHidden(this.material.name)) return;
+            if (texturer.isHidden(this.name)) return;
+
             if (textureShift = texturer.shiftUVs(this.name, this.uvShift))
             {
                 GL11.glMatrixMode(GL11.GL_TEXTURE);

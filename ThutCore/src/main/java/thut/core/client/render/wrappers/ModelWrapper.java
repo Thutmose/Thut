@@ -1,6 +1,5 @@
 package thut.core.client.render.wrappers;
 
-import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +11,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
 import thut.api.maths.Vector3;
 import thut.api.maths.Vector4;
 import thut.core.client.render.animation.Animation;
@@ -99,18 +97,7 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
             final IExtendedModelPart part = this.imodel.getParts().get(partName);
             if (part == null) continue;
             final int[] rgbab = part.getRGBAB();
-            if (animChanger != null)
-            {
-                final int default_ = new Color(rgbab[0], rgbab[1], rgbab[2], rgbab[3]).getRGB();
-                final int rgb = animChanger.getColourForPart(partName, entityIn, default_);
-                if (rgb != default_)
-                {
-                    final Color col = new Color(rgb);
-                    rgbab[0] = col.getRed();
-                    rgbab[1] = col.getGreen();
-                    rgbab[2] = col.getBlue();
-                }
-            }
+            if (animChanger != null) animChanger.modifyColourForPart(part.getName(), entityIn, rgbab);
             part.setRGBAB(rgbab);
             try
             {
@@ -153,9 +140,7 @@ public class ModelWrapper<T extends Entity> extends EntityModel<T> implements IM
             final float partialTickTime)
     {
         if (this.imodel == null) this.imodel = ModelFactory.create(this.model);
-        if (this.renderer.getAnimationChanger() != null) this.renderer.setAnimation(this.renderer.getAnimationChanger()
-                .modifyAnimation((MobEntity) entityIn, partialTickTime, this.renderer.getAnimation(entityIn)), entityIn,
-                partialTickTime);
+        if (this.renderer.getAnimationChanger() != null) this.renderer.setAnimation(entityIn, partialTickTime);
         this.applyAnimation(entityIn, AnimationHelper.getHolder(entityIn), this.renderer, partialTickTime, limbSwing);
     }
 
