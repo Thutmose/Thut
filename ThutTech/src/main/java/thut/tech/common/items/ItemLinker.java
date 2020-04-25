@@ -70,8 +70,8 @@ public class ItemLinker extends Item
                     final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
 
                     te.setLift(lift);
-                    int floor = te.getButtonFromClick(face, context.getHitVec().x, context.getHitVec().y,
-                            context.getHitVec().z);
+                    int floor = te.getButtonFromClick(face, context.getHitVec().x, context.getHitVec().y, context
+                            .getHitVec().z);
                     te.setFloor(floor);
                     if (floor >= 64) floor = 64 - floor;
                     final String message = "msg.floorSet";
@@ -87,8 +87,8 @@ public class ItemLinker extends Item
                     te.editFace[face.ordinal()] = !te.editFace[face.ordinal()];
                     te.setSidePage(face, 0);
                     final String message = "msg.editMode";
-                    if (!worldIn.isRemote)
-                        playerIn.sendMessage(new TranslationTextComponent(message, te.editFace[face.ordinal()]));
+                    if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, te.editFace[face
+                            .ordinal()]));
                     return ActionResultType.SUCCESS;
                 }
             }
@@ -111,8 +111,8 @@ public class ItemLinker extends Item
     @Override
     public ITextComponent getDisplayName(final ItemStack stack)
     {
-        if (stack.hasTag() && stack.getTag().contains("lift"))
-            return new TranslationTextComponent("item.thuttech.linker.linked");
+        if (stack.hasTag() && stack.getTag().contains("lift")) return new TranslationTextComponent(
+                "item.thuttech.linker.linked");
         return super.getDisplayName(stack);
     }
 

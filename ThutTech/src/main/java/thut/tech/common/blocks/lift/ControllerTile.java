@@ -68,7 +68,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public boolean                callPanel    = false;
 
     // Used for limiting how often checks for connected controllers are done.
-    private int                                        tick         = 0;
+    private int tick = 0;
 
     public ControllerTile()
     {
@@ -96,9 +96,9 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public boolean checkSides()
     {
-        final List<EntityLift> check = this.world.getEntitiesWithinAABB(EntityLift.class,
-                new AxisAlignedBB(this.getPos().getX() + 0.5 - 1, this.getPos().getY(), this.getPos().getZ() + 0.5 - 1,
-                        this.getPos().getX() + 0.5 + 1, this.getPos().getY() + 1, this.getPos().getZ() + 0.5 + 1));
+        final List<EntityLift> check = this.world.getEntitiesWithinAABB(EntityLift.class, new AxisAlignedBB(this
+                .getPos().getX() + 0.5 - 1, this.getPos().getY(), this.getPos().getZ() + 0.5 - 1, this.getPos().getX()
+                        + 0.5 + 1, this.getPos().getY() + 1, this.getPos().getZ() + 0.5 + 1));
         if (check != null && check.size() > 0)
         {
             this.setLift(check.get(0));
@@ -339,8 +339,19 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         this.here.set(this);
 
         if (this.getLift() != null && this.floor > 0) this.getLift().hasFloors[this.floor - 1] = true;
+
         if (this.getWorld().isRemote) return;
         if (this.world instanceof IBlockEntityWorld) return;
+
+        if (this.copiedState != null)
+        {
+            BlockState state = this.getWorld().getBlockState(this.getPos());
+            if (!state.get(ControllerBlock.MASKED))
+            {
+                state = state.with(ControllerBlock.MASKED, true);
+                this.world.setBlockState(this.getPos(), state);
+            }
+        }
 
         if (this.getLift() == null || !this.getLift().isAlive())
         {

@@ -26,18 +26,20 @@ import thut.tech.common.TechCore;
 public class ControllerBlock extends Block
 {
     public static final BooleanProperty CALLED  = BooleanProperty.create("called");
-
+    public static final BooleanProperty MASKED  = BooleanProperty.create("masked");
     public static final BooleanProperty CURRENT = BooleanProperty.create("current");
 
     public ControllerBlock(final Block.Properties props)
     {
         super(props);
-        this.setDefaultState(this.stateContainer.getBaseState().with(ControllerBlock.CALLED, false)
-                .with(ControllerBlock.CURRENT, false));
+        this.setDefaultState(this.stateContainer.getBaseState().with(ControllerBlock.CALLED, false).with(
+                ControllerBlock.MASKED, false).with(ControllerBlock.CURRENT, false));
     }
 
-    /** Can this block provide power. Only wire currently seems to have this
-     * change based on its state. */
+    /**
+     * Can this block provide power. Only wire currently seems to have this
+     * change based on its state.
+     */
     @Override
     public boolean canProvidePower(final BlockState state)
     {
@@ -55,14 +57,7 @@ public class ControllerBlock extends Block
     {
         builder.add(ControllerBlock.CALLED);
         builder.add(ControllerBlock.CURRENT);
-    }
-
-    @Override
-    public BlockState getExtendedState(final BlockState state, final IBlockReader world, final BlockPos pos)
-    {
-        final ControllerTile tile = (ControllerTile) world.getTileEntity(pos);
-        if (tile != null && tile.copiedState != null && tile.getWorld().isRemote) return tile.copiedState;
-        return state;
+        builder.add(ControllerBlock.MASKED);
     }
 
     @Override
