@@ -197,6 +197,7 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
                 .getModelData((ILightReader) world, pos, state, EmptyModelData.INSTANCE);
         final BlockPos min = entity.getMin();
         final BlockPos epos = ((Entity) entity).getPosition();
+        final BlockPos rpos = pos.add(min).add(entity.getOriginalPos());
         pos = pos.add(min.getX() + epos.getX(), min.getY() + epos.getY(), min.getZ() + epos.getZ());
         for (final RenderType type : RenderType.getBlockRenderTypes())
             if (RenderTypeLookup.canRenderInLayer(state, type))
@@ -204,7 +205,7 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
                 final BlockRendererDispatcher blockRenderer = Minecraft.getInstance().getBlockRendererDispatcher();
                 model = blockRenderer.getModelForState(state);
                 blockRenderer.getBlockModelRenderer().renderModel((ILightReader) world, model, state, pos, mat, bufferIn
-                        .getBuffer(type), true, new Random(), state.getPositionRandom(pos), packedLightIn, data);
+                        .getBuffer(type), true, new Random(), state.getPositionRandom(rpos), packedLightIn, data);
             }
     }
 }

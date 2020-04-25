@@ -68,7 +68,6 @@ public class ItemLinker extends Item
                 if (face != Direction.UP && face != Direction.DOWN)
                 {
                     final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
-
                     te.setLift(lift);
                     int floor = te.getButtonFromClick(face, context.getHitVec().x, context.getHitVec().y, context
                             .getHitVec().z);
