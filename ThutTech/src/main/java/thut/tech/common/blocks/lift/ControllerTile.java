@@ -5,14 +5,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 
-import io.netty.buffer.Unpooled;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -20,15 +18,12 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.extensions.IForgeTileEntity;
 import thut.api.entity.blockentity.IBlockEntity;
 import thut.api.entity.blockentity.world.IBlockEntityWorld;
 import thut.api.maths.Vector3;
 import thut.core.common.network.TileUpdate;
-import thut.tech.common.TechCore;
 import thut.tech.common.entity.EntityLift;
 import thut.tech.common.network.PacketLift;
 
@@ -120,7 +115,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
                 this.liftID, this.world)) this.setLift(EntityLift.getLiftFromUUID(this.liftID, this.world));
         final int button = this.getButtonFromClick(side, hitX, hitY, hitZ);
         final boolean valid = this.getLift() != null && this.getLift().hasFloors[button - 1];
-        if (this.getLift() != null && this.isSideOn(side)) if (this.editFace[side.ordinal()])
+        if (this.isSideOn(side)) if (this.editFace[side.ordinal()])
         {
             if (!this.getWorld().isRemote)
             {
@@ -151,19 +146,12 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         else
         {
             if (this.floorDisplay[side.ordinal()]) return false;
-            if (this.getWorld() instanceof IBlockEntityWorld)
+            if (this.getWorld().isRemote)
             {
-                this.buttonPress(button, this.callFaces[side.ordinal()]);
-                this.calledFloor = this.getLift().getDestinationFloor();
-            }
-            else if (this.getWorld().isRemote)
-            {
-                final PacketBuffer buffer = new PacketBuffer(Unpooled.buffer(32));
-                buffer.writeBlockPos(this.getPos());
-                buffer.writeInt(button);
-                buffer.writeBoolean(this.callFaces[side.ordinal()]);
-                final PacketLift packet = new PacketLift(buffer);
-                TechCore.packets.sendToServer(packet);
+                final boolean callPanel = this.callFaces[side.ordinal()];
+                if (this.getWorld() instanceof IBlockEntityWorld) PacketLift.sendButtonPress(this.getLift(), this
+                        .getPos(), button, callPanel);
+                else PacketLift.sendButtonPress(this.getPos(), button, callPanel);
             }
         }
         if (clicker instanceof ServerPlayerEntity) this.sendUpdate((ServerPlayerEntity) clicker);
@@ -225,7 +213,6 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public AxisAlignedBB getRenderBoundingBox()
     {
         final AxisAlignedBB bb = IForgeTileEntity.INFINITE_EXTENT_AABB;
@@ -307,9 +294,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     {
         final int state = 1;
         final byte byte0 = this.sides[side.getIndex()];
-
         if (side.getIndex() < 2) return;
-
         if (flag) this.sides[side.getIndex()] = (byte) (byte0 | state);
         else this.sides[side.getIndex()] = (byte) (byte0 & -state - 1);
         this.markDirty();

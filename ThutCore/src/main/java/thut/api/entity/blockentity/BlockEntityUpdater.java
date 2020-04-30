@@ -8,24 +8,25 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.shapes.IBooleanFunction;
 import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import thut.api.TickHandler;
-import thut.api.entity.blockentity.world.IBlockEntityWorld;
-import thut.api.maths.Matrix3;
-import thut.api.maths.vecmath.Vector3f;
 
 public class BlockEntityUpdater
 {
@@ -41,11 +42,50 @@ public class BlockEntityUpdater
     final Entity        theEntity;
     List<AxisAlignedBB> blockBoxes = Lists.newArrayList();
     Set<TileEntity>     erroredSet = Sets.newHashSet();
+    VoxelShape          totalShape = VoxelShapes.empty();
 
     public BlockEntityUpdater(final IBlockEntity rocket)
     {
         this.blockEntity = rocket;
         this.theEntity = (Entity) rocket;
+    }
+
+    public VoxelShape buildShape()
+    {
+        final int sizeX = this.blockEntity.getBlocks().length;
+        final int sizeY = this.blockEntity.getBlocks()[0].length;
+        final int sizeZ = this.blockEntity.getBlocks()[0][0].length;
+        final Entity mob = (Entity) this.blockEntity;
+        this.totalShape = VoxelShapes.empty();
+        final BlockPos.Mutable pos = new BlockPos.Mutable();
+        final BlockPos min = this.blockEntity.getMin();
+        final BlockPos origin = mob.getPosition();
+        final IBlockReader world = this.blockEntity.getFakeWorld();
+
+        final int xMin = MathHelper.floor(this.blockEntity.getMin().getX());
+        final int xMax = MathHelper.floor(this.blockEntity.getMax().getX());
+        final int zMin = MathHelper.floor(this.blockEntity.getMin().getZ());
+        final int zMax = MathHelper.floor(this.blockEntity.getMax().getZ());
+
+        final double dx = (xMax - xMin) / 2 + 0.5;
+        final double dz = (zMax - zMin) / 2 + 0.5;
+
+        for (int i = 0; i < sizeX; i++)
+            for (int j = 0; j < sizeY; j++)
+                for (int k = 0; k < sizeZ; k++)
+                {
+                    pos.setPos(i, j, k);
+                    final BlockState state = this.blockEntity.getBlocks()[i][j][k];
+                    pos.setPos(i + min.getX() + origin.getX(), j + min.getY() + origin.getY(), k + min.getZ() + origin
+                            .getZ());
+                    VoxelShape shape;
+                    if (state == null || (shape = state.getShape(world, pos)) == null) continue;
+                    if (shape.isEmpty()) continue;
+                    shape = shape.withOffset(mob.getPosX() + i - dx, mob.getPosY() + j + min.getY(), mob.getPosZ() + k
+                            - dz);
+                    this.totalShape = VoxelShapes.combineAndSimplify(this.totalShape, shape, IBooleanFunction.OR);
+                }
+        return this.totalShape;
     }
 
     public void applyEntityCollision(final Entity entity)
@@ -55,15 +95,13 @@ public class BlockEntityUpdater
         // inverse transformation before actually applying collision to entity.
         if ((this.theEntity.rotationYaw + 360) % 90 > 5 || this.theEntity.isPassenger(entity)) return;
 
-        this.blockBoxes.clear();
-        final int sizeX = this.blockEntity.getBlocks().length;
-        final int sizeY = this.blockEntity.getBlocks()[0].length;
-        final int sizeZ = this.blockEntity.getBlocks()[0][0].length;
-        final BlockPos.Mutable pos = new BlockPos.Mutable();
-        final int xMin = this.blockEntity.getMin().getX();
-        final int yMin = this.blockEntity.getMin().getY();
-        final int zMin = this.blockEntity.getMin().getZ();
-        final BlockPos origin = this.theEntity.getPosition();
+        boolean serverSide = entity.getEntityWorld().isRemote;
+        final boolean isPlayer = entity instanceof PlayerEntity;
+        if (isPlayer) serverSide = entity instanceof ServerPlayerEntity;
+
+        // Players are funny, and need to be specifically run on the client,
+        // everything else should be server side!
+        if (!isPlayer && !serverSide) return;
 
         final double minX = entity.getBoundingBox().minX;
         final double minY = entity.getBoundingBox().minY;
@@ -71,292 +109,196 @@ public class BlockEntityUpdater
         final double maxX = entity.getBoundingBox().maxX;
         final double maxY = entity.getBoundingBox().maxY;
         final double maxZ = entity.getBoundingBox().maxZ;
-        double dx, dz, dy, r;
+        double dx = 0, dz = 0, dy = 0;
         final Vec3d motion_a = this.theEntity.getMotion();
-        final Vec3d motion_b = entity.getMotion();
-        final Vector3f diffs = new Vector3f((float) (motion_a.x - motion_b.x), (float) (motion_a.y - motion_b.y),
-                (float) (motion_a.z - motion_b.z));
-        final IBlockEntityWorld fakeworld = this.blockEntity.getFakeWorld();
+        Vec3d motion_b = entity.getMotion();
         final AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+
+        if (isPlayer && serverSide)
+        {
+            final ServerPlayerEntity player = (ServerPlayerEntity) entity;
+            dx = player.chasingPosX - player.prevChasingPosX;
+            dy = player.chasingPosY - player.prevChasingPosY;
+            dz = player.chasingPosZ - player.prevChasingPosZ;
+            motion_b = new Vec3d(dx, dy, dz).scale(0.5);
+        }
+        final Vec3d totalV = motion_a.add(motion_b);
+        final Vec3d diffV = motion_b.subtract(motion_a);
+
         /** Expanded box by velocities to test for collision with. */
-        final AxisAlignedBB testBox = boundingBox.expand(-diffs.x, -diffs.y, -diffs.z);
 
-        // testBox = testBox.grow(0.5);
-        for (int i = 0; i < sizeX; i++)
-            for (int j = 0; j < sizeY; j++)
-                for (int k = 0; k < sizeZ; k++)
-                {
-                    pos.setPos(i + xMin + origin.getX(), j + yMin + origin.getY(), k + zMin + origin.getZ());
-                    final BlockState state = fakeworld.getBlockState(pos);
-                    // TODO see if we needed any other state here?
-                    final VoxelShape shape = state.getCollisionShape(fakeworld, pos);
-                    final List<AxisAlignedBB> toAdd = shape.toBoundingBoxList();
-                    for (final AxisAlignedBB blockBox : toAdd)
-                        if (blockBox != null)
-                        {
-                            final float dx2 = (float) (this.theEntity.posX - origin.getX()) - 0.5f;
-                            final float dy2 = (float) (this.theEntity.posY - origin.getY());
-                            final float dz2 = (float) (this.theEntity.posZ - origin.getZ()) - 0.5f;
-                            final AxisAlignedBB box = blockBox.offset(dx2 + pos.getX(), dy2 + pos.getY(), dz2 + pos
-                                    .getZ());
-                            if (box.intersects(testBox)) this.blockBoxes.add(box);
-                        }
-                }
+        final AxisAlignedBB testBox = boundingBox.expand(totalV.x, totalV.y + dy, totalV.z);
 
-        // No boxes, no need to process further.
-        if (this.blockBoxes.isEmpty()) return;
-
-        pos.setPos(this.theEntity.getPosition());
-        final Vector3f temp1 = new Vector3f();
-
-        final boolean merge = true;
-
-        // Here we merge the boxes into less boxes, by taking any boxes with
-        // shared faces and merging them.
-        if (merge) Matrix3.mergeAABBs(this.blockBoxes, 0, 0, 0);
-
-        /** Positions adjusted for velocity. */
-        final double lastTickMinY = minY + diffs.y;
-        final double nextTickMinY = minY - diffs.y;
-
-        final double lastTickMaxY = maxY + diffs.y;
-        final double nextTickMaxY = maxY - diffs.y;
-
-        final double lastTickMinX = minX + diffs.x;
-        final double nextTickMinX = minX - diffs.x;
-
-        final double lastTickMaxX = maxX + diffs.x;
-        final double nextTickMaxX = maxX - diffs.x;
-
-        final double lastTickMinZ = minZ + diffs.z;
-        final double nextTickMinZ = minZ - diffs.z;
-
-        final double lastTickMaxZ = maxZ + diffs.z;
-        final double nextTickMaxZ = maxZ - diffs.z;
+        this.blockBoxes.clear();
+        this.buildShape().forEachBox((x0, y0, z0, x1, y1, z1) ->
+        {
+            final AxisAlignedBB box = new AxisAlignedBB(x0, y0, z0, x1, y1, z1);
+            if (box.intersects(testBox)) this.blockBoxes.add(box);
+        });
 
         boolean colX = false;
         boolean colY = false;
         boolean colZ = false;
-        float stepY = 0;
-        // for each box, compute collision.
+
+        dx = 0;
+        dy = 0;
+        dz = 0;
+
+        boolean min = false;
+        boolean max = false;
+        boolean step = false;
         for (final AxisAlignedBB aabb : this.blockBoxes)
         {
-            dx = 10e3;
-            dz = 10e3;
-            dy = 10e3;
+            double dx1 = 0, dy1 = 0, dz1 = 0;
+            // We compare to testBox as it accounts for velocity
+            final AxisAlignedBB inter = testBox.intersect(aabb);
 
-            final boolean fromAbove = lastTickMinY >= aabb.maxY && nextTickMinY <= aabb.maxY;
-            final boolean fromBelow = nextTickMaxY >= aabb.minY && lastTickMaxY <= aabb.minY;
-            final boolean yPos = minY <= aabb.maxY && minY >= aabb.minY;
-            final boolean yNeg = maxY <= aabb.maxY && maxY >= aabb.minY;
+            boolean hitXn, hitYn, hitZn;
+            boolean hitXp, hitYp, hitZp;
+            hitYp = inter.maxY == aabb.maxY;
+            hitYn = inter.minY == aabb.minY;
 
-            final boolean fromXPos = lastTickMinX >= aabb.maxX && nextTickMinX <= aabb.maxX;
-            final boolean fromXNeg = nextTickMaxX >= aabb.minX && lastTickMaxX <= aabb.minX;
-            final boolean xPos = minX <= aabb.maxX && minX >= aabb.minX;
-            final boolean xNeg = maxX <= aabb.maxX && maxX >= aabb.minX;
+            hitXp = inter.maxX == aabb.maxX;
+            hitXn = inter.minX == aabb.minX;
 
-            final boolean fromZPos = lastTickMinZ >= aabb.maxZ && nextTickMinZ <= aabb.maxZ;
-            final boolean fromZNeg = nextTickMaxZ >= aabb.minZ && lastTickMaxZ <= aabb.minZ;
-            final boolean zPos = minZ <= aabb.maxZ && minZ >= aabb.minZ;
-            final boolean zNeg = maxZ <= aabb.maxZ && maxZ >= aabb.minZ;
+            hitZp = inter.maxZ == aabb.maxZ;
+            hitZn = inter.minZ == aabb.minZ;
 
-            final boolean collidesXPos = xPos && zPos && zNeg;
-            final boolean collidesXNeg = xNeg && zPos && zNeg;
+            boolean hx = hitXp || hitXn;
+            boolean hy = hitYp || hitYn;
+            boolean hz = hitZp || hitZn;
 
-            final boolean collidesZPos = zPos && xPos && xNeg;
-            final boolean collidesZNeg = zNeg && xPos && xNeg;
-
-            final boolean collidesYNeg = yNeg && (xPos || xNeg || zPos || zNeg);
-            boolean collidesYPos = yPos && (xPos || xNeg || zPos || zNeg);
-
-            boolean collided = false;
-            /** Collides with top of box, is standing on it. */
-            if (!collided && fromAbove)
+            // Check if should step, if so, call false on this.
+            if (hitYp && (hx || hz))
             {
-                temp1.y = (float) Math.max(aabb.maxY - diffs.y - nextTickMinY, temp1.y);
-                collided = true;
-                colY = true;
-            }
-            /** Collides with bottom of box, is under it. */
-            if (!collided && fromBelow)
-            {
-                temp1.y = (float) Math.min(aabb.minY - diffs.y - nextTickMaxY, temp1.y);
-                collided = true;
-                colY = true;
-            }
-
-            /** Collides with middle of +x face. */
-            if (!collided && (fromXPos || collidesXPos))
-            {
-                r = Math.max(aabb.maxX - boundingBox.minX, temp1.x);
-                dx = Math.min(dx, r);
-                collided = true;
-                colX = true;
-            }
-            /** Collides with middle of -x face. */
-            if (!collided && (fromXNeg || collidesXNeg))
-            {
-                r = Math.min(aabb.minX - boundingBox.maxX, temp1.x);
-                dx = Math.min(dx, r);
-                collided = true;
-                colX = true;
-            }
-            /** Collides with middle of +z face. */
-            if (!collided && (fromZPos || collidesZPos))
-            {
-                r = Math.max(aabb.maxZ - boundingBox.minZ, temp1.z);
-                dz = Math.min(dz, r);
-                collided = true;
-                colZ = true;
-            }
-            /** Collides with middle of -z face. */
-            if (!collided && (fromZNeg || collidesZNeg))
-            {
-                r = Math.min(aabb.minZ - boundingBox.maxZ, temp1.z);
-                dz = Math.min(dz, r);
-                collided = true;
-                colZ = true;
-            }
-            /** Collides with +x, +z corner. */
-            if (!collided && xPos && zPos)
-            {
-                r = Math.max(aabb.maxZ - boundingBox.minZ, temp1.z);
-                dz = Math.min(dz, r);
-                r = Math.max(aabb.maxX - boundingBox.minX, temp1.x);
-                dx = Math.min(dx, r);
-                collided = true;
-                colZ = true;
-                colX = true;
-            }
-            /** Collides with +x, -z corner. */
-            if (!collided && xPos && zNeg)
-            {
-                r = Math.min(aabb.minZ - boundingBox.maxZ, temp1.z);
-                dz = Math.min(dz, r);
-                r = Math.max(aabb.maxX - boundingBox.minX, temp1.x);
-                dx = Math.min(dx, r);
-                collided = true;
-                colZ = true;
-                colX = true;
-            }
-            /** Collides with -x, -z corner. */
-            if (!collided && xNeg && zNeg)
-            {
-                r = Math.min(aabb.minZ - boundingBox.maxZ, temp1.z);
-                dz = Math.min(dz, r);
-                r = Math.min(aabb.minX - boundingBox.maxX, temp1.x);
-                dx = Math.min(dx, r);
-                collided = true;
-                colZ = true;
-                colX = true;
-            }
-            /** Collides with -x, +z corner. */
-            if (!collided && xNeg && zPos)
-            {
-                r = Math.max(aabb.maxZ - boundingBox.minZ, temp1.z);
-                dz = Math.min(dz, r);
-                r = Math.min(aabb.minX - boundingBox.maxX, temp1.x);
-                dx = Math.min(dx, r);
-                collided = true;
-                colZ = true;
-                colX = true;
-            }
-
-            if ((colX || colZ) && motion_a.y == 0)
-            {
-                final float boxTopDist = (float) Math.max(aabb.maxY - diffs.y - nextTickMinY, temp1.y);
-                if (boxTopDist <= entity.stepHeight)
+                dy1 = aabb.maxY - boundingBox.minY;
+                if (dy1 < entity.stepHeight)
                 {
-                    collidesYPos = true;
-                    stepY = boxTopDist;
+                    hitXp = false;
+                    hitXn = false;
+
+                    hitZp = false;
+                    hitZn = false;
+                    step = true;
+                    dy = dy1;
                 }
+                else dy1 = 0;
             }
+            hx = hitXp || hitXn;
+            hy = hitYp || hitYn || step;
+            hz = hitZp || hitZn;
 
-            if (collidesYNeg)
+            min = hitYn;
+            max = hitYp;
+
+            check:
+            if (min || max && !(min && max))
             {
-                r = (float) Math.min(aabb.minY - diffs.y - nextTickMaxY, temp1.y);
-                dy = Math.min(r, dy);
+                // we already checked this for step!
+                if (step) break check;
+                if (min && diffV.y < 0) break check;
+                if (max && diffV.y > 0) break check;
+                dy1 = max ? aabb.maxY - boundingBox.minY : aabb.minY - boundingBox.maxY;
+            }
+            min = hitXn;
+            max = hitXp;
+            check:
+            if (min || max && !(min && max))
+            {
+                if (min && diffV.x < 0) break check;
+                if (max && diffV.x > 0) break check;
+                dx1 = max ? aabb.maxX - boundingBox.minX : aabb.minX - boundingBox.maxX;
+            }
+            min = hitZn;
+            max = hitZp;
+            check:
+            if (min || max && !(min && max))
+            {
+                if (min && diffV.z < 0) break check;
+                if (max && diffV.z > 0) break check;
+                dz1 = max ? aabb.maxZ - boundingBox.minZ : aabb.minZ - boundingBox.maxZ;
+            }
+            final double x = Math.abs(dx1);
+            final double y = Math.abs(dy1);
+            final double z = Math.abs(dz1);
+
+            final boolean toX = hx && !(x < y && hy || x < z && hz);
+            final boolean toY = hy && !(y < x && hx || y < z && hz);
+            final boolean toZ = hz && !(z < y && hy || z < x && hx);
+
+            if (toY)
+            {
                 colY = true;
+                dy = Math.abs(dy) > Math.abs(dy1) ? dy : dy1;
             }
-            else if (collidesYPos)
+            else if (toX)
             {
-                r = (float) Math.max(aabb.maxY - diffs.y - nextTickMinY, temp1.y);
-                dy = Math.min(r, dy);
-                colY = true;
+                colX = true;
+                dx = Math.abs(dx) > Math.abs(dx1) ? dx : dx1;
             }
-
-            final double dy1 = Math.abs(dy);
-            final double dz1 = Math.abs(dz);
-            final double dx1 = Math.abs(dx);
-
-            /** y minimum penetration. */
-            if (dy1 < dx1 && dy1 < dz1) temp1.y = (float) dy;
-            else if (dx1 < dy1 && dx1 < dz1) temp1.x = (float) dx;
-            else if (dz < 10e2) temp1.z = (float) dz;
-        }
-
-        temp1.y += stepY;
-
-        // Extra stuff to do with players.
-        if (entity instanceof PlayerEntity)
-        {
-            final PlayerEntity player = (PlayerEntity) entity;
-
-            if (player.getEntityWorld().isRemote) // This fixes jitter, need
-                // a
-                // better way to handle
-                // this.
-                if (Minecraft.getInstance().gameSettings.viewBobbing || TickHandler.playerTickTracker.containsKey(player
-                        .getUniqueID()))
-                {
-                    TickHandler.playerTickTracker.put(player.getUniqueID(), (int) (System.currentTimeMillis() % 2000));
-                    Minecraft.getInstance().gameSettings.viewBobbing = false;
-                }
-            /** This is for clearing jump values on client. */
-            if (player.getEntityWorld().isRemote) player.getPersistentData().putInt("lastStandTick",
-                    player.ticksExisted);
-            if (!player.abilities.isFlying)
+            else if (toZ)
             {
-                entity.onGround = true;
-                entity.onLivingFall(entity.fallDistance, 0);
-                entity.fallDistance = 0;
-            }
-            // Meed to set floatingTickCount to prevent being kicked for
-            // flying.
-            if (!player.abilities.isCreativeMode && !player.getEntityWorld().isRemote)
-            {
-                final ServerPlayerEntity serverplayer = (ServerPlayerEntity) player;
-                serverplayer.connection.floatingTickCount = 0;
+                colZ = true;
+                dz = Math.abs(dz) > Math.abs(dz1) ? dz : dz1;
             }
         }
 
         // If entity has collided, adjust motion accordingly.
         if (colX || colY || colZ)
         {
+            motion_b = entity.getMotion();
+            if (colY)
+            {
+                final Vec3d motion = new Vec3d(0, dy, 0);
+                entity.move(MoverType.SELF, motion);
+                dy = motion_a.y;
+            }
+            else dy = motion_b.y;
+            if (colX)
+            {
+                final Vec3d motion = new Vec3d(dx, 0, 0);
+                entity.move(MoverType.SELF, motion);
+                dx = motion_a.x;
+            }
+            else dx = 0.9 * motion_b.x;
+            if (colZ)
+            {
+                final Vec3d motion = new Vec3d(0, 0, dz);
+                entity.move(MoverType.SELF, motion);
+                dz = motion_a.z;
+            }
+            else dz = 0.9 * motion_b.z;
 
-            if (temp1.y >= 0)
+            entity.setMotion(dx, dy, dz);
+
+            if (colY)
             {
                 entity.onGround = true;
                 entity.onLivingFall(entity.fallDistance, 0);
                 entity.fallDistance = 0;
             }
-            if (temp1.length() > 0.001)
+
+            // Extra stuff to do with players.
+            if (isPlayer)
             {
-                final Vec3d motion = new Vec3d(temp1.x, temp1.y, temp1.z);
-                entity.move(MoverType.SELF, motion);
+                final PlayerEntity player = (PlayerEntity) entity;
+
+                if (!serverSide && (Minecraft.getInstance().gameSettings.viewBobbing || TickHandler.playerTickTracker
+                        .containsKey(player.getUniqueID())))
+                { // This fixes jitter, need a better way to handle this.
+                    TickHandler.playerTickTracker.put(player.getUniqueID(), (int) (System.currentTimeMillis() % 2000));
+                    Minecraft.getInstance().gameSettings.viewBobbing = false;
+                }
+                /** This is for clearing jump values on client. */
+                if (!serverSide) player.getPersistentData().putInt("lastStandTick", player.ticksExisted);
+                // Meed to set floatingTickCount to prevent being kicked for
+                // flying.
+                if (!player.abilities.isCreativeMode && serverSide)
+                {
+                    final ServerPlayerEntity serverplayer = (ServerPlayerEntity) player;
+                    serverplayer.connection.floatingTickCount = 0;
+                }
             }
-            dx = motion_b.x;
-            dy = motion_b.y;
-            dz = motion_b.z;
-
-            if (colX) dx = motion_a.x;
-            if (colY) dy = motion_a.y;
-            if (colZ) dz = motion_a.z;
-
-            dx *= 0.9;
-            dz *= 0.9;
-
-            entity.setMotion(dx, dy, dz);
 
         }
     }
@@ -386,8 +328,9 @@ public class BlockEntityUpdater
         size = EntitySize.fixed(1 + this.blockEntity.getMax().getX() - this.blockEntity.getMin().getX(),
                 this.blockEntity.getMax().getY());
         this.blockEntity.setSize(size);
-        if (this.theEntity.getMotion().y == 0) this.theEntity.setPosition(this.theEntity.posX, Math.round(
-                this.theEntity.posY), this.theEntity.posZ);
+        double y;
+        if (this.theEntity.getMotion().y == 0 && this.theEntity.getPosY() != (y = Math.round(this.theEntity.getPosY())))
+            this.theEntity.setPosition(this.theEntity.getPosX(), y, this.theEntity.getPosZ());
         final BlockPos.Mutable pos = new BlockPos.Mutable();
         final int xMin = this.blockEntity.getMin().getX();
         final int zMin = this.blockEntity.getMin().getZ();
@@ -403,21 +346,18 @@ public class BlockEntityUpdater
             for (int j = 0; j < sizeY; j++)
                 for (int k = 0; k < sizeZ; k++)
                 {
-                    pos.setPos(i + xMin + this.theEntity.posX, j + yMin + this.theEntity.posY, k + zMin
-                            + this.theEntity.posZ);
+                    pos.setPos(i + xMin + this.theEntity.getPosX(), j + yMin + this.theEntity.getPosY(), k + zMin
+                            + this.theEntity.getPosZ());
 
                     // TODO rotate here by entity rotation.
                     final TileEntity tile = this.blockEntity.getTiles()[i][j][k];
-                    if (tile != null)
-                    {
-                        tile.setWorldAndPos(world, pos.toImmutable());
-                    }
-                    if (tile instanceof ITickable)
+                    if (tile != null) tile.setWorldAndPos(world, pos.toImmutable());
+                    if (tile instanceof ITickableTileEntity)
                     {
                         if (this.erroredSet.contains(tile) || !BlockEntityUpdater.isWhitelisted(tile)) continue;
                         try
                         {
-                            ((ITickable) tile).tick();
+                            ((ITickableTileEntity) tile).tick();
                         }
                         catch (final Throwable e)
                         {

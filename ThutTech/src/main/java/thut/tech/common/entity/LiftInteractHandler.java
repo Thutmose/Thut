@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TranslationTextComponent;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.core.common.ThutCore;
@@ -29,10 +30,17 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
     }
 
     @Override
+    public ActionResultType applyPlayerInteraction(final PlayerEntity player, final Vec3d vec, final ItemStack stack,
+            final Hand hand)
+    {
+        final ActionResultType result = super.applyPlayerInteraction(player, vec, stack, hand);
+        return result;
+    }
+
+    @Override
     public ActionResultType interactInternal(final PlayerEntity player, final BlockPos pos, final ItemStack stack,
             final Hand hand)
     {
-        System.out.println(player + " " + stack);
         return ActionResultType.PASS;
     }
 

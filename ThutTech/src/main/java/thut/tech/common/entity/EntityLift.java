@@ -27,6 +27,7 @@ import thut.api.entity.blockentity.BlockEntityBase;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.api.maths.Vector3;
 import thut.api.maths.vecmath.Vector3f;
+import thut.core.common.ThutCore;
 import thut.core.common.network.EntityUpdate;
 import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.ControllerTile;
@@ -169,11 +170,12 @@ public class EntityLift extends BlockEntityBase
 
     public void call(final int floor)
     {
-        if (floor == 0 || floor > this.floors.length) return;
+        if (floor == 0 || floor > this.floors.length || !this.isServerWorld()) return;
         if (this.hasFloors[floor - 1])
         {
             this.callYValue(this.floors[floor - 1]);
             this.setDestinationFloor(floor);
+            ThutCore.LOGGER.debug("Lift Called to floor: " + floor);
         }
     }
 
@@ -399,7 +401,7 @@ public class EntityLift extends BlockEntityBase
         if (changed)
         {
             if (prev != 0 && prev != floor) this.hasFloors[prev - 1] = false;
-            EntityUpdate.sendEntityUpdate(this);
+            if (this.isServerWorld()) EntityUpdate.sendEntityUpdate(this);
         }
     }
 
@@ -421,7 +423,11 @@ public class EntityLift extends BlockEntityBase
         for (final TileEntity[][] tileArrArr : tiles)
             for (final TileEntity[] tileArr : tileArrArr)
                 for (final TileEntity tile : tileArr)
-                    if (tile instanceof ControllerTile) ((ControllerTile) tile).setLift(this);
+                    if (tile instanceof ControllerTile)
+                    {
+                        ((ControllerTile) tile).setLift(this);
+                        ((ControllerTile) tile).setWorldObj((World) this.getFakeWorld());
+                    }
     }
 
     @Override

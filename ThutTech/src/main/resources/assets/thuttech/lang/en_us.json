@@ -23,6 +23,7 @@
     "msg.lift.setcorner": "Set first corner of the Elevator to %s",
     "msg.lift.toobig": "You cannot make an Elevator this big.",
     "msg.lift.noblock": "You need to have %s Elevator blocks in your inventory to make an Elevator of this size.",
+    "msg.lift.reset": "Reset elevator creation",
 
     "msg.linker.reset": "Reset Device Linker",
 

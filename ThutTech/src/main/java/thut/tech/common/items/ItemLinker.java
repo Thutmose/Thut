@@ -46,7 +46,7 @@ public class ItemLinker extends Item
         if (!stack.hasTag()) return ActionResultType.PASS;
         else
         {
-            if (state.getBlock() == TechCore.LIFTCONTROLLER && !playerIn.isCrouching())
+            if (state.getBlock() == TechCore.LIFTCONTROLLER && !playerIn.isShiftKeyDown())
             {
                 final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
                 te.setSide(face, true);
@@ -63,7 +63,7 @@ public class ItemLinker extends Item
                 liftID = new UUID(0000, 0000);
             }
             final EntityLift lift = EntityLift.getLiftFromUUID(liftID, worldIn);
-            if (playerIn.isCrouching() && lift != null && state.getBlock() == TechCore.LIFTCONTROLLER)
+            if (playerIn.isShiftKeyDown() && lift != null && state.getBlock() == TechCore.LIFTCONTROLLER)
             {
                 if (face != Direction.UP && face != Direction.DOWN)
                 {
@@ -78,7 +78,7 @@ public class ItemLinker extends Item
                     return ActionResultType.SUCCESS;
                 }
             }
-            else if (playerIn.isCrouching() && state.getBlock() == TechCore.LIFTCONTROLLER)
+            else if (playerIn.isShiftKeyDown() && state.getBlock() == TechCore.LIFTCONTROLLER)
             {
                 if (face != Direction.UP && face != Direction.DOWN)
                 {
@@ -91,7 +91,7 @@ public class ItemLinker extends Item
                     return ActionResultType.SUCCESS;
                 }
             }
-            else if (playerIn.isCrouching())
+            else if (playerIn.isShiftKeyDown())
             {
                 stack.setTag(new CompoundNBT());
                 final String message = "msg.linker.reset";

@@ -25,15 +25,31 @@ public class CommonProxy implements Proxy
     @SubscribeEvent
     public void interactRightClickBlock(final PlayerInteractEvent.RightClickBlock evt)
     {
-        if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack().isEmpty() || !evt
-                .getPlayer().isCrouching() || evt.getItemStack().getItem() != TechCore.LIFT) return;
+        if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack().isEmpty() || evt
+                .getItemStack().getItem() != TechCore.LIFT) return;
+
         final ItemStack itemstack = evt.getItemStack();
         final PlayerEntity playerIn = evt.getPlayer();
         final World worldIn = evt.getWorld();
+        if (!evt.getPlayer().isShiftKeyDown())
+        {
+            if (itemstack.hasTag())
+            {
+                itemstack.getTag().remove("min");
+                itemstack.getTag().remove("time");
+                if (itemstack.getTag().isEmpty()) itemstack.setTag(null);
+                final String message = "msg.lift.reset";
+                if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message));
+                evt.setCanceled(true);
+            }
+            return;
+        }
+
         final BlockPos pos = evt.getPos();
-        if (itemstack.hasTag() && playerIn.isCrouching() && itemstack.getTag().contains("min"))
+        if (itemstack.hasTag() && playerIn.isShiftKeyDown() && itemstack.getTag().contains("min"))
         {
             final CompoundNBT minTag = itemstack.getTag().getCompound("min");
+            itemstack.getTag().putLong("time", worldIn.getGameTime());
             BlockPos min = pos;
             BlockPos max = Vector3.readFromNBT(minTag, "").getPos();
             final AxisAlignedBB box = new AxisAlignedBB(min, max);
@@ -81,20 +97,35 @@ public class CommonProxy implements Proxy
             final String message = "msg.lift.setcorner";
             if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message, pos));
             evt.setCanceled(true);
-            itemstack.getTag().putLong("time", worldIn.getDayTime());
+            itemstack.getTag().putLong("time", worldIn.getGameTime());
         }
     }
 
     @SubscribeEvent
     public void interactRightClickBlock(final PlayerInteractEvent.RightClickItem evt)
     {
-        if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack().isEmpty() || !evt
-                .getPlayer().isCrouching() || evt.getItemStack().getItem() != TechCore.LIFT) return;
+        if (evt.getHand() == Hand.OFF_HAND || evt.getWorld().isRemote || evt.getItemStack().isEmpty() || evt
+                .getItemStack().getItem() != TechCore.LIFT) return;
         final ItemStack itemstack = evt.getItemStack();
         final PlayerEntity playerIn = evt.getPlayer();
         final World worldIn = evt.getWorld();
-        if (itemstack.hasTag() && playerIn.isCrouching() && itemstack.getTag().contains("min") && itemstack.getTag()
-                .getLong("time") != worldIn.getDayTime())
+
+        if (!evt.getPlayer().isShiftKeyDown())
+        {
+            if (itemstack.hasTag())
+            {
+                itemstack.getTag().remove("min");
+                itemstack.getTag().remove("time");
+                if (itemstack.getTag().isEmpty()) itemstack.setTag(null);
+            }
+            final String message = "msg.lift.reset";
+            if (!worldIn.isRemote) playerIn.sendMessage(new TranslationTextComponent(message));
+            return;
+        }
+
+        final boolean validTag = itemstack.hasTag() && itemstack.getTag().contains("min");
+        final boolean alreadyUsed = validTag && itemstack.getTag().getLong("time") - worldIn.getGameTime() == 0;
+        if (validTag && !alreadyUsed)
         {
             final CompoundNBT minTag = itemstack.getTag().getCompound("min");
             final Vec3d loc = playerIn.getPositionVector().add(0, playerIn.getEyeHeight(), 0).add(playerIn.getLookVec()
