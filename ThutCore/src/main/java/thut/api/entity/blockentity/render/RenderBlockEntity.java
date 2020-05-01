@@ -104,8 +104,8 @@ public class RenderBlockEntity<T extends BlockEntityBase> extends EntityRenderer
                         {
                             mat.push();
                             mat.translate(pos.getX(), pos.getY(), pos.getZ());
-                            this.drawBlockAt(pos, blockEntity, mat, bufferIn, packedLightIn);
                             this.drawTileAt(pos, blockEntity, partialTicks, mat, bufferIn, packedLightIn);
+                            this.drawBlockAt(pos, blockEntity, mat, bufferIn, packedLightIn);
                             mat.pop();
                         }
                         else this.drawCrateAt(pos, blockEntity, mat, bufferIn, packedLightIn);

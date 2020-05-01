@@ -1,17 +1,20 @@
-# This is an example mods.toml file. It contains the data relating to the loading mods.
-# There are several mandatory fields (#mandatory), and many more that are optional (#optional).
-# The overall format is standard TOML format, v0.5.0.
-# Note that there are a couple of TOML lists in this file.
-# Find more information on toml format here:  https://github.com/toml-lang/toml
-# The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml"
-loaderVersion="[25,)"
+loaderVersion="[31,)"
+
 issueTrackerURL="https://github.com/Thutmose/Thut/issues"
+
 [[mods]]
-modId="thuttech"
-version="${file.jarVersion}"
-displayName="Thut Elevators"
-authors="Thutmose" #optional
-description='''
-Dynamical Moving elevators for Minecraft!
-'''
+    modId="thuttech"
+    version="${file.jarVersion}"
+    displayName="Thut Elevators"
+    authors="Thutmose"
+    description='''
+    Dynamical Moving elevators for Minecraft!
+    '''
+    
+[[dependencies.thuttech]]
+    modId="thutcore"
+    mandatory=true
+    versionRange="version_thutcore"
+    ordering="NONE"
+    side="BOTH"

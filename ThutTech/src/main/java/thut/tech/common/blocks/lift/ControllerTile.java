@@ -44,9 +44,6 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     Direction                     sourceSide;
     boolean                       loaded       = false;
     public int                    floor        = 0;
-    public int                    calledYValue = -1;
-    public int                    calledFloor  = 0;
-    public int                    currentFloor = 0;
     public UUID                   liftID       = null;
     UUID                          empty        = new UUID(0, 0);
     private byte[]                sides        = new byte[6];
@@ -77,8 +74,8 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public void buttonPress(final int button, final boolean callPanel)
     {
         if (callPanel && this.getLift() != null) this.getLift().call(this.floor);
-        else if (button != 0 && button <= this.getLift().floors.length && this.getLift() != null && this
-                .getLift().hasFloors[button - 1])
+        else if (button != 0 && button <= this.getLift().maxFloors() && this.getLift() != null && this.getLift()
+                .hasFloor(button))
         {
             if (button == this.floor)
             {
@@ -113,7 +110,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         if (this.liftID != null && !this.liftID.equals(this.empty) && this.getLift() != EntityLift.getLiftFromUUID(
                 this.liftID, this.world)) this.setLift(EntityLift.getLiftFromUUID(this.liftID, this.world));
         final int button = this.getButtonFromClick(side, hitX, hitY, hitZ);
-        final boolean valid = this.getLift() != null && this.getLift().hasFloors[button - 1];
+        final boolean valid = this.getLift() != null && this.getLift().hasFloor(button);
         if (this.isSideOn(side)) if (this.editFace[side.ordinal()])
         {
             if (!this.getWorld().isRemote)
@@ -174,6 +171,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         y = Math.abs(y);
         z = Math.abs(z);
         final int page = this.getSidePage(side);
+
         switch (side.getIndex())
         {
         case 0:
@@ -223,6 +221,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public int getSidePage(final Direction side)
     {
+        if (this.isEditMode(side)) return 0;
         return this.sidePages[side.getIndex()];
     }
 
@@ -294,9 +293,10 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public void setFloor(final int floor)
     {
-        if (this.getLift() != null && floor <= this.getLift().floors.length && floor > 0)
+        // no lift, no set floor.
+        if (this.getLift() != null) return;
+        if (this.getLift().setFoor(this, floor))
         {
-            this.getLift().setFoor(this, floor);
             this.floor = floor;
             this.markDirty();
         }
@@ -344,35 +344,28 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         if (this.here == null) this.here = Vector3.getNewVector();
         this.here.set(this);
 
-        if (this.getLift() != null && this.floor > 0) this.getLift().hasFloors[this.floor - 1] = true;
-
         if (this.getWorld().isRemote) return;
         if (this.world instanceof IBlockEntityWorld) return;
 
-        if (this.copiedState != null)
-        {
-            BlockState state = this.getWorld().getBlockState(this.getPos());
-            if (!state.get(ControllerBlock.MASKED))
-            {
-                state = state.with(ControllerBlock.MASKED, true);
-                this.world.setBlockState(this.getPos(), state);
-            }
-        }
-
-        if (this.getLift() == null || !this.getLift().isAlive())
-        {
-            this.calledYValue = -1;
-            this.calledFloor = 0;
-            this.currentFloor = 0;
-        }
-
-        if (this.getLift() != null && !this.world.isRemote)
+        called_floor_checks:
+        if (this.getLift() != null && this.floor > 0)
         {
             final BlockState state = this.world.getBlockState(this.getPos());
             boolean current = state.get(ControllerBlock.CURRENT);
             boolean called = state.get(ControllerBlock.CALLED);
-            final boolean shouldBeCurrent = this.lift.getPosition().getY() == this.getPos().getY() - 2;
-            final boolean shouldBeCalled = this.lift.getCalled() && this.lift.getDestY() == this.getPos().getY() - 2;
+
+            final int yWhenLiftHere = this.getLift().getFloorPos(this.floor);
+
+            // Set lifts current floor to this if it is in the area of the
+            // floor.
+            if ((int) Math.round(this.getLift().posY) == yWhenLiftHere) this.getLift().setCurrentFloor(this.floor);
+            else if (this.getLift().getCurrentFloor() == this.floor) this.getLift().setCurrentFloor(-1);
+
+            // Below here is server side only for these checks
+            if (this.world.isRemote) break called_floor_checks;
+
+            final boolean shouldBeCurrent = this.lift.getPosition().getY() == yWhenLiftHere;
+            final boolean shouldBeCalled = this.lift.getCalled() && this.lift.getDestY() == yWhenLiftHere;
 
             if (current && !shouldBeCurrent) this.world.setBlockState(this.getPos(), state.with(ControllerBlock.CURRENT,
                     false));
@@ -390,25 +383,13 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
             // In this case, we can respond to redstone signals on call faces
             if (!current && !called) for (final Direction facing : Direction.values())
             {
-                if (!this.isCallPanel(facing) || !this.isSideOn(facing)) continue;
+                // Note that we do not check if the side is on, as this allows
+                // only buttons, with no display number!
+                if (!this.isCallPanel(facing)) continue;
                 final int power = this.world.getRedstonePower(this.getPos(), facing.getOpposite());
                 if (power > 0) this.lift.call(this.floor);
             }
             MinecraftForge.EVENT_BUS.post(new ControllerUpdate(this));
-        }
-
-        if (this.getLift() != null && this.floor > 0)
-        {
-            // Set lifts current floor to this if it is in the area of the
-            // floor.
-            if ((int) Math.round(this.getLift().posY) == this.getLift().floors[this.floor - 1]) this.getLift()
-                    .setCurrentFloor(this.floor);
-            else if (this.getLift().getCurrentFloor() == this.floor) this.getLift().setCurrentFloor(-1);
-
-            // Sets the values used for rendering colours over numbers on the
-            // display.
-            this.calledFloor = this.getLift().getDestinationFloor();
-            this.currentFloor = this.getLift().getCurrentFloor();
         }
 
         // Cleanup floor if the lift is gone.
@@ -481,7 +462,7 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
                 this.setLift(this.lift);
                 // Make sure that lift's floor is this one if it doesn't have
                 // one defined.
-                if (this.floor > 0 && !this.getLift().hasFloors[this.floor - 1]) this.setFloor(this.floor);
+                if (this.floor > 0 && !this.getLift().hasFloor(this.floor)) this.setFloor(this.floor);
             }
         }
         return this.lift;

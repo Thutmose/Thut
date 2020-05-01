@@ -10,12 +10,10 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TranslationTextComponent;
 import thut.api.entity.blockentity.BlockEntityInteractHandler;
 import thut.core.common.ThutCore;
 import thut.tech.common.TechCore;
-import thut.tech.common.items.ItemLinker;
 
 public class LiftInteractHandler extends BlockEntityInteractHandler
 {
@@ -30,14 +28,6 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
     }
 
     @Override
-    public ActionResultType applyPlayerInteraction(final PlayerEntity player, final Vec3d vec, final ItemStack stack,
-            final Hand hand)
-    {
-        final ActionResultType result = super.applyPlayerInteraction(player, vec, stack, hand);
-        return result;
-    }
-
-    @Override
     public ActionResultType interactInternal(final PlayerEntity player, final BlockPos pos, final ItemStack stack,
             final Hand hand)
     {
@@ -47,17 +37,17 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
     @Override
     public boolean processInitialInteract(final PlayerEntity player, @Nullable ItemStack stack, final Hand hand)
     {
-        ThutCore.LOGGER.debug("Interaction with Lift: " + player + " " + stack + " " + hand);
 
-        final boolean shouldLinkLift = player.isShiftKeyDown() && stack.getItem() instanceof ItemLinker
-                && (this.lift.owner != null && player.getUniqueID().equals(this.lift.owner)
-                        || player.abilities.isCreativeMode);
+        final boolean isElevatorItemOrStick = stack.getItem() == Items.STICK || stack.getItem() == TechCore.LIFT;
+        final boolean isLinker = stack.getItem() == TechCore.LINKER;
+
+        final boolean canEdit = this.lift.owner != null && player.getUniqueID().equals(this.lift.owner)
+                || player.abilities.isCreativeMode;
+
+        final boolean shouldLinkLift = player.isShiftKeyDown() && isLinker && canEdit;
         final boolean shouldKillLiftUnowned = this.lift.owner == null;
-        final boolean shouldDisplayOwner = stack.getItem() instanceof ItemLinker && (this.lift.owner != null && player
-                .getUniqueID().equals(this.lift.owner) || player.abilities.isCreativeMode);
-        final boolean shouldKillLiftOwned = player.isShiftKeyDown() && player.getHeldItem(hand).getItem() == Items.STICK
-                && this.lift.owner != null && (player.getUniqueID().equals(this.lift.owner)
-                        || player.abilities.isCreativeMode);
+        final boolean shouldDisplayOwner = isLinker && canEdit;
+        final boolean shouldKillLiftOwned = player.isShiftKeyDown() && isElevatorItemOrStick && canEdit;
 
         if (shouldKillLiftUnowned)
         {

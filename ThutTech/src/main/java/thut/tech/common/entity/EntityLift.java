@@ -72,10 +72,9 @@ public class EntityLift extends BlockEntityBase
     public UUID           owner;
     public double         prevFloorY = 0;
     public double         prevFloor  = 0;
-    ControllerTile        current;
-    public int[]          floors     = new int[128];
+    private final int[]   floors     = new int[128];
 
-    public boolean[] hasFloors = new boolean[128];
+    private final int[] hasFloors = new int[128];
 
     private final Vector3f velocity = new Vector3f();
 
@@ -170,13 +169,17 @@ public class EntityLift extends BlockEntityBase
 
     public void call(final int floor)
     {
-        if (floor == 0 || floor > this.floors.length || !this.isServerWorld()) return;
-        if (this.hasFloors[floor - 1])
+        if (floor > 0 && floor <= this.floors.length)
         {
-            this.callYValue(this.floors[floor - 1]);
-            this.setDestinationFloor(floor);
-            ThutCore.LOGGER.debug("Lift Called to floor: " + floor);
+            if (!this.isServerWorld()) return;
+            if (this.hasFloor(floor))
+            {
+                this.callYValue(this.getFloorPos(floor));
+                this.setDestinationFloor(floor);
+                ThutCore.LOGGER.debug("Lift Called to floor: " + floor);
+            }
         }
+        else ThutCore.LOGGER.error("Set floor out of range!");
     }
 
     public void callYValue(final int yValue)
@@ -307,6 +310,15 @@ public class EntityLift extends BlockEntityBase
     public void readAdditional(final CompoundNBT arg0)
     {
         super.readAdditional(arg0);
+        final CompoundNBT tag = arg0.getCompound("floors");
+        for (int i = 0; i < this.hasFloors.length; i++)
+            if (tag.contains("" + i))
+            {
+                final int floor = tag.getInt("" + i);
+                final int num = tag.getInt("_" + i);
+                this.hasFloors[i] = num;
+                this.floors[i] = floor;
+            }
         if (arg0.hasUniqueId("owner")) this.owner = arg0.getUniqueId("owner");
     }
 
@@ -388,31 +400,65 @@ public class EntityLift extends BlockEntityBase
         this.setCalled(true);
     }
 
-    public void setFoor(final ControllerTile te, final int floor)
+    public boolean setFoor(final ControllerTile te, int floor)
     {
+        floor--;
+        if (floor < 0 || floor >= this.floors.length) return false;
         if (te != null)
         {
             boolean changed = false;
-            final int prev = te.floor;
             if (floor > 0)
             {
-                this.floors[floor - 1] = te.getPos().getY() - 2;
-                this.hasFloors[floor - 1] = true;
+                // If we don't have a floor, then actually set the position.
+                // If we did have one, it was already set, and not cleared, so
+                // we do not want to reset it!
+                if (this.hasFloors[floor] <= 0) this.floors[floor] = te.getPos().getY() - 2;
+                this.hasFloors[floor]++;
                 changed = true;
             }
             if (changed)
             {
-                if (prev != 0 && prev != floor) this.hasFloors[prev - 1] = false;
-                if (this.isServerWorld()) EntityUpdate.sendEntityUpdate(this);
+                final int prev = te.floor - 1;
+                // Reduce the number of previous floors if they existed.
+                if (prev != -1 && prev != floor && this.hasFloors[prev] > 0) this.hasFloors[prev]--;
             }
         }
-        else
+        else if (this.hasFloors[floor] > 0)
         {
-            this.floors[floor - 1] = 0;
-            this.hasFloors[floor - 1] = false;
-            if (this.isServerWorld()) EntityUpdate.sendEntityUpdate(this);
+            this.hasFloors[floor]--;
+            // If no tiles left for this floor, clear the position
+            if (this.hasFloors[floor] <= 0) this.floors[floor] = 0;
         }
+        if (this.isServerWorld()) EntityUpdate.sendEntityUpdate(this);
+        return true;
+    }
 
+    public void setFloorPos(int floor, final int posY)
+    {
+        floor--;
+        if (floor >= 0 && floor < this.floors.length) this.floors[floor] = posY;
+        ThutCore.LOGGER.error("Set floor out of range!");
+    }
+
+    public int getFloorPos(int floor)
+    {
+        floor--;
+        if (floor >= 0 && floor < this.floors.length) return this.floors[floor];
+        ThutCore.LOGGER.error("Requested floor out of range!");
+        return 0;
+    }
+
+    public boolean hasFloor(int floor)
+    {
+        floor--;
+        if (floor >= 0 && floor < this.hasFloors.length) return this.hasFloors[floor] > 0;
+        ThutCore.LOGGER.error("Checked floor out of range!");
+        return false;
+    }
+
+    public int maxFloors()
+    {
+        return this.hasFloors.length;
     }
 
     @Override
@@ -444,6 +490,14 @@ public class EntityLift extends BlockEntityBase
     public void writeAdditional(final CompoundNBT arg0)
     {
         super.writeAdditional(arg0);
+        final CompoundNBT tag = new CompoundNBT();
+        for (int i = 0; i < this.hasFloors.length; i++)
+            if (this.hasFloors[i] > 0)
+            {
+                tag.putInt("" + i, this.floors[i]);
+                tag.putInt("_" + i, this.hasFloors[i]);
+            }
+        arg0.put("floors", tag);
         if (this.owner != null) arg0.putUniqueId("owner", this.owner);
     }
 }

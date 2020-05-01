@@ -96,8 +96,8 @@ public class TechCore
 
     static void init()
     {
-        TechCore.LIFTCONTROLLER = new ControllerBlock(Block.Properties.create(Material.IRON).hardnessAndResistance(
-                3.5f)).setRegistryName(Reference.MOD_ID, "controller");
+        TechCore.LIFTCONTROLLER = new ControllerBlock(Block.Properties.create(Material.IRON).hardnessAndResistance(3.5f)
+                .variableOpacity().notSolid()).setRegistryName(Reference.MOD_ID, "controller");
         TechCore.LIFT = new Item(new Item.Properties().group(ThutCore.THUTITEMS)).setRegistryName(Reference.MOD_ID,
                 "lift");
         TechCore.LINKER = new ItemLinker(new Item.Properties().group(ThutCore.THUTITEMS)).setRegistryName(

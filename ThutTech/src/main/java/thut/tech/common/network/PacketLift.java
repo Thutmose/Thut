@@ -86,7 +86,6 @@ public class PacketLift extends Packet
             final ControllerTile te = (ControllerTile) tile;
             if (te.getLift() == null) return;
             te.buttonPress(this.button, this.call);
-            te.calledFloor = te.getLift().getDestinationFloor();
         }
     }
 

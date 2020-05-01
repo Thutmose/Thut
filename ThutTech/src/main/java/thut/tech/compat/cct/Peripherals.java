@@ -72,8 +72,8 @@ public class Peripherals
                 if (arguments.length != 1) throw new LuaException("Arguments: [floor]");
                 dist = ArgumentHelper.getInt(arguments, 0);
                 if (dist < 0) dist = 64 - dist;
-                if (dist - 1 >= this.tile.getLift().hasFloors.length) throw new LuaException("Floor not in range");
-                if (!this.tile.getLift().hasFloors[dist - 1]) throw new LuaException("Floor not found.");
+                if (dist - 1 >= this.tile.getLift().maxFloors()) throw new LuaException("Floor not in range");
+                if (!this.tile.getLift().hasFloor(dist)) throw new LuaException("Floor not found.");
                 this.tile.getLift().call(dist);
                 break;
             case 2:

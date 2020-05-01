@@ -99,7 +99,9 @@ public class ControllerBlock extends Block
         final ControllerTile te = (ControllerTile) world.getTileEntity(pos);
         side = side.getOpposite();
         final boolean called = state.get(ControllerBlock.CALLED);
-        if (te.isSideOn(side) && te.isCallPanel(side) && !called) return true;
+        // Note that we do not check if the side is on, as this allows
+        // only buttons, with no display number!
+        if (te.isCallPanel(side) && !called) return true;
         return false;
     }
 
@@ -143,6 +145,7 @@ public class ControllerBlock extends Block
             {
                 final BlockItemUseContext context = new BlockItemUseContext(new ItemUseContext(playerIn, handIn, hit));
                 te.copiedState = ((BlockItem) heldItem.getItem()).getBlock().getStateForPlacement(context);
+                worldIn.setBlockState(pos, state.with(ControllerBlock.MASKED, true));
                 if (!te.getWorld().isRemote) TileUpdate.sendUpdate(te);
                 return ActionResultType.SUCCESS;
             }
@@ -162,7 +165,7 @@ public class ControllerBlock extends Block
         }
         else if (te.isSideOn(side)) if (heldItem.getItem() == TechCore.LINKER)
         {
-            if (!worldIn.isRemote && !te.editFace[side.ordinal()] && !te.floorDisplay[side.ordinal()])
+            if (!worldIn.isRemote && !te.isEditMode(side) && !te.isFloorDisplay(side))
             {
                 te.setSidePage(side, (te.getSidePage(side) + 1) % 8);
                 if (playerIn instanceof ServerPlayerEntity) te.sendUpdate((ServerPlayerEntity) playerIn);

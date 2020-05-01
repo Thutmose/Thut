@@ -143,6 +143,15 @@ public class BlockEntityUpdater
         return 0;
     }
 
+    /**
+     * Checks if the bounding box intersects with another.
+     */
+    public static boolean intersectsOrAdjacent(final AxisAlignedBB boxA, final AxisAlignedBB boxB)
+    {
+        return boxA.minX <= boxB.maxX && boxA.maxX >= boxB.minX && boxA.minY <= boxB.maxY && boxA.maxY >= boxB.minY
+                && boxA.minZ <= boxB.maxZ && boxA.maxZ >= boxB.minZ;
+    }
+
     public void applyEntityCollision(final Entity entity)
     {
         // TODO instead of this, apply appropriate transformation to the
@@ -172,11 +181,11 @@ public class BlockEntityUpdater
 
         this.blockBoxes.clear();
         // Used to select which boxes to consider for collision
-        final AxisAlignedBB hitTest = testBox.grow(1.5 * diffV.length());
+        final AxisAlignedBB hitTest = testBox.grow(0.1 + diffV.length());
         this.buildShape().forEachBox((x0, y0, z0, x1, y1, z1) ->
         {
             final AxisAlignedBB box = new AxisAlignedBB(x0, y0, z0, x1, y1, z1);
-            if (box.intersects(hitTest)) this.blockBoxes.add(box);
+            if (BlockEntityUpdater.intersectsOrAdjacent(box, hitTest)) this.blockBoxes.add(box);
         });
 
         boolean colX = false;
@@ -195,12 +204,12 @@ public class BlockEntityUpdater
         {
             double dx1 = 0, dy1 = 0, dz1 = 0;
             // Only use ones that actually intersect for this loop
-            if (!aabb.intersects(toUse)) continue;
+            if (!BlockEntityUpdater.intersectsOrAdjacent(aabb, toUse)) continue;
 
             final AxisAlignedBB inter = toUse.intersect(aabb);
 
             // This is the floor of the box, so mark it as collided
-            if (inter.getYSize() == 0 && inter.maxY == aabb.maxY) colY = true;
+            if (inter.getYSize() == 0 && inter.minY == aabb.maxY) colY = true;
 
             // This means we don't actually intersect as far as the below checks
             // are concerned
