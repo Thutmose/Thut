@@ -16,5 +16,5 @@ issueTrackerURL="https://github.com/Thutmose/Thut/issues"
     modId="thutcore"
     mandatory=true
     versionRange="version_thutcore"
-    ordering="NONE"
+    ordering="AFTER"
     side="BOTH"

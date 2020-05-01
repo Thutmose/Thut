@@ -21,12 +21,12 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 ext {
-    VERSION = gitVersion()
+    VERSION_COMPILE = gitVersion()
     // Force a refresh of the toml file
     cleanTOML()
 }
 
-version = "${version_minecraft}-${VERSION}"
+version = "${version_minecraft}-${VERSION_COMPILE}"
 group = 'thut'
 archivesBaseName = "${compile_name}"
 
@@ -88,9 +88,9 @@ jar {
         attributes 'FMLAT': 'accesstransformer.cfg',
         "Specification-Title": "${compile_name}",
         "Specification-Vendor": "${author_name}",
-        "Specification-Version": VERSION,
+        "Specification-Version": VERSION_COMPILE,
         "Implementation-Title": project.name,
-        "Implementation-Version": VERSION,
+        "Implementation-Version": VERSION_COMPILE,
         "Implementation-Vendor" :"${author_name}",
         "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
     }
@@ -98,15 +98,11 @@ jar {
 
 processResources.doLast {
     def TOMLFILE = "./build/resources/main/META-INF/mods.toml"
-    replaceParameters(TOMLFILE, "version_thutcore", "${version_thutcore}")
+    replaceParameters(TOMLFILE, "version_thutcore", "[${version_thutcore},)")
 }
 
 def replaceParameters(filename, find, replace) {
     ant.replace(file:filename,token:find,value:replace)
-}
-
-processResources.doLast {
-    replaceParameters()
 }
 
 task sourcesJar(type: Jar) {
