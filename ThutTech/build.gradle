@@ -77,9 +77,9 @@ repositories {
 dependencies {
 
     minecraft "net.minecraftforge:forge:${version_minecraft}-${version_forge}"
-    
-    //Use our guys in libs
+    // Thutcore is where most of the code is
     implementation fg.deobf("libs:thutcore-${version_minecraft}:${version_thutcore}")
+    // Computercraft support for controllers
     implementation fg.deobf("org.squiddev:cc-tweaked-${version_minecraft}:${version_cct}")
 }
 
@@ -97,14 +97,16 @@ jar {
 }
 
 processResources.doLast {
-    replaceParameters()
+    def TOMLFILE = "./build/resources/main/META-INF/mods.toml"
+    replaceParameters(TOMLFILE, "version_thutcore", "${version_thutcore}")
 }
 
-def replaceParameters() {
-    ant.replace(
-    file:"./build/resources/main/META-INF/mods.toml",
-    token:"@VERSION",
-    value:VERSION )
+def replaceParameters(filename, find, replace) {
+    ant.replace(file:filename,token:find,value:replace)
+}
+
+processResources.doLast {
+    replaceParameters()
 }
 
 task sourcesJar(type: Jar) {

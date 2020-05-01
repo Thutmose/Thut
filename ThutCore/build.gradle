@@ -83,14 +83,13 @@ jar {
 }
 
 processResources.doLast {
-    replaceParameters()
+    def TOMLFILE = "./build/resources/main/META-INF/mods.toml"
+    replaceParameters(TOMLFILE, "@VERSION", VERSION)
+    replaceParameters(TOMLFILE, "version_mc", "${version_mcsupport}")
 }
 
-def replaceParameters() {
-    ant.replace(
-    file:"./build/resources/main/META-INF/mods.toml",
-    token:"@VERSION",
-    value:VERSION )
+def replaceParameters(filename, find, replace) {
+    ant.replace(file:filename,token:find,value:replace)
 }
 
 task sourcesJar(type: Jar) {
