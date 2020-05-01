@@ -17,7 +17,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import thut.core.common.network.TileUpdate;
@@ -36,20 +38,16 @@ public class ControllerBlock extends Block
                 ControllerBlock.MASKED, false).with(ControllerBlock.CURRENT, false));
     }
 
-    /**
-     * Can this block provide power. Only wire currently seems to have this
-     * change based on its state.
-     */
-    @Override
-    public boolean canProvidePower(final BlockState state)
-    {
-        return true;
-    }
-
     @Override
     public TileEntity createTileEntity(final BlockState state, final IBlockReader world)
     {
         return new ControllerTile();
+    }
+
+    @Override
+    public boolean hasTileEntity(final BlockState state)
+    {
+        return true;
     }
 
     @Override
@@ -60,27 +58,62 @@ public class ControllerBlock extends Block
         builder.add(ControllerBlock.MASKED);
     }
 
+    // RedStone stuff
     @Override
-    public int getStrongPower(final BlockState blockState, final IBlockReader blockAccess, final BlockPos pos,
-            final Direction side)
+    public int getWeakPower(final BlockState blockState, final IBlockReader blockAccess, final BlockPos pos,
+            Direction side)
     {
+        final ControllerTile te = (ControllerTile) blockAccess.getTileEntity(pos);
+        final boolean here = blockState.get(ControllerBlock.CURRENT);
+        final boolean called = blockState.get(ControllerBlock.CALLED);
+        side = side.getOpposite();
+        if (te.isSideOn(side))
+        {
+            if (te.isCallPanel(side)) return called ? 15 : 0;
+            if (te.isFloorDisplay(side)) return here ? 15 : 0;
+            return here ? 5 : 0;
+        }
         return 0;
     }
 
-    ////////////////////////////////////////////////////// RedStone
-    ////////////////////////////////////////////////////// stuff/////////////////////////////////////////////////
     @Override
-    public int getWeakPower(final BlockState blockState, final IBlockReader blockAccess, final BlockPos pos,
-            final Direction side)
+    public int getStrongPower(final BlockState blockState, final IBlockReader blockAccess, final BlockPos pos,
+            Direction side)
     {
-        return blockState.get(ControllerBlock.CURRENT) ? 15 : 0;
+        final ControllerTile te = (ControllerTile) blockAccess.getTileEntity(pos);
+        final boolean here = blockState.get(ControllerBlock.CURRENT);
+        final boolean called = blockState.get(ControllerBlock.CALLED);
+        side = side.getOpposite();
+        if (te.isSideOn(side))
+        {
+            if (te.isCallPanel(side)) return called ? 15 : 0;
+            if (te.isFloorDisplay(side)) return here ? 15 : 0;
+        }
+        return 0;
     }
 
     @Override
-    public boolean hasTileEntity(final BlockState state)
+    public boolean shouldCheckWeakPower(final BlockState state, final IWorldReader world, final BlockPos pos,
+            Direction side)
+    {
+        final ControllerTile te = (ControllerTile) world.getTileEntity(pos);
+        side = side.getOpposite();
+        final boolean called = state.get(ControllerBlock.CALLED);
+        if (te.isSideOn(side) && te.isCallPanel(side) && !called) return true;
+        return false;
+    }
+
+    /**
+     * Can this block provide power. Only wire currently seems to have this
+     * change based on its state.
+     */
+    @Override
+    public boolean canProvidePower(final BlockState state)
     {
         return true;
     }
+
+    // End of Redstone
 
     @Override
     public ActionResultType onBlockActivated(final BlockState state, final World worldIn, final BlockPos pos,
@@ -89,7 +122,7 @@ public class ControllerBlock extends Block
         final ItemStack heldItem = playerIn.getHeldItem(handIn);
         final Direction side = hit.getFace();
         final boolean linkerOrStick = heldItem.getItem() == Items.STICK || heldItem.getItem() == TechCore.LINKER;
-        if (linkerOrStick && playerIn.isCrouching())
+        if (linkerOrStick && playerIn.isShiftKeyDown())
         {
             final ControllerTile te = (ControllerTile) worldIn.getTileEntity(pos);
             if (te == null) return ActionResultType.PASS;
@@ -137,13 +170,33 @@ public class ControllerBlock extends Block
             }
             return ActionResultType.SUCCESS;
         }
-        else
+        else if (!playerIn.isShiftKeyDown())
         {
             final float hitX = (float) hit.getHitVec().x;
             final float hitY = (float) hit.getHitVec().y;
             final float hitZ = (float) hit.getHitVec().z;
             return te.doButtonClick(playerIn, side, hitX, hitY, hitZ) ? ActionResultType.SUCCESS
                     : ActionResultType.PASS;
+        }
+
+        if (playerIn.isShiftKeyDown() && handIn == Hand.MAIN_HAND && playerIn instanceof ServerPlayerEntity)
+        {
+            final boolean sideOn = !te.isSideOn(side);
+            playerIn.sendMessage(new TranslationTextComponent("msg.lift.side." + (sideOn ? "on" : "off")));
+            if (sideOn)
+            {
+                final boolean call = te.isCallPanel(side);
+                final boolean edit = te.isEditMode(side);
+                final boolean display = te.isFloorDisplay(side);
+                if (edit) playerIn.sendMessage(new TranslationTextComponent("msg.lift.side.edit"));
+                else if (call) playerIn.sendMessage(new TranslationTextComponent("msg.lift.side.call"));
+                else if (display) playerIn.sendMessage(new TranslationTextComponent("msg.lift.side.display"));
+                else
+                {
+                    final int page = te.getSidePage(side);
+                    playerIn.sendMessage(new TranslationTextComponent("msg.lift.side.page", page));
+                }
+            }
         }
         return ActionResultType.PASS;
     }

@@ -16,6 +16,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -88,6 +89,60 @@ public class BlockEntityUpdater
         return this.totalShape;
     }
 
+    private static double getIntersect(final double minA, final double minB, final double minC, final double maxA,
+            final double maxB, final double maxC)
+    {
+        // No actual intersect here.
+        if (!(minC == minA || minC == maxA || maxC == minA || maxC == maxA)) return 0;
+
+        double dmax_min, dmin_max, dmax_max, dmin_min;
+        boolean max_max, max_min, min_max, min_min;
+
+        dmax_max = maxA - maxB;
+        dmax_min = maxA - minB;
+        dmin_max = minA - maxB;
+        dmin_min = minA - minB;
+
+        max_max = maxA == maxB;
+        max_min = maxA == minB;
+        min_max = minA == maxB;
+        min_min = minA == minB;
+
+        if (min_min && MathHelper.epsilonEquals(minB, minC)) min_min = false;
+        if (max_max && MathHelper.epsilonEquals(maxB, maxC)) max_max = false;
+        if (max_min && MathHelper.epsilonEquals(maxB, minC)) max_min = false;
+        if (min_max && MathHelper.epsilonEquals(minB, maxC)) min_max = false;
+
+        // Also no intersection here.
+        if (!(min_min || max_max || max_min || min_max)) return 0;
+        double intersectAmount = 0;
+
+        if (min_min) intersectAmount = dmax_min;
+        if (max_max) intersectAmount = dmin_max;
+
+        if (max_min) intersectAmount = -dmax_max;
+        if (min_max) intersectAmount = -dmin_min;
+
+        return intersectAmount;
+    }
+
+    private static double getIntersect(final Axis axis, final AxisAlignedBB boxA, final AxisAlignedBB boxB,
+            final AxisAlignedBB boxC)
+    {
+        switch (axis)
+        {
+        case X:
+            return BlockEntityUpdater.getIntersect(boxA.minX, boxB.minX, boxC.minX, boxA.maxX, boxB.maxX, boxC.maxX);
+        case Y:
+            return BlockEntityUpdater.getIntersect(boxA.minY, boxB.minY, boxC.minY, boxA.maxY, boxB.maxY, boxC.maxY);
+        case Z:
+            return BlockEntityUpdater.getIntersect(boxA.minZ, boxB.minZ, boxC.minZ, boxA.maxZ, boxB.maxZ, boxC.maxZ);
+        default:
+            break;
+        }
+        return 0;
+    }
+
     public void applyEntityCollision(final Entity entity)
     {
         // TODO instead of this, apply appropriate transformation to the
@@ -99,21 +154,10 @@ public class BlockEntityUpdater
         final boolean isPlayer = entity instanceof PlayerEntity;
         if (isPlayer) serverSide = entity instanceof ServerPlayerEntity;
 
-        // Players are funny, and need to be specifically run on the client,
-        // everything else should be server side!
-        if (!isPlayer && !serverSide) return;
-
-        final double minX = entity.getBoundingBox().minX;
-        final double minY = entity.getBoundingBox().minY;
-        final double minZ = entity.getBoundingBox().minZ;
-        final double maxX = entity.getBoundingBox().maxX;
-        final double maxY = entity.getBoundingBox().maxY;
-        final double maxZ = entity.getBoundingBox().maxZ;
         double dx = 0, dz = 0, dy = 0;
         final Vec3d motion_a = this.theEntity.getMotion();
         Vec3d motion_b = entity.getMotion();
-        final AxisAlignedBB boundingBox = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
-
+        final AxisAlignedBB boundingBox = entity.getBoundingBox();
         if (isPlayer && serverSide)
         {
             final ServerPlayerEntity player = (ServerPlayerEntity) entity;
@@ -122,18 +166,17 @@ public class BlockEntityUpdater
             dz = player.chasingPosZ - player.prevChasingPosZ;
             motion_b = new Vec3d(dx, dy, dz).scale(0.5);
         }
-        final Vec3d totalV = motion_a.add(motion_b);
-        final Vec3d diffV = motion_b.subtract(motion_a);
-
+        final Vec3d diffV = motion_a.subtract(motion_b);
         /** Expanded box by velocities to test for collision with. */
-
-        final AxisAlignedBB testBox = boundingBox.expand(totalV.x, totalV.y + dy, totalV.z);
+        final AxisAlignedBB testBox = boundingBox.expand(diffV.x, diffV.y, diffV.z);// .grow(0.1);
 
         this.blockBoxes.clear();
+        // Used to select which boxes to consider for collision
+        final AxisAlignedBB hitTest = testBox.grow(1.5 * diffV.length());
         this.buildShape().forEachBox((x0, y0, z0, x1, y1, z1) ->
         {
             final AxisAlignedBB box = new AxisAlignedBB(x0, y0, z0, x1, y1, z1);
-            if (box.intersects(testBox)) this.blockBoxes.add(box);
+            if (box.intersects(hitTest)) this.blockBoxes.add(box);
         });
 
         boolean colX = false;
@@ -144,104 +187,90 @@ public class BlockEntityUpdater
         dy = 0;
         dz = 0;
 
-        boolean min = false;
-        boolean max = false;
-        boolean step = false;
+        AxisAlignedBB toUse = testBox;
+        final AxisAlignedBB orig = toUse;
+        // System.out.println("_____________________________");
+
         for (final AxisAlignedBB aabb : this.blockBoxes)
         {
             double dx1 = 0, dy1 = 0, dz1 = 0;
-            // We compare to testBox as it accounts for velocity
-            final AxisAlignedBB inter = testBox.intersect(aabb);
+            // Only use ones that actually intersect for this loop
+            if (!aabb.intersects(toUse)) continue;
 
-            boolean hitXn, hitYn, hitZn;
-            boolean hitXp, hitYp, hitZp;
-            hitYp = inter.maxY == aabb.maxY;
-            hitYn = inter.minY == aabb.minY;
+            final AxisAlignedBB inter = toUse.intersect(aabb);
 
-            hitXp = inter.maxX == aabb.maxX;
-            hitXn = inter.minX == aabb.minX;
+            // This is the floor of the box, so mark it as collided
+            if (inter.getYSize() == 0 && inter.maxY == aabb.maxY) colY = true;
 
-            hitZp = inter.maxZ == aabb.maxZ;
-            hitZn = inter.minZ == aabb.minZ;
+            // This means we don't actually intersect as far as the below checks
+            // are concerned
+            if (inter.getXSize() == 0 || inter.getYSize() == 0 || inter.getZSize() == 0) continue;
 
-            boolean hx = hitXp || hitXn;
-            boolean hy = hitYp || hitYn;
-            boolean hz = hitZp || hitZn;
+            // System.out.println("X");
+            dx1 = BlockEntityUpdater.getIntersect(Axis.X, inter, toUse, aabb);
+            // System.out.println("Y");
+            dy1 = BlockEntityUpdater.getIntersect(Axis.Y, inter, toUse, aabb);
+            // System.out.println("Z");
+            dz1 = BlockEntityUpdater.getIntersect(Axis.Z, inter, toUse, aabb);
 
-            // Check if should step, if so, call false on this.
-            if (hitYp && (hx || hz))
+            // Take the minimum of x and z
+            if (dx1 != 0 && dz1 != 0)
             {
-                dy1 = aabb.maxY - boundingBox.minY;
-                if (dy1 < entity.stepHeight)
-                {
-                    hitXp = false;
-                    hitXn = false;
-
-                    hitZp = false;
-                    hitZn = false;
-                    step = true;
-                    dy = dy1;
-                }
+                final boolean max = Math.abs(dx1) > Math.abs(dz1);
+                if (max) dx1 = 0;
+                else dz1 = 0;
+            }
+            // Take the minimum of y and x
+            if (dy1 != 0 && dx1 != 0)
+            {
+                final boolean max = Math.abs(dx1) > Math.abs(dy1);
+                if (max) dx1 = 0;
                 else dy1 = 0;
             }
-            hx = hitXp || hitXn;
-            hy = hitYp || hitYn || step;
-            hz = hitZp || hitZn;
+            // Take the minimum of y and z
+            if (dy1 != 0 && dz1 != 0)
+            {
+                final boolean max = Math.abs(dz1) > Math.abs(dy1);
+                if (max) dz1 = 0;
+                else dy1 = 0;
+            }
 
-            min = hitYn;
-            max = hitYp;
+            // If no y movement, but x or z, see if we should step up instead.
+            if (dy1 == 0 && !(dz1 == 0 && dx1 == 0))
+            {
+                dy = inter.maxY - toUse.minY;
+                if (dy >= 0 && dy < entity.stepHeight)
+                {
+                    boolean valid = true;
+                    // check if none of the other boxes disagree with the step
+                    for (final AxisAlignedBB aabb2 : this.blockBoxes)
+                    {
+                        if (aabb2 == aabb) continue;
+                        if (aabb2.intersects(toUse))
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid)
+                    {
+                        dx1 = 0;
+                        dz1 = 0;
+                        dy1 = dy;
+                    }
+                }
+            }
 
-            check:
-            if (min || max && !(min && max))
-            {
-                // we already checked this for step!
-                if (step) break check;
-                if (min && diffV.y < 0) break check;
-                if (max && diffV.y > 0) break check;
-                dy1 = max ? aabb.maxY - boundingBox.minY : aabb.minY - boundingBox.maxY;
-            }
-            min = hitXn;
-            max = hitXp;
-            check:
-            if (min || max && !(min && max))
-            {
-                if (min && diffV.x < 0) break check;
-                if (max && diffV.x > 0) break check;
-                dx1 = max ? aabb.maxX - boundingBox.minX : aabb.minX - boundingBox.maxX;
-            }
-            min = hitZn;
-            max = hitZp;
-            check:
-            if (min || max && !(min && max))
-            {
-                if (min && diffV.z < 0) break check;
-                if (max && diffV.z > 0) break check;
-                dz1 = max ? aabb.maxZ - boundingBox.minZ : aabb.minZ - boundingBox.maxZ;
-            }
-            final double x = Math.abs(dx1);
-            final double y = Math.abs(dy1);
-            final double z = Math.abs(dz1);
+            colX = colX || dx1 != 0;
+            colY = colY || dy1 != 0;
+            colZ = colZ || dz1 != 0;
 
-            final boolean toX = hx && !(x < y && hy || x < z && hz);
-            final boolean toY = hy && !(y < x && hx || y < z && hz);
-            final boolean toZ = hz && !(z < y && hy || z < x && hx);
-
-            if (toY)
-            {
-                colY = true;
-                dy = Math.abs(dy) > Math.abs(dy1) ? dy : dy1;
-            }
-            else if (toX)
-            {
-                colX = true;
-                dx = Math.abs(dx) > Math.abs(dx1) ? dx : dx1;
-            }
-            else if (toZ)
-            {
-                colZ = true;
-                dz = Math.abs(dz) > Math.abs(dz1) ? dz : dz1;
-            }
+            toUse = toUse.offset(dx1, dy1, dz1);
         }
+
+        dx = toUse.minX - orig.minX;
+        dy = toUse.minY - orig.minY;
+        dz = toUse.minZ - orig.minZ;
 
         // If entity has collided, adjust motion accordingly.
         if (colX || colY || colZ)
@@ -268,7 +297,6 @@ public class BlockEntityUpdater
                 dz = motion_a.z;
             }
             else dz = 0.9 * motion_b.z;
-
             entity.setMotion(dx, dy, dz);
 
             if (colY)
@@ -283,6 +311,14 @@ public class BlockEntityUpdater
             {
                 final PlayerEntity player = (PlayerEntity) entity;
 
+                if (serverSide)
+                {
+                    final ServerPlayerEntity serverplayer = (ServerPlayerEntity) player;
+                    // Meed to set floatingTickCount to prevent being kicked for
+                    // flying.
+                    if (!player.abilities.isCreativeMode) serverplayer.connection.floatingTickCount = 0;
+                }
+
                 if (!serverSide && (Minecraft.getInstance().gameSettings.viewBobbing || TickHandler.playerTickTracker
                         .containsKey(player.getUniqueID())))
                 { // This fixes jitter, need a better way to handle this.
@@ -291,13 +327,7 @@ public class BlockEntityUpdater
                 }
                 /** This is for clearing jump values on client. */
                 if (!serverSide) player.getPersistentData().putInt("lastStandTick", player.ticksExisted);
-                // Meed to set floatingTickCount to prevent being kicked for
-                // flying.
-                if (!player.abilities.isCreativeMode && serverSide)
-                {
-                    final ServerPlayerEntity serverplayer = (ServerPlayerEntity) player;
-                    serverplayer.connection.floatingTickCount = 0;
-                }
+
             }
 
         }

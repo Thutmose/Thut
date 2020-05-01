@@ -60,7 +60,6 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public boolean[]              callFaces    = new boolean[6];
     public boolean[]              editFace     = new boolean[6];
     public boolean[]              floorDisplay = new boolean[6];
-    public boolean                callPanel    = false;
 
     // Used for limiting how often checks for connected controllers are done.
     private int tick = 0;
@@ -123,15 +122,18 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
                 switch (button)
                 {
                 case 1:
-                    this.callFaces[side.ordinal()] = !this.callFaces[side.ordinal()];
+                    this.callFaces[side.ordinal()] = !this.isCallPanel(side);
                     this.floorDisplay[side.ordinal()] = false;
-                    clicker.sendMessage(new TranslationTextComponent(message, this.callFaces[side.ordinal()]));
+                    clicker.sendMessage(new TranslationTextComponent(message, this.isCallPanel(side)));
                     break;
                 case 2:
-                    this.floorDisplay[side.ordinal()] = !this.floorDisplay[side.ordinal()];
+                    this.floorDisplay[side.ordinal()] = !this.isFloorDisplay(side);
                     this.callFaces[side.ordinal()] = false;
                     message = "msg.floorDisplay";
-                    clicker.sendMessage(new TranslationTextComponent(message, this.floorDisplay[side.ordinal()]));
+                    clicker.sendMessage(new TranslationTextComponent(message, this.isFloorDisplay(side)));
+                    break;
+                case 13:
+                    if (this.getLift() != null) this.setLift(null);
                     break;
                 case 16:
                     this.editFace[side.ordinal()] = false;
@@ -244,11 +246,28 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
         return (byte0 & state) != 0;
     }
 
+    public boolean isCallPanel(final Direction side)
+    {
+        return this.callFaces[side.getIndex()];
+    }
+
+    public boolean isFloorDisplay(final Direction side)
+    {
+        return this.floorDisplay[side.getIndex()];
+    }
+
+    public boolean isEditMode(final Direction side)
+    {
+        return this.editFace[side.getIndex()];
+    }
+
     @Override
     public void read(final CompoundNBT par1)
     {
         super.read(par1);
         this.floor = par1.getInt("floor");
+        // Reset this so that it will re-find after loading.
+        this.lift = null;
         this.liftID = new UUID(par1.getLong("idMost"), par1.getLong("idLess"));
         this.sides = par1.getByteArray("sides");
         for (final Direction face : Direction.Plane.HORIZONTAL)
@@ -285,8 +304,10 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
     public void setLift(final EntityLift lift)
     {
+        if (lift == null && this.lift != null) this.lift.setFoor(null, this.floor);
         this.lift = lift;
         if (lift != null) this.liftID = lift.getUniqueID();
+        else this.liftID = null;
         if (this.world != null && !this.world.isRemote) TileUpdate.sendUpdate(this);
     }
 
@@ -347,39 +368,31 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
         if (this.getLift() != null && !this.world.isRemote)
         {
-            // This is whether the lift is currently at this floor, so redstone
-            // should be emitted.
-            boolean check = this.getLift().getCurrentFloor() == this.floor && (int) (this.getLift().getMotion().y
-                    * 16) == 0;
+            final BlockState state = this.world.getBlockState(this.getPos());
+            boolean current = state.get(ControllerBlock.CURRENT);
+            boolean called = state.get(ControllerBlock.CALLED);
+            final boolean shouldBeCurrent = this.lift.getPosition().getY() == this.getPos().getY() - 2;
+            final boolean shouldBeCalled = this.lift.getCalled() && this.lift.getDestY() == this.getPos().getY() - 2;
 
-            BlockState state = this.world.getBlockState(this.getPos());
-            boolean old = state.get(ControllerBlock.CURRENT);
-            boolean callPanel = false;
-            if (!old && !this.getLift().getCalled()) for (final Direction face : Direction.Plane.HORIZONTAL)
-                callPanel |= this.callFaces[face.ordinal()];
-            // Call panels should only respond to redstone signals if they are
-            // not supposed to be emitting one themselves.
-            if (callPanel && !old && !this.getLift().getCalled() && !check) if (this.world.isBlockPowered(this
-                    .getPos())) this.getLift().call(this.floor);
+            if (current && !shouldBeCurrent) this.world.setBlockState(this.getPos(), state.with(ControllerBlock.CURRENT,
+                    false));
+            else if (!current && shouldBeCurrent) this.world.setBlockState(this.getPos(), state.with(
+                    ControllerBlock.CURRENT, true));
 
-            // If state has changed, change the blockstate as well. only do this
-            // if it has changed to prevent too many changes to state.
-            if (check != old)
+            if (called && !shouldBeCalled) this.world.setBlockState(this.getPos(), state.with(ControllerBlock.CALLED,
+                    false));
+            else if (!called && shouldBeCalled) this.world.setBlockState(this.getPos(), state.with(
+                    ControllerBlock.CALLED, true));
+
+            current = state.get(ControllerBlock.CURRENT);
+            called = state.get(ControllerBlock.CALLED);
+
+            // In this case, we can respond to redstone signals on call faces
+            if (!current && !called) for (final Direction facing : Direction.values())
             {
-                state = state.with(ControllerBlock.CURRENT, check);
-                this.world.setBlockState(this.getPos(), state);
-            }
-
-            // Check to see if the called state needs to be changed.
-            if (this.getLift().getMotion().y == 0 || this.getLift().getDestinationFloor() == this.floor)
-            {
-                old = state.get(ControllerBlock.CALLED);
-                check = this.getLift().getDestinationFloor() == this.floor;
-                if (check != old)
-                {
-                    state = state.with(ControllerBlock.CALLED, check);
-                    this.world.setBlockState(this.getPos(), state);
-                }
+                if (!this.isCallPanel(facing) || !this.isSideOn(facing)) continue;
+                final int power = this.world.getRedstonePower(this.getPos(), facing.getOpposite());
+                if (power > 0) this.lift.call(this.floor);
             }
             MinecraftForge.EVENT_BUS.post(new ControllerUpdate(this));
         }

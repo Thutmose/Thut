@@ -390,19 +390,29 @@ public class EntityLift extends BlockEntityBase
 
     public void setFoor(final ControllerTile te, final int floor)
     {
-        boolean changed = false;
-        final int prev = te.floor;
-        if (floor > 0)
+        if (te != null)
         {
-            this.floors[floor - 1] = te.getPos().getY() - 2;
-            this.hasFloors[floor - 1] = true;
-            changed = true;
+            boolean changed = false;
+            final int prev = te.floor;
+            if (floor > 0)
+            {
+                this.floors[floor - 1] = te.getPos().getY() - 2;
+                this.hasFloors[floor - 1] = true;
+                changed = true;
+            }
+            if (changed)
+            {
+                if (prev != 0 && prev != floor) this.hasFloors[prev - 1] = false;
+                if (this.isServerWorld()) EntityUpdate.sendEntityUpdate(this);
+            }
         }
-        if (changed)
+        else
         {
-            if (prev != 0 && prev != floor) this.hasFloors[prev - 1] = false;
+            this.floors[floor - 1] = 0;
+            this.hasFloors[floor - 1] = false;
             if (this.isServerWorld()) EntityUpdate.sendEntityUpdate(this);
         }
+
     }
 
     @Override

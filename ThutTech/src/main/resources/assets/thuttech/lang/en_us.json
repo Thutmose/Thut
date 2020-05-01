@@ -24,6 +24,13 @@
     "msg.lift.toobig": "You cannot make an Elevator this big.",
     "msg.lift.noblock": "You need to have %s Elevator blocks in your inventory to make an Elevator of this size.",
     "msg.lift.reset": "Reset elevator creation",
+    
+    "msg.lift.side.on": "Side is ON",
+    "msg.lift.side.off": "Side is OFF",
+    "msg.lift.side.page": "Set to page %s",
+    "msg.lift.side.edit": "Set to Edit Mode",
+    "msg.lift.side.call": "Set to Call Panel",
+    "msg.lift.side.display": "Set to Display Panel",
 
     "msg.linker.reset": "Reset Device Linker",
 

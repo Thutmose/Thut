@@ -26,6 +26,7 @@ import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
@@ -50,6 +51,13 @@ public class ClientProxy extends CommonProxy
     KeyBinding DOWN;
     KeyBinding ROTATERIGHT;
     KeyBinding ROTATELEFT;
+
+    @SubscribeEvent
+    public void move(final InputUpdateEvent event)
+    {
+        // event.getMovementInput().forwardKeyDown = true;
+        // event.getMovementInput().moveForward = 5f;
+    }
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent

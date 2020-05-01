@@ -48,7 +48,18 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
     public boolean processInitialInteract(final PlayerEntity player, @Nullable ItemStack stack, final Hand hand)
     {
         ThutCore.LOGGER.debug("Interaction with Lift: " + player + " " + stack + " " + hand);
-        if (this.lift.owner == null)
+
+        final boolean shouldLinkLift = player.isShiftKeyDown() && stack.getItem() instanceof ItemLinker
+                && (this.lift.owner != null && player.getUniqueID().equals(this.lift.owner)
+                        || player.abilities.isCreativeMode);
+        final boolean shouldKillLiftUnowned = this.lift.owner == null;
+        final boolean shouldDisplayOwner = stack.getItem() instanceof ItemLinker && (this.lift.owner != null && player
+                .getUniqueID().equals(this.lift.owner) || player.abilities.isCreativeMode);
+        final boolean shouldKillLiftOwned = player.isShiftKeyDown() && player.getHeldItem(hand).getItem() == Items.STICK
+                && this.lift.owner != null && (player.getUniqueID().equals(this.lift.owner)
+                        || player.abilities.isCreativeMode);
+
+        if (shouldKillLiftUnowned)
         {
             ThutCore.LOGGER.error("Killing unowned Lift: " + this.lift);
             if (!this.lift.getEntityWorld().isRemote)
@@ -69,8 +80,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             }
             return true;
         }
-        if (player.isCrouching() && stack != null && stack.getItem() instanceof ItemLinker && (this.lift.owner != null
-                && player.getUniqueID().equals(this.lift.owner) || player.abilities.isCreativeMode))
+        else if (shouldLinkLift)
         {
             if (stack.getTag() == null) stack.setTag(new CompoundNBT());
             stack.getTag().putString("lift", this.lift.getCachedUniqueIdString());
@@ -80,8 +90,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             if (!this.lift.getEntityWorld().isRemote) player.sendMessage(new TranslationTextComponent(message));
             return true;
         }
-        else if (stack != null && stack.getItem() instanceof ItemLinker && (this.lift.owner != null && player
-                .getUniqueID().equals(this.lift.owner) || player.abilities.isCreativeMode))
+        else if (shouldDisplayOwner)
         {
             if (!this.lift.getEntityWorld().isRemote && this.lift.owner != null)
             {
@@ -92,9 +101,7 @@ public class LiftInteractHandler extends BlockEntityInteractHandler
             }
             return true;
         }
-        if (player.isCrouching() && stack != null && player.getHeldItem(hand).getItem() == Items.STICK
-                && this.lift.owner != null && (player.getUniqueID().equals(this.lift.owner)
-                        || player.abilities.isCreativeMode))
+        else if (shouldKillLiftOwned)
         {
             if (!this.lift.getEntityWorld().isRemote)
             {

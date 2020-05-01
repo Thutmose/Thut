@@ -7,7 +7,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
-import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
@@ -25,8 +24,11 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
+import thut.api.entity.blockentity.world.IBlockEntityWorld;
 import thut.tech.common.blocks.lift.ControllerTile;
 
 public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer<T>
@@ -107,6 +109,14 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
         // Floor Display toggle
         colour = monitor.floorDisplay[side.ordinal()] ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
         this.drawOverLay(mat, buff, monitor, 2, colour, side, false, 0);
+
+        // Clear Controller toggle
+        colour = monitor.getLift() != null ? new Color(0, 255, 0, 255) : new Color(255, 0, 0, 255);
+        this.drawOverLay(mat, buff, monitor, 13, colour, side, false, 0);
+
+        // Exit edit mode
+        colour = new Color(0, 255, 0, 255);
+        this.drawOverLay(mat, buff, monitor, 16, colour, side, false, 0);
     }
 
     public void drawFloorNumbers(final MatrixStack mat, final IRenderTypeBuffer buffer, final int page)
@@ -170,7 +180,6 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
         if (floor > 0 && floor < 17)
         {
             mat.push();
-            // System.out.println(order);
             final float dz = -0.001f * (1 + order);
             floor -= 1;
             final double x = (double) (3 - floor & 3) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
@@ -216,25 +225,28 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
         }
 
         final BlockState copied = monitor.copiedState;
+
         if (copied != null)
         {
             mat.push();
-            final BlockRenderType blockrendertype = copied.getRenderType();
-            if (blockrendertype == BlockRenderType.MODEL)
+            World world = monitor.getWorld();
+            final BlockPos pos = monitor.getPos();
+            if (world instanceof IBlockEntityWorld)
             {
-                final IModelData data = Minecraft.getInstance().getBlockRendererDispatcher().getModelForState(copied)
-                        .getModelData(monitor.getWorld(), monitor.getPos(), copied, EmptyModelData.INSTANCE);
-                for (final RenderType type : RenderType.getBlockRenderTypes())
-                    if (RenderTypeLookup.canRenderInLayer(copied, type))
-                    {
-                        final BlockRendererDispatcher blockRenderer = Minecraft.getInstance()
-                                .getBlockRendererDispatcher();
-                        final IBakedModel model = blockRenderer.getModelForState(copied);
-                        blockRenderer.getBlockModelRenderer().renderModel(monitor.getWorld(), model, copied, monitor
-                                .getPos(), mat, buff.getBuffer(type), true, new Random(), copied.getPositionRandom(
-                                        monitor.getPos()), combinedOverlayIn, data);
-                    }
+                final IBlockEntityWorld w = (IBlockEntityWorld) world;
+                world = w.getWorld();
             }
+            final IModelData data = Minecraft.getInstance().getBlockRendererDispatcher().getModelForState(copied)
+                    .getModelData(world, pos, copied, EmptyModelData.INSTANCE);
+            for (final RenderType type : RenderType.getBlockRenderTypes())
+                if (RenderTypeLookup.canRenderInLayer(copied, type))
+                {
+                    final BlockRendererDispatcher blockRenderer = Minecraft.getInstance().getBlockRendererDispatcher();
+                    final IBakedModel model = blockRenderer.getModelForState(copied);
+                    blockRenderer.getBlockModelRenderer().renderModel(world, model, copied, pos, mat, buff.getBuffer(
+                            type), false, new Random(), copied.getPositionRandom(monitor.getPos()), combinedOverlayIn,
+                            data);
+                }
             mat.pop();
         }
 
