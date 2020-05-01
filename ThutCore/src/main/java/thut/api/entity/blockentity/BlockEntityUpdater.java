@@ -314,9 +314,9 @@ public class BlockEntityUpdater
                 if (serverSide)
                 {
                     final ServerPlayerEntity serverplayer = (ServerPlayerEntity) player;
-                    // Meed to set floatingTickCount to prevent being kicked for
-                    // flying.
-                    if (!player.abilities.isCreativeMode) serverplayer.connection.floatingTickCount = 0;
+                    // Meed to set floatingTickCount to prevent being kicked
+                    serverplayer.connection.vehicleFloatingTickCount = 0;
+                    serverplayer.connection.floatingTickCount = 0;
                 }
 
                 if (!serverSide && (Minecraft.getInstance().gameSettings.viewBobbing || TickHandler.playerTickTracker

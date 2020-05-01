@@ -103,6 +103,10 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
         this.toMoveX = this.controller.leftInputDown || this.controller.rightInputDown;
         this.toMoveZ = this.controller.backInputDown || this.controller.forwardInputDown;
 
+        this.speedDown = 1;
+        this.speedUp = 1;
+        this.speedHoriz = 1;
+
         // this.speedUp = 0.5;
         // this.speedDown = 0.5;
         // final int high = 30;
@@ -397,7 +401,6 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
         dx -= this.getPosX();
         dy -= this.getPosY();
         dz -= this.getPosZ();
-        System.out.println("align");
         if (dx * dx + dy * dy + dz * dz > 0) EntityUpdate.sendEntityUpdate(this);
     }
 
@@ -491,9 +494,25 @@ public class EntityCraft extends BlockEntityBase implements IMultiplePassengerEn
     {
         if (this.isPassenger(passenger))
         {
-            if (passenger.isCrouching()) passenger.stopRiding();
+            if (passenger.isShiftKeyDown()) passenger.stopRiding();
             IMultiplePassengerEntity.MultiplePassengerManager.managePassenger(passenger, this);
+            passenger.onGround = true;
+            passenger.onLivingFall(passenger.fallDistance, 0);
+            passenger.fallDistance = 0;
+            if (passenger instanceof ServerPlayerEntity)
+            {
+                ((ServerPlayerEntity) passenger).connection.vehicleFloatingTickCount = 0;
+                ((ServerPlayerEntity) passenger).connection.floatingTickCount = 0;
+            }
         }
+    }
+
+    @Override
+    public boolean onLivingFall(final float distance, final float damageMultiplier)
+    {
+        // Do nothing here, the supoer method will call this to all passengers
+        // as well!
+        return false;
     }
 
     @Override
