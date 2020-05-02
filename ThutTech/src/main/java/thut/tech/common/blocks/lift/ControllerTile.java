@@ -107,11 +107,11 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public boolean doButtonClick(final LivingEntity clicker, final Direction side, final float hitX, final float hitY,
             final float hitZ)
     {
-        if (this.liftID != null && !this.liftID.equals(this.empty) && this.getLift() != EntityLift.getLiftFromUUID(
-                this.liftID, this.world)) this.setLift(EntityLift.getLiftFromUUID(this.liftID, this.world));
         final int button = this.getButtonFromClick(side, hitX, hitY, hitZ);
         final boolean valid = this.getLift() != null && this.getLift().hasFloor(button);
-        if (this.isSideOn(side)) if (this.editFace[side.ordinal()])
+        if (!this.isSideOn(side)) return false;
+        if (this.isFloorDisplay(side)) return false;
+        if (this.isEditMode(side))
         {
             if (!this.getWorld().isRemote)
             {
@@ -142,16 +142,11 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
             }
             return true;
         }
-        else
+        else if (this.getWorld().isRemote)
         {
-            if (this.floorDisplay[side.ordinal()]) return false;
-            if (this.getWorld().isRemote)
-            {
-                final boolean callPanel = this.callFaces[side.ordinal()];
-                if (this.getWorld() instanceof IBlockEntityWorld) PacketLift.sendButtonPress(this.getLift(), this
-                        .getPos(), button, callPanel);
-                else PacketLift.sendButtonPress(this.getPos(), button, callPanel);
-            }
+            final boolean callPanel = this.isCallPanel(side);
+            System.out.println(this.getLift());
+            PacketLift.sendButtonPress(this.getLift(), this.getPos(), button, callPanel);
         }
         if (clicker instanceof ServerPlayerEntity) this.sendUpdate((ServerPlayerEntity) clicker);
         return valid;
@@ -294,7 +289,8 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     public void setFloor(final int floor)
     {
         // no lift, no set floor.
-        if (this.getLift() != null) return;
+        if (this.getLift() == null) return;
+        // Set the lift's floor to here
         if (this.getLift().setFoor(this, floor))
         {
             this.floor = floor;
@@ -343,12 +339,44 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
     {
         if (this.here == null) this.here = Vector3.getNewVector();
         this.here.set(this);
-
+        EntityLift lift = this.getLift();
+        // if (this.liftID != null)
+        // {
+        // System.out.println(lift + " " + this.liftID);
+        // System.out.println(this.floor);
+        // }
         if (this.getWorld().isRemote) return;
         if (this.world instanceof IBlockEntityWorld) return;
 
+        // Cleanup floor if the lift is gone.
+        if (this.floor > 0 && (lift == null || !lift.isAlive()))
+        {
+            this.setLift(null);
+            lift = null;
+            this.floor = 0;
+        }
+        // Scan sides for a controller which actually has a lift attached, and
+        // attach self to that floor.
+        if (lift == null && this.tick++ % 50 == 0) for (final Direction side : Direction.values())
+        {
+            final TileEntity t = this.here.getTileEntity(this.world, side);
+            this.here.getBlock(this.world, side);
+            if (t instanceof ControllerTile)
+            {
+                final ControllerTile te = (ControllerTile) t;
+                if (te.getLift() != null)
+                {
+                    this.setLift(lift = te.getLift());
+                    this.floor = te.floor;
+                    this.markDirty();
+                    break;
+                }
+            }
+        }
+        if (lift == null) return;
+
         called_floor_checks:
-        if (this.getLift() != null && this.floor > 0)
+        if (this.floor > 0)
         {
             final BlockState state = this.world.getBlockState(this.getPos());
             boolean current = state.get(ControllerBlock.CURRENT);
@@ -358,14 +386,14 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
 
             // Set lifts current floor to this if it is in the area of the
             // floor.
-            if ((int) Math.round(this.getLift().posY) == yWhenLiftHere) this.getLift().setCurrentFloor(this.floor);
-            else if (this.getLift().getCurrentFloor() == this.floor) this.getLift().setCurrentFloor(-1);
+            if ((int) Math.round(this.getLift().posY) == yWhenLiftHere) lift.setCurrentFloor(this.floor);
+            else if (this.getLift().getCurrentFloor() == this.floor) lift.setCurrentFloor(-1);
 
             // Below here is server side only for these checks
             if (this.world.isRemote) break called_floor_checks;
 
-            final boolean shouldBeCurrent = this.lift.getPosition().getY() == yWhenLiftHere;
-            final boolean shouldBeCalled = this.lift.getCalled() && this.lift.getDestY() == yWhenLiftHere;
+            final boolean shouldBeCurrent = lift.getPosition().getY() == yWhenLiftHere;
+            final boolean shouldBeCalled = lift.getCalled() && lift.getDestY() == yWhenLiftHere;
 
             if (current && !shouldBeCurrent) this.world.setBlockState(this.getPos(), state.with(ControllerBlock.CURRENT,
                     false));
@@ -387,35 +415,9 @@ public class ControllerTile extends TileEntity implements ITickableTileEntity// 
                 // only buttons, with no display number!
                 if (!this.isCallPanel(facing)) continue;
                 final int power = this.world.getRedstonePower(this.getPos(), facing.getOpposite());
-                if (power > 0) this.lift.call(this.floor);
+                if (power > 0) lift.call(this.floor);
             }
             MinecraftForge.EVENT_BUS.post(new ControllerUpdate(this));
-        }
-
-        // Cleanup floor if the lift is gone.
-        if (this.floor > 0 && (this.getLift() == null || !this.getLift().isAlive()))
-        {
-            this.setLift(null);
-            this.floor = 0;
-        }
-
-        // Scan sides for a controller which actually has a lift attached, and
-        // attach self to that floor.
-        if (this.getLift() == null && this.tick++ % 50 == 0) for (final Direction side : Direction.values())
-        {
-            final TileEntity t = this.here.getTileEntity(this.world, side);
-            this.here.getBlock(this.world, side);
-            if (t instanceof ControllerTile)
-            {
-                final ControllerTile te = (ControllerTile) t;
-                if (te.getLift() != null)
-                {
-                    this.setLift(te.getLift());
-                    this.floor = te.floor;
-                    this.markDirty();
-                    break;
-                }
-            }
         }
     }
 

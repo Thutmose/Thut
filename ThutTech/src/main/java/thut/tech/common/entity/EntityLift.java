@@ -407,15 +407,13 @@ public class EntityLift extends BlockEntityBase
         if (te != null)
         {
             boolean changed = false;
-            if (floor > 0)
-            {
-                // If we don't have a floor, then actually set the position.
-                // If we did have one, it was already set, and not cleared, so
-                // we do not want to reset it!
-                if (this.hasFloors[floor] <= 0) this.floors[floor] = te.getPos().getY() - 2;
-                this.hasFloors[floor]++;
-                changed = true;
-            }
+            // If we don't have a floor, then actually set the position.
+            // If we did have one, it was already set, and not cleared, so
+            // we do not want to reset it!
+            if (this.hasFloors[floor] <= 0) this.floors[floor] = te.getPos().getY() - 2;
+            this.hasFloors[floor]++;
+            changed = true;
+
             if (changed)
             {
                 final int prev = te.floor - 1;

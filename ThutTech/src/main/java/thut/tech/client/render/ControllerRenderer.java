@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Matrix4f;
@@ -34,7 +35,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
 import thut.api.entity.blockentity.world.IBlockEntityWorld;
+import thut.tech.common.TechCore;
 import thut.tech.common.blocks.lift.ControllerTile;
+import thut.tech.common.entity.EntityLift;
 
 public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer<T>
 {
@@ -93,7 +96,7 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
                 ControllerRenderer.getState(tex));
     }
 
-    private static final RenderType NUMBERS   = ControllerRenderer.makeType(ControllerRenderer.font);
+    private static RenderType       NUMBERS   = ControllerRenderer.makeType(ControllerRenderer.font);
     private static final RenderType OVERLAY_1 = ControllerRenderer.makeType(ControllerRenderer.overlay_1);
     private static final RenderType OVERLAY   = ControllerRenderer.makeType(ControllerRenderer.overlay);
 
@@ -132,21 +135,22 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
 
     public void drawFloorNumbers(final MatrixStack mat, final IRenderTypeBuffer buffer, final int page)
     {
-        for (int floor = 0; floor < 16; floor++)
+        for (int floor = 1; floor <= 16; floor++)
             this.drawNumber(mat, buffer, floor + page * 16, floor);
     }
 
-    private void drawNumber(final MatrixStack mat, final IRenderTypeBuffer buffer, int number, final int floor)
+    private void drawNumber(final MatrixStack mat, final IRenderTypeBuffer buffer, int number, int floor)
     {
         mat.push();
-        final float dz = -0.002f;
+        floor--;
+        final float dz = -0.006f;
         final boolean minus = number >= 64;
         if (minus) number -= 64;
 
         final double x = (double) (3 - floor & 3) / (double) 4, y = ((double) 3 - (floor >> 2)) / 4;
         final int actFloor = number;
-        float[] uvs = this.locationFromNumber((actFloor + 1) % 10);
-        final float[] uvs1 = this.locationFromNumber((actFloor + 1) / 10);
+        float[] uvs = this.locationFromNumber(actFloor % 10);
+        final float[] uvs1 = this.locationFromNumber(actFloor / 10);
         final float r = 0, g = 0, b = 0, a = 1f;
 
         if (actFloor > 8)
@@ -237,11 +241,15 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
 
         int calledFloor = 0;
         int currentFloor = 0;
+        boolean hasLinker = Screen.hasShiftDown();
+        hasLinker = hasLinker && (Minecraft.getInstance().player.getHeldItemMainhand().getItem() == TechCore.LINKER
+                || Minecraft.getInstance().player.getHeldItemOffhand().getItem() == TechCore.LINKER);
 
-        if (monitor.getLift() != null)
+        final EntityLift lift = monitor.getLift();
+        if (lift != null)
         {
-            calledFloor = monitor.getLift().getCalled() ? monitor.getLift().getDestinationFloor() : -1;
-            currentFloor = monitor.getLift().getCurrentFloor();
+            calledFloor = lift.getCalled() ? lift.getDestinationFloor() : -1;
+            currentFloor = lift.getCurrentFloor();
         }
 
         final BlockState copied = monitor.copiedState;
@@ -270,6 +278,7 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             mat.pop();
         }
 
+        dirs:
         for (int i = 0; i < 6; i++)
         {
             final Direction dir = Direction.byIndex(i);
@@ -322,49 +331,49 @@ public class ControllerRenderer<T extends TileEntity> extends TileEntityRenderer
             }
             else
             {
+                final int page = monitor.getSidePage(dir);
+                final int pageShift = page * 16;
+
                 // Draw numbers on top
-                if (monitor.getLift() == null) this.drawFloorNumbers(mat, buff, monitor.getSidePage(dir));
-                else
+                if (lift == null)
                 {
-                    final int page = monitor.getSidePage(dir);
-                    if (monitor.getLift() != null) for (int floor = 1; floor <= 16; floor++)
-                        if (monitor.getLift().hasFloor(floor + page * 16)) this.drawNumber(mat, buff, floor + page * 16,
-                                floor);
-                }
-
-                if (monitor.getLift() != null)
-                {
-                    a = 220;
-                    final Color mapped = new Color(255, 255, 255, 220);
-                    Color colour = new Color(0, 255, 0, a);
-
-                    for (int j = monitor.getSidePage(dir) * 16 + 1; j <= 16 + monitor.getSidePage(dir) * 16; j++)
-                        if (monitor.getLift().hasFloor(j)) this.drawOverLay(mat, buff, monitor, j + 1, mapped, dir,
-                                false, 0);
-
-                    this.drawOverLay(mat, buff, monitor, monitor.floor, colour, dir, false, 0);
-                    colour = new Color(255, 255, 0, a);
-                    this.drawOverLay(mat, buff, monitor, monitor.getLift().getDestinationFloor(), colour, dir, false,
-                            0);
-                    colour = new Color(0, 128, 255, a);
-
-                    this.drawOverLay(mat, buff, monitor, monitor.getLift().getCurrentFloor(), colour, dir, false, 0);
-
-                    // Draw numbers on top
-                    final int page = monitor.getSidePage(dir);
-                    for (int floor = 1; floor <= 16; floor++)
-                        if (monitor.getLift().hasFloor(floor + page * 16)) this.drawNumber(mat, buff, floor + page * 16,
-                                floor);
-
-                }
-                else
-                {
+                    this.drawFloorNumbers(mat, buff, monitor.getSidePage(dir));
                     // Draw background slots
                     final Color colour = new Color(255, 255, 255, 255);
-                    for (int j = monitor.getSidePage(dir) * 16; j < 16 + monitor.getSidePage(dir) * 16; j++)
-                        this.drawOverLay(mat, buff, monitor, j + 1, colour, dir, false, 0);
-                    this.drawFloorNumbers(mat, buff, monitor.getSidePage(dir));
+                    for (int j = pageShift + 1; j <= 16 + pageShift; j++)
+                        this.drawOverLay(mat, buff, monitor, j, colour, dir, false, 0);
+                    this.drawFloorNumbers(mat, buff, page);
+                    mat.pop();
+                    continue dirs;
                 }
+
+                final Color mapped = new Color(255, 255, 255, 220);
+                final Color unmapped = new Color(255, 255, 255, 64);
+                for (int floor = 1; floor <= 16; floor++)
+                {
+                    final int realFloor = floor + pageShift;
+                    final boolean hasFloor = lift.hasFloor(realFloor);
+                    if (hasFloor)
+                    {
+                        this.drawNumber(mat, buff, realFloor, floor);
+                        this.drawOverLay(mat, buff, monitor, floor, mapped, dir, false, 0);
+                    }
+                    else if (hasLinker)
+                    {
+                        this.drawNumber(mat, buff, realFloor, floor);
+                        this.drawOverLay(mat, buff, monitor, floor, unmapped, dir, false, 0);
+                    }
+                }
+
+                a = 128;
+                Color colour = new Color(0, 255, 0, a);
+                this.drawOverLay(mat, buff, monitor, monitor.floor, colour, dir, false, 0);
+                colour = new Color(255, 255, 0, a);
+                this.drawOverLay(mat, buff, monitor, monitor.getLift().getDestinationFloor(), colour, dir, false, 0);
+                colour = new Color(0, 128, 255, a);
+
+                this.drawOverLay(mat, buff, monitor, monitor.getLift().getCurrentFloor(), colour, dir, false, 0);
+
             }
             mat.pop();
         }
