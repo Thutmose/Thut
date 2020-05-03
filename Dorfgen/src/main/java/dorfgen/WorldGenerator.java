@@ -18,26 +18,21 @@ import dorfgen.worldgen.WorldChunkManagerFinite;
 import dorfgen.worldgen.WorldTypeFinite;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent.Decorate;
-import net.minecraftforge.event.terraingen.DecorateBiomeEvent.Decorate.EventType;
 import net.minecraftforge.event.world.WorldEvent.Load;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.eventhandler.Event.Result;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 @Mod(modid = WorldGenerator.MODID, name = WorldGenerator.NAME, version = "1.8", acceptableRemoteVersions = "*")
@@ -61,7 +56,7 @@ public class WorldGenerator
     public BufferedImage structuresMap;
 
     public final DorfMap                dorfs        = new DorfMap();
-    public final SiteStructureGenerator structureGen = new SiteStructureGenerator(dorfs);
+    public final SiteStructureGenerator structureGen = new SiteStructureGenerator(this.dorfs);
 
     public static int      scale;
     public static boolean  finite;
@@ -79,40 +74,35 @@ public class WorldGenerator
 
     public WorldGenerator()
     {
-        instance = this;
+        WorldGenerator.instance = this;
     }
 
     Block roadgravel;
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent e)
+    public void preInit(final FMLPreInitializationEvent e)
     {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.TERRAIN_GEN_BUS.register(this);
         new Config(e);
-        File file = e.getSuggestedConfigurationFile();
-        String seperator = System.getProperty("file.separator");
+        final File file = e.getSuggestedConfigurationFile();
+        final String seperator = System.getProperty("file.separator");
 
         GameRegistry.registerItem(new ItemDebug(), "debugItem");// TODO texture
-        GameRegistry.registerBlock(roadgravel = new BlockRoadSurface(), "roadgravel");
+        GameRegistry.registerBlock(this.roadgravel = new BlockRoadSurface(), "roadgravel");
 
-        String folder = file.getAbsolutePath();
-        String name = file.getName();
-        FileLoader.biomes = folder.replace(name, MODID + seperator + "biomes.csv");
+        final String folder = file.getAbsolutePath();
+        final String name = file.getName();
+        FileLoader.biomes = folder.replace(name, WorldGenerator.MODID + seperator + "biomes.csv");
         //
         MapGenStructureIO.registerStructure(Start.class, "dorfsitestart");
 
-        Thread dorfProcess = new Thread(new Runnable()
+        final Thread dorfProcess = new Thread(() ->
         {
-
-            @Override
-            public void run()
-            {
-                new FileLoader();
-                dorfs.init();
-                structureGen.init();
-                done[0] = true;
-            }
+            new FileLoader();
+            WorldGenerator.this.dorfs.init();
+            WorldGenerator.this.structureGen.init();
+            WorldGenerator.this.done[0] = true;
         });
         dorfProcess.setName("dorfgen image processor");
         dorfProcess.start();
@@ -120,157 +110,107 @@ public class WorldGenerator
     }
 
     @EventHandler
-    public void load(FMLInitializationEvent evt)
+    public void load(final FMLInitializationEvent evt)
     {
-        finiteWorldType = new WorldTypeFinite("finite");
+        this.finiteWorldType = new WorldTypeFinite("finite");
         try
         {
             // chunkClass = Class.forName("bigworld.storage.BigChunk");
         }
-        catch (Exception e)
+        catch (final Exception e)
         {
         }
-        if (evt.getSide() == Side.CLIENT)
-        {
-            Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item.getItemFromBlock(roadgravel), 0,
-                    new ModelResourceLocation("dorfgen:roadgravel", "inventory"));
-        }
+        if (evt.getSide() == Side.CLIENT) Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Item
+                .getItemFromBlock(this.roadgravel), 0, new ModelResourceLocation("dorfgen:roadgravel", "inventory"));
     }
 
     @EventHandler
-    public void postInit(FMLPostInitializationEvent e)
-    {
-
-        // for (BiomeGenBase b : BiomeGenBase.getBiomeGenArray()) {//TODO see if
-        // this is still needed
-        // if (b != null && !MapGenVillage.villageSpawnBiomes.contains(b)) {
-        // BiomeManager.addVillageBiome(b, true);
-        // }
-        // }
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
-        {
-            Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(
-                    Item.getItemFromBlock(BlockRoadSurface.uggrass), 0,
-                    new ModelResourceLocation("dorfgen:roadgravel", "inventory"));
-
-        }
-    }
-
-    @EventHandler
-    public void serverLoad(FMLServerStartingEvent event)
+    public void serverLoad(final FMLServerStartingEvent event)
     {
         event.registerServerCommand(new Commands());
     }
 
     @SubscribeEvent
-    public void genEvent(Load evt)
+    public void genEvent(final Load evt)
     {
         if (evt.getWorld().provider.getWorldChunkManager() instanceof WorldChunkManagerFinite)
         {
 
-            if (!spawnSite.isEmpty())
+            if (!WorldGenerator.spawnSite.isEmpty())
             {
-                ArrayList<Site> sites = new ArrayList<Site>(DorfMap.sitesById.values());
-                for (Site s : sites)
-                {
-                    if (s.name.equalsIgnoreCase(spawnSite))
+                final ArrayList<Site> sites = new ArrayList<>(DorfMap.sitesById.values());
+                for (final Site s : sites)
+                    if (s.name.equalsIgnoreCase(WorldGenerator.spawnSite))
                     {
-                        int x = s.x * scale;
+                        final int x = s.x * WorldGenerator.scale;
                         int y = 0;
-                        int z = s.z * scale;
+                        final int z = s.z * WorldGenerator.scale;
                         try
                         {
-                            y = dorfs.elevationMap[(x - shift.getX()) / scale][(z - shift.getZ()) / scale];
+                            y = this.dorfs.elevationMap[(x - WorldGenerator.shift.getX()) / WorldGenerator.scale][(z
+                                    - WorldGenerator.shift.getZ()) / WorldGenerator.scale];
                         }
-                        catch (Exception e)
+                        catch (final Exception e)
                         {
-                            System.out.println(s + " " + dorfs.elevationMap.length);
+                            System.out.println(s + " " + this.dorfs.elevationMap.length);
                             e.printStackTrace();
                         }
-                        evt.world.setSpawnPoint(new BlockPos(x + scale / 2, y, z + scale / 2));
+                        evt.world.setSpawnPoint(new BlockPos(x + WorldGenerator.scale / 2, y, z + WorldGenerator.scale
+                                / 2));
                         return;
                     }
-                }
             }
-            if (randomSpawn)
+            if (WorldGenerator.randomSpawn)
             {
-                ArrayList<Site> sites = new ArrayList<Site>(DorfMap.sitesById.values());
+                final ArrayList<Site> sites = new ArrayList<>(DorfMap.sitesById.values());
 
                 Collections.shuffle(sites, evt.getWorld().rand);
 
-                for (Site s : sites)
-                {
+                for (final Site s : sites)
                     if (s.type.isVillage() && s.type != SiteType.HIPPYHUTS)
                     {
-                        int x = s.x * scale;
+                        final int x = s.x * WorldGenerator.scale;
                         int y = 0;
-                        int z = s.z * scale;
+                        final int z = s.z * WorldGenerator.scale;
                         try
                         {
-                            y = dorfs.elevationMap[(x - shift.getX()) / scale][(z - shift.getZ()) / scale];
+                            y = this.dorfs.elevationMap[(x - WorldGenerator.shift.getX()) / WorldGenerator.scale][(z
+                                    - WorldGenerator.shift.getZ()) / WorldGenerator.scale];
                         }
-                        catch (Exception e)
+                        catch (final Exception e)
                         {
-                            System.out.println(s + " " + dorfs.elevationMap.length);
+                            System.out.println(s + " " + this.dorfs.elevationMap.length);
                             e.printStackTrace();
                         }
-                        evt.world.setSpawnPoint(new BlockPos(x + scale / 2, y, z + scale / 2));
+                        evt.world.setSpawnPoint(new BlockPos(x + WorldGenerator.scale / 2, y, z + WorldGenerator.scale
+                                / 2));
                         return;
                     }
-                }
             }
-            else
-            {
-                evt.world.setSpawnPoint(spawn);
-            }
-        }
-    }
-
-    @EventHandler
-    public void LoadComplete(FMLLoadCompleteEvent event)
-    {
-        while (!done[0])
-        {
-            try
-            {
-                Thread.sleep(100);
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
+            else evt.world.setSpawnPoint(WorldGenerator.spawn);
         }
     }
 
     @SubscribeEvent
-    public void decorate(Decorate event)
+    public void decorate(final Decorate event)
     {
-        Collection<Site> sites = dorfs.getSiteForCoords(event.pos.getX(), event.pos.getZ());
-        if (sites != null && event.type == EventType.TREE)
-        {
-            for (Site site : sites)
-            {
-                if (site != null && site.rgbmap != null)
+        final Collection<Site> sites = this.dorfs.getSiteForCoords(event.pos.getX(), event.pos.getZ());
+        if (sites != null && event.type == EventType.TREE) for (final Site site : sites)
+            if (site != null && site.rgbmap != null) for (int x = event.pos.getX(); x < event.pos.getX() + 16; x++)
+                for (int z = event.pos.getZ(); z < event.pos.getZ() + 16; z++)
                 {
-                    for (int x = event.pos.getX(); x < event.pos.getX() + 16; x++)
-                        for (int z = event.pos.getZ(); z < event.pos.getZ() + 16; z++)
-                        {
-                            int width = (scale / SiteStructureGenerator.SITETOBLOCK);
-                            int pixelX = (x - site.corners[0][0] * scale - scale / 2 - width / 2) / width;
-                            int pixelY = (z - site.corners[0][1] * scale - scale / 2 - width / 2) / width;
-                            if(pixelX >= site.rgbmap.length || pixelY >= site.rgbmap[0].length)
-                            {
-                                continue;
-                            }
-                            if(SiteMapColours.getMatch(site.rgbmap[pixelX][pixelY])!=SiteMapColours.GENERIC)
-                            {
-                                event.setResult(Result.DENY);
-                                return;
-                            }
-                        }
+                    final int width = WorldGenerator.scale / SiteStructureGenerator.SITETOBLOCK;
+                    final int pixelX = (x - site.corners[0][0] * WorldGenerator.scale - WorldGenerator.scale / 2 - width
+                            / 2) / width;
+                    final int pixelY = (z - site.corners[0][1] * WorldGenerator.scale - WorldGenerator.scale / 2 - width
+                            / 2) / width;
+                    if (pixelX >= site.rgbmap.length || pixelY >= site.rgbmap[0].length) continue;
+                    if (SiteMapColours.getMatch(site.rgbmap[pixelX][pixelY]) != SiteMapColours.GENERIC)
+                    {
+                        event.setResult(Result.DENY);
+                        return;
+                    }
                 }
-            }
-        }
     }
 
 }

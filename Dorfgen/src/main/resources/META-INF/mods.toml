@@ -1,0 +1,20 @@
+modLoader="javafml"
+loaderVersion="[31,)"
+issueTrackerURL="https://github.com/Thutmose/Thut/issues"
+
+
+[[mods]]
+    modId="dorfgen"
+    version="@VERSION"
+    displayName="DorfGen"
+    authors="Thutmose"
+    description='''
+    This is a Dwarf Fortress legends exports to Minecraft world convertor
+    '''
+    
+[[dependencies.dorfgen]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="version_mc"
+    ordering="NONE"
+    side="BOTH"

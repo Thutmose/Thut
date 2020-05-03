@@ -1,38 +1,38 @@
 Red,Green,Blue,BiomeID,BiomeName,only biome id or name is needed
 0,0,0,255,,
-128,128,128,,ExtremeHillsM,// mountain
-0,224,255,,River,// temperate freshwater lake
-0,192,255,,Ocean,// temperate brackish lake
-0,160,255,,Ocean,// temperate saltwater lake
-0,96,255,,River,// tropical freshwater lake
-0,64,255,,Ocean,// tropical brackish lake
-0,32,255,,Ocean,// tropical saltwater lake
-0,255,255,,FrozenOcean,// arctic ocean
-0,0,255,,DeepOcean,// tropical ocean
-0,128,255,,DeepOcean,// temperate ocean 
-64,255,255,,IcePlains,// glacier 
-128,255,255,,IcePlains,// tundra 
-96,192,128,,Swampland,// temperate freshwater swamp 
-64,192,128,,Swampland,// temperate saltwater swamp 
-96,255,128,,Swampland,// temperate freshwater marsh 
-64,255,128,,Swampland,// temperate saltwater marsh 
-96,192,64,,Swampland,// tropical freshwater swamp 
-64,192,64,,Swampland,// tropical saltwater swamp 
-64,255,96,,Swampland,// mangrove swamp 
-96,255,64,,Swampland,// tropical freshwater marsh 
-64,255,64,,Swampland,// tropical saltwater marsh 
-0,96,64,,ColdTaiga,// taiga forest 
-0,96,32,,Taiga,// temperate conifer forest 
-0,160,32,,RoofedForest,// temperate broadleaf forest 
-0,96,0,,BirchForestM,// tropical conifer forest 
-0,128,0,,FlowerForest,// tropical dry broadleaf forest 
-0,160,0,,Jungle,// tropical moist broadleaf forest 
-0,255,32,,Plains,// temperate grassland 
-0,224,32,,Savanna,// temperate savanna 
-0,192,32,,SunflowerPlains,// temperate shrubland 
-255,160,0,,Plains,// tropical grassland 
-255,176,0,,Savanna,// tropical savanna 
-255,192,0,,JungleEdge,// tropical shrubland 
-255,96,32,,MesaPlateau,// badland desert 
-255,255,0,,Desert,// sand desert 
-255,128,64,,Desert,// rock desert 
+128,128,128,,gravelly_mountains,// mountain
+0,224,255,,river,// temperate freshwater lake
+0,192,255,,ocean,// temperate brackish lake
+0,160,255,,ocean,// temperate saltwater lake
+0,96,255,,river,// tropical freshwater lake
+0,64,255,,ocean,// tropical brackish lake
+0,32,255,,ocean,// tropical saltwater lake
+0,255,255,,frozen_ocean,// arctic ocean
+0,0,255,,deep_ocean,// tropical ocean
+0,128,255,,deep_ocean,// temperate ocean 
+64,255,255,,snowy_tundra,// glacier 
+128,255,255,,snowy_tundra,// tundra 
+96,192,128,,swamp,// temperate freshwater swamp 
+64,192,128,,swamp,// temperate saltwater swamp 
+96,255,128,,swamp,// temperate freshwater marsh 
+64,255,128,,swamp,// temperate saltwater marsh 
+96,192,64,,swamp,// tropical freshwater swamp 
+64,192,64,,swamp,// tropical saltwater swamp 
+64,255,96,,swamp,// mangrove swamp 
+96,255,64,,swamp,// tropical freshwater marsh 
+64,255,64,,swamp,// tropical saltwater marsh 
+0,96,64,,snowy_taiga,// taiga forest 
+0,96,32,,taiga,// temperate conifer forest 
+0,160,32,,dark_forest,// temperate broadleaf forest 
+0,96,0,,tall_birch_forest,// tropical conifer forest 
+0,128,0,,birch_forest,// tropical dry broadleaf forest 
+0,160,0,,jungle,// tropical moist broadleaf forest 
+0,255,32,,plains,// temperate grassland 
+0,224,32,,savanna,// temperate savanna 
+0,192,32,,sunflower_plains,// temperate shrubland 
+255,160,0,,plains,// tropical grassland 
+255,176,0,,savanna,// tropical savanna 
+255,192,0,,jungle_edge,// tropical shrubland 
+255,96,32,,badlands_plateau,// badland desert 
+255,255,0,,desert,// sand desert 
+255,128,64,,badlands,// rock desert 

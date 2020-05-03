@@ -2,18 +2,38 @@ package dorfgen.conversion;
 
 import java.awt.Color;
 
-public class BiomeConversion     
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.ForgeRegistry;
+
+public class BiomeConversion
 {
-    Color colorKey;
-    public int mineCraftBiome;
-    public BiomeConversion(Color color, int biome)
+    public static int getBiomeID(final Biome biome)
     {
-        colorKey = color;
-        mineCraftBiome = biome;
+        final ForgeRegistry<Biome> reg = (ForgeRegistry<Biome>) ForgeRegistries.BIOMES;
+        return reg.getID(biome);
     }
-    
-    public boolean matches(int rgb)
+
+    public static Biome getBiome(final int id)
     {
-        return colorKey.getRGB() == rgb;
+        final ForgeRegistry<Biome> reg = (ForgeRegistry<Biome>) ForgeRegistries.BIOMES;
+        final Biome b = reg.getValue(id);
+        if (b == null) return Biomes.DEFAULT;
+        return b;
+    }
+
+    Color      colorKey;
+    public int mineCraftBiome;
+
+    public BiomeConversion(final Color color, final int biome)
+    {
+        this.colorKey = color;
+        this.mineCraftBiome = biome;
+    }
+
+    public boolean matches(final int rgb)
+    {
+        return this.colorKey.getRGB() == rgb;
     }
 }
